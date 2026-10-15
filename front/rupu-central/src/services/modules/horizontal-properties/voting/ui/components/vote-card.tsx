@@ -48,7 +48,7 @@ export function VoteCard({ unit, onVote, onDeleteVote, votingActive = false, lab
   const hint = clickable ? (unit.hasVoted ? ' · clic para anular el voto' : ' · clic para registrar voto') : '';
   const title = `${unit.number} · ${unit.resident} · coef ${formatCoef(unit.participationCoefficient || 0)}% · ${status}${hint}`;
 
-  const className = `h-[34px] min-w-0 rounded-[5px] flex items-center justify-center px-1 text-[11px] font-medium tracking-[-.02em] truncate ${vtMono} transition-[transform,box-shadow] duration-150`;
+  const className = `h-[34px] max-md:h-11 min-w-0 rounded-[5px] flex items-center justify-center px-1 text-[11px] font-medium tracking-[-.02em] truncate ${vtMono} transition-[transform,box-shadow] duration-150`;
 
   if (!clickable) {
     return (

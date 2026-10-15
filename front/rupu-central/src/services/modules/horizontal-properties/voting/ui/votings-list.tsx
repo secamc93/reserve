@@ -185,7 +185,7 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
               <li
                 key={voting.id}
                 aria-label={voting.title}
-                className="bg-white rounded-lg px-4 sm:px-[18px] py-3.5 grid grid-cols-[32px_1fr_auto] lg:grid-cols-[32px_minmax(0,1fr)_minmax(180px,300px)_90px_auto] gap-x-[18px] gap-y-3 items-center"
+                className="bg-white rounded-lg px-3.5 sm:px-[18px] py-3.5 grid grid-cols-[26px_minmax(0,1fr)] md:grid-cols-[32px_1fr_auto] lg:grid-cols-[32px_minmax(0,1fr)_minmax(180px,300px)_90px_auto] gap-x-3 md:gap-x-[18px] gap-y-3 items-center"
                 style={{ border: `1px solid ${VT.border}` }}
               >
                 <div className={`${vtMono} text-[13px] font-medium`} style={{ color: VT.muted }}>
@@ -200,7 +200,7 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
                     {metaParts.join(' · ')}
                   </div>
                 </div>
-                <div className="col-span-3 lg:col-span-1 row-start-2 lg:row-start-auto">
+                <div className="col-span-2 md:col-span-3 lg:col-span-1 row-start-2 lg:row-start-auto">
                   {hasVotes && results && (
                     <StackedBar segments={results.segments} quorum={quorum} height={10} radius={3} markerOverflow={4} />
                   )}
@@ -215,12 +215,12 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
                 >
                   {winner ? `${formatPct(winner.pct)}%` : '—'}
                 </div>
-                <div className="flex gap-1.5 items-center justify-end">
+                <div className="col-span-2 row-start-3 md:col-span-1 md:row-start-auto flex gap-1.5 items-center justify-end">
                   <button
                     type="button"
                     disabled={busyId === voting.id}
                     onClick={() => handlePrimary(voting, status.key)}
-                    className="h-[30px] px-3 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors disabled:opacity-60"
+                    className="h-[30px] max-md:h-11 max-md:flex-1 max-md:text-sm justify-center px-3 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors disabled:opacity-60"
                     style={
                       status.primary
                         ? { background: VT.ink, color: '#fff', border: `1px solid ${VT.ink}` }

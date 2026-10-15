@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { TokenStorage } from '@shared/config';
 import { createVotingGroupAction, updateVotingGroupAction } from '../infrastructure/actions';
 import type { VotingGroup } from '../domain/entities';
-import { VT, VtDialog, VtNotice, VtSwitch, vtBtn, vtInput, vtLabel, vtMono, vtTextarea } from './design';
+import { VT, VtDialog, VtNotice, VtSwitch, vtBtn, vtDialogFooter, vtInput, vtLabel, vtMono, vtTextarea } from './design';
 
 /** Fecha local para un <input type="datetime-local"> (YYYY-MM-DDTHH:mm). */
 const toLocalInput = (date: Date) => {
@@ -235,7 +235,7 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
 
         {error && <VtNotice>{error}</VtNotice>}
 
-        <div className="flex justify-end gap-2 pt-4 mt-1" style={{ borderTop: `1px solid ${VT.border}` }}>
+        <div className={`${vtDialogFooter} mt-1`} style={{ borderTop: `1px solid ${VT.border}` }}>
           <button type="button" className={vtBtn.ghost} onClick={onClose} disabled={saving}>
             Cancelar
           </button>

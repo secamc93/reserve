@@ -819,31 +819,115 @@ export function LiveVotingModal({
   const secondaryButton =
     'h-8 px-3 rounded-md bg-white text-[13px] font-medium transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed';
 
+  /** Menú "más acciones": en el encabezado (escritorio) o en la barra inferior (teléfono, abre hacia arriba). */
+  const renderMoreMenu = (mobile: boolean) => (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowMoreMenu(v => !v)}
+                  className={`${mobile ? 'h-11 w-11' : 'h-8 w-8'} rounded-md bg-white flex items-center justify-center hover:bg-[#f5f5f4]`}
+                  style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
+                  aria-haspopup="menu"
+                  aria-expanded={showMoreMenu}
+                  aria-label="Más acciones"
+                  title="Más acciones"
+                >
+                  <VtIcon name="more" size={16} />
+                </button>
+                {showMoreMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} aria-hidden="true" />
+                    <div
+                      role="menu"
+                      className={`absolute right-0 ${mobile ? 'bottom-full mb-2' : 'top-10'} z-20 w-56 rounded-lg bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,.12)]`}
+                      style={{ border: `1px solid ${VT.border}` }}
+                    >
+                      {mobile && isActive && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            setIsLive(!isLive);
+                          }}
+                          className="w-full text-left px-3 py-3 text-sm hover:bg-[#f5f5f4]"
+                          style={{ color: VT.ink }}
+                        >
+                          {isLive ? 'Pausar animación en vivo' : 'Reanudar animación en vivo'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          setView('result');
+                        }}
+                        disabled={!results}
+                        className="w-full text-left px-3 py-2 max-md:py-3 max-md:text-sm text-[13px] hover:bg-[#f5f5f4] disabled:opacity-50"
+                        style={{ color: VT.ink }}
+                      >
+                        Ver resultados ampliados
+                      </button>
+                      {!isActive && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            changeVotingStatus(true);
+                          }}
+                          className="w-full text-left px-3 py-2 max-md:py-3 max-md:text-sm text-[13px] hover:bg-[#f5f5f4]"
+                          style={{ color: VT.ink }}
+                        >
+                          Reabrir votación
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          setShowResetConfirm(true);
+                        }}
+                        disabled={!isActive}
+                        className="w-full text-left px-3 py-2 max-md:py-3 max-md:text-sm text-[13px] hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ color: VT.live }}
+                        title="Eliminar todos los votos de esta votación"
+                      >
+                        Resetear votación
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+  );
+
   return (
     <>
       {/* Overlay de pantalla completa */}
-      <div className={`fixed inset-0 z-50 flex ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
+      <div className={`fixed inset-0 max-md:bottom-[calc(64px+env(safe-area-inset-bottom))] z-50 flex ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
         <div className="w-full h-full flex flex-col">
           {/* Header fijo */}
           <div
-            className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-7 py-4 bg-white flex-shrink-0"
+            className="flex flex-wrap items-center justify-between gap-3 px-3 sm:px-7 py-3 md:py-4 bg-white flex-shrink-0"
             style={{ borderBottom: `1px solid ${VT.border}` }}
           >
-            <div className="flex items-center gap-3.5 min-w-0 flex-wrap">
+            <div className="flex items-center gap-x-3.5 gap-y-1.5 min-w-0 flex-wrap max-md:w-full">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex items-center gap-1.5 text-[13px] hover:text-[#c8603f] transition-colors"
+                className="flex items-center gap-1.5 text-[13px] hover:text-[#c8603f] transition-colors min-w-0 max-md:min-h-11"
                 style={{ color: '#6b6a66' }}
               >
                 <VtIcon name="back" size={16} />
-                {groupName || 'Votaciones'}
+                <span className="truncate max-md:max-w-[38vw]" title={groupName || 'Votaciones'}>{groupName || 'Votaciones'}</span>
               </button>
               <div className="w-px h-[18px]" style={{ background: VT.border }} />
               <div className={`${vtMono} text-xs font-medium`} style={{ color: VT.muted }}>
                 {orderLabel}
               </div>
-              <h1 className="m-0 text-[17px] font-semibold tracking-[-.01em] min-w-0 truncate max-w-[60vw] sm:max-w-none">
+              <h1 className="m-0 text-[17px] font-semibold tracking-[-.01em] min-w-0 truncate max-w-[60vw] sm:max-w-none max-md:order-2 max-md:basis-full max-md:max-w-full max-md:whitespace-normal max-md:line-clamp-2 max-md:leading-snug" title={voting.title}>
                 {voting.title}
               </h1>
               {isActive ? (
@@ -864,7 +948,7 @@ export function LiveVotingModal({
                 </span>
               )}
             </div>
-            <div className="flex gap-2 items-center flex-wrap">
+            <div className="hidden md:flex gap-2 items-center flex-wrap">
               <button
                 type="button"
                 onClick={toggleQrStrip}
@@ -915,72 +999,7 @@ export function LiveVotingModal({
                   Ver resultado
                 </button>
               )}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowMoreMenu(v => !v)}
-                  className="h-8 w-8 rounded-md bg-white flex items-center justify-center hover:bg-[#f5f5f4]"
-                  style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
-                  aria-haspopup="menu"
-                  aria-expanded={showMoreMenu}
-                  aria-label="Más acciones"
-                  title="Más acciones"
-                >
-                  <VtIcon name="more" size={16} />
-                </button>
-                {showMoreMenu && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} aria-hidden="true" />
-                    <div
-                      role="menu"
-                      className="absolute right-0 top-10 z-20 w-56 rounded-lg bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,.12)]"
-                      style={{ border: `1px solid ${VT.border}` }}
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setShowMoreMenu(false);
-                          setView('result');
-                        }}
-                        disabled={!results}
-                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f4] disabled:opacity-50"
-                        style={{ color: VT.ink }}
-                      >
-                        Ver resultados ampliados
-                      </button>
-                      {!isActive && (
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowMoreMenu(false);
-                            changeVotingStatus(true);
-                          }}
-                          className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f4]"
-                          style={{ color: VT.ink }}
-                        >
-                          Reabrir votación
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setShowMoreMenu(false);
-                          setShowResetConfirm(true);
-                        }}
-                        disabled={!isActive}
-                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ color: VT.live }}
-                        title="Eliminar todos los votos de esta votación"
-                      >
-                        Resetear votación
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
+              {renderMoreMenu(false)}
             </div>
           </div>
 
@@ -988,7 +1007,7 @@ export function LiveVotingModal({
           {showQrStrip && (
             <div
               id="live-qr-strip"
-              className="flex flex-wrap items-center gap-5 px-4 sm:px-7 py-3.5 bg-white flex-shrink-0"
+              className="flex flex-wrap items-center gap-3 md:gap-5 px-3 sm:px-7 py-3.5 bg-white flex-shrink-0"
               style={{ borderBottom: `1px solid ${VT.border}` }}
             >
               {qr.loading && <span className="text-[13px]" style={{ color: VT.muted }}>Generando código QR…</span>}
@@ -1035,7 +1054,7 @@ export function LiveVotingModal({
             <VotingSummaryBlock results={results} quorum={quorum} />
 
             {/* Unidades por torre - ocupa el espacio restante */}
-            <div className="flex-1 min-h-[320px] lg:min-h-0 px-4 sm:px-7 py-[18px]">
+            <div className="flex-1 min-h-[320px] lg:min-h-0 px-3 sm:px-7 py-4 md:py-[18px]">
               {loadingDetails ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -1077,6 +1096,51 @@ export function LiveVotingModal({
                 />
               )}
             </div>
+          </div>
+
+          {/* Teléfono: acciones en una barra inferior del contenido (al alcance del pulgar) */}
+          <div
+            className="md:hidden flex-shrink-0 bg-white px-3 pt-2.5 pb-3 flex flex-col gap-2"
+            style={{ borderTop: `1px solid ${VT.border}` }}
+            role="toolbar"
+            aria-label="Acciones de la votación"
+          >
+            <div className={`grid gap-2 ${isActive ? 'grid-cols-[1fr_1fr_1.8fr_44px]' : 'grid-cols-[1fr_1fr_44px]'}`}>
+              <button
+                type="button"
+                onClick={toggleQrStrip}
+                className={`${vtBtn.secondary} h-11`}
+                aria-expanded={showQrStrip}
+                aria-controls="live-qr-strip"
+              >
+                <VtIcon name="qr" size={14} />
+                QR
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkVoteModal(true)}
+                className={`${vtBtn.secondary} h-11`}
+                disabled={!isActive}
+                title="Votación masiva"
+              >
+                Masiva
+              </button>
+              {isActive && (
+                <button type="button" className={`${vtBtn.accent} h-11 px-2 text-[13px] whitespace-nowrap`} onClick={() => setShowCloseConfirm(true)} disabled={statusBusy}>
+                  Cerrar votación
+                </button>
+              )}
+              {renderMoreMenu(true)}
+            </div>
+            {isActive ? (
+              <button type="button" onClick={handleVote} className={`${vtBtn.primary} w-full h-12 text-[15px]`}>
+                Registrar voto
+              </button>
+            ) : (
+              <button type="button" className={`${vtBtn.primary} w-full h-12 text-[15px]`} onClick={() => setView('result')} disabled={!results}>
+                Ver resultado
+              </button>
+            )}
           </div>
         </div>
       </div>

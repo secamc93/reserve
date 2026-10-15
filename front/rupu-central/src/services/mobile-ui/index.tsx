@@ -9,17 +9,20 @@ import { useSyncExternalStore, type ReactNode } from 'react';
 
 const PHONE_QUERY = '(max-width: 767px)';
 
+const hasMatchMedia = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+
 function subscribe(onChange: () => void) {
+  if (!hasMatchMedia()) return () => {};
   const mql = window.matchMedia(PHONE_QUERY);
   mql.addEventListener('change', onChange);
   return () => mql.removeEventListener('change', onChange);
 }
 
-/** true en teléfono (< md). En el servidor y en el primer render del cliente es false (escritorio). */
+/** true en teléfono (< md). En el servidor, en la hidratación y sin matchMedia (jsdom) es false (escritorio). */
 export function useIsMobile(): boolean {
   return useSyncExternalStore(
     subscribe,
-    () => window.matchMedia(PHONE_QUERY).matches,
+    () => hasMatchMedia() && window.matchMedia(PHONE_QUERY).matches,
     () => false,
   );
 }
@@ -43,7 +46,8 @@ export function MobileCard({
 }) {
   return (
     <div
-      className={`w-full min-w-0 text-left ${onClick ? 'cursor-pointer' : ''}`}
+      // contain:inline-size: el texto truncado no ensancha la celda de la tabla compartida.
+      className={`w-full min-w-0 text-left [contain:inline-size] ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-3 min-w-0">

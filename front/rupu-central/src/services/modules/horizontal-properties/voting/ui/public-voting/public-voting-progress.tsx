@@ -56,7 +56,7 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="h-10 px-5 rounded-lg text-sm font-semibold text-white"
+            className="h-10 max-md:h-11 px-5 rounded-lg text-sm font-semibold text-white"
             style={{ background: VT.ink }}
           >
             Reintentar

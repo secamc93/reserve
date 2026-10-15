@@ -211,20 +211,20 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
 
   return (
     <div className={`min-h-[calc(100vh-57px)] ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
-      <div className="px-4 sm:px-8 py-7 flex flex-col gap-[18px] w-full">
+      <div className="px-3 sm:px-8 py-4 md:py-7 flex flex-col gap-4 md:gap-[18px] w-full">
         <div className="flex flex-wrap justify-between items-end gap-3">
           <div>
             <Link
               href={`/properties/${businessId}/voting-groups`}
-              className="inline-flex items-center gap-1.5 text-xs mb-2 hover:text-[#c8603f]"
+              className="inline-flex items-center gap-1.5 text-xs mb-2 hover:text-[#c8603f] max-md:min-h-11 max-md:mb-0 max-md:text-[13px] max-w-full"
               style={{ color: VT.muted }}
             >
               <VtIcon name="back" size={12} />
               {group?.name ?? 'Grupos de votación'}
             </Link>
-            <h1 className="m-0 text-2xl font-semibold tracking-[-.02em]">Asistencia</h1>
+            <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em]">Asistencia</h1>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap max-md:w-full max-md:flex-col-reverse max-md:[&>*]:w-full">
             {listId && (
               <Link
                 href={`/properties/${businessId}/voting-groups/${groupId}/attendance/${listId}`}
@@ -308,7 +308,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                       role="tab"
                       aria-selected={filter === t.key}
                       onClick={() => setFilter(t.key)}
-                      className="px-2.5 py-1 rounded-[5px] text-xs font-medium"
+                      className="px-2.5 py-1 max-md:h-9 max-md:px-3 rounded-[5px] text-xs font-medium"
                       style={filter === t.key ? { background: VT.ink, color: '#fff' } : { color: VT.inkSoft }}
                     >
                       {t.label} · {t.count}
@@ -316,7 +316,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                   ))}
                 </div>
                 <label
-                  className="flex items-center gap-2 h-[30px] px-2.5 rounded-md text-xs w-full sm:w-[240px] focus-within:ring-1 focus-within:ring-[#c8603f]"
+                  className="flex items-center gap-2 h-[30px] max-md:h-11 max-md:text-base px-2.5 rounded-md text-xs w-full sm:w-[240px] focus-within:ring-1 focus-within:ring-[#c8603f]"
                   style={{ border: `1px solid ${VT.borderStrong}`, color: VT.muted }}
                 >
                   <VtIcon name="search" size={14} />
@@ -332,7 +332,43 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                 </label>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* Teléfono: una fila táctil por unidad (tocar la fila marca o quita la presencia) */}
+              <ul className="md:hidden m-0 p-0 list-none" aria-label="Unidades">
+                {visible.map((row) => {
+                  const busy = pending.has(row.unitId);
+                  return (
+                    <li
+                      key={row.unitId}
+                      className="flex items-center gap-3 px-3 py-2.5 min-h-[56px] cursor-pointer active:bg-[#faf9f7]"
+                      style={{ borderTop: `1px solid #efedea` }}
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest('[role="switch"]') || busy) return;
+                        togglePresence(row, !row.present);
+                      }}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2 min-w-0">
+                          <span className={`${vtMono} text-sm font-semibold shrink-0`}>{row.unitNumber}</span>
+                          <span className={`${vtMono} text-[11px] shrink-0`} style={{ color: VT.muted }}>{formatCoef(row.coefPct)}%</span>
+                        </div>
+                        <div className="text-[13px] truncate" title={row.residentName}>{row.residentName}</div>
+                        {row.proxyName && (
+                          <div className="text-xs truncate" style={{ color: VT.inkSoft }} title={row.proxyName}>Poder: {row.proxyName}</div>
+                        )}
+                      </div>
+                      <VtSwitch
+                        checked={row.present}
+                        onChange={(next) => togglePresence(row, next)}
+                        label={`Presente ${row.unitNumber}`}
+                        disabled={busy}
+                        busy={busy}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="overflow-x-auto max-md:hidden">
                 <table className="w-full min-w-[620px] text-[13px] border-collapse">
                   <thead>
                     <tr className={`${vtMono} text-[10px] font-medium tracking-[.06em] text-left`} style={{ color: VT.muted }}>
@@ -369,12 +405,12 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                     ))}
                   </tbody>
                 </table>
+              </div>
                 {visible.length === 0 && (
                   <p className="text-center text-[13px] py-10 m-0" style={{ color: VT.muted }}>
                     {rows.length === 0 ? 'La lista no tiene unidades.' : 'No hay unidades con ese criterio.'}
                   </p>
                 )}
-              </div>
             </div>
           </>
         )}

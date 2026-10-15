@@ -22,6 +22,10 @@ interface VotingSummaryBlockProps {
   quorum: number;
 }
 
+/** Cifra por opción: en línea en escritorio; en teléfono, celda de una grilla de 2 columnas. */
+const metricCell =
+  'flex items-baseline gap-2 min-w-0 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1.5 max-md:rounded-lg max-md:px-3 max-md:py-2.5 max-md:bg-[#faf9f7] max-md:border max-md:border-[#e4e2dd]';
+
 export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps) {
   if (!results) {
     return (
@@ -35,38 +39,42 @@ export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps)
   const status = getQuorumStatus(participation, quorum);
 
   return (
-    <div className="bg-white px-4 sm:px-7 pt-6" style={{ borderBottom: `1px solid ${VT.border}` }}>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 lg:gap-10 items-end pb-5">
+    <div className="bg-white px-3 sm:px-7 pt-4 md:pt-6" style={{ borderBottom: `1px solid ${VT.border}` }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 md:gap-6 lg:gap-10 items-end pb-4 md:pb-5">
         <div className="min-w-0">
           {/* Cifras por opción */}
-          <div className="flex flex-wrap gap-x-7 gap-y-3 items-baseline">
+          <div className="flex flex-wrap gap-x-7 gap-y-3 items-baseline max-md:grid max-md:grid-cols-2 max-md:gap-2">
             {segments.map((s) => (
-              <div key={s.key} className="flex items-baseline gap-2">
-                <span className="inline-block w-2.5 h-2.5 rounded-[2px] -translate-y-px" style={{ background: s.color }} />
-                <span className="text-[13px]" style={{ color: VT.inkSoft }}>{s.label}</span>
-                <span className={`${vtMono} text-[26px] leading-none font-semibold tracking-[-.03em]`} style={{ color: VT.ink }}>
-                  {formatPct(s.pct)}
-                  <span className="text-sm" style={{ color: VT.muted }}>%</span>
+              <div key={s.key} className={metricCell}>
+                <span className="inline-block w-2.5 h-2.5 rounded-[2px] -translate-y-px shrink-0" style={{ background: s.color }} />
+                <span className="text-[13px] max-md:flex-1 max-md:min-w-0 max-md:truncate" style={{ color: VT.inkSoft }} title={s.label}>{s.label}</span>
+                <span className="inline-flex items-baseline gap-2 max-md:basis-full">
+                  <span className={`${vtMono} text-[26px] max-md:text-[22px] leading-none font-semibold tracking-[-.03em]`} style={{ color: VT.ink }}>
+                    {formatPct(s.pct)}
+                    <span className="text-sm" style={{ color: VT.muted }}>%</span>
+                  </span>
+                  <span className="text-[11px]" style={{ color: VT.muted }}>{s.votes} un.</span>
                 </span>
-                <span className="text-[11px]" style={{ color: VT.muted }}>{s.votes} un.</span>
               </div>
             ))}
-            <div className="flex items-baseline gap-2 lg:ml-auto">
+            <div className={`${metricCell} lg:ml-auto`}>
               <span
-                className="inline-block w-2.5 h-2.5 rounded-[2px] -translate-y-px"
+                className="inline-block w-2.5 h-2.5 rounded-[2px] -translate-y-px shrink-0"
                 style={{ border: `1px solid ${VT.pendingBorder}`, background: '#fff' }}
               />
-              <span className="text-[13px]" style={{ color: VT.inkSoft }}>Pendiente</span>
-              <span className={`${vtMono} text-[26px] leading-none font-semibold tracking-[-.03em]`} style={{ color: VT.muted }}>
-                {formatPct(pending.pct)}
-                <span className="text-sm">%</span>
+              <span className="text-[13px] max-md:flex-1 max-md:min-w-0 max-md:truncate" style={{ color: VT.inkSoft }}>Pendiente</span>
+              <span className="inline-flex items-baseline gap-2 max-md:basis-full">
+                <span className={`${vtMono} text-[26px] max-md:text-[22px] leading-none font-semibold tracking-[-.03em]`} style={{ color: VT.muted }}>
+                  {formatPct(pending.pct)}
+                  <span className="text-sm">%</span>
+                </span>
+                <span className="text-[11px]" style={{ color: VT.muted }}>{pending.votes} un.</span>
               </span>
-              <span className="text-[11px]" style={{ color: VT.muted }}>{pending.votes} un.</span>
             </div>
           </div>
 
           {/* Barra apilada con quórum */}
-          <div className="mt-[30px]">
+          <div className="mt-7 md:mt-[30px]">
             <StackedBar segments={segments} quorum={quorum} height={28} showQuorumLabel />
           </div>
           <div className={`${vtMono} flex justify-between text-[10px] mt-1.5`} style={{ color: VT.muted }}>
@@ -81,7 +89,7 @@ export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps)
           <div className={`${vtMono} text-[11px] tracking-[.06em] mb-0.5`} style={{ color: VT.muted }}>
             PARTICIPACIÓN
           </div>
-          <div className={`${vtMono} text-[40px] leading-none font-semibold tracking-[-.04em]`} style={{ color: VT.ink }}>
+          <div className={`${vtMono} text-[34px] md:text-[40px] leading-none font-semibold tracking-[-.04em]`} style={{ color: VT.ink }}>
             {formatPct(participation)}
             <span className="text-lg" style={{ color: VT.muted }}>%</span>
           </div>

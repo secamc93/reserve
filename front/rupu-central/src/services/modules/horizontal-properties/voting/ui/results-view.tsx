@@ -112,7 +112,7 @@ export function ResultsView({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-[13px] hover:text-[#c8603f] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[13px] hover:text-[#c8603f] transition-colors max-md:min-h-11"
             style={{ color: VT.inkSoft }}
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
@@ -120,18 +120,18 @@ export function ResultsView({
             </svg>
             {backLabel}
           </button>
-          <span className={`${vtMono} text-[11px]`} style={{ color: VT.muted }}>Esc para volver</span>
+          <span className={`${vtMono} text-[11px] max-md:hidden`} style={{ color: VT.muted }}>Esc para volver</span>
         </div>
 
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-[60px] px-4 sm:px-10 lg:px-[90px] py-8 lg:py-12">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 items-center gap-6 md:gap-10 lg:gap-[60px] px-3 sm:px-10 lg:px-[90px] py-5 md:py-8 lg:py-12 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
           {/* Dona */}
-          <div className="relative w-full max-w-[480px] aspect-square justify-self-center">
+          <div className="relative w-full max-w-[280px] md:max-w-[480px] aspect-square justify-self-center">
             <svg viewBox="0 0 42 42" className="w-full h-full -rotate-90" role="img" aria-label={`Resultados por coeficiente. Quórum ${quorum}%`}>
               <circle r={radius} cx="21" cy="21" fill="transparent" stroke={VT.border} strokeWidth="3" />
               {donut}
               <line x1="37.5" y1="21" x2="40.5" y2="21" stroke={VT.accent} strokeWidth=".7" transform={`rotate(${quorumDeg} 21 21)`} />
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-10">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 md:px-10">
               <div className={`${vtMono} text-xs tracking-[.08em]`} style={{ color: VT.muted }}>
                 {winner ? (closed ? winner.label.toUpperCase() : `${winner.label.toUpperCase()} · MAYORÍA`) : 'SIN VOTOS AÚN'}
               </div>
@@ -149,7 +149,7 @@ export function ResultsView({
           </div>
 
           {/* Tabla de resultados */}
-          <div className="flex flex-col gap-7 min-w-0">
+          <div className="flex flex-col gap-5 md:gap-7 min-w-0">
             <div>
               <div className="flex items-center gap-2.5 mb-2.5 flex-wrap">
                 <span className={`${vtMono} text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.muted }}>
@@ -199,7 +199,7 @@ export function ResultsView({
               Quórum requerido {quorum}% ·{' '}
               <strong style={{ color: status.fg }}>{status.label}</strong>
             </div>
-            {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+            {actions && <div className="flex flex-wrap gap-2 max-md:flex-col max-md:[&>*]:w-full">{actions}</div>}
           </div>
         </div>
       </div>
