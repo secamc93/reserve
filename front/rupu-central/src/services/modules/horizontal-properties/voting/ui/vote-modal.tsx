@@ -1,14 +1,46 @@
 /**
- * Modal: Votar en una Votación
+ * A7 · Registrar el voto de una unidad (admin, presencial).
+ * Ficha de la unidad (o buscador de unidades sin votar), botones grandes por
+ * opción con su color y "Guardar: <opción>". Si la unidad no tiene asistencia,
+ * ofrece marcarla y registrar el voto (regla del back: con lista activa solo
+ * votan unidades con asistencia).
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Modal, Spinner, Alert } from '@shared/ui';
+import { useEffect, useMemo, useState } from 'react';
 import { TokenStorage } from '@shared/config';
-import { createVoteAction, markUnitAttendanceAction } from '../infrastructure/actions';
-import { getUnvotedUnitsAction } from '../infrastructure/actions';
+import { createVoteAction, getUnvotedUnitsAction, markUnitAttendanceAction } from '../infrastructure/actions';
+import type { UnvotedUnit } from '../infrastructure/actions';
+import {
+  VT,
+  VtDialog,
+  VtIcon,
+  VtNotice,
+  buildOptionPalette,
+  formatOrder,
+  formatPct,
+  getOptionKind,
+  vtBtn,
+  vtInput,
+  vtLabel,
+  vtMono,
+} from './design';
+
+interface VoteModalOption {
+  id: number;
+  optionText: string;
+  optionCode: string;
+  displayOrder: number;
+  color?: string;
+  isActive?: boolean;
+}
+
+/** Datos de la unidad que muestra la ficha (coeficiente y asistencia). */
+export interface VoteUnitInfo {
+  coefPct?: number;
+  hasAttendance?: boolean;
+}
 
 interface VoteModalProps {
   isOpen: boolean;
@@ -18,25 +50,41 @@ interface VoteModalProps {
   groupId: number;
   votingId: number;
   votingTitle: string;
-  votingType: string;
-  allowAbstention: boolean;
-  options: Array<{ id: number; optionText: string; optionCode: string; displayOrder: number }>;
-  currentVotes?: Array<{ property_unit_id: number; voted_at: string }>; // ✅ NUEVO: Votos actuales para filtrar
-  preselectedUnit?: { // ✅ NUEVO: Unidad preseleccionada desde la tarjeta
+  /** Orden de la votación ("VOTACIÓN 01 · REGISTRO MANUAL"). */
+  displayOrder?: number;
+  /** @deprecated Se conserva por compatibilidad; ya no se muestra. */
+  votingType?: string;
+  /** @deprecated Se conserva por compatibilidad; las opciones ya incluyen la abstención si existe. */
+  allowAbstention?: boolean;
+  options: VoteModalOption[];
+  /** Votos ya registrados (para no ofrecer unidades que ya votaron). */
+  currentVotes?: Array<{ property_unit_id: number; voted_at?: string }>;
+  /** Unidad elegida desde la ficha del panel. */
+  preselectedUnit?: {
     propertyUnitId: number;
     residentId?: number | null;
     unitNumber: string;
     residentName: string;
   };
+  /** Coeficiente (% del total) y asistencia por id de unidad. */
+  unitInfo?: Record<number, VoteUnitInfo>;
 }
 
-interface ResidentOption {
+interface SelectedUnit {
   id: number;
-  name: string;
-  unitNumber: string;
-  isMain: boolean;
-  isActive?: boolean;
+  number: string;
+  residentName: string;
 }
+
+const isAttendanceError = (message: string) => /asistencia|attendance/i.test(message);
+
+const friendlyError = (message: string) => {
+  if (/ya vot|already/i.test(message)) return 'Esta unidad ya votó en esta votación.';
+  if (/no corresponde|no pertenece/i.test(message)) return 'La unidad o la opción no corresponden a esta votación.';
+  if (/inactiv/i.test(message)) return 'La votación no está abierta.';
+  if (/token/i.test(message)) return 'La sesión expiró. Inicia sesión de nuevo.';
+  return message || 'No se pudo registrar el voto.';
+};
 
 export function VoteModal({
   isOpen,
@@ -46,810 +94,248 @@ export function VoteModal({
   groupId,
   votingId,
   votingTitle,
-  votingType,
-  allowAbstention,
+  displayOrder,
   options,
-  currentVotes = [], // ✅ NUEVO: Votos actuales para filtrar
-  preselectedUnit, // ✅ NUEVO: Unidad preseleccionada
+  currentVotes = [],
+  preselectedUnit,
+  unitInfo = {},
 }: VoteModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [loadingResidents, setLoadingResidents] = useState(true);
+  const [unit, setUnit] = useState<SelectedUnit | null>(null);
+  const [search, setSearch] = useState('');
+  const [unvoted, setUnvoted] = useState<UnvotedUnit[]>([]);
+  const [loadingUnits, setLoadingUnits] = useState(false);
+  const [optionId, setOptionId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
-  const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
+  const [needsAttendance, setNeedsAttendance] = useState(false);
 
-  // ✅ NUEVO: Estados para manejar asistencia
-  const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
-  const [markingAttendance, setMarkingAttendance] = useState(false);
-  const [pendingVoteData, setPendingVoteData] = useState<{
-    residentId: number;
-    optionId: number;
-    residentName: string;
-    optionText: string;
-  } | null>(null);
+  const activeOptions = useMemo(
+    () => [...options].filter((o) => o.isActive !== false).sort((a, b) => a.displayOrder - b.displayOrder),
+    [options]
+  );
+  const palette = useMemo(
+    () => buildOptionPalette(activeOptions.map((o) => ({ id: o.id, text: o.optionText, code: o.optionCode, color: o.color }))),
+    [activeOptions]
+  );
 
-  // useEffect para precargar datos de unidad seleccionada desde la tarjeta
+  // Al abrir: unidad preseleccionada (desde la ficha) o buscador
   useEffect(() => {
-    if (isOpen && preselectedUnit) {
-      console.log('✅ Precargando unidad desde tarjeta:', preselectedUnit);
-      // Precargar el propertyUnitId como selectedResidentId (el sistema usa unit_id)
-      setSelectedResidentId(preselectedUnit.propertyUnitId);
-      setSelectedResidentName(`${preselectedUnit.unitNumber} - ${preselectedUnit.residentName || 'Sin residente'}`);
-    }
-  }, [isOpen, preselectedUnit]);
+    if (!isOpen) return;
+    setError(null);
+    setNeedsAttendance(false);
+    setOptionId(null);
+    setSearch('');
+    setUnit(
+      preselectedUnit
+        ? { id: preselectedUnit.propertyUnitId, number: preselectedUnit.unitNumber, residentName: preselectedUnit.residentName }
+        : null
+    );
+    // La ficha se recrea en cada render del panel: basta con el id de la unidad.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, preselectedUnit?.propertyUnitId]);
 
-  // Log cuando cambia el selectedResidentId
+  // Unidades sin votar (para el buscador)
   useEffect(() => {
-    console.log('🔄 selectedResidentId cambió a:', selectedResidentId);
-  }, [selectedResidentId]);
-
-  // Log cuando cambia el selectedOptionId
-  useEffect(() => {
-    console.log('🔄 selectedOptionId cambió a:', selectedOptionId);
-  }, [selectedOptionId]);
-  const [residents, setResidents] = useState<ResidentOption[]>([]);
-  const [allResidents, setAllResidents] = useState<ResidentOption[]>([]); // Lista completa
-  const [unitFilter, setUnitFilter] = useState(''); // Filtro por unidad (búsqueda)
-  const [selectedResidentName, setSelectedResidentName] = useState(''); // Nombre del residente seleccionado
-  const [showResidentDropdown, setShowResidentDropdown] = useState(false);
-  const [isSearching, setIsSearching] = useState(false); // Indicador de búsqueda en progreso
-
-  // Cargar residentes cuando se abre el modal
-  useEffect(() => {
-    if (isOpen) {
-      loadResidents();
-    }
-  }, [isOpen, businessId]);
-
-  // 🔄 IMPORTANTE: Consultar endpoint cada vez que se abre el dropdown
-  useEffect(() => {
-    if (showResidentDropdown && isOpen) {
-      console.log('🔄 [VOTE MODAL] Dropdown abierto - consultando endpoint directamente');
-      loadResidents();
-    }
-  }, [showResidentDropdown, isOpen]);
-
-  // Buscar residentes en el backend cuando cambia el filtro (solo cuando se está buscando)
-  useEffect(() => {
-    // Solo buscar si el usuario está escribiendo (dropdown abierto)
-    if (!showResidentDropdown || selectedResidentId) {
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true); // Indicar que se va a buscar
-
-    const searchResidents = async () => {
-      if (!isOpen || !businessId) {
-        setIsSearching(false);
-        return;
-      }
-
-      const token = TokenStorage.getBusinessToken();
-      if (!token) {
-        setIsSearching(false);
-        return;
-      }
-
+    if (!isOpen || unit) return;
+    const token = TokenStorage.getBusinessToken();
+    if (!token) return;
+    let cancelled = false;
+    setLoadingUnits(true);
+    const handle = setTimeout(async () => {
       try {
-        // Usar el endpoint de unidades sin votar con filtro (SIEMPRE consulta directa al endpoint, sin cache)
-        const unvotedData = await getUnvotedUnitsAction({
-          businessId: businessId,
-          groupId,
-          votingId,
-          token,
-          unitNumber: unitFilter.trim() || undefined, // Filtrar por número de unidad
-        });
+        const res = await getUnvotedUnitsAction({ businessId, groupId, votingId, token, unitNumber: search.trim() || undefined });
+        if (cancelled) return;
+        const voted = new Set(currentVotes.map((v) => v.property_unit_id));
+        setUnvoted((res.success && res.data ? res.data : []).filter((u) => !voted.has(u.unit_id)));
+      } finally {
+        if (!cancelled) setLoadingUnits(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+    // currentVotes cambia con cada voto del SSE; basta con recargar al abrir o buscar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, unit, search, businessId, groupId, votingId]);
 
-        console.log('🔍 [VOTE MODAL] Búsqueda de unidades sin votar (consulta directa):', {
-          filtro: unitFilter || '(todos)',
-          resultados: unvotedData.data?.length || 0,
-          response: unvotedData
-        });
+  const selectedOption = activeOptions.find((o) => o.id === optionId) || null;
+  const info = unit ? unitInfo[unit.id] : undefined;
 
-        if (!unvotedData.success || !unvotedData.data) {
-          setResidents([]);
+  const submit = async (markAttendanceFirst = false) => {
+    if (!unit || !optionId) return;
+    const token = TokenStorage.getBusinessToken();
+    if (!token) return setError('No se encontró el token de autenticación');
+    setSaving(true);
+    setError(null);
+    try {
+      if (markAttendanceFirst) {
+        const att = await markUnitAttendanceAction({ token, businessId, groupId, votingId, unitId: unit.id, markAttendance: true });
+        if (!att.success) throw new Error(att.error || 'No se pudo marcar la asistencia');
+      }
+      const res = await createVoteAction({
+        token,
+        businessId,
+        groupId,
+        votingId,
+        data: { votingId, votingOptionId: optionId, propertyUnitId: unit.id, ipAddress: 'admin-panel', userAgent: navigator.userAgent },
+      });
+      if (!res.success) {
+        const message = res.error || '';
+        if (!markAttendanceFirst && isAttendanceError(message)) {
+          setNeedsAttendance(true);
           return;
         }
-
-        // Mapear unidades sin votar a formato de residentes
-        let residentOptions: ResidentOption[] = unvotedData.data.map((unit) => ({
-          id: unit.unit_id,
-          name: unit.resident_name || `Unidad ${unit.unit_number}`,
-          unitNumber: unit.unit_number,
-          isMain: true,
-          isActive: true,
-        }));
-
-        // ✅ FILTRO ADICIONAL: Eliminar unidades que ya votaron (según datos del SSE)
-        if (currentVotes.length > 0) {
-          const votedUnitIds = new Set(currentVotes.map(vote => vote.property_unit_id));
-          const beforeFilter = residentOptions.length;
-
-          residentOptions = residentOptions.filter(resident => {
-            const hasVoted = votedUnitIds.has(resident.id);
-            if (hasVoted) {
-              console.log(`🚫 [VOTE MODAL] Filtrando unidad ${resident.unitNumber} (ID: ${resident.id}) - ya votó (búsqueda)`);
-            }
-            return !hasVoted;
-          });
-
-          console.log(`🔍 [VOTE MODAL] Filtro aplicado en búsqueda: ${beforeFilter} → ${residentOptions.length} unidades (eliminadas ${beforeFilter - residentOptions.length})`);
-        }
-
-        setResidents(residentOptions);
-      } catch (err) {
-        console.error('❌ Error buscando unidades sin votar:', err);
-        setResidents([]);
-      } finally {
-        setIsSearching(false);
+        throw new Error(message);
       }
-    };
-
-    // Debounce: esperar 500ms después de que el usuario deje de escribir
-    const timeoutId = setTimeout(() => {
-      searchResidents();
-    }, 500);
-
-    return () => {
-      clearTimeout(timeoutId);
-      setIsSearching(false);
-    };
-  }, [unitFilter, businessId, isOpen, showResidentDropdown, selectedResidentId]);
-
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.resident-search-dropdown')) {
-        setShowResidentDropdown(false);
-      }
-    };
-
-    if (showResidentDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showResidentDropdown]);
-
-  const loadResidents = async () => {
-    setLoadingResidents(true);
-    setError(null);
-
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) {
-        setError('No se encontró el token de autenticación');
-        return;
-      }
-
-      // Cargar solo unidades sin votar (SIEMPRE consulta directa al endpoint, sin cache)
-      console.log('🔍 [VOTE MODAL] Cargando unidades sin votar (consulta directa):', { businessId, groupId, votingId });
-
-      const unvotedData = await getUnvotedUnitsAction({
-        businessId: businessId,
-        groupId,
-        votingId,
-        token,
-      });
-
-      console.log('📊 [VOTE MODAL] Respuesta del endpoint:', unvotedData);
-      console.log('📊 Unidades sin votar obtenidas:', unvotedData.data?.length || 0);
-
-      if (!unvotedData.success || !unvotedData.data) {
-        setError('Error al cargar unidades sin votar');
-        return;
-      }
-
-      // Mapear unidades sin votar a formato de residentes
-      let residentOptions: ResidentOption[] = unvotedData.data.map((unit) => ({
-        id: unit.unit_id,
-        name: unit.resident_name || `Unidad ${unit.unit_number}`,
-        unitNumber: unit.unit_number,
-        isMain: true, // Asumir que es residente principal
-        isActive: true,
-      }));
-
-      // ✅ FILTRO ADICIONAL: Eliminar unidades que ya votaron (según datos del SSE)
-      if (currentVotes.length > 0) {
-        const votedUnitIds = new Set(currentVotes.map(vote => vote.property_unit_id));
-        const beforeFilter = residentOptions.length;
-
-        residentOptions = residentOptions.filter(resident => {
-          const hasVoted = votedUnitIds.has(resident.id);
-          if (hasVoted) {
-            console.log(`🚫 [VOTE MODAL] Filtrando unidad ${resident.unitNumber} (ID: ${resident.id}) - ya votó`);
-          }
-          return !hasVoted;
-        });
-
-        console.log(`🔍 [VOTE MODAL] Filtro aplicado: ${beforeFilter} → ${residentOptions.length} unidades (eliminadas ${beforeFilter - residentOptions.length})`);
-      }
-
-      console.log('✅ Residentes sin votar cargados:', residentOptions.length);
-
-      setResidents(residentOptions);
-      setAllResidents(residentOptions); // Guardar lista inicial
-
-      if (residentOptions.length === 0) {
-        setError('No hay unidades disponibles para votar. Todas las unidades ya han emitido su voto.');
-      }
-    } catch (err) {
-      console.error('❌ Error cargando residentes:', err);
-      setError('Error al cargar la lista de residentes');
-    } finally {
-      setLoadingResidents(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('🔄 Iniciando submit del voto...');
-    console.log('📊 Estado actual:', {
-      selectedResidentId,
-      selectedOptionId,
-      residents: residents.length,
-      loading
-    });
-
-    setError(null);
-
-    if (!selectedResidentId) {
-      console.log('❌ Error: No hay residente seleccionado');
-      setError('Debe seleccionar el residente que emite el voto');
-      return;
-    }
-
-    if (!selectedOptionId) {
-      console.log('❌ Error: No hay opción seleccionada');
-      setError('Debe seleccionar una opción para votar');
-      return;
-    }
-
-    console.log('✅ Validaciones pasadas, procediendo con el voto...');
-
-    setLoading(true);
-
-    try {
-      const token = TokenStorage.getBusinessToken();
-
-      if (!token) {
-        setError('No se encontró el token de autenticación');
-        return;
-      }
-
-      // Obtener IP y User Agent del cliente
-      const ipAddress = 'client-ip'; // En producción se obtendría del servidor
-      const userAgent = navigator.userAgent;
-
-      console.log('📤 Enviando voto al servidor...', {
-        votingId,
-        votingOptionId: selectedOptionId,
-        propertyUnitId: selectedResidentId, // selectedResidentId contiene el unit_id
-        businessId,
-        groupId
-      });
-
-      const result = await createVoteAction({
-        token,
-        businessId: businessId,
-        groupId,
-        votingId,
-        data: {
-          votingId,
-          votingOptionId: selectedOptionId,
-          propertyUnitId: selectedResidentId, // selectedResidentId contiene el unit_id
-          ipAddress,
-          userAgent,
-        },
-      });
-
-      console.log('📥 Respuesta del servidor:', result);
-
-      if (result.success) {
-        console.log('✅ Voto registrado exitosamente:', result.data);
-
-        // Obtener el nombre del residente y la opción votada para el mensaje
-        const resident = residents.find(r => r.id === selectedResidentId);
-        const option = options.find(o => o.id === selectedOptionId);
-        const residentName = resident?.name || 'Residente';
-        const optionText = option?.optionText || 'Opción';
-
-        // Mostrar mensaje de confirmación y resetear formulario para siguiente voto
-        setSuccessMessage(`✅ Voto registrado exitosamente: ${residentName} votó por "${optionText}"`);
-        resetForm();
-
-        // 🔄 IMPORTANTE: Recargar lista de unidades sin votar para reflejar el nuevo estado
-        console.log('🔄 Recargando lista de unidades sin votar después del voto...');
-        await loadResidents();
-
-        // Limpiar mensaje después de 3 segundos
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-
-        // Notificar al componente padre (para actualizaciones SSE) pero NO cerrar modal
-        onSuccess();
-      } else {
-        console.log('❌ Error en la respuesta:', result.error);
-        setError(result.error || 'Error al registrar el voto');
-      }
-    } catch (err) {
-      console.error('Error registrando voto:', err);
-
-      // Extraer el mensaje de error específico de la API
-      let errorMessage = 'Error inesperado al registrar el voto';
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === 'string') {
-        errorMessage = err;
-      }
-
-      // ✅ NUEVO: Detectar error de asistencia
-      if (errorMessage.includes('asistencia') || errorMessage.toLowerCase().includes('attendance')) {
-        // Guardar los datos del voto pendiente
-        const resident = residents.find(r => r.id === selectedResidentId);
-        const option = options.find(o => o.id === selectedOptionId);
-
-        setPendingVoteData({
-          residentId: selectedResidentId!,
-          optionId: selectedOptionId!,
-          residentName: resident?.name || 'Residente',
-          optionText: option?.optionText || 'Opción',
-        });
-
-        // Mostrar diálogo de asistencia
-        setShowAttendanceDialog(true);
-        setLoading(false);
-        return; // No mostrar error genérico
-      }
-
-      // Personalizar mensajes comunes
-      if (errorMessage.includes('ya votó')) {
-        errorMessage = '⚠️ Este residente ya emitió su voto en esta votación';
-      } else if (errorMessage.includes('no encontrado') || errorMessage.includes('not found')) {
-        errorMessage = 'La votación o el residente no fueron encontrados';
-      } else if (errorMessage.includes('inactivo') || errorMessage.includes('inactive')) {
-        errorMessage = 'La votación no está activa o el residente está inactivo';
-      } else if (errorMessage.includes('token')) {
-        errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente';
-      }
-
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ NUEVO: Manejar marcado de asistencia y retry del voto
-  const handleMarkAttendanceAndVote = async () => {
-    if (!pendingVoteData) return;
-
-    setMarkingAttendance(true);
-    setError(null);
-
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) {
-        setError('No se encontró el token de autenticación');
-        return;
-      }
-
-      // Llamar al Server Action para marcar asistencia
-      const attendanceResult = await markUnitAttendanceAction({
-        token,
-        businessId,
-        groupId,
-        votingId,
-        unitId: pendingVoteData.residentId,
-        markAttendance: true,
-      });
-
-      if (!attendanceResult.success) {
-        setError(attendanceResult.error || 'Error al marcar asistencia');
-        return;
-      }
-
-      setSuccessMessage('✅ Asistencia marcada. Registrando voto...');
-
-      // Cerrar el diálogo de asistencia
-      setShowAttendanceDialog(false);
-
-      // Intentar registrar el voto nuevamente
-      const ipAddress = 'client-ip';
-      const userAgent = navigator.userAgent;
-
-      const result = await createVoteAction({
-        token,
-        businessId: businessId,
-        groupId,
-        votingId,
-        data: {
-          votingId,
-          votingOptionId: pendingVoteData.optionId,
-          propertyUnitId: pendingVoteData.residentId,
-          ipAddress,
-          userAgent,
-        },
-      });
-
-      if (result.success) {
-        setSuccessMessage(`✅ Voto registrado exitosamente: ${pendingVoteData.residentName} votó por "${pendingVoteData.optionText}"`);
-        resetForm();
-        await loadResidents();
-        setTimeout(() => setSuccessMessage(null), 3000);
-        onSuccess();
-      } else {
-        setError(result.error || 'Error al registrar el voto');
-      }
-    } catch (err) {
-      console.error('Error marcando asistencia:', err);
-      setError(err instanceof Error ? err.message : 'Error al marcar asistencia');
-    } finally {
-      setMarkingAttendance(false);
-      setPendingVoteData(null);
-    }
-  };
-
-  const resetForm = () => {
-    // No limpiar si hay unidad preseleccionada (solo limpiar la opción)
-    if (preselectedUnit) {
-      setSelectedOptionId(null);
-      setError(null);
-      setSuccessMessage(null);
-    } else {
-      setSelectedOptionId(null);
-      setSelectedResidentId(null);
-      setSelectedResidentName('');
-      setError(null);
-      setSuccessMessage(null);
-      setUnitFilter('');
-    }
-  };
-
-  const clearUnitFilter = () => {
-    setUnitFilter('');
-    setSelectedResidentId(null);
-    setSelectedResidentName('');
-    setShowResidentDropdown(false);
-  };
-
-  const handleClose = () => {
-    if (!loading && !loadingResidents) {
-      resetForm();
+      setNeedsAttendance(false);
+      onSuccess();
       onClose();
+    } catch (err) {
+      setError(friendlyError(err instanceof Error ? err.message : ''));
+    } finally {
+      setSaving(false);
     }
   };
-
-  // Ordenar opciones por displayOrder
-  const sortedOptions = [...options].sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={`Votar: ${votingTitle}`} size="md">
-      {loadingResidents ? (
-        <div className="flex justify-center items-center py-12">
-          <Spinner size="lg" />
-          <span className="ml-3 text-gray-600">Cargando residentes...</span>
+    <VtDialog
+      open={isOpen}
+      onClose={onClose}
+      busy={saving}
+      width={480}
+      layer="over"
+      eyebrow={`Votación ${formatOrder(displayOrder ?? 1)} · Registro manual`}
+      title="Registrar voto"
+      subtitle={votingTitle}
+    >
+      {/* Unidad */}
+      {unit ? (
+        <div className="flex items-center gap-3 px-3.5 py-3 rounded-lg" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
+          <span className={`${vtMono} text-base font-semibold`}>{unit.number}</span>
+          <div className="flex-1 min-w-0 leading-tight">
+            <div className="text-[13px] font-semibold truncate">{unit.residentName || 'Sin residente'}</div>
+            <div className="text-xs" style={{ color: VT.muted }}>
+              {info?.coefPct != null ? `coef ${formatPct(info.coefPct)}%` : 'coeficiente —'}
+              {info?.hasAttendance === true ? ' · presente' : info?.hasAttendance === false ? ' · sin asistencia' : ''}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="text-xs underline underline-offset-2"
+            style={{ color: VT.muted }}
+            onClick={() => {
+              setUnit(null);
+              setNeedsAttendance(false);
+            }}
+            disabled={saving}
+          >
+            cambiar
+          </button>
         </div>
       ) : (
-        <form onSubmit={(e) => {
-          console.log('📝 Formulario submit detectado');
-          handleSubmit(e);
-        }} className="space-y-6">
-          {/* Información de la votación */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">Información</h3>
-            <div className="space-y-1 text-sm text-blue-700">
-              <p>Tipo: <span className="font-medium">{votingType}</span></p>
-              {allowAbstention && (
-                <p className="text-green-700">✓ Permite abstención</p>
-              )}
-            </div>
+        <div>
+          <label htmlFor="vote-unit-search" className={vtLabel}>Unidad</label>
+          <div className="relative">
+            <input
+              id="vote-unit-search"
+              className={`${vtInput} ${vtMono} pr-9`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Número de unidad (ej. T2-804)"
+              autoComplete="off"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: VT.muted }}>
+              <VtIcon name="search" size={16} />
+            </span>
           </div>
-
-          {/* Selector de residente con búsqueda */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Votando como residente *
-            </label>
-
-            {/* Si hay unidad preseleccionada desde tarjeta, mostrar info fija */}
-            {preselectedUnit ? (
-              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">🏠</span>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold text-blue-900">
-                      {preselectedUnit.unitNumber}
-                    </div>
-                    <div className="text-sm text-blue-700">
-                      {preselectedUnit.residentName || 'Sin residente registrado'}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                      Precargado
-                    </div>
-                  </div>
-                </div>
+          <div
+            role="listbox"
+            aria-label="Unidades sin votar"
+            className="mt-1.5 max-h-56 overflow-y-auto rounded-lg bg-white"
+            style={{ border: `1px solid ${VT.border}` }}
+          >
+            {loadingUnits ? (
+              <div className="px-3.5 py-3 text-[13px]" style={{ color: VT.muted }}>Buscando unidades…</div>
+            ) : unvoted.length === 0 ? (
+              <div className="px-3.5 py-3 text-[13px]" style={{ color: VT.muted }}>
+                {search ? 'No hay unidades sin votar con ese número.' : 'Todas las unidades ya votaron.'}
               </div>
             ) : (
-              <div className="relative resident-search-dropdown">
-                {/* Si hay un residente seleccionado, mostrar solo su nombre (no editable) */}
-                {selectedResidentId && selectedResidentName ? (
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={selectedResidentName}
-                      readOnly
-                      className="input w-full pr-16 bg-green-50 border-green-300 text-green-800 font-medium cursor-not-allowed"
-                      disabled={loading}
-                    />
-                    {/* Botón para cambiar residente */}
-                    <button
-                      type="button"
-                      onClick={clearUnitFilter}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-green-600 hover:text-green-800"
-                      title="Cambiar residente"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  /* Campo de búsqueda cuando no hay residente seleccionado */
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Buscar por número de unidad..."
-                      value={unitFilter}
-                      onChange={(e) => {
-                        console.log('✏️ [VOTE MODAL] Escribiendo en filtro - abriendo dropdown y consultando endpoint');
-                        setUnitFilter(e.target.value);
-                        setShowResidentDropdown(true);
-                      }}
-                      onFocus={() => {
-                        console.log('🎯 [VOTE MODAL] Input enfocado - abriendo dropdown y consultando endpoint');
-                        setShowResidentDropdown(true);
-                      }}
-                      className="input w-full pr-8"
-                      disabled={loading}
-                    />
-                    {/* Indicador sutil de búsqueda */}
-                    {isSearching && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Dropdown solo se muestra cuando no hay residente seleccionado y está activo */}
-                {!selectedResidentId && showResidentDropdown && (unitFilter || allResidents.length > 0) && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {residents.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gray-500">
-                        {unitFilter ? 'No se encontraron residentes' : 'No hay residentes activos'}
-                      </div>
-                    ) : (
-                      [...residents].sort((a, b) => {
-                        if (a.isMain && !b.isMain) return -1;
-                        if (!a.isMain && b.isMain) return 1;
-                        return a.name.localeCompare(b.name);
-                      }).map((resident) => (
-                        <div
-                          key={resident.id}
-                          className="px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                          onClick={() => {
-                            console.log('🏠 Seleccionando residente:', {
-                              id: resident.id,
-                              name: resident.name,
-                              unitNumber: resident.unitNumber
-                            });
-                            setSelectedResidentId(resident.id);
-                            setSelectedResidentName(`${resident.unitNumber} - ${resident.name}`);
-                            setUnitFilter(''); // Limpiar el filtro de búsqueda
-                            setShowResidentDropdown(false);
-                          }}
-                        >
-                          <div className="font-medium">{resident.name}</div>
-                          <div className="text-xs text-gray-500">
-                            Unidad: {resident.unitNumber}
-                            {resident.isMain && <span className="ml-2 text-green-600">• Principal</span>}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!preselectedUnit && selectedResidentId && (
-              <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm text-green-800">
-                  ✓ <strong>Residente seleccionado:</strong> {residents.find(r => r.id === selectedResidentId)?.name}
-                  - Unidad: {residents.find(r => r.id === selectedResidentId)?.unitNumber}
-                </p>
-                <p className="text-xs text-green-600 mt-1">
-                  ID: {selectedResidentId} | Puedes continuar con la selección del voto
-                </p>
-              </div>
-            )}
-
-          </div>
-
-
-          {/* Opciones de votación */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Selecciona tu voto *
-            </label>
-            <div className="space-y-2">
-              {sortedOptions.map((option) => (
-                <label
-                  key={option.id}
-                  className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedOptionId === option.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                    }`}
+              unvoted.slice(0, 50).map((u) => (
+                <button
+                  key={u.unit_id}
+                  type="button"
+                  role="option"
+                  aria-selected={false}
+                  onClick={() => setUnit({ id: u.unit_id, number: u.unit_number, residentName: u.resident_name || '' })}
+                  className="w-full flex justify-between items-center px-3.5 py-2.5 text-left text-[13px] hover:bg-[#f5f5f4]"
+                  style={{ borderBottom: `1px solid #efedea` }}
                 >
-                  <input
-                    type="radio"
-                    name="vote-option"
-                    value={option.id}
-                    checked={selectedOptionId === option.id}
-                    onChange={() => setSelectedOptionId(option.id)}
-                    disabled={loading}
-                    className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                  />
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">{option.optionText}</p>
-                    <p className="text-sm text-gray-500">Código: {option.optionCode}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <Alert type="error" onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          )}
-
-          {/* Mensaje de éxito */}
-          {successMessage && (
-            <Alert type="success" onClose={() => setSuccessMessage(null)}>
-              {successMessage}
-            </Alert>
-          )}
-
-          {/* Botones */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={loading}
-              className="btn btn-outline"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !selectedOptionId || !selectedResidentId || residents.length === 0}
-              className={`btn min-w-[120px] ${loading || !selectedOptionId || !selectedResidentId || residents.length === 0
-                ? 'btn-disabled opacity-50 cursor-not-allowed'
-                : 'btn-primary'
-                }`}
-              onClick={(e) => {
-                console.log('🖱️ Click en botón de votar detectado');
-                console.log('🔍 Estado del botón:', {
-                  loading,
-                  selectedOptionId,
-                  selectedResidentId,
-                  residentsLength: residents.length,
-                  disabled: loading || !selectedOptionId || !selectedResidentId || residents.length === 0
-                });
-              }}
-              title={
-                !selectedResidentId ? 'Selecciona un residente primero' :
-                  !selectedOptionId ? 'Selecciona una opción de voto' :
-                    residents.length === 0 ? 'No hay residentes disponibles' :
-                      'Confirmar voto'
-              }
-            >
-              {loading ? (
-                <Spinner size="sm" />
-              ) : !selectedResidentId ? (
-                'Selecciona Residente'
-              ) : !selectedOptionId ? (
-                'Selecciona Voto'
-              ) : (
-                'Confirmar Voto'
-              )}
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* ✅ NUEVO: Diálogo de confirmación de asistencia */}
-      {showAttendanceDialog && pendingVoteData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex items-start mb-4">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <span className="text-2xl">⚠️</span>
-                </div>
-              </div>
-              <div className="ml-4 flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Asistencia No Registrada
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  La unidad <strong>{pendingVoteData.residentName}</strong> no tiene asistencia marcada para esta votación.
-                </p>
-                <p className="text-sm text-gray-600 mb-4">
-                  Para poder votar, primero debes marcar la asistencia de esta unidad.
-                </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Voto pendiente:</strong> {pendingVoteData.optionText}
-                  </p>
-                </div>
-                <p className="text-sm text-gray-700 font-medium">
-                  ¿Deseas marcar la asistencia ahora y continuar con el voto?
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAttendanceDialog(false);
-                  setPendingVoteData(null);
-                }}
-                disabled={markingAttendance}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleMarkAttendanceAndVote}
-                disabled={markingAttendance}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {markingAttendance ? (
-                  <>
-                    <Spinner size="sm" />
-                    <span>Marcando...</span>
-                  </>
-                ) : (
-                  'Marcar Asistencia y Votar'
-                )}
-              </button>
-            </div>
+                  <span className={`${vtMono} font-medium`}>{u.unit_number}</span>
+                  <span className="text-xs truncate ml-3" style={{ color: VT.muted }}>
+                    {u.resident_name || 'Sin residente'}
+                    {unitInfo[u.unit_id]?.hasAttendance === false ? ' · sin asistencia' : ''}
+                  </span>
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}
-    </Modal>
+
+      {/* Opciones */}
+      <div className="flex flex-col gap-2" role="radiogroup" aria-label="Opción de voto">
+        {activeOptions.length === 0 && <VtNotice tone="info">Esta votación no tiene opciones activas.</VtNotice>}
+        {activeOptions.map((option) => {
+          const color = palette.byId(option.id) || palette.forText(option.optionText, option.color);
+          const abstain = getOptionKind(option.optionText, option.optionCode) === 'abstain';
+          const selected = optionId === option.id;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={saving}
+              onClick={() => setOptionId(option.id)}
+              className="h-[52px] rounded-lg flex items-center justify-between px-4 text-base font-semibold text-left transition-colors disabled:opacity-60"
+              style={
+                selected
+                  ? { background: color, color: '#fff', border: `1.5px solid ${color}` }
+                  : { background: '#fff', color: abstain ? VT.inkSoft : color, border: `1.5px solid ${abstain ? VT.pendingBorder : color}` }
+              }
+            >
+              <span>{option.optionText}</span>
+              {selected && <VtIcon name="check" size={18} strokeWidth={2.5} />}
+            </button>
+          );
+        })}
+      </div>
+
+      {needsAttendance && unit && (
+        <VtNotice>
+          <div className="flex flex-col gap-2">
+            <span>
+              La unidad {unit.number} no tiene asistencia registrada. Con lista de asistencia activa solo votan las unidades
+              presentes.
+            </span>
+            <button type="button" className={`${vtBtn.primary} self-start`} onClick={() => submit(true)} disabled={saving}>
+              {saving ? 'Registrando…' : 'Marcar presente y guardar el voto'}
+            </button>
+          </div>
+        </VtNotice>
+      )}
+      {error && <VtNotice>{error}</VtNotice>}
+
+      <div className="flex justify-end gap-2 pt-4" style={{ borderTop: `1px solid ${VT.border}` }}>
+        <button type="button" className={vtBtn.ghost} onClick={onClose} disabled={saving}>
+          Cancelar
+        </button>
+        <button type="button" className={vtBtn.primary} onClick={() => submit(false)} disabled={saving || !unit || !selectedOption}>
+          {saving ? 'Guardando…' : selectedOption ? `Guardar: ${selectedOption.optionText}` : 'Elige una opción'}
+        </button>
+      </div>
+    </VtDialog>
   );
 }
-

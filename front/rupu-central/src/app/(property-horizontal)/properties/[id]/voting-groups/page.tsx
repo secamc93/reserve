@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { VotingGroupsSection } from '@/services/modules/horizontal-properties/voting/ui/voting-groups-section';
 
@@ -16,13 +15,5 @@ export default function VotingGroupsPage() {
     );
   }
 
-  return (
-    <div>
-      {/* Navegación */}
-
-      <div className="p-6">
-        <VotingGroupsSection businessId={businessId} />
-      </div>
-    </div>
-  );
+  return <VotingGroupsSection businessId={businessId} />;
 }

@@ -1,12 +1,16 @@
 /**
- * Componente: Validación de Residente para Votación Pública
+ * R1 · Identificación del residente (unidad + documento), desde el QR.
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Alert, Spinner } from '@shared/ui';
-import { getPropertyUnitsForPublicVotingAction, validateResidentAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Spinner } from '@shared/ui';
+import {
+  getPropertyUnitsForPublicVotingAction,
+  validateResidentAction,
+} from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
+import { VT, VtIcon, VtNotice, unitFloor, votingFontRoot, vtMono } from '../design';
 
 interface PropertyUnit {
   id: number;
@@ -23,21 +27,9 @@ interface ResidentData {
 }
 
 interface VotingContextData {
-  property: {
-    id: number;
-    name: string;
-    address: string;
-  };
-  voting: {
-    id: number;
-    title: string;
-    description: string;
-  };
-  voting_group: {
-    id: number;
-    name: string;
-    description: string;
-  };
+  property: { id: number; name: string; address: string };
+  voting?: { id: number; title: string; description: string } | null;
+  voting_group?: { id: number; name: string; description: string } | null;
   is_group_token?: boolean;
 }
 
@@ -48,396 +40,178 @@ interface PublicVotingValidationProps {
   onError: (error: string) => void;
 }
 
-export function PublicVotingValidation({
-  publicToken,
-  votingContext,
-  onSuccess,
-  onError
-}: PublicVotingValidationProps) {
+export function PublicVotingValidation({ publicToken, votingContext, onSuccess, onError }: PublicVotingValidationProps) {
   const [units, setUnits] = useState<PropertyUnit[]>([]);
-  const [filteredUnits, setFilteredUnits] = useState<PropertyUnit[]>([]);
-  const [selectedUnitId, setSelectedUnitId] = useState('');
-  const [unitSearchTerm, setUnitSearchTerm] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [dni, setDni] = useState('');
-  const [loading, setLoading] = useState(false);
   const [loadingUnits, setLoadingUnits] = useState(true);
+  const [term, setTerm] = useState('');
+  const [selected, setSelected] = useState<PropertyUnit | null>(null);
+  const [dni, setDni] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
-  // Cargar unidades de la propiedad
   useEffect(() => {
-    loadUnits();
-  }, []);
-
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('#unit') && !target.closest('.unit-dropdown')) {
-        setShowDropdown(false);
+    let cancelled = false;
+    (async () => {
+      try {
+        const result = await getPropertyUnitsForPublicVotingAction({ publicToken });
+        if (!result.success || !result.data) throw new Error(result.error || 'Error al cargar unidades');
+        if (!cancelled) setUnits(result.data.units || []);
+      } catch {
+        if (!cancelled) onErrorRef.current('Error al cargar las unidades de la propiedad');
+      } finally {
+        if (!cancelled) setLoadingUnits(false);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
+  }, [publicToken]);
 
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showDropdown]);
-
-  const loadUnits = async () => {
-    try {
-      console.log('📦 [VALIDATION] Cargando unidades...');
-      setLoadingUnits(true);
-
-      const result = await getPropertyUnitsForPublicVotingAction({
-        publicToken
-      });
-
-      console.log('📥 [VALIDATION] Resultado de unidades:', result);
-
-      if (result.success && result.data) {
-        const loadedUnits = result.data.units || [];
-        console.log(`✅ [VALIDATION] ${loadedUnits.length} unidades cargadas`);
-        console.log('📋 [VALIDATION] Estructura de unidades:', loadedUnits.slice(0, 3)); // Mostrar las primeras 3
-        setUnits(loadedUnits);
-        setFilteredUnits(loadedUnits);
-      } else {
-        console.error('❌ [VALIDATION] Error al cargar unidades:', result.error);
-        throw new Error(result.error || 'Error al cargar unidades');
-      }
-    } catch (err) {
-      console.error('❌ [VALIDATION] Error cargando unidades:', err);
-      onError('Error al cargar las unidades de la propiedad');
-    } finally {
-      setLoadingUnits(false);
-    }
-  };
-
-  // Filtrar unidades en tiempo real
-  useEffect(() => {
-    if (unitSearchTerm.trim() === '') {
-      setFilteredUnits(units);
-    } else {
-      const filtered = units.filter(unit =>
-        unit.number.toLowerCase().includes(unitSearchTerm.toLowerCase())
-      );
-      setFilteredUnits(filtered);
-    }
-  }, [unitSearchTerm, units]);
-
-  const handleSelectUnit = (unit: PropertyUnit) => {
-    setSelectedUnitId(unit.id?.toString() || unit.number);
-    setUnitSearchTerm(unit.number);
-    setShowDropdown(false);
-  };
-
-  const handleClearSelection = () => {
-    setSelectedUnitId('');
-    setUnitSearchTerm('');
-    setShowDropdown(false);
-  };
-
+  const matches = useMemo(() => {
+    const q = term.trim().toLowerCase();
+    if (!q || selected) return [];
+    return units
+      .filter((u) => u.number.toLowerCase().includes(q))
+      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
+      .slice(0, 8);
+  }, [units, term, selected]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    // Validar que todos los campos estén completos
-    if (!selectedUnitId || !dni.trim()) {
-      console.warn('⚠️ [VALIDATION] Datos incompletos');
-      setError('Por favor, seleccione una unidad e ingrese su DNI');
-      return;
-    }
-
-    console.log('🔐 [VALIDATION] Validando residente:', {
-      propertyUnitId: parseInt(selectedUnitId),
-      dni: dni.trim()
-    });
-
-    console.log('🔄 [VALIDATION] Iniciando validación, setting loading to true');
-    setLoading(true);
-
+    if (!selected) return setError('Elige tu unidad de la lista');
+    if (!dni.trim()) return setError('Escribe tu documento de identidad');
+    setSubmitting(true);
     try {
-      // Encontrar el ID real de la unidad seleccionada
-      const selectedUnit = units.find(unit =>
-        (unit.id?.toString() || unit.number) === selectedUnitId
-      );
-
-      if (!selectedUnit) {
-        setError('Unidad no encontrada');
-        setLoading(false);
-        return;
-      }
-
-      const result = await validateResidentAction({
-        publicToken,
-        propertyUnitId: selectedUnit.id || parseInt(selectedUnit.number),
-        dni: dni.trim()
-      });
-
-      console.log('📥 [VALIDATION] Resultado de validación:', result);
-
+      const result = await validateResidentAction({ publicToken, propertyUnitId: selected.id, dni: dni.trim() });
       if (result.success && result.data) {
         const { voting_auth_token, resident_id, resident_name, property_unit_number, voting_id, hp_id, group_id } = result.data;
-
-        console.log('✅ [VALIDATION] Residente validado:', {
-          resident_id,
-          resident_name,
-          property_unit_number,
-          voting_id,
-          hp_id,
-          group_id
-        });
-
         onSuccess(voting_auth_token, {
           id: resident_id,
           name: resident_name,
           unitNumber: property_unit_number,
           votingId: voting_id,
           businessId: hp_id,
-          groupId: group_id
+          groupId: group_id,
         });
       } else {
-        console.error('❌ [VALIDATION] Error en validación:', result.error || result.message);
-        const errorMessage = result.error || result.message || 'Error al validar residente';
-        setError(errorMessage);
-        // No llamar onError() para permitir reintentar
+        setError(
+          `${result.error || result.message || 'No pudimos validar tus datos'}. Revisa que la unidad y el documento coincidan con los registrados.`
+        );
       }
-    } catch (err) {
-      console.error('❌ [VALIDATION] Error validando residente:', err);
-      setError('Error de conexión. Por favor, intente nuevamente.');
-      // No llamar onError() para permitir reintentar
+    } catch {
+      setError('Error de conexión. Intenta de nuevo.');
     } finally {
-      console.log('🔄 [VALIDATION] Finalizando validación, setting loading to false');
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (loadingUnits) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Cargando unidades...</p>
-        </div>
-      </div>
-    );
-  }
+  const title = votingContext.voting_group?.name || votingContext.voting?.title || 'Votación';
+  const intro = votingContext.voting
+    ? `Identifícate para votar en «${votingContext.voting.title}».`
+    : 'Identifícate una vez para votar en todos los puntos de la asamblea.';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-            <span className="text-2xl">🗳️</span>
+    <div className={`min-h-screen ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
+      <form onSubmit={handleSubmit} className="max-w-[480px] mx-auto min-h-screen flex flex-col p-[22px]" noValidate>
+        <div className={`${vtMono} text-[11px] font-medium tracking-[.06em] uppercase`} style={{ color: VT.muted }}>
+          {votingContext.property.name}
+        </div>
+        <h1 className="mt-3.5 mb-0 text-2xl leading-tight font-semibold tracking-[-.02em]">{title}</h1>
+        <p className="mt-2 mb-0 text-sm leading-normal" style={{ color: VT.inkSoft }}>{intro}</p>
+
+        <div className="mt-[26px] flex flex-col gap-3.5">
+          <div>
+            <label htmlFor="r1-unit" className="block text-xs font-semibold mb-1.5">Tu unidad</label>
+            <div className="relative">
+              <input
+                id="r1-unit"
+                type="text"
+                autoComplete="off"
+                value={term}
+                onChange={(e) => {
+                  setTerm(e.target.value);
+                  setSelected(null);
+                }}
+                placeholder={loadingUnits ? 'Cargando unidades…' : 'Ej. T2-804'}
+                disabled={loadingUnits}
+                className={`${vtMono} w-full h-[52px] rounded-[10px] bg-white px-3.5 pr-11 text-base font-medium outline-none`}
+                style={{ border: `1px solid ${term ? VT.ink : VT.borderStrong}` }}
+                role="combobox"
+                aria-expanded={matches.length > 0}
+                aria-controls="r1-unit-list"
+              />
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: VT.muted }}>
+                {loadingUnits ? <Spinner size="sm" /> : <VtIcon name="search" size={16} />}
+              </span>
+            </div>
+            {matches.length > 0 && (
+              <div
+                id="r1-unit-list"
+                role="listbox"
+                aria-label="Unidades"
+                className="mt-1.5 rounded-[10px] bg-white overflow-hidden"
+                style={{ border: `1px solid ${VT.border}` }}
+              >
+                {matches.map((unit) => {
+                  const floor = unitFloor(unit.number);
+                  return (
+                    <button
+                      key={unit.id}
+                      type="button"
+                      role="option"
+                      aria-selected={false}
+                      onClick={() => {
+                        setSelected(unit);
+                        setTerm(unit.number);
+                      }}
+                      className="w-full flex justify-between items-center px-3.5 py-3 text-[15px] text-left hover:bg-[#f5f5f4]"
+                      style={{ borderBottom: `1px solid #efedea` }}
+                    >
+                      <span className={vtMono}>{unit.number}</span>
+                      {floor && <span className="text-xs" style={{ color: VT.muted }}>piso {floor}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {term && !selected && !loadingUnits && matches.length === 0 && (
+              <p className="mt-1.5 mb-0 text-xs" style={{ color: VT.muted }}>No encontramos una unidad con «{term}».</p>
+            )}
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Validación de Residente
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Seleccione su unidad e ingrese su DNI para continuar
+          <div>
+            <label htmlFor="r1-dni" className="block text-xs font-semibold mb-1.5">Documento de identidad</label>
+            <input
+              id="r1-dni"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              value={dni}
+              onChange={(e) => setDni(e.target.value.replace(/[.\s]/g, ''))}
+              placeholder="Número sin puntos"
+              className="w-full h-[52px] rounded-[10px] bg-white px-3.5 text-base outline-none focus:border-[#1a1a1a]"
+              style={{ border: `1px solid ${VT.borderStrong}` }}
+            />
+          </div>
+          {error && <VtNotice>{error}</VtNotice>}
+        </div>
+
+        <div className="mt-auto pt-8 flex flex-col gap-2.5">
+          <button
+            type="submit"
+            disabled={submitting || loadingUnits}
+            className="h-[52px] rounded-[10px] text-white text-base font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ background: VT.ink }}
+          >
+            {submitting ? 'Validando…' : 'Continuar'}
+          </button>
+          <p className="m-0 text-center text-xs leading-snug" style={{ color: VT.muted }}>
+            Solo residentes registrados. El documento debe coincidir con el de la unidad.
           </p>
         </div>
-
-        {/* Información del contexto de votación */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-blue-900 mb-3">
-              {votingContext.property.name}
-            </h3>
-
-            <div className="border-t border-blue-200 pt-3">
-              {/* Mostrar votación específica (token individual) */}
-              {votingContext.voting && (
-                <>
-                  <h4 className="text-md font-semibold text-blue-800 mb-1">
-                    {votingContext.voting.title}
-                  </h4>
-                  <p className="text-xs text-blue-600 mb-2">
-                    {votingContext.voting.description}
-                  </p>
-                </>
-              )}
-
-              {/* Mostrar grupo de votación */}
-              {votingContext.voting_group && (
-                <p className="text-xs text-blue-500">
-                  📋 {votingContext.voting_group.name}
-                </p>
-              )}
-
-              {/* Mensaje para tokens de grupo */}
-              {!votingContext.voting && votingContext.is_group_token && (
-                <p className="text-sm text-blue-700">
-                  🗳️ Acceso a todas las votaciones del grupo
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <Alert type="error" onClose={() => setError(null)}>
-                <div className="space-y-2">
-                  <p className="font-medium">{error}</p>
-                  <p className="text-sm opacity-90">
-                    Verifique que la unidad y el DNI sean correctos e intente nuevamente.
-                  </p>
-                </div>
-              </Alert>
-            )}
-
-            <div className="relative">
-              <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-2">
-                Unidad Residencial
-              </label>
-
-              {/* Input con botón de limpiar */}
-              <div className="relative">
-                <input
-                  id="unit"
-                  type="text"
-                  value={unitSearchTerm}
-                  onChange={(e) => {
-                    setUnitSearchTerm(e.target.value);
-                    setShowDropdown(true);
-                    if (!e.target.value) {
-                      setSelectedUnitId('');
-                    }
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  className="mt-1 block w-full px-3 py-3 pr-20 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-base text-gray-900 bg-white"
-                  placeholder="Busque su apartamento/casa (ej: 101, 202, A-1)"
-                  required
-                />
-
-                {/* Botón de limpiar */}
-                {selectedUnitId && (
-                  <button
-                    type="button"
-                    onClick={handleClearSelection}
-                    className="absolute inset-y-0 right-12 flex items-center pr-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                    title="Limpiar selección"
-                  >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* Icono de búsqueda */}
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Dropdown de resultados mejorado para móviles */}
-              {showDropdown && filteredUnits.length > 0 && (
-                <div className="unit-dropdown absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
-                  {filteredUnits.map((unit, index) => (
-                    <button
-                      key={unit.id || index}
-                      type="button"
-                      onClick={() => handleSelectUnit(unit)}
-                      className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${selectedUnitId === (unit.id?.toString() || unit.number)
-                        ? 'bg-blue-100 text-blue-900 border-blue-200'
-                        : 'text-gray-900'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <span className="font-medium text-base">{unit.number}</span>
-                          <p className="text-sm text-gray-500 mt-1">Unidad residencial</p>
-                        </div>
-                        {selectedUnitId === (unit.id?.toString() || unit.number) && (
-                          <svg className="h-5 w-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Mensaje cuando no hay resultados */}
-              {showDropdown && unitSearchTerm && filteredUnits.length === 0 && (
-                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg p-4 text-center text-gray-500 text-sm">
-                  <div className="flex items-center justify-center">
-                    <svg className="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.57M15 6H9m0 0l3 3m-3-3l-3 3" />
-                    </svg>
-                    No se encontraron unidades que coincidan con &quot;{unitSearchTerm}&quot;
-                  </div>
-                </div>
-              )}
-
-              <p className="mt-2 text-xs text-gray-500">
-                Digite el número de su apartamento/casa para buscarlo
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-2">
-                Documento de Identidad (DNI)
-              </label>
-              <input
-                id="dni"
-                type="text"
-                value={dni}
-                onChange={(e) => setDni(e.target.value)}
-                className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-base text-gray-900 bg-white"
-                placeholder="Ingrese su número de DNI"
-                required
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Ingrese el DNI del residente registrado en esta unidad
-              </p>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading || !selectedUnitId || !dni.trim()}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading ? (
-                  <>
-                    <Spinner size="sm" />
-                    <span className="ml-2">Validando...</span>
-                  </>
-                ) : (
-                  'Continuar a Votación'
-                )}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Información</span>
-              </div>
-            </div>
-
-            <div className="mt-4 text-xs text-gray-500 space-y-2">
-              <p>• Solo residentes registrados pueden votar</p>
-              <p>• El DNI debe coincidir exactamente con el registrado</p>
-              <p>• Cada residente puede votar una sola vez</p>
-              <p>• Su voto es confidencial y seguro</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
   );
 }
-
-

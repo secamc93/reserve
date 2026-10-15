@@ -5,27 +5,34 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Spinner, Modal } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getVotingDetailsAction, resetVotingAction } from '@/services/modules/horizontal-properties/voting/infrastructure/actions';
+import { activateVotingAction } from '../infrastructure/actions/activate-voting.action';
+import { deactivateVotingAction } from '../infrastructure/actions/deactivate-voting.action';
+import { ResultsView } from './results-view';
+import { GroupQRModal } from './components/group-qr-modal';
+import { useGroupQr, GROUP_QR_VALID_HOURS } from './hooks';
 import { VoteModal } from './vote-modal';
 import { BulkVoteModal } from './bulk-vote-modal';
 import { VotesByUnitSection, type ResidentialUnit } from './components/votes-by-unit-section';
 import { VotingSummaryBlock } from './voting-summary-block';
-import { useVotingSSE } from './hooks';
+
 import { Vote } from '../domain/entities'; // ✅ Usar la interfaz oficial
+import { useVotingSSE } from './hooks';
 import {
   VT,
+  VtDialog,
+  VtIcon,
+  VtNotice,
   votingFontRoot,
+  vtBtn,
   vtMono,
   buildOptionPalette,
   computeCoefficientResults,
-  formatCoef,
   formatOrder,
-  formatPct,
-  getQuorumStatus,
-  getWinner,
   resolveQuorum,
   type CoefficientResults,
 } from './design';
@@ -43,163 +50,6 @@ interface Voting {
   requiredPercentage: number;
   createdAt: string;
   updatedAt: string;
-}
-
-interface ResultsOverlayProps {
-  results: CoefficientResults;
-  quorum: number;
-  votingTitle: string;
-  displayOrder: number;
-  onClose: () => void;
-}
-
-/**
- * Resultados ampliados (opción 1e): dona fina con el umbral de quórum
- * dibujado sobre el anillo + tabla de resultados por coeficiente.
- */
-function ResultsOverlay({ results, quorum, votingTitle, displayOrder, onClose }: ResultsOverlayProps) {
-  // Cerrar con Escape
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  const { segments, pending, participation } = results;
-  const status = getQuorumStatus(participation, quorum);
-  const winner = getWinner(segments);
-
-  // Dona: circunferencia 100 (r = 15.9155) => el dasharray es directamente el %
-  const radius = 15.91549430918954;
-  let cumulative = 0;
-  const donut = segments
-    .filter((s) => s.pct > 0)
-    .map((s) => {
-      const pct = Math.min(s.pct, 100);
-      const circle = (
-        <circle
-          key={s.key}
-          r={radius}
-          cx="21"
-          cy="21"
-          fill="transparent"
-          stroke={s.color}
-          strokeWidth="3"
-          strokeDasharray={`${pct.toFixed(3)} ${(100 - pct).toFixed(3)}`}
-          strokeDashoffset={(-cumulative).toFixed(3)}
-          className="transition-all duration-500"
-        />
-      );
-      cumulative += pct;
-      return circle;
-    });
-  const quorumDeg = Math.min(Math.max(quorum, 0), 100) * 3.6;
-
-  const rows = [
-    ...segments.map((s) => ({ ...s, pending: false })),
-    { key: 'pending', label: 'Pendiente', color: '#fff', pct: pending.pct, votes: pending.votes, coef: pending.coef, pending: true },
-  ];
-
-  return (
-    <div className={`fixed inset-0 z-[70] overflow-y-auto ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
-      <div className="min-h-full flex flex-col">
-        <div className="flex items-center justify-between px-4 sm:px-7 pt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex items-center gap-1.5 text-[13px] hover:text-[#c8603f] transition-colors"
-            style={{ color: VT.inkSoft }}
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15 19l-7-7 7-7" />
-            </svg>
-            Volver al panel
-          </button>
-          <span className={`${vtMono} text-[11px]`} style={{ color: VT.muted }}>Esc para cerrar</span>
-        </div>
-
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-12 px-4 sm:px-10 lg:px-[72px] py-8 lg:py-12">
-          {/* Dona */}
-          <div className="relative w-full max-w-[440px] aspect-square justify-self-center">
-            <svg viewBox="0 0 42 42" className="w-full h-full -rotate-90" role="img" aria-label={`Resultados por coeficiente. Quórum ${quorum}%`}>
-              <circle r={radius} cx="21" cy="21" fill="transparent" stroke={VT.border} strokeWidth="3" />
-              {donut}
-              <line x1="37.5" y1="21" x2="40.5" y2="21" stroke={VT.accent} strokeWidth=".7" transform={`rotate(${quorumDeg} 21 21)`} />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-10">
-              <div className={`${vtMono} text-xs tracking-[.08em]`} style={{ color: VT.muted }}>
-                {winner ? `${winner.label.toUpperCase()} · MAYORÍA` : 'SIN VOTOS AÚN'}
-              </div>
-              <div
-                className={`${vtMono} font-semibold leading-none tracking-[-.05em] mt-1.5 text-[clamp(48px,10vw,84px)]`}
-                style={{ color: winner ? winner.color : VT.muted }}
-              >
-                {formatPct(winner ? winner.pct : 0)}
-                <span className="text-[0.38em]" style={{ color: VT.muted }}>%</span>
-              </div>
-              <div className="text-[13px] mt-2.5" style={{ color: VT.inkSoft }}>
-                de coeficiente · participación {formatPct(participation)}%
-              </div>
-            </div>
-          </div>
-
-          {/* Tabla de resultados */}
-          <div className="flex flex-col gap-7 min-w-0">
-            <div>
-              <div className={`${vtMono} text-[11px] font-medium tracking-[.06em] mb-2`} style={{ color: VT.muted }}>
-                RESULTADOS · VOTACIÓN {formatOrder(displayOrder)}
-              </div>
-              <h1 className="m-0 text-2xl sm:text-[30px] leading-[1.15] font-semibold tracking-[-.02em]">{votingTitle}</h1>
-            </div>
-            <div className="flex flex-col">
-              {rows.map((r) => {
-                const isWinner = !r.pending && winner?.key === r.key;
-                return (
-                  <div
-                    key={r.key}
-                    className="grid grid-cols-[14px_1fr_auto] sm:grid-cols-[14px_1fr_auto_auto] gap-x-3.5 gap-y-1 items-center py-3.5"
-                    style={{ borderBottom: `1px solid ${VT.border}` }}
-                  >
-                    <span
-                      className="w-3.5 h-3.5 rounded-[3px]"
-                      style={{ background: r.color, border: `1px solid ${r.pending ? VT.pendingBorder : r.color}` }}
-                    />
-                    <span className="text-[17px] flex items-center gap-2 min-w-0" style={{ fontWeight: isWinner ? 600 : r.pending ? 400 : 500 }}>
-                      <span className="truncate">{r.label}</span>
-                      {isWinner && (
-                        <span
-                          className={`${vtMono} text-[10px] font-semibold tracking-[.06em] px-1.5 py-0.5 rounded`}
-                          style={{ background: VT.paper, color: VT.inkSoft, border: `1px solid ${VT.border}` }}
-                        >
-                          MAYORÍA
-                        </span>
-                      )}
-                    </span>
-                    <span className={`${vtMono} text-[13px] hidden sm:block`} style={{ color: VT.muted }}>
-                      {r.votes} un. · coef {formatCoef(r.coef)}
-                    </span>
-                    <span className={`${vtMono} text-2xl leading-none font-semibold tracking-[-.03em] min-w-[90px] text-right`}>
-                      {formatPct(r.pct)}%
-                    </span>
-                    <span className={`${vtMono} text-xs sm:hidden col-start-2 col-span-2`} style={{ color: VT.muted }}>
-                      {r.votes} un. · coef {formatCoef(r.coef)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex items-center gap-2.5 text-[13px]" style={{ color: VT.inkSoft }}>
-              <span className="w-0.5 h-4" style={{ background: VT.accent }} />
-              Quórum requerido {quorum}% ·{' '}
-              <strong style={{ color: status.fg }}>{status.label}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 interface VotingOption {
@@ -235,6 +85,12 @@ interface LiveVotingModalProps {
   options: VotingOption[];
   votes: Vote[];
   onVoteSuccess: () => void;
+  /** Nombre del grupo (enlace de vuelta en la cabecera). */
+  groupName?: string;
+  /** Total de votaciones del grupo (para "01 / 04"). */
+  votingsCount?: number | null;
+  /** Siguiente votación del grupo (botón "Siguiente votación" del resultado final). */
+  nextVoting?: { id: number; displayOrder: number; title: string } | null;
 }
 
 export function LiveVotingModal({
@@ -244,15 +100,29 @@ export function LiveVotingModal({
   voting,
   options,
   votes: initialVotes,
-  onVoteSuccess
+  onVoteSuccess,
+  groupName,
+  votingsCount,
+  nextVoting,
 }: LiveVotingModalProps) {
+  const router = useRouter();
+  // Estado abierto/cerrado local: "Cerrar votación" y "Reabrir" lo cambian sin recargar.
+  const [isActive, setIsActive] = useState<boolean>(!!voting?.isActive);
+  const [closedAt, setClosedAt] = useState<string | null>(voting && !voting.isActive ? voting.updatedAt : null);
+  const [view, setView] = useState<'panel' | 'result'>('panel');
+  const autoResultChecked = useRef(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [statusBusy, setStatusBusy] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [showQrStrip, setShowQrStrip] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const qr = useGroupQr(businessId, voting?.votingGroupId || 0);
   const [showVoteModal, setShowVoteModal] = useState(false);
   const [showBulkVoteModal, setShowBulkVoteModal] = useState(false);
   const [selectedUnitForVote, setSelectedUnitForVote] = useState<ResidentialUnit | null>(null);
   const [showDeleteVoteModal, setShowDeleteVoteModal] = useState(false);
   const [selectedUnitForDelete, setSelectedUnitForDelete] = useState<ResidentialUnit | null>(null);
   const [deletingVote, setDeletingVote] = useState(false);
-  const [showPieChart, setShowPieChart] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [useRealTime, setUseRealTime] = useState(true);
@@ -293,7 +163,7 @@ export function LiveVotingModal({
     businessId,
     voting?.votingGroupId || 0,
     voting?.id || 0,
-    isOpen && useRealTime && voting?.isActive
+    isOpen && useRealTime && isActive
   );
 
   const loadVotingDetails = useCallback(async () => {
@@ -701,6 +571,13 @@ export function LiveVotingModal({
   const currentVotes = useRealTime && sseConnected ? convertSSEVotesToFrontend(sseVotes) : safeInitialVotes;
   const currentTotalVotes = useRealTime && sseConnected ? sseTotalVotes : safeInitialVotes.length;
 
+  // A8: si la votación ya está cerrada y tiene votos, se abre directo en el resultado final.
+  useEffect(() => {
+    if (autoResultChecked.current || !votingDetails) return;
+    autoResultChecked.current = true;
+    if (!isActive && votingDetails.units_voted > 0) setView('result');
+  }, [votingDetails, isActive]);
+
   if (!isOpen || !voting) return null;
 
   // Nota: antes se generaban votos de ejemplo (mock) que no se usaban en el render;
@@ -732,6 +609,16 @@ export function LiveVotingModal({
 
   // Obtener unidades residenciales desde el endpoint
   const residentialUnits = convertToResidentialUnits();
+
+  // Ficha del registro manual (A7): coeficiente como % del total y asistencia por unidad
+  const totalCoefficient = votingDetails?.units.reduce((sum, u) => sum + (u.participation_coefficient || 0), 0) ?? 0;
+  const unitInfo: Record<number, { coefPct: number; hasAttendance: boolean }> = {};
+  votingDetails?.units.forEach((u) => {
+    unitInfo[u.property_unit_id] = {
+      coefPct: totalCoefficient > 0 ? ((u.participation_coefficient || 0) / totalCoefficient) * 100 : 0,
+      hasAttendance: u.has_attendance,
+    };
+  });
 
   const handleVote = () => {
     setShowVoteModal(true);
@@ -886,6 +773,51 @@ export function LiveVotingModal({
     setSelectedUnitForVote(null);
   };
 
+  // Cerrar / reabrir la votación (A6 → A8 y "Reabrir" en A8)
+  const changeVotingStatus = async (open: boolean) => {
+    const token = TokenStorage.getBusinessToken();
+    if (!token) return;
+    setStatusBusy(true);
+    setStatusError(null);
+    try {
+      const action = open ? activateVotingAction : deactivateVotingAction;
+      const res = await action({ token, businessId, groupId: voting.votingGroupId, votingId: voting.id });
+      if (!res.success) throw new Error(res.error || (open ? 'No se pudo reabrir la votación' : 'No se pudo cerrar la votación'));
+      setIsActive(open);
+      if (open) {
+        setClosedAt(null);
+        setView('panel');
+      } else {
+        setClosedAt(new Date().toISOString());
+        setView('result');
+      }
+      setShowCloseConfirm(false);
+    } catch (err) {
+      setStatusError(err instanceof Error ? err.message : 'No se pudo cambiar el estado de la votación');
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
+  const toggleQrStrip = async () => {
+    const next = !showQrStrip;
+    setShowQrStrip(next);
+    if (next && !qr.data && !qr.loading) await qr.generate();
+  };
+
+  const copyQrLink = async () => {
+    if (!qr.data) return;
+    try {
+      await navigator.clipboard.writeText(qr.data.publicUrl);
+    } catch {
+      /* el enlace sigue visible para copiarlo a mano */
+    }
+  };
+
+  const orderLabel = votingsCount
+    ? `${formatOrder(voting.displayOrder)} / ${formatOrder(votingsCount)}`
+    : formatOrder(voting.displayOrder);
+
   const secondaryButton =
     'h-8 px-3 rounded-md bg-white text-[13px] font-medium transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed';
 
@@ -906,19 +838,17 @@ export function LiveVotingModal({
                 className="flex items-center gap-1.5 text-[13px] hover:text-[#c8603f] transition-colors"
                 style={{ color: '#6b6a66' }}
               >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M15 19l-7-7 7-7" />
-                </svg>
-                Votaciones
+                <VtIcon name="back" size={16} />
+                {groupName || 'Votaciones'}
               </button>
               <div className="w-px h-[18px]" style={{ background: VT.border }} />
               <div className={`${vtMono} text-xs font-medium`} style={{ color: VT.muted }}>
-                {formatOrder(voting.displayOrder)}
+                {orderLabel}
               </div>
               <h1 className="m-0 text-[17px] font-semibold tracking-[-.01em] min-w-0 truncate max-w-[60vw] sm:max-w-none">
                 {voting.title}
               </h1>
-              {voting.isActive ? (
+              {isActive ? (
                 isLive ? (
                   <span className={`${vtMono} inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.live }}>
                     <span className="w-[7px] h-[7px] rounded-full animate-pulse" style={{ background: VT.live }} />
@@ -932,25 +862,39 @@ export function LiveVotingModal({
                 )
               ) : (
                 <span className={`${vtMono} text-[11px] font-medium tracking-[.06em] px-1.5 py-0.5 rounded`} style={{ color: VT.muted, border: `1px solid ${VT.borderStrong}` }}>
-                  INACTIVA
+                  CERRADA
                 </span>
               )}
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center flex-wrap">
               <button
                 type="button"
-                onClick={() => setIsLive(!isLive)}
-                className={secondaryButton}
+                onClick={toggleQrStrip}
+                className={`${secondaryButton} inline-flex items-center gap-1.5`}
                 style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
+                aria-expanded={showQrStrip}
+                aria-controls="live-qr-strip"
               >
-                {isLive ? 'Pausar' : 'Reanudar'}
+                <VtIcon name="qr" size={14} />
+                QR
               </button>
+              {isActive && (
+                <button
+                  type="button"
+                  onClick={() => setIsLive(!isLive)}
+                  className={secondaryButton}
+                  style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
+                  title="Pausa o reanuda la animación de en vivo en esta pantalla"
+                >
+                  {isLive ? 'Pausar' : 'Reanudar'}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setShowBulkVoteModal(true)}
                 className={secondaryButton}
                 style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
-                disabled={!voting.isActive}
+                disabled={!isActive}
                 title="Votación masiva"
               >
                 Masiva
@@ -960,10 +904,19 @@ export function LiveVotingModal({
                 onClick={handleVote}
                 className="h-8 px-3.5 rounded-md text-[13px] font-semibold text-white transition-colors hover:bg-[#c8603f] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a1a]"
                 style={{ background: VT.ink }}
-                disabled={!voting.isActive}
+                disabled={!isActive}
               >
                 Registrar voto
               </button>
+              {isActive ? (
+                <button type="button" className={vtBtn.accent} onClick={() => setShowCloseConfirm(true)} disabled={statusBusy}>
+                  Cerrar votación
+                </button>
+              ) : (
+                <button type="button" className={vtBtn.accent} onClick={() => setView('result')} disabled={!results}>
+                  Ver resultado
+                </button>
+              )}
               <div className="relative">
                 <button
                   type="button"
@@ -975,11 +928,7 @@ export function LiveVotingModal({
                   aria-label="Más acciones"
                   title="Más acciones"
                 >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="5" r="1" />
-                    <circle cx="12" cy="12" r="1" />
-                    <circle cx="12" cy="19" r="1" />
-                  </svg>
+                  <VtIcon name="more" size={16} />
                 </button>
                 {showMoreMenu && (
                   <>
@@ -994,13 +943,28 @@ export function LiveVotingModal({
                         role="menuitem"
                         onClick={() => {
                           setShowMoreMenu(false);
-                          setShowPieChart(true);
+                          setView('result');
                         }}
-                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f4]"
+                        disabled={!results}
+                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f4] disabled:opacity-50"
                         style={{ color: VT.ink }}
                       >
                         Ver resultados ampliados
                       </button>
+                      {!isActive && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            changeVotingStatus(true);
+                          }}
+                          className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f4]"
+                          style={{ color: VT.ink }}
+                        >
+                          Reabrir votación
+                        </button>
+                      )}
                       <button
                         type="button"
                         role="menuitem"
@@ -1008,7 +972,7 @@ export function LiveVotingModal({
                           setShowMoreMenu(false);
                           setShowResetConfirm(true);
                         }}
-                        disabled={!voting.isActive}
+                        disabled={!isActive}
                         className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ color: VT.live }}
                         title="Eliminar todos los votos de esta votación"
@@ -1021,6 +985,51 @@ export function LiveVotingModal({
               </div>
             </div>
           </div>
+
+          {/* QR plegable (A6) */}
+          {showQrStrip && (
+            <div
+              id="live-qr-strip"
+              className="flex flex-wrap items-center gap-5 px-4 sm:px-7 py-3.5 bg-white flex-shrink-0"
+              style={{ borderBottom: `1px solid ${VT.border}` }}
+            >
+              {qr.loading && <span className="text-[13px]" style={{ color: VT.muted }}>Generando código QR…</span>}
+              {qr.error && <span className="text-[13px]" style={{ color: VT.live }}>{qr.error}</span>}
+              {qr.data && (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={qr.data.qrDataUrl}
+                    alt={`Código QR para votar en ${qr.data.groupName}`}
+                    className="w-[104px] h-[104px] rounded-lg"
+                    style={{ border: `1px solid ${VT.border}` }}
+                  />
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                    <div className={`${vtMono} text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.muted }}>
+                      QR DEL GRUPO · {qr.data.votingsCount} {qr.data.votingsCount === 1 ? 'VOTACIÓN' : 'VOTACIONES'}
+                    </div>
+                    <div className={`${vtMono} text-[13px] truncate`} title={qr.data.publicUrl}>
+                      {qr.data.publicUrl.replace(/^https?:\/\//, '').split('?')[0]}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <button type="button" className={vtBtn.primary} onClick={() => setShowQrModal(true)}>
+                        Proyectar
+                      </button>
+                      <button type="button" className={vtBtn.ghost} onClick={copyQrLink}>
+                        Copiar enlace
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {statusError && (
+            <div className="px-4 sm:px-7 pt-3">
+              <VtNotice>{statusError}</VtNotice>
+            </div>
+          )}
 
           {/* Contenido */}
           <div className="flex-1 min-h-0 flex flex-col overflow-y-auto lg:overflow-hidden">
@@ -1055,14 +1064,7 @@ export function LiveVotingModal({
                 <div className="flex items-center justify-center h-full">
                   <div className="max-w-2xl mx-auto p-6 rounded-lg bg-white" style={{ border: `1px solid ${VT.border}` }}>
                     <p className="font-semibold mb-3" style={{ color: VT.live }}>Error de configuración de colores</p>
-                    <p className="text-sm leading-relaxed mb-4" style={{ color: VT.inkSoft }}>{colorConfigError}</p>
-                    <p className="text-sm mb-2" style={{ color: VT.inkSoft }}>Para solucionar este problema:</p>
-                    <ol className="text-sm list-decimal pl-5 space-y-1" style={{ color: VT.inkSoft }}>
-                      <li>Ve a la lista de votaciones</li>
-                      <li>Edita las opciones de votación que no tienen color</li>
-                      <li>Asigna un color a cada opción</li>
-                      <li>Guarda los cambios</li>
-                    </ol>
+                    <p className="text-sm leading-relaxed" style={{ color: VT.inkSoft }}>{colorConfigError}</p>
                   </div>
                 </div>
               ) : (
@@ -1072,7 +1074,7 @@ export function LiveVotingModal({
                   onVoteClick={handleVoteFromCard}
                   onDeleteVoteClick={handleDeleteVoteFromCard}
                   showVoteButton={true}
-                  votingActive={voting?.isActive || false}
+                  votingActive={isActive}
                   resolveColor={palette.forText}
                 />
               )}
@@ -1081,14 +1083,72 @@ export function LiveVotingModal({
         </div>
       </div>
 
-      {showPieChart && results && (
-        <ResultsOverlay
+      {/* A8 · Resultado (final si está cerrada; ampliado si sigue abierta) */}
+      {view === 'result' && results && (
+        <ResultsView
           results={results}
           quorum={quorum}
           votingTitle={voting.title}
           displayOrder={voting.displayOrder}
-          onClose={() => setShowPieChart(false)}
+          totalVotings={votingsCount}
+          closed={!isActive}
+          closedAt={closedAt}
+          backLabel={isActive ? 'Volver al panel' : 'Ver panel por unidad'}
+          onBack={() => setView('panel')}
+          actions={
+            !isActive ? (
+              <>
+                {nextVoting && (
+                  <button
+                    type="button"
+                    className={`${vtBtn.primary} h-10`}
+                    onClick={() =>
+                      router.push(`/properties/${businessId}/voting-groups/${voting.votingGroupId}/votings/${nextVoting.id}/live`)
+                    }
+                  >
+                    Siguiente votación · {formatOrder(nextVoting.displayOrder)}
+                  </button>
+                )}
+                <button type="button" className={`${vtBtn.ghost} h-10`} onClick={() => changeVotingStatus(true)} disabled={statusBusy}>
+                  {statusBusy ? 'Reabriendo…' : 'Reabrir'}
+                </button>
+                <button type="button" className={`${vtBtn.ghost} h-10`} onClick={onClose}>
+                  Volver a {groupName || 'las votaciones'}
+                </button>
+              </>
+            ) : undefined
+          }
         />
+      )}
+
+      {/* Confirmar cierre (A6 → A8) */}
+      <VtDialog
+        open={showCloseConfirm}
+        onClose={() => setShowCloseConfirm(false)}
+        busy={statusBusy}
+        eyebrow={`Votación ${orderLabel}`}
+        title="¿Cerrar la votación?"
+        width={460}
+        layer="over"
+        footer={
+          <>
+            <button type="button" className={vtBtn.ghost} onClick={() => setShowCloseConfirm(false)} disabled={statusBusy}>
+              Cancelar
+            </button>
+            <button type="button" className={vtBtn.primary} onClick={() => changeVotingStatus(false)} disabled={statusBusy}>
+              {statusBusy ? 'Cerrando…' : 'Cerrar y ver resultado'}
+            </button>
+          </>
+        }
+      >
+        <p className="m-0 text-sm leading-relaxed" style={{ color: VT.inkSoft }}>
+          Nadie más podrá votar en «{voting.title}». Podrás reabrirla desde el resultado si lo necesitas.
+        </p>
+        {statusError && <VtNotice>{statusError}</VtNotice>}
+      </VtDialog>
+
+      {showQrModal && qr.data && (
+        <GroupQRModal data={qr.data} validHours={GROUP_QR_VALID_HOURS} onClose={() => setShowQrModal(false)} />
       )}
 
       {/* Modal de Voto */}
@@ -1104,9 +1164,9 @@ export function LiveVotingModal({
           groupId={voting.votingGroupId}
           votingId={voting.id}
           votingTitle={voting.title}
-          votingType={voting.votingType}
-          allowAbstention={voting.allowAbstention}
+          displayOrder={voting.displayOrder}
           options={options}
+          unitInfo={unitInfo}
           currentVotes={sseVotes.map(vote => ({
             property_unit_id: vote.property_unit_id,
             voted_at: vote.voted_at

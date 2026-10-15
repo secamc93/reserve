@@ -8,13 +8,15 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { VT, votingFontRoot, vtMono } from '../design';
+import { VT, formatDayTime, votingFontRoot, vtMono } from '../design';
 
 export interface GroupQRData {
   qrDataUrl: string;
   publicUrl: string;
   groupName: string;
   votingsCount: number;
+  /** Fecha de vencimiento del enlace (ISO). */
+  expiresAt?: string;
 }
 
 interface GroupQRModalProps {
@@ -26,11 +28,27 @@ interface GroupQRModalProps {
 
 const votingsLabel = (count: number) => `${count} ${count === 1 ? 'votación' : 'votaciones'}`;
 
+/** "Da acceso a las 4 votaciones del grupo" */
+const accessLabel = (count: number) =>
+  count === 1 ? 'Da acceso a la votación del grupo' : `Da acceso a las ${count} votaciones del grupo`;
+
 /** URL legible (sin protocolo) para mostrar; el enlace real se conserva para copiar. */
 const displayUrl = (url: string) => url.replace(/^https?:\/\//, '');
 
+/** Host + ruta, sin el token (que es muy largo para leerlo). */
+const shortUrl = (url: string) => {
+  try {
+    const u = new URL(url);
+    return `${u.host}${u.pathname}`;
+  } catch {
+    return displayUrl(url).split('?')[0];
+  }
+};
+
 export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalProps) {
   const [copied, setCopied] = useState(false);
+  const [showFullUrl, setShowFullUrl] = useState(false);
+  const validUntil = data.expiresAt ? formatDayTime(new Date(data.expiresAt)).toUpperCase() : null;
   const [projecting, setProjecting] = useState(false);
   const projectorRef = useRef<HTMLDivElement>(null);
 
@@ -108,11 +126,11 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
           <div className="flex justify-between items-start gap-4">
             <div className="min-w-0">
               <div className={`${vtMono} text-[11px] font-medium tracking-[.06em] mb-1.5`} style={{ color: VT.muted }}>
-                QR DEL GRUPO · VÁLIDO {validHours} H
+                QR DEL GRUPO · {validUntil ? `VÁLIDO HASTA ${validUntil}` : `VÁLIDO ${validHours} H`}
               </div>
               <h2 id="group-qr-title" className="m-0 text-xl font-semibold tracking-[-.015em]">{data.groupName}</h2>
               <div className="text-[13px] mt-0.5" style={{ color: VT.muted }}>
-                Acceso a {votingsLabel(data.votingsCount)} del grupo
+                {accessLabel(data.votingsCount)}
               </div>
             </div>
             <button
@@ -138,11 +156,21 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
             />
             <div className="flex flex-col gap-2.5 min-w-0">
               <div
-                className={`${vtMono} px-3 py-2.5 rounded-lg text-xs leading-[1.45] break-all max-h-24 overflow-y-auto`}
+                className="px-3 py-2.5 rounded-lg flex flex-col gap-1"
                 style={{ border: `1px solid ${VT.border}`, background: VT.paper, color: VT.ink }}
                 title={data.publicUrl}
               >
-                {displayUrl(data.publicUrl)}
+                <span className={`${vtMono} text-[13px] font-medium ${showFullUrl ? 'break-all' : 'truncate'}`}>
+                  {showFullUrl ? data.publicUrl : shortUrl(data.publicUrl)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowFullUrl((v) => !v)}
+                  className="self-start text-[11px] underline-offset-2 hover:underline"
+                  style={{ color: VT.muted }}
+                >
+                  {showFullUrl ? 'ocultar enlace completo' : 'ver enlace completo'}
+                </button>
               </div>
               <button
                 type="button"
@@ -171,6 +199,9 @@ export function GroupQRModal({ data, validHours = 24, onClose }: GroupQRModalPro
                   Descargar PNG
                 </button>
               </div>
+              <p className="m-0 text-[11px] leading-snug" style={{ color: VT.muted }}>
+                Un solo QR para toda la asamblea. El residente se identifica una vez y vota en cada punto cuando lo abras.
+              </p>
             </div>
           </div>
         </div>

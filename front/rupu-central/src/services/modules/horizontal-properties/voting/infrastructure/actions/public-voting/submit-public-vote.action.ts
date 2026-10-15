@@ -25,6 +25,8 @@ export interface SubmitPublicVoteResult {
   };
   error?: string;
   message?: string;
+  /** Código HTTP de la respuesta (403 sin asistencia, 409 ya votó, 400 unidad u opción ajena). */
+  status?: number;
 }
 
 export async function submitPublicVoteAction(
@@ -63,12 +65,13 @@ export async function submitPublicVoteAction(
       return {
         success: false,
         error: result.error || result.message || 'Error al registrar voto',
-        message: result.message
+        message: result.message,
+        status: response.status
       };
     }
 
     console.log('✅ [ACTION] submitPublicVote - Voto registrado exitosamente');
-    return result;
+    return { ...result, status: response.status };
   } catch (error) {
     console.error('❌ [ACTION] submitPublicVote - Exception:', error);
     return {
