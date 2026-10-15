@@ -107,3 +107,6 @@ cam.pem
 # Backups de archivos de entorno (contienen secretos)
 .env.bak*
 **/.env.bak*
+
+# Salidas de las rondas de pruebas manuales
+.claude/testing/**/runs/

@@ -18,4 +18,4 @@ testing/<modulo>/
 
 | Módulo | Casos |
 |--------|-------|
-| `votaciones/` | grupo y votación, voto del admin, voto público por QR, panel en vivo |
+| `votaciones/` | grupo y votación, voto del admin, voto público por QR, panel en vivo. Back automatizado en `votaciones/back/ronda_api.py`; front en `front/rupu-central/e2e/` |
