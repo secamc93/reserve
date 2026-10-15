@@ -20,6 +20,7 @@ type VotingHandler struct {
 	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler
 	votesHandler         handlervotes.IVotesHandler
 	publicHandler        handlerpublic.IPublicHandler
+	scopeGuard           gin.HandlerFunc
 }
 
 // New crea el handler principal que orquesta todos los handlers modulares
@@ -30,6 +31,8 @@ func New(
 	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler,
 	votesHandler handlervotes.IVotesHandler,
 	publicHandler handlerpublic.IPublicHandler,
+	groupLookup GroupLookup,
+	votingLookup VotingLookup,
 ) *VotingHandler {
 	return &VotingHandler{
 		votingGroupsHandler:  votingGroupsHandler,
@@ -38,6 +41,7 @@ func New(
 		votingOptionsHandler: votingOptionsHandler,
 		votesHandler:         votesHandler,
 		publicHandler:        publicHandler,
+		scopeGuard:           ScopeGuard(groupLookup, votingLookup),
 	}
 }
 
@@ -46,6 +50,9 @@ func New(
 func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 	// Rutas privadas (requieren autenticación admin)
 	groups := router.Group("/horizontal-properties/voting-groups")
+	// Aislamiento multi-tenant: toda ruta con :group_id (y :voting_id) se valida contra la propiedad
+	// del token antes del handler. JWT primero para que el guard conozca el negocio.
+	groups.Use(middleware.JWT(), h.scopeGuard)
 	{
 		// handler-voting-groups: /horizontal-properties/voting-groups
 		h.votingGroupsHandler.Router(groups)

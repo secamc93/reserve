@@ -60,6 +60,8 @@ func newRouter(t *testing.T, repo domain.VotingRepository) (*gin.Engine, *cache.
 		handlervotingoptions.New(options, logger),
 		handlervotes.New(votes, logger),
 		handlerpublic.New(public, groups, votings, votes, results, shared, vc, testSecret, logger),
+		groups,
+		votings,
 	)
 	r := gin.New()
 	h.RegisterRoutes(r.Group("/api/v1"))

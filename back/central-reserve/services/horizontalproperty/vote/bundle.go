@@ -53,6 +53,8 @@ func New(db db.IDatabase, jwtSecret string, logger log.ILogger, router *gin.Rout
 		votingOptionsHandler,
 		votesHandler,
 		publicHandler,
+		votingGroupsUseCase,
+		votingsUseCase,
 	)
 	handler.RegisterRoutes(router)
 }
