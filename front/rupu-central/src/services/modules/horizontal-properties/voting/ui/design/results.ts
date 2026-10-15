@@ -7,7 +7,7 @@ import { buildOptionPalette, type PaletteOption, type ResultSegment } from './to
 
 export interface ResultUnitInput {
   hasVoted: boolean;
-  /** Coeficiente de participación de la unidad (sobre 100). */
+  /** Coeficiente de participación de la unidad (fracción o porcentaje: se normaliza por el total). */
   coef: number;
   optionId?: number | null;
   optionText?: string | null;
@@ -27,8 +27,10 @@ const norm = (value?: string | null) =>
   (value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
 
 /**
- * Suma coeficientes por opción. El total de coeficientes del conjunto es 100,
- * por lo que la suma de coeficientes es directamente el % legal.
+ * Suma coeficientes por opción y los expresa como % del total de coeficientes del conjunto.
+ * Los coeficientes pueden venir como fracción (suman 1, como documenta la API) o como
+ * porcentaje (suman 100): se normaliza por el total real, así el resultado es el % legal en
+ * ambos casos.
  */
 export function computeCoefficientResults(options: PaletteOption[], units: ResultUnitInput[]): CoefficientResults {
   const palette = buildOptionPalette(options);
@@ -62,12 +64,15 @@ export function computeCoefficientResults(options: PaletteOption[], units: Resul
     segments[index].coef += coef;
   });
 
+  const totalCoef = segments.reduce((sum, s) => sum + s.coef, 0) + pendingCoef;
+  const toPct = (coef: number) => (totalCoef > 0 ? Math.max(0, (coef / totalCoef) * 100) : 0);
+
   segments.forEach((s) => {
-    s.pct = Math.max(0, s.coef);
+    s.pct = toPct(s.coef);
   });
 
-  const pendingPct = Math.max(0, pendingCoef);
-  const participation = Math.max(0, Math.min(100, 100 - pendingPct));
+  const pendingPct = toPct(pendingCoef);
+  const participation = totalCoef > 0 ? Math.max(0, Math.min(100, 100 - pendingPct)) : 0;
 
   return {
     segments,
