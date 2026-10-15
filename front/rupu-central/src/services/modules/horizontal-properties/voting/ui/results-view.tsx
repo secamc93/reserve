@@ -19,6 +19,7 @@ import {
   vtMono,
   type CoefficientResults,
 } from './design';
+import { VOTING_TIME_ZONE } from './design/status';
 
 interface ResultsViewProps {
   results: CoefficientResults;
@@ -43,7 +44,7 @@ const timeOf = (iso?: string | null) => {
   const date = new Date(iso);
   return Number.isNaN(date.getTime())
     ? null
-    : date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+    : date.toLocaleTimeString('es-CO', { timeZone: VOTING_TIME_ZONE, hour: '2-digit', minute: '2-digit', hour12: false });
 };
 
 export function ResultsView({

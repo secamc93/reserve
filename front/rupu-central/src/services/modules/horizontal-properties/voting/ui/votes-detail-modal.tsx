@@ -9,6 +9,7 @@ import { Modal, Spinner, Badge, Table, type TableColumn } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { getVotesAction } from '../infrastructure/actions';
 import { useIsMobile, mobileColumn, MobileCard } from '@/services/mobile-ui';
+import { VOTING_TIME_ZONE } from './design/status';
 
 interface Vote {
   id: number;
@@ -83,7 +84,7 @@ export function VotesDetailModal({
 
   const isMobile = useIsMobile();
   const formatVotedAt = (value: unknown) =>
-    new Date(String(value)).toLocaleDateString('es-ES', {
+    new Date(String(value)).toLocaleDateString('es-ES', { timeZone: VOTING_TIME_ZONE,
       year: 'numeric',
       month: 'short',
       day: 'numeric',

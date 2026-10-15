@@ -32,6 +32,7 @@ import {
   votingFontRoot,
   vtMono,
 } from '../design';
+import { VOTING_TIME_ZONE } from '../design/status';
 
 type VotingInfo = NonNullable<GetVotingInfoResult['data']>;
 
@@ -55,7 +56,7 @@ interface PublicVotingScreenProps {
 
 const formatTime = (iso?: string) => {
   const date = iso ? new Date(iso) : new Date();
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('es-CO', { timeZone: VOTING_TIME_ZONE, hour: '2-digit', minute: '2-digit', hour12: false });
 };
 
 export function PublicVotingScreen({

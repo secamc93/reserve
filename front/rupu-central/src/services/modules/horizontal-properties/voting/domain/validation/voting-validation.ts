@@ -131,14 +131,14 @@ export function validateVotingPeriod(
   if (now < start) {
     return {
       isActive: false,
-      message: `La votación aún no ha comenzado. Inicia el ${start.toLocaleString()}`,
+      message: `La votación aún no ha comenzado. Inicia el ${start.toLocaleString('es-CO', { timeZone: 'America/Bogota' })}`,
     };
   }
 
   if (now > end) {
     return {
       isActive: false,
-      message: `La votación ha finalizado. Terminó el ${end.toLocaleString()}`,
+      message: `La votación ha finalizado. Terminó el ${end.toLocaleString('es-CO', { timeZone: 'America/Bogota' })}`,
     };
   }
 

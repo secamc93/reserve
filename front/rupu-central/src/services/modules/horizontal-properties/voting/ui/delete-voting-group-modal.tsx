@@ -9,6 +9,7 @@ import { Modal, Spinner, Alert } from '@shared/ui';
 import { TokenStorage } from '@shared/config';
 import { VotingGroup } from '../domain/entities';
 import { deleteVotingGroupAction } from '../infrastructure/actions/delete-voting-group.action';
+import { VOTING_TIME_ZONE } from './design/status';
 
 interface DeleteVotingGroupModalProps {
   isOpen: boolean;
@@ -112,7 +113,7 @@ export function DeleteVotingGroupModal({
             <div>
               <span className="font-medium text-gray-700">Fecha de inicio:</span>
               <span className="ml-2 text-gray-900">
-                {new Date(group.votingStartDate).toLocaleDateString('es-ES', {
+                {new Date(group.votingStartDate).toLocaleDateString('es-ES', { timeZone: VOTING_TIME_ZONE,
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
@@ -124,7 +125,7 @@ export function DeleteVotingGroupModal({
             <div>
               <span className="font-medium text-gray-700">Fecha de fin:</span>
               <span className="ml-2 text-gray-900">
-                {new Date(group.votingEndDate).toLocaleDateString('es-ES', {
+                {new Date(group.votingEndDate).toLocaleDateString('es-ES', { timeZone: VOTING_TIME_ZONE,
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
