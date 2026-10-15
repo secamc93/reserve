@@ -5,7 +5,7 @@ Uso (desde la raíz): set -a && . ./.env.test && set +a && API=http://localhost:
 Resultados de cada corrida: .claude/testing/votaciones/back/runs/ (ignorado por git).
 Crea datos con sufijo de corrida y limpia los grupos de votación que crea.
 """
-import json, os, sys, time, urllib.request, urllib.error
+import json, os, queue, sys, threading, time, urllib.request, urllib.error
 
 API = os.environ.get("API", "http://localhost:3050/api/v1")
 EMAIL, PASSWORD = os.environ["E2E_EMAIL"], os.environ["E2E_PASSWORD"]
@@ -35,6 +35,51 @@ def call(method, path, token=None, body=None, query=None):
             return e.code, json.loads(raw)
         except Exception:
             return e.code, {"raw": raw[:300]}
+
+
+def open_sse(path, token, query=None):
+    """Abre un stream SSE en un hilo y devuelve una cola de (evento, data)."""
+    url = API + path + "?" + "&".join(f"{k}={v}" for k, v in {**(query or {}), "token": token}.items())
+    q = queue.Queue()
+
+    def run():
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url), timeout=60) as r:
+                q.put(("__status__", r.status))
+                ev = None
+                for raw in r:
+                    line = raw.decode().rstrip("\n")
+                    if line.startswith("event:"):
+                        ev = line[6:].strip()
+                    elif line.startswith("data:"):
+                        q.put((ev, json.loads(line[5:].strip())))
+        except urllib.error.HTTPError as e:
+            q.put(("__status__", e.code))
+        except Exception as e:  # noqa: BLE001 - se reporta en la cola
+            q.put(("__error__", str(e)))
+
+    threading.Thread(target=run, daemon=True).start()
+    return q
+
+
+def sse_wait(q, name, timeout=10):
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            ev, d = q.get(timeout=max(0.1, end - time.time()))
+        except queue.Empty:
+            break
+        if ev in ("heartbeat", "__status__"):
+            continue
+        return ev, d
+    return (None, None)
+
+
+def count_of(d, option_id):
+    for x in (d or {}).get("results") or []:
+        if x.get("voting_option_id") == option_id:
+            return x.get("vote_count")
+    return None
 
 
 def check(name, ok, detail=""):
@@ -126,8 +171,10 @@ check("crear grupo", st in (200, 201) and r.get("success"), f"{st} {r}")
 GID = find_id(data(r))
 st, r = call("GET", "/horizontal-properties/voting-groups", BT, query=Q)
 check("listar grupos incluye el creado", st == 200 and any(find_id(g) == GID for g in as_list(data(r))), f"{st}")
+check("grupo nuevo con require_document_validation=false por defecto",
+      any(find_id(g) == GID and g.get("require_document_validation") is False for g in as_list(data(r))), f"{as_list(data(r))[:1]}")
 st, r = call("PUT", f"/horizontal-properties/voting-groups/{GID}", BT, {**grp, "description": "Editado"}, Q)
-check("actualizar grupo", st == 200 and r.get("success"), f"{st} {r}")
+check("actualizar grupo", st == 200 and r.get("success") and data(r).get("require_document_validation") is False, f"{st} {r}")
 
 vt = {"title": f"Aprobación presupuesto {RUN}", "description": "Votación QA", "voting_type": "majority",
       "is_secret": False, "allow_abstention": True, "display_order": 1, "required_percentage": 51}
@@ -194,17 +241,45 @@ st, r = call("POST", f"/horizontal-properties/voting-groups/{GID}/generate-publi
 check("generar URL pública del grupo", st in (200, 201) and r.get("success"), f"{st} {r}")
 PT = data(r).get("token")
 st, r = call("GET", "/public/voting-context", PT)
-check("public voting-context", st == 200, f"{st} {r}")
+check("public voting-context (require_document_validation=false)", st == 200 and data(r).get("require_document_validation") is False, f"{st} {r}")
 st, r = call("GET", "/public/property-units", PT)
 check("public unidades (token del QR)", st == 200, f"{st} {r}")
 u4 = unit_ids[4]
+
+# Grupo que exige documento (require_document_validation=true)
+st, r = call("PUT", f"/horizontal-properties/voting-groups/{GID}", BT, {**grp, "require_document_validation": True}, Q)
+check("activar require_document_validation en el grupo", st == 200 and data(r).get("require_document_validation") is True, f"{st} {r}")
+st, r = call("GET", "/public/voting-context", PT)
+check("public voting-context (require_document_validation=true)", st == 200 and data(r).get("require_document_validation") is True, f"{st} {r}")
+st, r = call("POST", "/public/validate-resident", PT, {"property_unit_id": u4})
+check("con documento: validar sin dni -> 400 Documento requerido", st == 400 and r.get("message") == "Documento requerido", f"{st} {r}")
 st, r = call("POST", "/public/validate-resident", PT, {"property_unit_id": u4, "dni": "999999999"})
-check("validar residente con DNI erróneo rechazado", st >= 400, f"{st} {r}")
+check("con documento: DNI erróneo -> 404", st == 404, f"{st} {r}")
 st, r = call("POST", "/public/validate-resident", PT, {"property_unit_id": u4, "dni": f"90000{u4:04d}"})
-check("validar residente", st == 200 and r.get("success"), f"{st} {r}")
+check("con documento: validar residente con DNI", st == 200 and r.get("success") and data(r).get("require_document_validation") is True, f"{st} {r}")
+
+# Grupo sin documento: basta la unidad (el voto es por unidad)
+st, r = call("PUT", f"/horizontal-properties/voting-groups/{GID}", BT, {**grp, "require_document_validation": False}, Q)
+check("desactivar require_document_validation en el grupo", st == 200 and data(r).get("require_document_validation") is False, f"{st} {r}")
+st, r = call("POST", "/public/validate-resident", PT, {"property_unit_id": 999999999})
+check("sin documento: unidad inexistente/ajena -> 404", st == 404, f"{st} {r}")
+st, r = call("POST", "/public/validate-resident", PT, {"property_unit_id": u4})
+check("sin documento: validar solo con la unidad", st == 200 and r.get("success") and data(r).get("resident_name") and data(r).get("require_document_validation") is False, f"{st} {r}")
 VAT = data(r).get("voting_auth_token")
 st, r = call("GET", "/public/voting-group/votings", VAT)
-check("public votaciones del grupo (token de residente)", st == 200 and r.get("success"), f"{st} {r}")
+check("public votaciones del grupo (token de residente)", st == 200 and r.get("success")
+      and (data(r).get("voting_group") or {}).get("require_document_validation") is False, f"{st} {r}")
+
+# SSE público con el token del residente de grupo + voting_id
+SSE = open_sse("/public/voting-stream", VAT, {"voting_id": VID})
+ev, d = sse_wait(SSE, "connected")
+check("SSE público: connected", ev == "connected", f"{ev} {d}")
+ev, d = sse_wait(SSE, "initial_data")
+check("SSE público: initial_data con resultados", ev == "initial_data" and count_of(d, opts["SI"]) is not None
+      and all("percentage_by_coefficient" in x for x in d.get("results", [])), f"{ev} {d}")
+si_inicial = count_of(d, opts["SI"]) or 0
+st, _ = call("GET", "/public/voting-stream", None, {"voting_id": VID})
+check("SSE público sin token -> 401", st == 401, f"{st}")
 st, r = call("GET", "/public/units-with-residents", VAT)
 check("public unidades con residentes (token de residente)", st == 200, f"{st} {r}")
 st, r = call("GET", "/public/voting-info", VAT, query={"voting_id": VID})
@@ -215,6 +290,8 @@ st, r = call("PUT", f"{VP}/{VID}/units/{u4}/attendance", BT, {"mark_attendance":
 check("admin marca asistencia de la unidad del QR", st == 200, f"{st} {r}")
 st, r = call("POST", "/public/vote", VAT, {"voting_id": VID, "voting_option_id": opts["SI"]})
 check("voto público Sí", st in (200, 201) and r.get("success"), f"{st} {r}")
+ev, d = sse_wait(SSE, "new_vote")
+check("SSE público: new_vote con el conteo nuevo", ev == "new_vote" and count_of(d, opts["SI"]) == si_inicial + 1, f"{ev} {d}")
 st, r = call("POST", "/public/vote", VAT, {"voting_id": VID, "voting_option_id": opts["NO"]})
 check("voto público duplicado -> 409", st == 409, f"{st} {r}")
 st, r = call("POST", "/public/vote", BT, {"voting_id": VID, "voting_option_id": opts["SI"]})
@@ -231,6 +308,8 @@ st, r = call("PATCH", f"{VP}/{VID}/deactivate", BT, query=Q)
 check("desactivar votación", st == 200 and r.get("success"), f"{st} {r}")
 st, r = call("DELETE", f"{VV}/reset", BT, query=Q)
 check("resetear votos", st in (200, 204), f"{st} {r}")
+ev, d = sse_wait(SSE, "votes_reset")
+check("SSE público: votes_reset con conteo 0", ev == "votes_reset" and count_of(d, opts["SI"]) == 0, f"{ev} {d}")
 st, r = call("GET", VV, BT, query=Q)
 check("tras reset 0 votos", len(as_list(data(r))) == 0, f"{len(as_list(data(r)))}")
 st, r = call("DELETE", f"{VP}/{VID}", BT, query=Q)

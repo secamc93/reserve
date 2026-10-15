@@ -3,6 +3,7 @@
 | Fecha | Entorno | Caso | Resultado | Evidencia | Bug / commit |
 |-------|---------|------|-----------|-----------|--------------|
 | 2026-10-14 | worktree `ronda-votaciones` (back :3060, BD `rupu_ronda_votaciones`) | Ronda API (`ronda_api.py`: CU-01, CU-02, CU-03) | FAIL → OK | 1ª corrida 53/58; tras arreglos **57/57** en 3 corridas seguidas | ver abajo |
+| 2026-10-15 | worktree `votopub-back` (back :3060, BD `rupu_votopub_back`) | Ronda API con `require_document_validation` (true/false) y SSE público con token de grupo | OK | **69/69** | rama `wt/votopub-back` |
 
 ### Bugs encontrados y corregidos en la ronda (2026-10-14)
 
