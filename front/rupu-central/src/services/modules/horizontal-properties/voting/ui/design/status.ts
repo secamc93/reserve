@@ -145,9 +145,16 @@ export const toBackendVotingType = (type?: string | null): BackendVotingType =>
 
 // ===================== Fechas =====================
 
-const dayFormatter = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
-const timeFormatter = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
-const shortDayFormatter = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short' });
+/**
+ * Zona horaria de las fechas del módulo: la de las propiedades (America/Bogota, la que se asigna al
+ * crearlas). Sin fijarla, el formato dependía de la zona de quien renderiza (en el servidor o el CI,
+ * UTC): una asamblea que termina en la noche de Colombia mostraba el día siguiente.
+ */
+export const VOTING_TIME_ZONE = 'America/Bogota';
+
+const dayFormatter = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric', timeZone: VOTING_TIME_ZONE });
+const timeFormatter = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: VOTING_TIME_ZONE });
+const shortDayFormatter = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', timeZone: VOTING_TIME_ZONE });
 
 const clean = (value: string) => value.replace(/\./g, '').replace(/\s+de\s+/g, ' ');
 
