@@ -131,11 +131,11 @@ export default function AttendanceListPage() {
       
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="mb-4 md:mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+            className="flex items-center gap-2 min-h-[44px] md:min-h-0 text-gray-600 hover:text-gray-900 transition-colors mb-2 md:mb-4"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -143,7 +143,7 @@ export default function AttendanceListPage() {
             Volver
           </button>
 
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">
             {attendanceList.title}
           </h1>
           {attendanceList.description && (
@@ -156,7 +156,7 @@ export default function AttendanceListPage() {
             <button
               onClick={handleDeleteList}
               disabled={deleting}
-              className="btn btn-outline text-red-600 border-red-300 hover:bg-red-50"
+              className="btn btn-outline w-full md:w-auto min-h-[44px] md:min-h-0 text-red-600 border-red-300 hover:bg-red-50"
             >
               {deleting ? 'Eliminando...' : 'Eliminar lista'}
             </button>

@@ -19,7 +19,7 @@ export default function ReservationsPage() {
     <div>
       {/* Navegación */}
 
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <ReservationsTable businessId={businessId} />
       </div>
     </div>

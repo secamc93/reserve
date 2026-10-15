@@ -47,15 +47,31 @@ export default function ParkingPage() {
     <div>
       {/* Navegación */}
 
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Gestión de Parqueaderos</h1>
-        <p className="text-gray-600 mb-6">
+      <div className="p-3 md:p-6">
+        <h1 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">Gestión de Parqueaderos</h1>
+        <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
           Administra las zonas de parqueo, espacios individuales, asignaciones permanentes y reservas temporales.
         </p>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8">
+        {/* Teléfono: selector de sección a ancho completo (las 4 pestañas no caben) */}
+        <div className="md:hidden mb-4">
+          <label htmlFor="parking-section" className="block text-xs font-medium uppercase tracking-wide text-gray-500 mb-1">
+            Sección
+          </label>
+          <select
+            id="parking-section"
+            value={activeTab}
+            onChange={(e) => changeTab(e.target.value as typeof activeTab)}
+            className="w-full min-h-[44px] rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-900"
+          >
+            {tabs.map((tab) => (
+              <option key={tab.id} value={tab.id}>{tab.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="hidden md:block border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8" aria-label="Secciones de parqueaderos">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -76,7 +92,7 @@ export default function ParkingPage() {
         </div>
 
         {/* Contenido según tab activo */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="md:bg-white md:rounded-lg md:shadow md:p-6">
           {activeTab === 'zones' && <ParkingZonesTable businessId={businessId} />}
           {activeTab === 'slots' && <ParkingSlotsTable businessId={businessId} />}
           {activeTab === 'assignments' && <ParkingAssignmentsTable businessId={businessId} />}

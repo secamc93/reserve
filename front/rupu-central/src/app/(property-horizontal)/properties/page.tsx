@@ -58,11 +58,11 @@ export default function PropertiesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-3 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Propiedad Horizontal</h1>
-          <p className="text-gray-600 mt-2">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Propiedad Horizontal</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">
             Selecciona un negocio en el dropdown superior para ver su detalle
           </p>
         </div>
