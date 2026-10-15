@@ -323,7 +323,7 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
           </div>
         )}
 
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4 border-t border-gray-200 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
           <Button
             type="button"
             variant="outline"

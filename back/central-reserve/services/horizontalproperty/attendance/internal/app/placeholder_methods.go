@@ -2,6 +2,7 @@ package app
 
 import (
 	"central_reserve/services/horizontalproperty/attendance/internal/domain"
+	"central_reserve/shared/pagination"
 	"context"
 	"fmt"
 	"time"
@@ -21,12 +22,7 @@ func (uc *AttendanceUseCase) GetAttendanceListByVotingGroup(ctx context.Context,
 
 func (uc *AttendanceUseCase) ListAttendanceListsPaged(ctx context.Context, businessID uint, filters map[string]interface{}, page, pageSize int) (*domain.PaginatedAttendanceListsDTO, error) {
 	// Validar parámetros
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	lists, total, err := uc.attendanceRepo.ListAttendanceListsPaged(ctx, businessID, filters, page, pageSize)
 	if err != nil {
@@ -160,12 +156,7 @@ func (uc *AttendanceUseCase) GetActiveProxiesByPropertyUnit(ctx context.Context,
 
 func (uc *AttendanceUseCase) ListProxiesPaged(ctx context.Context, businessID uint, filters map[string]interface{}, page, pageSize int) (*domain.PaginatedProxiesDTO, error) {
 	// Validar parámetros
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	proxies, total, err := uc.attendanceRepo.ListProxiesPaged(ctx, businessID, filters, page, pageSize)
 	if err != nil {
@@ -328,6 +319,7 @@ func (uc *AttendanceUseCase) GetAttendanceRecordByID(ctx context.Context, id uin
 
 
 func (uc *AttendanceUseCase) GetAttendanceRecordsByListPaged(ctx context.Context, attendanceListID uint, unitNumber string, attended *bool, page int, pageSize int) (*domain.PaginatedAttendanceRecordsDTO, error) {
+	page, pageSize = pagination.Normalize(page, pageSize)
 	records, total, err := uc.attendanceRepo.GetAttendanceRecordsByListPaged(ctx, attendanceListID, unitNumber, attended, page, pageSize)
 	if err != nil {
 		return nil, err

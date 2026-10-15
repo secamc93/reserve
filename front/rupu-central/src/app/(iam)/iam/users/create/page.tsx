@@ -111,10 +111,10 @@ export default function CreateUserPage() {
   ];
 
   return (
-    <div className="p-8 w-full">
+    <div className="p-3 md:p-8 w-full">
       <div className="w-full">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-4 md:mb-8">
           <div className="flex items-center gap-4 mb-4">
             <Button
               variant="outline"
@@ -126,8 +126,8 @@ export default function CreateUserPage() {
               Volver
             </Button>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <UserGroupIcon className="w-8 h-8 mr-2" />
+          <h1 className="text-xl md:text-3xl font-bold text-gray-900 flex items-center">
+            <UserGroupIcon className="w-6 h-6 md:w-8 md:h-8 mr-2" />
             Crear Usuario
           </h1>
           <p className="mt-2 text-gray-600">
@@ -228,7 +228,7 @@ export default function CreateUserPage() {
             </div>
 
             {/* Botones */}
-            <div className="flex gap-4 justify-end">
+            <div className="flex flex-col-reverse md:flex-row gap-4 justify-end [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
               <Button
                 type="button"
                 variant="outline"

@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { getCommonAreasAction } from '../infrastructure/actions/get-common-areas.action';
 import { CommonAreaListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
+import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
@@ -16,11 +18,11 @@ interface CommonAreasTableProps {
 }
 
 export function CommonAreasTable({ businessId }: CommonAreasTableProps) {
+  const isMobile = useIsMobile();
   const [commonAreas, setCommonAreas] = useState<CommonAreaListDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -119,10 +121,10 @@ export function CommonAreasTable({ businessId }: CommonAreasTableProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Zonas Comunes</h1>
-        <Button onClick={() => setIsCreateModalOpen(true)}>Nueva Zona Común</Button>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+        <h1 className="text-xl md:text-2xl font-bold">Zonas Comunes</h1>
+        <Button onClick={() => setIsCreateModalOpen(true)} className="w-full md:w-auto min-h-[44px] md:min-h-0 justify-center">Nueva Zona Común</Button>
       </div>
 
       <CreateCommonAreaModal
@@ -143,18 +145,20 @@ export function CommonAreasTable({ businessId }: CommonAreasTableProps) {
 
       <Table
         data={commonAreas}
-        columns={columns}
+        columns={isMobile ? mobileColumn<CommonAreaListDTO>('Zonas comunes', (area) => (
+          <MobileCard
+            title={area.name}
+            subtitle={area.typeName}
+            badge={<span className={`text-sm font-medium ${area.isActive ? 'text-green-600' : 'text-red-600'}`}>{area.isActive ? 'Activa' : 'Inactiva'}</span>}
+            fields={[
+              { label: 'Ubicación', value: area.location || '-' },
+              { label: 'Capacidad', value: String(area.maxCapacity) },
+              { label: 'Requiere aprobación', value: area.requiresApproval ? 'Sí' : 'No', full: true },
+            ]}
+          />
+        )) : columns}
         loading={loading}
-        pagination={{
-          currentPage: page,
-          totalItems: total,
-          totalPages: Math.ceil(total / pageSize),
-          itemsPerPage: pageSize,
-          onPageChange: setPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total }}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import (
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/resources/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			page				query		int						false	"Número de página"							default(1)	minimum(1)
-//	@Param			page_size			query		int						false	"Tamaño de página"							default(10)	minimum(1)	maximum(100)
+//	@Param			page_size			query		int						false	"Tamaño de página"							default(10)	minimum(1)	maximum(200)
 //	@Param			name				query		string					false	"Filtrar por nombre (búsqueda parcial)"
 //	@Param			description			query		string					false	"Filtrar por descripción (búsqueda parcial)"
 //	@Param			business_type_id	query		int						false	"Filtrar por tipo de business (incluye genéricos)"
@@ -45,6 +46,17 @@ func (h *ResourceHandler) GetResourcesHandler(c *gin.Context) {
 		})
 		return
 	}
+
+	page, pageSize, err := pagination.Resolve(req.Page, req.PageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: "Parámetros de paginación inválidos",
+			Error:   err.Error(),
+		})
+		return
+	}
+	req.Page, req.PageSize = page, pageSize
 
 	// Determinar business_type_id según permisos
 	var businessTypeID *uint

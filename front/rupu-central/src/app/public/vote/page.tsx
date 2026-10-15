@@ -13,6 +13,7 @@ import { PublicVotingsList } from '@/services/modules/horizontal-properties/voti
 import { PublicVotingScreen } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-screen';
 import { PublicVotingProgress } from '@/services/modules/horizontal-properties/voting/ui/public-voting/public-voting-progress';
 import { Spinner } from '@shared/ui';
+import { VT, formatOrder, votingFontRoot } from '@/services/modules/horizontal-properties/voting/ui/design';
 import type { GroupVoting } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
 
 interface VotingParams {
@@ -51,13 +52,14 @@ interface ResidentData {
 
 function PublicVotePageContent() {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState<'context' | 'validation' | 'voting-list' | 'voting' | 'progress' | 'success' | 'error'>('context');
+  const [step, setStep] = useState<'context' | 'validation' | 'voting-list' | 'voting' | 'progress' | 'error'>('context');
   const [votingParams, setVotingParams] = useState<VotingParams | null>(null);
   const [votingContext, setVotingContext] = useState<VotingContextData | null>(null);
   const [votingAuthToken, setVotingAuthToken] = useState<string | null>(null);
   const [residentData, setResidentData] = useState<ResidentData | null>(null);
   const [selectedVotingId, setSelectedVotingId] = useState<number | null>(null);
   const [selectedVoting, setSelectedVoting] = useState<GroupVoting | null>(null);
+  const [groupVotingsTotal, setGroupVotingsTotal] = useState<number | null>(null);
   const [isGroupToken, setIsGroupToken] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -151,10 +153,10 @@ function PublicVotePageContent() {
     }
   };
 
-  const handleSelectVoting = (votingId: number, voting: GroupVoting) => {
-    console.log('📋 [PUBLIC VOTE] Votación seleccionada:', votingId, voting.title);
+  const handleSelectVoting = (votingId: number, voting: GroupVoting, total: number) => {
     setSelectedVotingId(votingId);
     setSelectedVoting(voting);
+    setGroupVotingsTotal(total);
     setStep('voting');
   };
 
@@ -169,52 +171,25 @@ function PublicVotePageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Cargando votación...</p>
-        </div>
+      <div className={`min-h-screen flex items-center justify-center ${votingFontRoot}`} style={{ background: VT.paper }}>
+        <Spinner size="lg" text="Cargando votación..." />
       </div>
     );
   }
 
   if (error || step === 'error') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
-          <div className="text-center">
-            <div className="text-red-500 text-6xl mb-4">❌</div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Error de Acceso</h1>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="btn btn-primary"
-            >
-              Reintentar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 'success') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
-          <div className="text-center">
-            <div className="text-green-500 text-6xl mb-4">✅</div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">¡Voto Registrado!</h1>
-            <p className="text-gray-600 mb-4">
-              Su voto ha sido registrado exitosamente. Gracias por participar.
-            </p>
-            <button
-              onClick={() => window.close()}
-              className="btn btn-primary"
-            >
-              Cerrar
-            </button>
-          </div>
+      <div className={`min-h-screen flex items-center justify-center p-[22px] ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
+        <div className="max-w-[420px] w-full bg-white rounded-[10px] p-6 text-center" style={{ border: `1px solid ${VT.border}` }} role="alert">
+          <h1 className="m-0 text-xl font-semibold">No pudimos abrir la votación</h1>
+          <p className="mt-2 mb-5 text-sm leading-normal" style={{ color: VT.inkSoft }}>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="h-11 px-5 rounded-lg text-white text-sm font-semibold"
+            style={{ background: VT.ink }}
+          >
+            Reintentar
+          </button>
         </div>
       </div>
     );
@@ -225,7 +200,7 @@ function PublicVotePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: VT.paper }}>
       {step === 'context' && votingParams && (
         <PublicVotingContext
           publicToken={votingParams.token}
@@ -264,6 +239,13 @@ function PublicVotePageContent() {
           votingAuthToken={votingAuthToken}
           residentData={residentData}
           selectedVotingId={selectedVotingId}
+          orderLabel={
+            selectedVoting && groupVotingsTotal
+              ? `${formatOrder(selectedVoting.display_order)} / ${formatOrder(groupVotingsTotal)}`
+              : undefined
+          }
+          isGroupToken={isGroupToken}
+          onBack={isGroupToken ? () => setStep('voting-list') : undefined}
           onSuccess={handleVoteSuccess}
           onError={handleError}
         />

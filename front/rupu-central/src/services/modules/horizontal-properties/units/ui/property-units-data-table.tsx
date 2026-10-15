@@ -8,12 +8,11 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Upload,
   Filter
 } from 'lucide-react';
 import { PropertyUnit, UNIT_TYPE_LABELS } from '../domain';
+import { Pagination } from '@shared/ui/pagination';
 
 // ============================================================================
 // TIPOS E INTERFACES
@@ -46,11 +45,9 @@ export interface PropertyUnitsDataTableProps {
   onFilterRemove?: (filterId: string) => void;
   onClearAllFilters?: () => void;
   onAddFilter?: (filterKey: string, value: any) => void;
-  currentPage?: number;
+  /** page/page_size viven en la URL (ver usePaginationParams); aquí solo los totales del back. */
   totalPages?: number;
   totalItems?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
   loading?: boolean;
 }
 
@@ -69,11 +66,8 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
   onFilterRemove,
   onClearAllFilters,
   onAddFilter,
-  currentPage = 1,
-  totalPages = 10,
+  totalPages,
   totalItems = 0,
-  pageSize = 10,
-  onPageChange,
   loading = false
 }) => {
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
@@ -140,91 +134,6 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
     }
   };
 
-  // Renderizar páginas para paginación
-  const renderPageNumbers = () => {
-    const pages = [];
-
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(
-          <button
-            key={i}
-            onClick={() => onPageChange?.(i)}
-            className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-              currentPage === i
-                ? 'bg-[#42A5F5] text-white'
-                : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-            }`}
-          >
-            {i}
-          </button>
-        );
-      }
-    } else {
-      pages.push(
-        <button
-          key={1}
-          onClick={() => onPageChange?.(1)}
-          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-            currentPage === 1
-              ? 'bg-[#42A5F5] text-white'
-              : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-          }`}
-        >
-          1
-        </button>
-      );
-
-      if (currentPage > 3) {
-        pages.push(
-          <div key="dots1" className="px-2 text-[#757575]">
-            ...
-          </div>
-        );
-      }
-
-      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-        pages.push(
-          <button
-            key={i}
-            onClick={() => onPageChange?.(i)}
-            className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-              currentPage === i
-                ? 'bg-[#42A5F5] text-white'
-                : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-            }`}
-          >
-            {i}
-          </button>
-        );
-      }
-
-      if (currentPage < totalPages - 2) {
-        pages.push(
-          <div key="dots2" className="px-2 text-[#757575]">
-            ...
-          </div>
-        );
-      }
-
-      pages.push(
-        <button
-          key={totalPages}
-          onClick={() => onPageChange?.(totalPages)}
-          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-medium font-['Geist'] transition-colors ${
-            currentPage === totalPages
-              ? 'bg-[#42A5F5] text-white'
-              : 'bg-white border border-[#E0E0E0] text-[#757575] hover:bg-gray-50'
-          }`}
-        >
-          {totalPages}
-        </button>
-      );
-    }
-
-    return pages;
-  };
-
   if (loading) {
     return (
       <div className="w-full bg-white rounded-xl border border-[#90CAF9] p-8 flex items-center justify-center">
@@ -236,9 +145,9 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
   return (
     <div className="w-full bg-white rounded-xl border border-[#90CAF9]">
       {/* ============== HEADER ============== */}
-      <div className="bg-[#1E88E5] rounded-t-xl px-6 py-4 flex items-center justify-between gap-4">
+      <div className="bg-[#1E88E5] rounded-t-xl px-4 py-3 md:px-6 md:py-4 flex flex-col-reverse md:flex-row md:items-center justify-between gap-3 md:gap-4">
         {/* Filtros */}
-        <div className="flex-1 flex items-center gap-3">
+        <div className="flex-1 min-w-0 flex flex-wrap items-center gap-3">
           <span className="text-white text-sm font-semibold font-['Geist']">
             Filtros:
           </span>
@@ -248,7 +157,7 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                className="w-[180px] h-10 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0] px-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                className="w-[180px] h-11 md:h-10 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0] px-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
               >
                 <span className="text-[#757575] text-sm font-['Geist']">
                   Agregar filtro
@@ -258,7 +167,7 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
 
               {/* Dropdown menu */}
               {isFilterDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-[#E0E0E0] z-50">
+                <div className="absolute top-full left-0 mt-2 w-[min(20rem,calc(100vw-2.5rem))] bg-white rounded-lg shadow-lg border border-[#E0E0E0] z-50">
                   {!selectedFilterKey ? (
                     /* Lista de filtros disponibles */
                     <div className="p-2 max-h-64 overflow-y-auto">
@@ -398,12 +307,12 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
           )}
         </div>
 
-        {/* Botones de acción */}
-        <div className="flex gap-2">
+        {/* Botones de acción (en teléfono, arriba y a lo ancho) */}
+        <div className="flex gap-2 [&>button]:flex-1 md:[&>button]:flex-none">
           {onImport && (
             <button
               onClick={onImport}
-              className="h-9 bg-[#42A5F5] rounded-lg px-4 flex items-center gap-1.5 hover:bg-[#1E88E5] transition-colors"
+              className="h-11 md:h-9 bg-[#42A5F5] rounded-lg px-4 flex items-center justify-center gap-1.5 hover:bg-[#1E88E5] transition-colors"
             >
               <Upload className="w-4 h-4 text-white" />
               <span className="text-white text-sm font-medium font-['Geist']">
@@ -414,7 +323,7 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
           {onAdd && (
             <button
               onClick={onAdd}
-              className="h-9 bg-[#42A5F5] rounded-lg px-4 flex items-center gap-1.5 hover:bg-[#1E88E5] transition-colors"
+              className="h-11 md:h-9 bg-[#42A5F5] rounded-lg px-4 flex items-center justify-center gap-1.5 hover:bg-[#1E88E5] transition-colors"
             >
               <Plus className="w-4 h-4 text-white" />
               <span className="text-white text-sm font-medium font-['Geist']">
@@ -428,7 +337,7 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
       {/* ============== TABLA ============== */}
       <div className="bg-white">
         {/* Header de la tabla */}
-        <div className="bg-[#64B5F6] h-12 px-6 flex items-center">
+        <div className="bg-[#64B5F6] h-12 px-6 hidden md:flex items-center">
           <div className="w-24 flex items-center">
             <span className="text-white text-sm font-semibold font-['Geist']">Número</span>
           </div>
@@ -467,9 +376,35 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
           </div>
         ) : (
           data.map((unit, index) => (
+            <React.Fragment key={unit.id}>
+            {/* Teléfono: tarjeta */}
+            <div className={`md:hidden px-4 py-3 border-b border-[#E3F2FD] ${index % 2 === 0 ? 'bg-[#F5FAFE]' : 'bg-white'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[#0D47A1] text-base font-semibold font-['Geist'] truncate" title={unit.number}>{unit.number}</div>
+                  <div className="text-[#1565C0] text-sm font-['Geist'] truncate">{UNIT_TYPE_LABELS[unit.unitType] || unit.unitType}</div>
+                </div>
+                <span className={`${unit.isActive ? 'bg-[#81C784]' : 'bg-[#E57373]'} shrink-0 px-3 h-7 rounded-full inline-flex items-center text-white text-xs font-medium`}>
+                  {unit.isActive ? 'Activa' : 'Inactiva'}
+                </span>
+              </div>
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm font-['Geist']">
+                <div><dt className="text-[11px] uppercase text-[#757575]">Piso · Bloque</dt><dd className="text-[#1976D2]">{unit.floor ?? '-'} · {unit.block || '-'}</dd></div>
+                <div><dt className="text-[11px] uppercase text-[#757575]">Coeficiente</dt><dd className="text-[#1976D2] tabular-nums">{unit.coefficient ? unit.coefficient.toFixed(6) : '-'}</dd></div>
+                <div><dt className="text-[11px] uppercase text-[#757575]">Área</dt><dd className="text-[#1976D2]">{unit.area ? `${unit.area} m²` : '-'}</dd></div>
+                <div><dt className="text-[11px] uppercase text-[#757575]">Habitaciones</dt><dd className="text-[#1976D2]">{unit.bedrooms ?? '-'}</dd></div>
+              </dl>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button onClick={() => onEdit?.(unit)} className="h-11 rounded-lg bg-[#E3F2FD] text-[#1565C0] text-sm font-medium inline-flex items-center justify-center gap-1.5" aria-label={`Editar ${unit.number}`}>
+                  <Pencil className="w-4 h-4" /> Editar
+                </button>
+                <button onClick={() => onDelete?.(unit)} className="h-11 rounded-lg bg-[#FFEBEE] text-[#C62828] text-sm font-medium inline-flex items-center justify-center gap-1.5" aria-label={`Eliminar ${unit.number}`}>
+                  <Trash2 className="w-4 h-4" /> Eliminar
+                </button>
+              </div>
+            </div>
             <div
-              key={unit.id}
-              className={`h-14 px-6 flex items-center ${
+              className={`h-14 px-6 hidden md:flex items-center ${
                 index % 2 === 0 ? 'bg-[#E3F2FD]' : 'bg-white'
               }`}
             >
@@ -553,43 +488,13 @@ export const PropertyUnitsDataTable: React.FC<PropertyUnitsDataTableProps> = ({
                 </button>
               </div>
             </div>
+            </React.Fragment>
           ))
         )}
       </div>
 
-      {/* ============== FOOTER / PAGINACIÓN ============== */}
-      <div className="bg-[#F5F5F5] h-16 px-6 rounded-b-xl border-t border-[#E0E0E0] flex items-center justify-between">
-        {/* Texto de resultados */}
-        <div className="text-[#757575] text-sm font-['Geist']">
-          Mostrando {data.length} de {totalItems} unidades
-        </div>
-
-        {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            {/* Botón anterior */}
-            <button
-              onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="w-8 h-8 bg-white rounded border border-[#E0E0E0] flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4 text-[#757575]" />
-            </button>
-
-            {/* Números de página */}
-            {renderPageNumbers()}
-
-            {/* Botón siguiente */}
-            <button
-              onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="w-8 h-8 bg-white rounded border border-[#E0E0E0] flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4 text-[#757575]" />
-            </button>
-          </div>
-        )}
-      </div>
+      {/* ============== FOOTER / PAGINACIÓN (estado en la URL) ============== */}
+      <Pagination total={totalItems} totalPages={totalPages} className="rounded-b-xl" />
     </div>
   );
 };

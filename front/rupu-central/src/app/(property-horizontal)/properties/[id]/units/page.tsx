@@ -20,7 +20,7 @@ export default function UnitsPage() {
     <div>
       {/* Navegación */}
 
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <PropertyUnitsTable businessId={businessId} />
       </div>
     </div>

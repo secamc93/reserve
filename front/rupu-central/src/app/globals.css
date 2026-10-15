@@ -255,6 +255,59 @@ body {
   @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl max-w-md w-full p-4 sm:p-6 transform transition-all;
 }
 
+/* Teléfono (< md): el modal es una hoja que sube desde abajo, a todo el ancho, con safe-area. */
+@media (max-width: 767.98px) {
+  .modal {
+    @apply items-end p-0;
+  }
+
+  .modal > .modal-content,
+  .modal > .modal-glass {
+    @apply w-full max-w-none rounded-b-none rounded-t-3xl;
+    max-height: 92dvh;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    animation: sheetUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* Hoja inferior (BottomSheet / menú de módulos del teléfono) */
+.sheet-panel {
+  animation: sheetUp 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.2s ease-out;
+}
+
+.sheet-backdrop {
+  animation: sheetFade 0.2s ease-out;
+}
+
+@keyframes sheetFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel,
+  .sheet-backdrop,
+  .modal > .modal-content,
+  .modal > .modal-glass {
+    animation: none;
+    transition: none;
+  }
+}
+
 /* Listas - usando colores dinámicos */
 .list-item {
   @apply flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors rounded-lg cursor-pointer;
@@ -299,6 +352,14 @@ body {
   @apply px-6 py-4 text-sm;
   color: var(--gray-800);
   background: white;
+}
+
+/* Teléfono: celdas más compactas; la tabla se desplaza horizontalmente dentro de su tarjeta. */
+@media (max-width: 767.98px) {
+  .table th,
+  .table td {
+    @apply px-3 py-3;
+  }
 }
 
 .table tbody tr:hover {

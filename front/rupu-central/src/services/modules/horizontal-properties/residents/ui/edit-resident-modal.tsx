@@ -185,7 +185,7 @@ export function EditResidentModal({ businessId, resident, onClose, onSuccess }: 
           </Alert>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Unidad</label>
             <div className="relative">
@@ -248,7 +248,7 @@ export function EditResidentModal({ businessId, resident, onClose, onSuccess }: 
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="Email"
             type="email"
@@ -262,7 +262,7 @@ export function EditResidentModal({ businessId, resident, onClose, onSuccess }: 
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="Teléfono"
             value={formData.phone || ''}
@@ -298,7 +298,7 @@ export function EditResidentModal({ businessId, resident, onClose, onSuccess }: 
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse md:flex-row md:justify-end gap-2 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
           <button type="button" onClick={onClose} className="btn btn-outline" disabled={loading}>
             Cancelar
           </button>

@@ -186,7 +186,7 @@ export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps)
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+        <div className="flex flex-col-reverse md:flex-row justify-end mt-6 pt-4 border-t border-gray-200 gap-3 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
           <Button
             variant="outline"
             onClick={onClose}

@@ -5,6 +5,7 @@ import (
 
 	"central_reserve/services/horizontalproperty/resident/internal/domain"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 )
 
 func (uc *residentUseCase) ListResidents(ctx context.Context, filters domain.ResidentFiltersDTO) (*domain.PaginatedResidentsDTO, error) {
@@ -12,12 +13,7 @@ func (uc *residentUseCase) ListResidents(ctx context.Context, filters domain.Res
 	ctx = log.WithFunctionCtx(ctx, "ListResidents")
 
 	// Validar paginación
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.PageSize < 1 || filters.PageSize > 100 {
-		filters.PageSize = 10
-	}
+	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
 
 	// Obtener residentes paginados
 	result, err := uc.repo.ListResidents(ctx, filters)

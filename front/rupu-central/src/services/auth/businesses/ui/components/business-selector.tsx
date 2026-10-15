@@ -133,36 +133,6 @@ export function BusinessSelector({ businesses, isOpen, onClose, showSuperAdminBu
         // Redirigir a la página de propiedades con el ID del business
         router.push(`/properties/${business.id}`);
         break;
-      case 'restaurant':
-        router.push('/restaurant/dashboard');
-        break;
-      case 'cafe':
-        router.push('/cafe/dashboard');
-        break;
-      case 'bar':
-        router.push('/bar/dashboard');
-        break;
-      case 'hotel':
-        router.push('/hotel/dashboard');
-        break;
-      case 'spa':
-        router.push('/spa/dashboard');
-        break;
-      case 'salon':
-        router.push('/salon/dashboard');
-        break;
-      case 'clinic':
-        router.push('/clinic/dashboard');
-        break;
-      case 'gym':
-        router.push('/gym/dashboard');
-        break;
-      case 'studio':
-        router.push('/studio/dashboard');
-        break;
-      case 'office':
-        router.push('/office/dashboard');
-        break;
       default:
         router.push('/home');
     }

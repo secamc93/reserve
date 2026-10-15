@@ -4,6 +4,7 @@
 
 'use client';
 
+import { Pagination, usePaginationParams } from '@shared/ui/pagination';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Table, Badge, Spinner, Alert, ConfirmModal, type TableColumn } from '@shared/ui';
@@ -27,8 +28,7 @@ export function HorizontalPropertiesTable() {
   const [properties, setProperties] = useState<HorizontalProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [totalPages, setTotalPages] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -38,7 +38,7 @@ export function HorizontalPropertiesTable() {
 
   useEffect(() => {
     loadProperties();
-  }, [page]);
+  }, [page, pageSize]);
 
   const loadProperties = async () => {
     setLoading(true);
@@ -416,28 +416,8 @@ export function HorizontalPropertiesTable() {
         </div>
       )}
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="pagination-alt">
-          <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="pagination-button"
-          >
-            ← Anterior
-          </button>
-          <span className="pagination-info">
-            Página {page} de {totalPages} ({total} total)
-          </span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="pagination-button"
-          >
-            Siguiente →
-          </button>
-        </div>
-      )}
+      {/* Paginación (estado en la URL) */}
+      {total > 0 && <Pagination total={total} totalPages={totalPages} disabled={loading} />}
 
       {/* Modal de creación */}
       <CreatePropertyModal

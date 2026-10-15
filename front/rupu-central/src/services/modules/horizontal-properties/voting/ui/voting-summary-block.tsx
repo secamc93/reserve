@@ -1,332 +1,103 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { VotingOption } from '../domain/entities';
 
-interface Voting {
-  id: number;
-  votingGroupId: number;
-  title: string;
-  description: string;
-  votingType: string;
-  isSecret: boolean;
-  allowAbstention: boolean;
-  isActive: boolean;
-  displayOrder: number;
-  requiredPercentage: number;
-  createdAt: string;
-  updatedAt: string;
-}
+/**
+ * Resumen en vivo de la votación (rediseño, opción 1a):
+ * cifras grandes por opción (% por coeficiente), barra apilada con marcador
+ * de quórum y participación con badge de estado del quórum.
+ */
+
+import {
+  StackedBar,
+  VT,
+  vtMono,
+  formatPct,
+  getQuorumStatus,
+  type CoefficientResults,
+} from './design';
 
 interface VotingSummaryBlockProps {
-  voting: Voting;
-  options: VotingOption[];
-  votingDetails: {
-    total_units: number;
-    units_voted: number;
-    units_pending: number;
-    units: Array<{
-      property_unit_number: string;
-      participation_coefficient: number;
-      resident_name: string | null;
-      resident_id: number | null;
-      has_voted: boolean;
-      option_text: string | null;
-      option_code: string | null;
-      option_color: string | null;
-      voted_at: string | null;
-    }>;
-  } | null;
+  /** Resultados por coeficiente ya calculados (null mientras cargan). */
+  results: CoefficientResults | null;
+  /** Quórum requerido (% de coeficiente). */
+  quorum: number;
 }
 
-export function VotingSummaryBlock({ voting, options, votingDetails }: VotingSummaryBlockProps) {
-  // Estado para mantener estadísticas válidas
-  const [validStats, setValidStats] = useState<{
-    optionStats: Array<{
-      id: number;
-      optionText: string;
-      optionCode: string;
-      coefficientSum: number;
-      percentageByCoefficient: number;
-      votes: number;
-      percentageOfVoted: number;
-      color: string;
-    }>;
-    notVotedCoefficient: number;
-    notVotedCount: number;
-    notVotedPercentage: number;
-  } | null>(null);
+/** Cifra por opción: en línea en escritorio; en teléfono, celda de una grilla de 2 columnas. */
+const metricCell =
+  'flex items-baseline gap-2 min-w-0 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1.5 max-md:rounded-lg max-md:px-3 max-md:py-2.5 max-md:bg-[#faf9f7] max-md:border max-md:border-[#e4e2dd]';
 
-  // useEffect para actualizar estadísticas válidas
-  useEffect(() => {
-    console.log('🔍 [VotingSummaryBlock] useEffect ejecutándose');
-    console.log('🔍 [VotingSummaryBlock] votingDetails:', votingDetails);
-    console.log('🔍 [VotingSummaryBlock] options:', options);
-
-    if (!votingDetails) {
-      console.log('⚠️ [VotingSummaryBlock] No hay votingDetails, saliendo');
-      return;
-    }
-
-    const totalCoefficient = 100;
-
-    // Calcular estadísticas de opciones
-    const optionStats = options.map(option => {
-      const unitsWithOption = votingDetails.units.filter(unit =>
-        unit.option_text === option.optionText && unit.has_voted
-      );
-
-      console.log(`🔍 [VotingSummaryBlock] Opción "${option.optionText}": ${unitsWithOption.length} votos`);
-
-      const coefficientSum = unitsWithOption.reduce((sum, unit) =>
-        sum + unit.participation_coefficient, 0
-      );
-
-      const percentageByCoefficient = (coefficientSum / totalCoefficient) * 100;
-      const votes = unitsWithOption.length;
-      const percentageOfVoted = votingDetails.total_units > 0
-        ? (votes / votingDetails.total_units) * 100
-        : 0;
-
-      console.log(`✅ [VotingSummaryBlock] Opción "${option.optionText}" - stats:`, {
-        coefficientSum,
-        percentageByCoefficient,
-        votes
-      });
-
-      return {
-        id: option.id,
-        optionText: option.optionText,
-        optionCode: option.optionCode,
-        coefficientSum,
-        percentageByCoefficient,
-        votes,
-        percentageOfVoted,
-        color: option.color || '#3b82f6'
-      };
-    });
-
-    // Calcular "No Votado"
-    const notVotedUnits = votingDetails.units.filter(unit => !unit.has_voted);
-    const notVotedCoefficient = notVotedUnits.reduce((sum, unit) =>
-      sum + unit.participation_coefficient, 0
-    );
-    const notVotedCount = notVotedUnits.length;
-    const notVotedPercentage = (notVotedCoefficient / totalCoefficient) * 100;
-
-    // Solo actualizar si hay VOTOS REALES (no solo unidades sin votar)
-    const hasRealVotes = optionStats.some(stat => stat.votes > 0);
-
-    console.log('🔍 [VotingSummaryBlock] hasRealVotes:', hasRealVotes);
-    console.log('🔍 [VotingSummaryBlock] optionStats:', optionStats);
-
-    if (hasRealVotes) {
-      console.log('✅ [VotingSummaryBlock] Actualizando validStats (hay votos reales)');
-      setValidStats({
-        optionStats,
-        notVotedCoefficient,
-        notVotedCount,
-        notVotedPercentage
-      });
-    } else {
-      console.log('⚠️ [VotingSummaryBlock] No hay votos reales, manteniendo estadísticas anteriores');
-    }
-  }, [votingDetails, options]);
-
-  // Early return después de todos los hooks
-  if (!votingDetails) {
+export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps) {
+  if (!results) {
     return (
-      <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-        <div className="text-center text-gray-500">
-          Cargando estadísticas...
-        </div>
+      <div className="px-4 sm:px-7 py-6 bg-white text-sm" style={{ borderBottom: `1px solid ${VT.border}`, color: VT.muted }}>
+        Cargando estadísticas...
       </div>
     );
   }
 
-  // Usar estadísticas válidas o calcular nuevas si no hay datos guardados
-  const statsToUse = validStats || {
-    optionStats: options.map(option => ({
-      id: option.id,
-      optionText: option.optionText,
-      optionCode: option.optionCode,
-      coefficientSum: 0,
-      percentageByCoefficient: 0,
-      votes: 0,
-      percentageOfVoted: 0,
-      color: option.color || '#3b82f6'
-    })),
-    notVotedCoefficient: 100,
-    notVotedCount: votingDetails?.total_units || 0,
-    notVotedPercentage: 100
-  };
-
-  console.log('🎨 [VotingSummaryBlock] Renderizando con validStats:', validStats);
-  console.log('🎨 [VotingSummaryBlock] statsToUse:', statsToUse);
-
-  const { optionStats, notVotedCoefficient, notVotedCount, notVotedPercentage } = statsToUse;
-
-  // Combinar todas las estadísticas
-  const allStats = [
-    ...optionStats,
-    {
-      id: -1,
-      optionText: 'No Votado',
-      optionCode: 'NOT_VOTED',
-      coefficientSum: notVotedCoefficient,
-      percentageByCoefficient: notVotedPercentage,
-      votes: notVotedCount,
-      percentageOfVoted: notVotedPercentage,
-      color: '#6b7280'
-    }
-  ].sort((a, b) => b.coefficientSum - a.coefficientSum);
-
-  // Calcular estadísticas correctas para el resumen
-  const totalVotedUnits = optionStats.reduce((sum: number, option: any) => sum + option.votes, 0);
-  const totalPendingUnits = notVotedCount;
-  const totalUnits = votingDetails?.total_units || 0; // ✅ Usar el total del backend
-
-  console.log('📊 [VotingSummaryBlock] Resumen:', {
-    totalVotedUnits,
-    totalPendingUnits,
-    totalUnits,
-    fromBackend: votingDetails?.total_units
-  });
-
-  const quorumReached = (100 - notVotedPercentage) >= voting.requiredPercentage;
+  const { segments, pending, participation } = results;
+  const status = getQuorumStatus(participation, quorum);
 
   return (
-    <div className="mb-6 bg-white p-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-        {/* Opciones de Votación - COMPACTAS */}
-        <div className="lg:col-span-2 h-full">
-          <h3 className="text-sm font-bold text-gray-900 mb-3 border-b pb-1">
-            📊 Opciones de Votación
-          </h3>
-          <div className="grid grid-cols-3 gap-2">
-            {allStats.map((option) => {
-              const isNotVoted = option.optionCode === 'NOT_VOTED';
+    <div className="bg-white px-3 sm:px-7 pt-4 md:pt-6" style={{ borderBottom: `1px solid ${VT.border}` }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 md:gap-6 lg:gap-10 items-end pb-4 md:pb-5">
+        <div className="min-w-0">
+          {/* Cifras por opción */}
+          <div className="flex flex-wrap gap-x-7 gap-y-3 items-baseline max-md:grid max-md:grid-cols-2 max-md:gap-2">
+            {segments.map((s) => (
+              <div key={s.key} className={metricCell}>
+                <span className="inline-block w-2.5 h-2.5 rounded-[2px] -translate-y-px shrink-0" style={{ background: s.color }} />
+                <span className="text-[13px] max-md:flex-1 max-md:min-w-0 max-md:truncate" style={{ color: VT.inkSoft }} title={s.label}>{s.label}</span>
+                <span className="inline-flex items-baseline gap-2 max-md:basis-full">
+                  <span className={`${vtMono} text-[26px] max-md:text-[22px] leading-none font-semibold tracking-[-.03em]`} style={{ color: VT.ink }}>
+                    {formatPct(s.pct)}
+                    <span className="text-sm" style={{ color: VT.muted }}>%</span>
+                  </span>
+                  <span className="text-[11px]" style={{ color: VT.muted }}>{s.votes} un.</span>
+                </span>
+              </div>
+            ))}
+            <div className={`${metricCell} lg:ml-auto`}>
+              <span
+                className="inline-block w-2.5 h-2.5 rounded-[2px] -translate-y-px shrink-0"
+                style={{ border: `1px solid ${VT.pendingBorder}`, background: '#fff' }}
+              />
+              <span className="text-[13px] max-md:flex-1 max-md:min-w-0 max-md:truncate" style={{ color: VT.inkSoft }}>Pendiente</span>
+              <span className="inline-flex items-baseline gap-2 max-md:basis-full">
+                <span className={`${vtMono} text-[26px] max-md:text-[22px] leading-none font-semibold tracking-[-.03em]`} style={{ color: VT.muted }}>
+                  {formatPct(pending.pct)}
+                  <span className="text-sm">%</span>
+                </span>
+                <span className="text-[11px]" style={{ color: VT.muted }}>{pending.votes} un.</span>
+              </span>
+            </div>
+          </div>
 
-              return (
-                <div
-                  key={option.id}
-                  className={`bg-white border rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow ${isNotVoted ? 'border-gray-300 bg-gray-50' : 'border-gray-200'
-                    }`}
-                >
-                  {/* Header compacto */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {isNotVoted ? (
-                        <div className="w-4 h-4 bg-gray-400 rounded-full flex items-center justify-center">
-                          <span className="text-xs text-white">⏳</span>
-                        </div>
-                      ) : (
-                        <div
-                          className="w-4 h-4 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: option.color }}
-                        >
-                          <span className="text-xs text-white font-bold">1</span>
-                        </div>
-                      )}
-                      <div>
-                        <div className="font-semibold text-xs text-gray-900">{option.optionText}</div>
-                        <div className="text-xs text-gray-500">{option.optionCode}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Métricas compactas */}
-                  <div className="grid grid-cols-3 gap-1 text-xs">
-                    <div className="bg-blue-50 border border-blue-200 rounded p-1 text-center">
-                      <div className="font-bold text-blue-700">{option.percentageByCoefficient.toFixed(1)}%</div>
-                      <div className="text-blue-600">Por Coef.</div>
-                    </div>
-                    <div className="bg-green-50 border border-green-200 rounded p-1 text-center">
-                      <div className="font-bold text-green-700">{option.votes}</div>
-                      <div className="text-green-600">Unidades</div>
-                    </div>
-                    <div className="bg-purple-50 border border-purple-200 rounded p-1 text-center">
-                      <div className="font-bold text-purple-700">{option.percentageOfVoted.toFixed(0)}%</div>
-                      <div className="text-purple-600">Por Cant.</div>
-                    </div>
-                  </div>
-
-                  {/* Barra de coeficiente compacta */}
-                  <div className="mt-2">
-                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                      <span>Coef:</span>
-                      <span>{option.coefficientSum.toFixed(3)}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div
-                        className={`h-1 rounded-full ${isNotVoted ? 'bg-gray-400' : ''
-                          }`}
-                        style={{
-                          width: `${Math.min(option.percentageByCoefficient, 100)}%`,
-                          backgroundColor: isNotVoted ? '#9ca3af' : option.color
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          {/* Barra apilada con quórum */}
+          <div className="mt-7 md:mt-[30px]">
+            <StackedBar segments={segments} quorum={quorum} height={28} showQuorumLabel />
+          </div>
+          <div className={`${vtMono} flex justify-between text-[10px] mt-1.5`} style={{ color: VT.muted }}>
+            <span>0</span>
+            <span>% por coeficiente</span>
+            <span>100</span>
           </div>
         </div>
 
-        {/* Resumen de Estadísticas - COMPACTO */}
-        <div className="lg:col-span-1 h-full">
-          <h3 className="text-sm font-bold text-gray-900 mb-3 border-b pb-1">
-            📊 Resumen
-          </h3>
-
-          {/* Estadísticas compactas en una sola fila - distribuidas uniformemente */}
-          <div className="grid grid-cols-4 gap-2 text-xs w-full">
-            {/* Total Unidades */}
-            <div className="bg-gray-50 rounded p-2 border border-gray-200 text-center">
-              <span className="text-gray-600 block">Total</span>
-              <span className="font-bold text-lg text-gray-900">{totalUnits}</span>
-            </div>
-
-            {/* Han Votado */}
-            <div className="bg-green-50 rounded p-2 border border-green-200 text-center">
-              <span className="text-green-600 block">Votados</span>
-              <span className="font-bold text-lg text-green-700">
-                {totalVotedUnits}
-              </span>
-              <span className="text-green-600 text-xs">
-                ({totalUnits > 0
-                  ? ((totalVotedUnits / totalUnits) * 100).toFixed(1)
-                  : '0'}%)
-              </span>
-            </div>
-
-            {/* Pendientes */}
-            <div className="bg-orange-50 rounded p-2 border border-orange-200 text-center">
-              <span className="text-orange-600 block">Pendientes</span>
-              <span className="font-bold text-lg text-orange-700">
-                {totalPendingUnits}
-              </span>
-              <span className="text-orange-600 text-xs">
-                ({totalUnits > 0
-                  ? ((totalPendingUnits / totalUnits) * 100).toFixed(1)
-                  : '0'}%)
-              </span>
-            </div>
-
-            {/* % Requerido */}
-            <div className="bg-purple-50 rounded p-2 border border-purple-200 text-center">
-              <span className="text-purple-600 block">% Requerido</span>
-              <span className="font-bold text-lg text-purple-700">{voting.requiredPercentage}%</span>
-              <div className="mt-1">
-                {(100 - notVotedPercentage) >= voting.requiredPercentage ? (
-                  <span className="text-xs text-green-600 font-semibold">✅ Quórum</span>
-                ) : (
-                  <span className="text-xs text-red-600 font-semibold">
-                    ⏳ -{((100 - notVotedPercentage) - voting.requiredPercentage).toFixed(1)}%
-                  </span>
-                )}
-              </div>
-            </div>
+        {/* Participación */}
+        <div className="text-left lg:text-right pb-1">
+          <div className={`${vtMono} text-[11px] tracking-[.06em] mb-0.5`} style={{ color: VT.muted }}>
+            PARTICIPACIÓN
+          </div>
+          <div className={`${vtMono} text-[34px] md:text-[40px] leading-none font-semibold tracking-[-.04em]`} style={{ color: VT.ink }}>
+            {formatPct(participation)}
+            <span className="text-lg" style={{ color: VT.muted }}>%</span>
+          </div>
+          <div
+            className="inline-flex items-center gap-1.5 mt-2 px-2 py-[3px] rounded text-[11px] font-semibold"
+            style={{ background: status.bg, color: status.fg }}
+          >
+            {status.label}
           </div>
         </div>
       </div>

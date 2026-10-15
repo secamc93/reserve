@@ -88,11 +88,14 @@ export function useDashboardStats(
     }
   };
 
+  // page/pageSize pueden venir de la URL: si cambian, se recarga con los nuevos valores.
   useEffect(() => {
+    setCurrentPage(initialPage);
+    setPageSize(initialPageSize);
     if (autoLoad) {
-      loadStats();
+      loadStats(initialPage, initialPageSize);
     }
-  }, [businessId, autoLoad]);
+  }, [businessId, autoLoad, initialPage, initialPageSize]);
 
   return {
     stats,

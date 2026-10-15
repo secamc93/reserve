@@ -70,7 +70,8 @@ export function UnitAutocomplete({
         businessId,
         token,
         page: 1,
-        pageSize: 500, // Cargar muchas unidades para búsqueda local
+        // Primeras 200 (máximo del back) para sugerir; lo demás se busca en el servidor por número (searchInAPI).
+        pageSize: 200,
         isActive: true,
       });
       const loadedUnits = result.units || [];

@@ -18,6 +18,7 @@ export interface VotingOption {
   option_code: string;
   display_order: number;
   is_active: boolean;
+  color?: string;
 }
 
 export interface GetVotingInfoResult {
@@ -49,6 +50,8 @@ export interface GetVotingInfoResult {
       option_text: string;
       vote_count: number;
       percentage: number;
+      /** % sobre el total de coeficientes de la propiedad (el % legal). */
+      percentage_by_coefficient?: number;
     }>;
     hp_id: number;
     voting_group_id: number;

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useIsMobile, MobileCard, MobileActionButton, mobileColumn } from '@/services/mobile-ui';
 import { getResourcesAction, deleteResourceAction } from '../../infrastructure/actions';
-import { Table, TableColumn, Button, ConfirmModal, PaginationProps, TableFiltersProps } from '@shared/ui';
+import { Table, TableColumn, Button, ConfirmModal, TableUrlPagination, TableFiltersProps } from '@shared/ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { FilterOption, ActiveFilter } from '@shared/ui/dynamic-filters';
 import { PencilIcon, TrashIcon, CubeTransparentIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useBusinessTypes } from '../../../business-types/ui/hooks';
@@ -32,8 +34,7 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [resourceToDelete, setResourceToDelete] = useState<ResourceUI | null>(null);
   const [editResource, setEditResource] = useState<ResourceUI | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -288,16 +289,33 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
   ];
 
   // Configurar paginación
-  const pagination: PaginationProps = {
-    currentPage: page,
-    totalPages: totalPages,
-    totalItems: total,
-    itemsPerPage: pageSize,
-    onPageChange: setPage,
-    onItemsPerPageChange: setPageSize,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  };
+  const pagination: TableUrlPagination = { total: total, totalPages };
+
+  // Teléfono: cada recurso es una tarjeta.
+  const isMobile = useIsMobile();
+  const mobileColumns = mobileColumn<ResourceUI>('Recursos', (resource) => (
+    <div className="[contain:inline-size]">
+      <MobileCard
+        title={resource.name}
+        subtitle={resource.description}
+        fields={[
+          { label: 'Tipo de negocio', value: resource.business_type_name || '-', full: true },
+          { label: 'Creado', value: formatDate(resource.createdAt) },
+          { label: 'Actualizado', value: formatDate(resource.updatedAt) },
+        ]}
+        actions={
+          <>
+            <MobileActionButton className="flex-1" onClick={() => handleEditClick(resource)}>
+              <PencilIcon className="w-5 h-5" /> Editar
+            </MobileActionButton>
+            <MobileActionButton variant="danger" title="Eliminar recurso" disabled={deletingId === resource.id} onClick={() => handleDeleteClick(resource)}>
+              <TrashIcon className="w-5 h-5" />
+            </MobileActionButton>
+          </>
+        }
+      />
+    </div>
+  ));
 
   // Configurar filtros
   const tableFilters: TableFiltersProps = {
@@ -314,8 +332,9 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
       { value: 'name', label: 'Nombre' },
     ],
     headerActions: (
-      <Link href="/iam/resources/create" className="btn btn-primary" title="Crear Recurso">
+      <Link href="/iam/resources/create" className="btn btn-primary w-full md:w-auto min-h-[44px] md:min-h-0 justify-center" title="Crear Recurso">
         <PlusIcon className="w-5 h-5" />
+        <span className="md:hidden">Crear recurso</span>
       </Link>
     ),
   };
@@ -338,7 +357,7 @@ export function ResourcesTable({ token }: ResourcesTableProps) {
     <div className="w-full">
       {/* Tabla de recursos con filtros y paginación integrada */}
       <Table
-        columns={columns}
+        columns={isMobile ? mobileColumns : columns}
         data={resources}
         loading={loading}
         keyExtractor={(resource) => resource.id.toString()}

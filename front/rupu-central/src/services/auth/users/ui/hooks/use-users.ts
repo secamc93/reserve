@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getUsersAction, GetUsersInput, GetUsersResult } from '../../infrastructure/actions';
 import { TokenStorage } from '@shared/config';
+import { usePaginationParams } from '@shared/ui/pagination';
 
 export interface UseUsersOptions {
   initialPage?: number;
@@ -46,20 +47,16 @@ export interface UseUsersReturn {
 }
 
 export function useUsers(options: UseUsersOptions = {}) {
-  const {
-    initialPage = 1,
-    pageSize: initialPageSize = 10,
-    autoLoad = false
-  } = options;
+  // initialPage/pageSize se ignoran: la paginación sale de la URL.
+  const { autoLoad = false } = options;
 
   // Estado
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Paginación
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [pageSize, setPageSizeState] = useState(initialPageSize);
+  // Paginación: page/page_size viven en la URL (?page=&page_size=)
+  const { page: currentPage, pageSize, setPage: setUrlPage, setPageSize: setUrlPageSize } = usePaginationParams();
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   
@@ -126,20 +123,19 @@ export function useUsers(options: UseUsersOptions = {}) {
 
   // Cambiar página
   const setPage = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
+    setUrlPage(page);
+  }, [setUrlPage]);
 
   // Cambiar tamaño de página
   const setPageSize = useCallback((size: number) => {
-    setPageSizeState(size);
-    setCurrentPage(1); // Reset a la primera página
-  }, []);
+    setUrlPageSize(size); // vuelve a la página 1
+  }, [setUrlPageSize]);
 
   // Cambiar filtros
   const setFilters = useCallback((newFilters: Partial<UseUsersReturn['filters']>) => {
     setFiltersState(prev => ({ ...prev, ...newFilters }));
-    setCurrentPage(1); // Reset a la primera página
-  }, []);
+    setUrlPage(1); // Reset a la primera página
+  }, [setUrlPage]);
 
   // Refrescar datos
   const refresh = useCallback(() => {

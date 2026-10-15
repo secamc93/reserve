@@ -21,14 +21,15 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Badge } from '@shared/ui/badge';
-import { Table, TableColumn, PaginationProps, TableFiltersProps } from '@shared/ui/table';
+import { Table, TableColumn, TableUrlPagination, TableFiltersProps } from '@shared/ui/table';
 import { ConfirmModal } from '@shared/ui/confirm-modal';
 import { Modal } from '@shared/ui/modal';
 import { deleteUserAction } from '../../infrastructure/actions';
 import { getUserByIdAction } from '../../infrastructure/actions';
 import { generatePasswordAction } from '../../infrastructure/actions';
 import { UserDetailModal } from './user-detail-modal';
-import { TokenStorage } from '@shared/config'; 
+import { TokenStorage } from '@shared/config';
+import { useIsMobile, MobileCard, MobileActionButton, mobileColumn } from '@/services/mobile-ui';
 
 interface User {
   id: number;
@@ -72,13 +73,9 @@ interface UsersTableProps {
   closeDeleteModal?: () => void;
   isViewModalOpen?: boolean;
   closeViewModal?: () => void;
-  // Props de paginación
-  currentPage?: number;
+  // Paginación: page/page_size viven en la URL; aquí solo los totales del back
   totalPages?: number;
   totalCount?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (size: number) => void;
   // Props de filtros
   filters?: TableFiltersProps;
 }
@@ -96,12 +93,8 @@ export function UsersTable({
   closeDeleteModal,
   isViewModalOpen,
   closeViewModal,
-  currentPage = 1,
   totalPages = 1,
   totalCount = 0,
-  pageSize = 10,
-  onPageChange,
-  onPageSizeChange,
   filters
 }: UsersTableProps) {
   
@@ -385,21 +378,50 @@ export function UsersTable({
     },
   ];
 
-  const pagination: PaginationProps | undefined = onPageChange ? {
-    currentPage,
-    totalPages,
-    totalItems: totalCount,
-    itemsPerPage: pageSize,
-    onPageChange,
-    onItemsPerPageChange: onPageSizeChange,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  } : undefined;
+  const pagination: TableUrlPagination = { total: totalCount, totalPages };
+
+  // Teléfono: cada usuario es una tarjeta con sus acciones táctiles.
+  const isMobile = useIsMobile();
+  const mobileColumns = mobileColumn<User>('Usuarios', (user) => (
+    <div className="[contain:inline-size]">
+      <MobileCard
+        title={user.name}
+        subtitle={user.email}
+        badge={
+          <Badge type={user.is_active ? 'success' : 'error'} className="text-xs">
+            {user.is_active ? 'Activo' : 'Inactivo'}
+          </Badge>
+        }
+        fields={[
+          { label: 'Teléfono', value: user.phone || '-' },
+          { label: 'Último acceso', value: user.last_login_at ? formatDate(user.last_login_at) : 'Nunca' },
+          {
+            label: 'Roles',
+            full: true,
+            value: user.is_super_user
+              ? 'Super Administrador'
+              : user.business_role_assignments && user.business_role_assignments.length > 0
+                ? user.business_role_assignments.map((b) => `${b.business_name || `Negocio ${b.business_id}`}: ${b.role_name}`).join(' · ')
+                : 'Sin rol asignado',
+          },
+        ]}
+        actions={
+          <>
+            <MobileActionButton className="flex-1 px-0" title="Ver detalles" onClick={() => onViewUser?.(user)}><EyeIcon className="w-5 h-5" /></MobileActionButton>
+            <MobileActionButton className="flex-1 px-0" title="Editar usuario" onClick={() => onEditUser?.(user)}><PencilIcon className="w-5 h-5" /></MobileActionButton>
+            <MobileActionButton className="flex-1 px-0" title="Asignar roles" onClick={() => onAssignRoles?.(user)}><ShieldCheckIcon className="w-5 h-5" /></MobileActionButton>
+            <MobileActionButton className="flex-1 px-0" title="Generar nueva contraseña" disabled={generatingPassword} onClick={() => handleOpenConfirmPasswordModal(user)}><KeyIcon className="w-5 h-5" /></MobileActionButton>
+            <MobileActionButton className="flex-1 px-0" title="Eliminar usuario" variant="danger" onClick={() => onDeleteUser?.(user)}><TrashIcon className="w-5 h-5" /></MobileActionButton>
+          </>
+        }
+      />
+    </div>
+  ));
 
   return (
     <>
       <Table
-        columns={columns}
+        columns={isMobile ? mobileColumns : columns}
         data={users}
         loading={loading}
         emptyMessage="No hay usuarios disponibles"
@@ -450,13 +472,13 @@ export function UsersTable({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email:</label>
               <div className="flex items-center space-x-2">
-                <code className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
+                <code className="flex-1 min-w-0 break-all px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
                   {generatedPasswordData?.email || 'N/A'}
                 </code>
                 <button
                   type="button"
                   onClick={handleCopyEmail}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  className="p-2 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 inline-flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
                   title="Copiar email"
                 >
                   {emailCopied ? (
@@ -473,13 +495,13 @@ export function UsersTable({
                 Contraseña generada:
               </label>
               <div className="flex items-center space-x-2">
-                <code className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
+                <code className="flex-1 min-w-0 break-all px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
                   {generatedPasswordData?.password || 'N/A'}
                 </code>
                 <button
                   type="button"
                   onClick={handleCopyPassword}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  className="p-2 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 inline-flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
                   title="Copiar contraseña"
                 >
                   {passwordCopied ? (
@@ -496,7 +518,7 @@ export function UsersTable({
             Esta contraseña solo se muestra una vez. Asegúrate de copiarla y guardarla de forma segura.
           </p>
 
-          <div className="flex justify-end pt-4 border-t border-gray-200">
+          <div className="flex flex-col-reverse md:flex-row justify-end pt-4 border-t border-gray-200 gap-3 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
             <Button
               type="button"
               variant="primary"

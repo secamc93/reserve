@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { getParkingAssignmentsAction } from '../infrastructure/actions/get-parking-assignments.action';
 import { ParkingAssignmentListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
+import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
@@ -19,11 +21,11 @@ interface ParkingAssignmentsTableProps {
 }
 
 export function ParkingAssignmentsTable({ businessId, propertyUnitId }: ParkingAssignmentsTableProps) {
+  const isMobile = useIsMobile();
   const [assignments, setAssignments] = useState<ParkingAssignmentListDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
   const [showAssignModal, setShowAssignModal] = useState(false);
 
@@ -159,10 +161,10 @@ export function ParkingAssignmentsTable({ businessId, propertyUnitId }: ParkingA
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Asignaciones Permanentes</h2>
-        <Button onClick={() => setShowAssignModal(true)}>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-4">
+        <h2 className="text-lg md:text-xl font-semibold">Asignaciones Permanentes</h2>
+        <Button onClick={() => setShowAssignModal(true)} className="w-full md:w-auto min-h-[44px] md:min-h-0 justify-center">
           <PlusIcon className="w-4 h-4 mr-2" />
           Nueva Asignacion
         </Button>
@@ -176,18 +178,21 @@ export function ParkingAssignmentsTable({ businessId, propertyUnitId }: ParkingA
 
       <Table
         data={assignments}
-        columns={columns}
+        columns={isMobile ? mobileColumn<ParkingAssignmentListDTO>('Asignaciones', (a) => (
+            <MobileCard
+              title={`${a.parkingSlotNumber} · ${a.vehiclePlate}`}
+              subtitle={a.vehicleBrand && a.vehicleModel ? `${a.vehicleBrand} ${a.vehicleModel}` : undefined}
+              badge={<Badge color={a.isActive ? 'success' : 'danger'}>{a.isActive ? 'Activa' : 'Inactiva'}</Badge>}
+              fields={[
+                { label: 'Unidad', value: a.propertyUnitNumber || '-' },
+                { label: 'Residente', value: a.residentName || '-' },
+                { label: 'Inicio', value: new Date(a.startDate).toLocaleDateString('es-CO') },
+                { label: 'Fin', value: a.endDate ? new Date(a.endDate).toLocaleDateString('es-CO') : 'Permanente' },
+              ]}
+            />
+          )) : columns}
         loading={loading}
-        pagination={{
-          currentPage: page,
-          totalPages: Math.ceil(total / pageSize),
-          totalItems: total,
-          itemsPerPage: pageSize,
-          onPageChange: setPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total }}
         emptyMessage="No hay asignaciones registradas"
       />
 

@@ -133,16 +133,6 @@ export function BusinessTypeForm({
 
   const iconOptions = [
     { value: 'building', label: '🏢 Edificio' },
-    { value: 'utensils', label: '🍽️ Restaurante' },
-    { value: 'coffee', label: '☕ Café' },
-    { value: 'wine', label: '🍺 Bar' },
-    { value: 'bed', label: '🏨 Hotel' },
-    { value: 'spa', label: '💆 Spa' },
-    { value: 'scissors', label: '💇 Salón' },
-    { value: 'heart', label: '🏥 Clínica' },
-    { value: 'dumbbell', label: '💪 Gimnasio' },
-    { value: 'camera', label: '📸 Estudio' },
-    { value: 'briefcase', label: '💼 Oficina' },
   ];
 
   return (
@@ -157,7 +147,7 @@ export function BusinessTypeForm({
           value={formData.name}
           onChange={handleInputChange}
           error={errors.name}
-          placeholder="Ej: Restaurante"
+          placeholder="Ej: Propiedad Horizontal"
           required
         />
 

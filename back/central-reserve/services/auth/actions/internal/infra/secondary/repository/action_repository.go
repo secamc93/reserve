@@ -2,6 +2,7 @@ package repository
 
 import (
 	"central_reserve/services/auth/actions/internal/domain"
+	"central_reserve/shared/pagination"
 	"context"
 	"dbpostgres/app/infra/models"
 	"fmt"
@@ -16,12 +17,7 @@ func (r *Repository) GetActions(ctx context.Context, page, pageSize int, name st
 	r.logger.Info().Int("page", page).Int("page_size", pageSize).Str("name", name).Msg("Iniciando búsqueda de actions")
 
 	// Configurar paginación por defecto
-	if pageSize <= 0 {
-		pageSize = 10
-	}
-	if page <= 0 {
-		page = 1
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	offset := (page - 1) * pageSize
 

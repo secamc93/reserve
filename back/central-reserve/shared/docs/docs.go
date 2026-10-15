@@ -51,7 +51,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
@@ -412,7 +412,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Lista todas las listas de asistencia por business con filtros opcionales",
+                "description": "Lista todas las listas de asistencia por business con filtros opcionales y paginación",
                 "consumes": [
                     "application/json"
                 ],
@@ -446,6 +446,20 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Filtro por ID del grupo de votación",
                         "name": "voting_group_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Página (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 200,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Tamaño de página (default 10, max 200)",
+                        "name": "page_size",
                         "in": "query"
                     }
                 ],
@@ -749,8 +763,10 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Tamaño de página (default 50)",
+                        "description": "Tamaño de página (default 10, max 200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -845,7 +861,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Lista todos los apoderados de un business con filtros opcionales",
+                "description": "Lista todos los apoderados de un business con filtros opcionales y paginación",
                 "consumes": [
                     "application/json"
                 ],
@@ -879,6 +895,20 @@ const docTemplate = `{
                         "type": "boolean",
                         "description": "Filtro por activo",
                         "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Página (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 200,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Tamaño de página (default 10, max 200)",
+                        "name": "page_size",
                         "in": "query"
                     }
                 ],
@@ -1885,8 +1915,18 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Elementos por página (por defecto 10)",
+                        "description": "Elementos por página (por defecto 10, máximo 200)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 200,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Alias de page_size (compatibilidad)",
                         "name": "per_page",
                         "in": "query"
                     },
@@ -2100,11 +2140,19 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Elementos por página",
+                        "description": "Elementos por página (máximo 200)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 200,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Alias de page_size (compatibilidad)",
                         "name": "per_page",
                         "in": "query"
                     },
@@ -2683,8 +2731,10 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Tamaño de página para business summaries (solo super admin, default: 10, max: 100)",
+                        "description": "Tamaño de página para business summaries (solo super admin, default: 10, max: 200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -2809,6 +2859,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "minimum": 1,
                         "type": "integer",
                         "default": 1,
                         "description": "Número de página (mínimo 1)",
@@ -2816,9 +2867,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página (1-100)",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -3117,9 +3170,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -3594,9 +3649,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -3966,9 +4023,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -4351,9 +4410,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 200,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Tamaño de página",
+                        "description": "Tamaño de página (1-200)",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -5442,6 +5503,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/voting-groups/{group_id}/generate-public-url": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Genera una URL con token especial para compartir vía QR y permitir votación en todas las votaciones del grupo. La URL se construye usando: 1) frontend_url del request, o 2) URL_BASE_SWAGGER + /public/vote",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Generar URL pública para grupo de votación con QR",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del business (opcional para super admin, alternativo a body)",
+                        "name": "business_id",
+                        "in": "query"
+                    },
+                    {
+                        "description": "Configuración de la URL (business_id opcional en body para super admin)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicGroupURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/voting-groups/{group_id}/votings": {
             "get": {
                 "security": [
@@ -6268,6 +6393,78 @@ const docTemplate = `{
                 }
             }
         },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/units/{unit_id}/attendance": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marca o desmarca la asistencia de una unidad para una votación específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones"
+                ],
+                "summary": "Marcar/desmarcar asistencia de unidad",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la unidad",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de asistencia",
+                        "name": "attendance",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.MarkAttendanceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/unvoted-units": {
             "get": {
                 "security": [
@@ -6450,6 +6647,130 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/bulk": {
+            "post": {
+                "description": "Registra múltiples votos para diferentes unidades con la misma opción",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Votación masiva",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de votación masiva",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateBulkVotesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/previous-voted-units": {
+            "get": {
+                "description": "Busca la votación anterior en el mismo grupo y retorna las unidades que votaron",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Obtener unidades que votaron en la votación anterior",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del grupo de votación",
+                        "name": "group_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación actual",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/votes/reset": {
+            "delete": {
+                "description": "Elimina todos los votos de una votación (mantiene asistencia)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Resetear votación",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación",
+                        "name": "voting_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     }
                 }
@@ -7713,9 +8034,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/public/voting-group/votings": {
+            "get": {
+                "description": "Obtiene todas las votaciones de un grupo con información de si la unidad ya votó en cada una",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Votaciones Públicas"
+                ],
+                "summary": "Listar votaciones de un grupo (público)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticación de votación (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/public/voting-info": {
             "get": {
-                "description": "Obtiene toda la información de la votación usando solo el VOTING_AUTH_TOKEN. Incluye título, descripción, opciones, etc.",
+                "description": "Obtiene toda la información de la votación usando el VOTING_AUTH_TOKEN. Para tokens de grupo, debe proporcionar voting_id como query param.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7733,6 +8104,12 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de votación (requerido solo para tokens de grupo)",
+                        "name": "voting_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7879,7 +8256,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
@@ -8266,7 +8643,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
@@ -8890,7 +9267,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
@@ -11591,6 +11968,7 @@ const docTemplate = `{
         "central_reserve_services_horizontalproperty_resident_internal_infra_primary_handlers_request.CreateResidentRequest": {
             "type": "object",
             "required": [
+                "business_id",
                 "dni",
                 "email",
                 "name",
@@ -11598,6 +11976,10 @@ const docTemplate = `{
                 "resident_type_id"
             ],
             "properties": {
+                "business_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "dni": {
                     "type": "string",
                     "example": "123456789"
@@ -12343,6 +12725,37 @@ const docTemplate = `{
                 }
             }
         },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateBulkVotesRequest": {
+            "type": "object",
+            "required": [
+                "property_unit_ids",
+                "voting_option_id"
+            ],
+            "properties": {
+                "auto_mark_attendance": {
+                    "type": "boolean"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "property_unit_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "voting_option_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.CreateVoteRequest": {
             "type": "object",
             "required": [
@@ -12469,6 +12882,17 @@ const docTemplate = `{
                 }
             }
         },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.MarkAttendanceRequest": {
+            "type": "object",
+            "required": [
+                "mark_attendance"
+            ],
+            "properties": {
+                "mark_attendance": {
+                    "type": "boolean"
+                }
+            }
+        },
         "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.UpdateVotingOptionStatusRequest": {
             "type": "object",
             "required": [
@@ -12480,9 +12904,193 @@ const docTemplate = `{
                 }
             }
         },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteItemResultResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "property_unit_id": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "vote": {
+                    "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteResultResponse": {
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteItemResultResponse"
+                    }
+                },
+                "succeeded": {
+                    "type": "integer"
+                },
+                "total_processed": {
+                    "type": "integer"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteSuccess": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.BulkVoteResultResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse": {
+            "type": "object",
+            "properties": {
+                "previous_voting_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "previous_voting_title": {
+                    "type": "string",
+                    "example": "Aprobación de presupuesto"
+                },
+                "total_voted": {
+                    "type": "integer",
+                    "example": 45
+                },
+                "voted_unit_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        1,
+                        2,
+                        3
+                    ]
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsSuccess": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingResultResponse": {
+            "type": "object",
+            "properties": {
+                "deleted_count": {
+                    "type": "integer",
+                    "example": 45
+                },
+                "voting_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingSuccess": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ResetVotingResultResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string",
+                    "example": "#22c55e"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "192.168.1.100"
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Voto emitido correctamente"
+                },
+                "option_code": {
+                    "type": "string",
+                    "example": "YES"
+                },
+                "option_text": {
+                    "type": "string",
+                    "example": "Sí, apruebo"
+                },
+                "property_unit_id": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "user_agent": {
+                    "type": "string",
+                    "example": "Mozilla/5.0"
+                },
+                "voted_at": {
+                    "type": "string",
+                    "example": "2025-03-05T14:30:00Z"
+                },
+                "voting_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "voting_option_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.CreatePublicVoteRequest": {
             "type": "object",
             "required": [
+                "voting_id",
                 "voting_option_id"
             ],
             "properties": {
@@ -12494,9 +13102,35 @@ const docTemplate = `{
                     "description": "Opcional - viene del token",
                     "type": "integer"
                 },
-                "voting_option_id": {
+                "voting_id": {
+                    "description": "REQUERIDO: ID de la votación (para tokens de grupo)",
                     "type": "integer",
                     "example": 1
+                },
+                "voting_option_id": {
+                    "description": "REQUERIDO: Opción seleccionada",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.GeneratePublicGroupURLRequest": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "description": "ID del business (solo para super admin, opcional en body)",
+                    "type": "integer",
+                    "example": 19
+                },
+                "duration_hours": {
+                    "description": "Duración del token en horas",
+                    "type": "integer",
+                    "example": 24
+                },
+                "frontend_url": {
+                    "description": "URL base del frontend (opcional, usa URL_BASE_SWAGGER + /public/vote si está vacío)",
+                    "type": "string",
+                    "example": "https://votacion.miconjunto.com/vote"
                 }
             }
         },
@@ -12560,8 +13194,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:3050",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Restaurant Reservation API",
-	Description:      "Servicio REST para la gestión de reservas multi-restaurante.",
+	Title:            "Rupü - Propiedad Horizontal API",
+	Description:      "Servicio REST para la gestión de propiedades horizontales.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

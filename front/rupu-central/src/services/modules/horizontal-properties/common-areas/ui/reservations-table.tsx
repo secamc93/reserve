@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { getReservationsAction } from '../infrastructure/actions/get-reservations.action';
 import { ReservationListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
+import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
@@ -15,11 +17,11 @@ interface ReservationsTableProps {
 }
 
 export function ReservationsTable({ businessId }: ReservationsTableProps) {
+  const isMobile = useIsMobile();
   const [reservations, setReservations] = useState<ReservationListDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
 
   const getBusinessToken = useCallback(async (): Promise<string> => {
@@ -118,10 +120,10 @@ export function ReservationsTable({ businessId }: ReservationsTableProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Reservas de Zonas Comunes</h1>
-        <Button>Nueva Reserva</Button>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+        <h1 className="text-xl md:text-2xl font-bold">Reservas de Zonas Comunes</h1>
+        <Button className="w-full md:w-auto min-h-[44px] md:min-h-0 justify-center">Nueva Reserva</Button>
       </div>
 
       {error && (
@@ -132,18 +134,21 @@ export function ReservationsTable({ businessId }: ReservationsTableProps) {
 
       <Table
         data={reservations}
-        columns={columns}
+        columns={isMobile ? mobileColumn<ReservationListDTO>('Reservas', (r) => (
+          <MobileCard
+            title={r.commonAreaName}
+            subtitle={r.residentName || undefined}
+            badge={<span className="text-sm font-medium text-gray-700">{r.statusName}</span>}
+            fields={[
+              { label: 'Unidad', value: r.propertyUnitNumber },
+              { label: 'Fecha', value: new Date(r.reservationDate).toLocaleDateString() },
+              { label: 'Horario', value: `${r.startTime} - ${r.endTime}` },
+              { label: 'Invitados', value: String(r.numberOfGuests) },
+            ]}
+          />
+        )) : columns}
         loading={loading}
-        pagination={{
-          currentPage: page,
-          totalItems: total,
-          totalPages: Math.ceil(total / pageSize),
-          itemsPerPage: pageSize,
-          onPageChange: setPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total }}
       />
     </div>
   );

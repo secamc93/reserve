@@ -1,225 +1,165 @@
 /**
- * Componente: Lista de Votaciones del Grupo (Público)
+ * R2 · Votaciones del grupo (residente). La abierta va destacada con "Votar ahora".
+ * Se actualiza sola (consulta periódica) cuando el administrador abre o cierra un punto.
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Alert, Spinner } from '@shared/ui';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Spinner } from '@shared/ui';
 import { getGroupVotingsAction, type GroupVoting } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
+import { VT, VtIcon, VtNotice, formatOrder, initialsOf, publicVotingRowState, sortPublicVotings, votingFontRoot, vtMono } from '../design';
+
+/** Cada cuánto se refresca la lista (ms). */
+const REFRESH_MS = 5000;
 
 interface PublicVotingsListProps {
   votingAuthToken: string;
-  residentData: {
-    id: number;
-    name: string;
-    unitNumber: string;
-  };
-  onSelectVoting: (votingId: number, voting: GroupVoting) => void;
+  residentData: { id: number; name: string; unitNumber: string };
+  onSelectVoting: (votingId: number, voting: GroupVoting, totalVotings: number) => void;
   onError: (error: string) => void;
 }
 
-export function PublicVotingsList({
-  votingAuthToken,
-  residentData,
-  onSelectVoting,
-  onError
-}: PublicVotingsListProps) {
+export function PublicVotingsList({ votingAuthToken, residentData, onSelectVoting, onError }: PublicVotingsListProps) {
   const [votings, setVotings] = useState<GroupVoting[]>([]);
-  const [groupInfo, setGroupInfo] = useState<{
-    id: number;
-    name: string;
-    description: string;
-  } | null>(null);
-  const [stats, setStats] = useState({
-    totalVotings: 0,
-    activeVotings: 0,
-    userVotesCount: 0
-  });
+  const [groupName, setGroupName] = useState<string>('');
+  const [votesCount, setVotesCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [stale, setStale] = useState(false);
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+
+  const load = useCallback(
+    async (first: boolean) => {
+      try {
+        const result = await getGroupVotingsAction({ votingAuthToken });
+        if (!result.success || !result.data) throw new Error(result.error || 'Error al cargar votaciones');
+        setVotings(result.data.votings || []);
+        setGroupName(result.data.voting_group?.name || '');
+        setVotesCount(result.data.user_votes_count || 0);
+        setStale(false);
+      } catch (err) {
+        if (first) onErrorRef.current(err instanceof Error ? err.message : 'Error al cargar votaciones');
+        else setStale(true);
+      } finally {
+        if (first) setLoading(false);
+      }
+    },
+    [votingAuthToken]
+  );
 
   useEffect(() => {
-    loadVotings();
-  }, [votingAuthToken]);
-
-  const loadVotings = async () => {
-    try {
-      console.log('📊 [VOTINGS LIST] Cargando votaciones del grupo...');
-      setLoading(true);
-      setError(null);
-
-      const result = await getGroupVotingsAction({ votingAuthToken });
-
-      console.log('📥 [VOTINGS LIST] Resultado:', result);
-
-      if (result.success && result.data) {
-        // Asegurar que votings sea siempre un array (nunca null)
-        setVotings(result.data.votings || []);
-        setGroupInfo(result.data.voting_group);
-        setStats({
-          totalVotings: result.data.total_votings || 0,
-          activeVotings: result.data.active_votings || 0,
-          userVotesCount: result.data.user_votes_count || 0
-        });
-        console.log('✅ [VOTINGS LIST] Votaciones cargadas:', result.data.total_votings);
-      } else {
-        throw new Error(result.error || 'Error al cargar votaciones');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar votaciones';
-      console.error('❌ [VOTINGS LIST] Error:', errorMessage);
-      setError(errorMessage);
-      onError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+    load(true);
+    const timer = setInterval(() => load(false), REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [load]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Cargando votaciones...</p>
-        </div>
+      <div className={`min-h-screen flex items-center justify-center ${votingFontRoot}`} style={{ background: VT.paper }}>
+        <Spinner size="lg" text="Cargando votaciones..." />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <Alert type="error">
-            <div>
-              <p className="font-semibold mb-1">Error</p>
-              <p>{error}</p>
-            </div>
-          </Alert>
-        </div>
-      </div>
-    );
-  }
+  const ordered = sortPublicVotings(votings);
+  const total = votings.length;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="text-center">
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 mb-4">
-              <span className="text-2xl">🗳️</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {groupInfo?.name || 'Grupo de Votaciones'}
-            </h1>
-            {groupInfo?.description && (
-              <p className="text-gray-600 mb-4">{groupInfo.description}</p>
-            )}
-            <p className="text-sm text-gray-500 mb-4">
-              Seleccione la votación en la que desea participar
-            </p>
+    <div className={`min-h-screen ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
+      <div className="max-w-[480px] mx-auto min-h-screen flex flex-col p-[22px]">
+        <div className={`${vtMono} flex justify-between items-center gap-3 text-[11px] font-medium tracking-[.06em]`} style={{ color: VT.muted }}>
+          <span className="uppercase truncate">{groupName || 'Asamblea'}</span>
+          <span>{residentData.unitNumber}</span>
+        </div>
 
-            {/* Info del residente */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <span className="font-medium">Residente:</span> {residentData.name}
-              </p>
-              <p className="text-sm text-blue-600">
-                <span className="font-medium">Unidad:</span> {residentData.unitNumber}
-              </p>
-            </div>
-
-            {/* Estadísticas */}
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-gray-900">{stats.totalVotings}</p>
-                <p className="text-xs text-gray-600">Total</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-green-700">{stats.activeVotings}</p>
-                <p className="text-xs text-green-600">Activas</p>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-blue-700">{stats.userVotesCount}</p>
-                <p className="text-xs text-blue-600">Mis votos</p>
-              </div>
-            </div>
+        <div className="mt-3.5 flex items-center gap-2.5 px-3 py-2.5 bg-white rounded-lg text-[13px]" style={{ border: `1px solid ${VT.border}` }}>
+          <span className={`${vtMono} w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold flex-shrink-0`} style={{ background: '#efedea' }}>
+            {initialsOf(residentData.name)}
+          </span>
+          <div className="leading-tight min-w-0">
+            <div className="font-semibold truncate">{residentData.name}</div>
+            <div className="text-xs" style={{ color: VT.muted }}>Unidad {residentData.unitNumber}</div>
           </div>
+          <span className={`${vtMono} ml-auto text-[11px] font-medium whitespace-nowrap`} style={{ color: VT.muted }}>
+            {votesCount}/{total} votos
+          </span>
         </div>
 
-        {/* Lista de votaciones */}
-        <div className="space-y-4">
-          {!votings || votings.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-500">No hay votaciones disponibles</p>
-            </div>
-          ) : (
-            votings.map((voting) => (
-              <div
-                key={voting.id}
-                className={`bg-white rounded-lg shadow-md p-6 transition-all ${
-                  voting.has_voted || !voting.is_active
-                    ? 'opacity-60'
-                    : 'hover:shadow-lg'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <span className="text-lg font-semibold text-gray-900">
-                        {voting.display_order}. {voting.title}
-                      </span>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          voting.is_active
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {voting.is_active ? 'Activa' : 'Inactiva'}
-                      </span>
-                      {voting.has_voted && (
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                          ✓ Ya votaste
-                        </span>
-                      )}
-                    </div>
-                    {voting.description && (
-                      <p className="text-sm text-gray-600 mb-2">{voting.description}</p>
-                    )}
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Tipo: {voting.voting_type}</span>
-                      <span>Opciones: {voting.options_count}</span>
-                      {voting.required_percentage && (
-                        <span>Requerido: {voting.required_percentage}%</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+        <h1 className="mt-6 mb-0 text-xl font-semibold tracking-[-.015em]">Puntos a votar</h1>
 
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => onSelectVoting(voting.id, voting)}
-                    disabled={voting.has_voted || !voting.is_active}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      voting.has_voted || !voting.is_active
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                  >
-                    {voting.has_voted
-                      ? 'Ya votaste'
-                      : voting.is_active
-                        ? 'Votar ahora'
-                        : 'Inactiva'}
-                  </button>
-                </div>
-              </div>
-            ))
+        <ul className="mt-3 mb-0 p-0 list-none flex flex-col gap-2" aria-label="Puntos a votar">
+          {ordered.length === 0 && (
+            <li className="bg-white rounded-[10px] px-4 py-6 text-center text-sm" style={{ border: `1px solid ${VT.border}`, color: VT.muted }}>
+              Aún no hay puntos para votar.
+            </li>
           )}
-        </div>
+          {ordered.map((voting) => {
+            const state = publicVotingRowState(voting);
+            if (state === 'open') {
+              return (
+                <li
+                  key={voting.id}
+                  aria-label={voting.title}
+                  className="bg-white rounded-[10px] px-4 py-3.5 flex flex-col gap-2.5"
+                  style={{ border: `1.5px solid ${VT.ink}` }}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className={`${vtMono} text-[11px] font-medium`} style={{ color: VT.muted }}>{formatOrder(voting.display_order)}</span>
+                    <span className={`${vtMono} inline-flex items-center gap-1.5 text-[10px] font-medium tracking-[.06em]`} style={{ color: VT.live }}>
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: VT.live }} />
+                      ABIERTA
+                    </span>
+                  </div>
+                  <div className="text-base font-semibold leading-tight">{voting.title}</div>
+                  <button
+                    type="button"
+                    onClick={() => onSelectVoting(voting.id, voting, total)}
+                    className="h-11 rounded-lg text-white text-sm font-semibold"
+                    style={{ background: VT.ink }}
+                  >
+                    Votar ahora
+                  </button>
+                </li>
+              );
+            }
+            return (
+              <li
+                key={voting.id}
+                aria-label={voting.title}
+                className="bg-white rounded-[10px] px-4 py-3.5 flex gap-3 items-center"
+                style={{ border: `1px solid ${VT.border}`, color: VT.muted }}
+              >
+                <span className={`${vtMono} text-[11px] font-medium`}>{formatOrder(voting.display_order)}</span>
+                <span className="text-sm flex-1 min-w-0" style={{ color: VT.inkSoft }}>{voting.title}</span>
+                {state === 'voted' ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectVoting(voting.id, voting, total)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold max-md:min-h-11 max-md:px-2 max-md:-mr-2 max-md:text-xs"
+                    style={{ color: VT.yes }}
+                    aria-label={`Ver resultado de ${voting.title}`}
+                  >
+                    <VtIcon name="check" size={12} strokeWidth={3} />
+                    Votaste
+                  </button>
+                ) : (
+                  <span className="text-[11px]">No abierta</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {stale && (
+          <div className="mt-3">
+            <VtNotice tone="info">Sin conexión por ahora; reintentando…</VtNotice>
+          </div>
+        )}
+
+        <p className="mt-auto pt-8 mb-0 text-center text-xs" style={{ color: VT.muted }}>
+          Esta pantalla se actualiza sola cuando el administrador abre un punto.
+        </p>
       </div>
     </div>
   );

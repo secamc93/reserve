@@ -1,945 +1,300 @@
 /**
- * Componente: Lista de Votaciones
+ * A1 · Votaciones del grupo (filas del grupo expandido).
+ * Cada fila: orden, título + estado, tipo/quórum, barra por coeficiente con el
+ * marcador de quórum, % de la opción que va ganando y la acción principal
+ * (En vivo / Iniciar / Configurar / Resultado) + menú de más acciones.
  */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Badge, Spinner, ConfirmModal } from '@shared/ui';
+import { useCallback, useEffect, useState } from 'react';
 import { TokenStorage } from '@shared/config';
-import {
-  getVotingsAction,
-  getVotingOptionsAction,
-  getVotesAction,
-  updateVotingOptionStatusAction,
-  deleteVotingOptionAction,
-} from '../infrastructure/actions';
+import { getVotingDetailsAction, getVotingOptionsAction } from '../infrastructure/actions';
 import { activateVotingAction } from '../infrastructure/actions/activate-voting.action';
 import { deactivateVotingAction } from '../infrastructure/actions/deactivate-voting.action';
-import { CreateVotingModal } from './create-voting-modal';
-import { EditVotingModal } from './edit-voting-modal';
+import type { Voting, VotingOption } from '../domain/entities';
+import { VotingFormModal } from './voting-form-modal';
 import { DeleteVotingModal } from './delete-voting-modal';
-import { CreateVotingOptionModal } from './create-voting-option-modal';
 import { VotesDetailModal } from './votes-detail-modal';
-import { VoteModal } from './vote-modal';
-import { LiveVotingModal } from './live-voting-modal';
 import {
-  PlayIcon,
-  PauseIcon,
-  TrashIcon,
-  ChartPieIcon,
-  EllipsisHorizontalIcon,
-  PlusCircleIcon,
-  UserPlusIcon,
-  PlayCircleIcon,
-  InformationCircleIcon,
-  ListBulletIcon,
-  CheckCircleIcon,
-  PencilSquareIcon,
-  StopIcon,
-  BoltIcon,
-  ChevronDownIcon,
-} from '@heroicons/react/24/outline';
-
-interface Voting {
-  id: number;
-  votingGroupId: number;
-  title: string;
-  description: string;
-  votingType: string;
-  isSecret: boolean;
-  allowAbstention: boolean;
-  isActive: boolean;
-  displayOrder: number;
-  requiredPercentage: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface VotingOption {
-  id: number;
-  votingId: number;
-  optionText: string;
-  optionCode: string;
-  color?: string;
-  displayOrder: number;
-  isActive: boolean;
-}
-
-interface Vote {
-  id: number;
-  votingId: number;
-  propertyUnitId: number;
-  votingOptionId: number;
-  votedAt: string;
-  ipAddress: string;
-  userAgent: string;
-  notes?: string;
-}
+  StackedBar,
+  VT,
+  VtBadge,
+  VtMenu,
+  VtNotice,
+  computeCoefficientResults,
+  formatOrder,
+  formatPct,
+  getVotingStatus,
+  getWinner,
+  resolveQuorum,
+  votingTypeLabel,
+  vtBtn,
+  vtMono,
+  type CoefficientResults,
+} from './design';
 
 interface VotingsListProps {
   businessId: number;
   groupId: number;
   groupName: string;
-  onToggleAttendance?: () => void;
-  isAttendanceVisible?: boolean;
+  /** Votaciones del grupo (las carga la tarjeta del grupo). */
+  votings: Voting[];
+  /** Recarga las votaciones del grupo. */
+  onReload: () => Promise<void> | void;
 }
 
-export function VotingsList({
-  businessId,
-  groupId,
-  groupName,
-  onToggleAttendance,
-  isAttendanceVisible,
-}: VotingsListProps) {
-  const [loading, setLoading] = useState(false);
-  const [votings, setVotings] = useState<Voting[]>([]);
-  const [votingOptions, setVotingOptions] = useState<Record<number, VotingOption[]>>({});
-  const [votingVotes, setVotingVotes] = useState<Record<number, Vote[]>>({});
-  const [expandedVoting, setExpandedVoting] = useState<number | null>(null);
-  const [showCreateVotingModal, setShowCreateVotingModal] = useState(false);
-  const [showCreateOptionModal, setShowCreateOptionModal] = useState(false);
-  const [selectedVotingForOption, setSelectedVotingForOption] = useState<number | null>(null);
-  const [showVotesDetailModal, setShowVotesDetailModal] = useState(false);
-  const [showVoteModal, setShowVoteModal] = useState(false);
-  const [showLiveVotingModal, setShowLiveVotingModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedVotingForDetails, setSelectedVotingForDetails] = useState<Voting | null>(null);
-  const [selectedVotingForLive, setSelectedVotingForLive] = useState<Voting | null>(null);
-  const [selectedVotingForEdit, setSelectedVotingForEdit] = useState<Voting | null>(null);
-  const [selectedVotingForDelete, setSelectedVotingForDelete] = useState<Voting | null>(null);
-  const [optionStatusLoadingId, setOptionStatusLoadingId] = useState<number | null>(null);
-  const [optionToDelete, setOptionToDelete] = useState<{ votingId: number; option: VotingOption } | null>(null);
-  const [showDeleteOptionConfirm, setShowDeleteOptionConfirm] = useState(false);
+interface RowData {
+  options: VotingOption[];
+  results: CoefficientResults | null;
+}
 
-  useEffect(() => {
-    loadVotings();
-  }, [businessId, groupId]);
+export const liveVotingPath = (businessId: number, groupId: number, votingId: number) =>
+  `/properties/${businessId}/voting-groups/${groupId}/votings/${votingId}/live`;
 
-  const loadVotings = async () => {
-    setLoading(true);
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) {
-        console.error('❌ No se encontró el token');
-        return;
-      }
+export function VotingsList({ businessId, groupId, groupName, votings, onReload }: VotingsListProps) {
+  const [rows, setRows] = useState<Record<number, RowData>>({});
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Voting | null>(null);
+  const [deleting, setDeleting] = useState<Voting | null>(null);
+  const [detail, setDetail] = useState<Voting | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-      const result = await getVotingsAction({ token, businessId, groupId });
-
-      if (result.success && result.data) {
-        const sortedVotings = result.data.sort((a, b) => a.displayOrder - b.displayOrder);
-        setVotings(sortedVotings);
-      }
-    } catch (error) {
-      console.error('❌ Error al cargar votaciones:', error);
-    }
-    setLoading(false);
-  };
-
-  const loadVotingOptions = useCallback(async (votingId: number) => {
-    try {
+  const loadRow = useCallback(
+    async (voting: Voting) => {
       const token = TokenStorage.getBusinessToken();
       if (!token) return;
-
-      const result = await getVotingOptionsAction({ token, businessId, groupId, votingId });
-
-      if (result.success && result.data) {
-        const sortedOptions = result.data.sort((a, b) => a.displayOrder - b.displayOrder);
-        setVotingOptions(prev => ({
-          ...prev,
-          [votingId]: sortedOptions
-        }));
-      }
-    } catch (error) {
-      console.error('❌ Error al cargar opciones:', error);
-    }
-  }, [businessId, groupId]);
+      const [optionsRes, detailsRes] = await Promise.all([
+        getVotingOptionsAction({ token, businessId, groupId, votingId: voting.id }),
+        getVotingDetailsAction({ token, businessId, votingGroupId: groupId, votingId: voting.id }),
+      ]);
+      const options = (optionsRes.success && optionsRes.data ? optionsRes.data : []).sort((a, b) => a.displayOrder - b.displayOrder);
+      const results =
+        detailsRes.success && detailsRes.data
+          ? computeCoefficientResults(
+              options.map((o) => ({ id: o.id, text: o.optionText, code: o.optionCode, color: o.color })),
+              detailsRes.data.units.map((u) => ({
+                hasVoted: u.has_voted,
+                coef: u.participation_coefficient || 0,
+                optionText: u.option_text,
+              }))
+            )
+          : null;
+      setRows((prev) => ({ ...prev, [voting.id]: { options, results } }));
+    },
+    [businessId, groupId]
+  );
 
   useEffect(() => {
-    votings.forEach((voting) => {
-      if (!votingOptions[voting.id]) {
-        loadVotingOptions(voting.id);
-      }
-    });
-  }, [votings, votingOptions, loadVotingOptions]);
+    votings.forEach((v) => loadRow(v));
+  }, [votings, loadRow]);
 
-  const loadVotes = async (votingId: number) => {
+  const reloadAll = async () => {
+    await onReload();
+  };
+
+  const setActive = async (voting: Voting, active: boolean) => {
+    const token = TokenStorage.getBusinessToken();
+    if (!token) return false;
+    setBusyId(voting.id);
+    setError(null);
     try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) return;
-
-      const result = await getVotesAction({ token, businessId, groupId, votingId });
-
-      if (result.success && result.data) {
-        setVotingVotes(prev => ({
-          ...prev,
-          [votingId]: result.data || []
-        }));
+      const action = active ? activateVotingAction : deactivateVotingAction;
+      const res = await action({ token, businessId, groupId, votingId: voting.id });
+      if (!res.success) {
+        setError(res.error || 'No se pudo cambiar el estado de la votación');
+        return false;
       }
-    } catch (error) {
-      console.error('❌ Error al cargar votos:', error);
-    }
-  };
-
-  const handleToggleVoting = async (votingId: number) => {
-    if (expandedVoting === votingId) {
-      setExpandedVoting(null);
-    } else {
-      setExpandedVoting(votingId);
-      // Si no hemos cargado las opciones, cargarlas
-      if (!votingOptions[votingId]) {
-        await loadVotingOptions(votingId);
-      }
-      // Si no hemos cargado los votos, cargarlos
-      if (!votingVotes[votingId]) {
-        await loadVotes(votingId);
-      }
-    }
-  };
-
-  const handleCreateVotingSuccess = () => {
-    loadVotings();
-  };
-
-  const handleAddOption = (votingId: number) => {
-    setSelectedVotingForOption(votingId);
-    setShowCreateOptionModal(true);
-  };
-
-  const handleCreateOptionSuccess = () => {
-    if (selectedVotingForOption) {
-      loadVotingOptions(selectedVotingForOption);
-    }
-  };
-
-  const handleViewVotes = async (voting: Voting) => {
-    // Cargar opciones si no están cargadas
-    if (!votingOptions[voting.id]) {
-      await loadVotingOptions(voting.id);
-    }
-    setSelectedVotingForDetails(voting);
-    setShowVotesDetailModal(true);
-  };
-
-  const handleVote = async (voting: Voting) => {
-    // Cargar opciones si no están cargadas
-    if (!votingOptions[voting.id]) {
-      await loadVotingOptions(voting.id);
-    }
-    setSelectedVotingForDetails(voting);
-    setShowVoteModal(true);
-  };
-
-  const handleVoteSuccess = () => {
-    console.log('✅ Voto registrado exitosamente');
-    // Recargar votos si está abierto el modal de detalles
-    if (showVotesDetailModal && selectedVotingForDetails) {
-      loadVotes(selectedVotingForDetails.id);
-    }
-    // También recargar para la votación en vivo si está abierta
-    if (showLiveVotingModal && selectedVotingForLive) {
-      loadVotes(selectedVotingForLive.id);
-    }
-  };
-
-  const handleToggleOptionStatus = async (voting: Voting, option: VotingOption) => {
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) throw new Error('Token no disponible');
-
-      setOptionStatusLoadingId(option.id);
-
-      const result = await updateVotingOptionStatusAction({
-        token,
-        businessId,
-        groupId,
-        votingId: voting.id,
-        optionId: option.id,
-        isActive: !option.isActive,
-      });
-
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'No se pudo actualizar la opción');
-      }
-
-      setVotingOptions(prev => ({
-        ...prev,
-        [voting.id]: (prev[voting.id] || []).map(opt =>
-          opt.id === option.id ? result.data! : opt
-        ),
-      }));
-    } catch (error) {
-      console.error('❌ Error al actualizar estado de la opción:', error);
-      alert(error instanceof Error ? error.message : 'Error al actualizar la opción');
+      return true;
     } finally {
-      setOptionStatusLoadingId(null);
+      setBusyId(null);
     }
   };
 
-  const handleDeleteOptionRequest = (voting: Voting, option: VotingOption) => {
-    setOptionToDelete({ votingId: voting.id, option });
-    setShowDeleteOptionConfirm(true);
-  };
-
-  const handleDeleteOption = async () => {
-    if (!optionToDelete) return;
-
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) throw new Error('Token no disponible');
-
-      const result = await deleteVotingOptionAction({
-        token,
-        businessId,
-        groupId,
-        votingId: optionToDelete.votingId,
-        optionId: optionToDelete.option.id,
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'No se pudo eliminar la opción');
-      }
-
-      setVotingOptions(prev => ({
-        ...prev,
-        [optionToDelete.votingId]: (prev[optionToDelete.votingId] || []).filter(
-          opt => opt.id !== optionToDelete.option.id
-        ),
-      }));
-    } catch (error) {
-      console.error('❌ Error al eliminar opción:', error);
-      alert(error instanceof Error ? error.message : 'Error al eliminar opción');
-    } finally {
-      setShowDeleteOptionConfirm(false);
-      setOptionToDelete(null);
+  const handlePrimary = async (voting: Voting, key: string) => {
+    if (key === 'draft') {
+      setEditing(voting);
+      setFormOpen(true);
+      return;
     }
-  };
-
-  const handleLiveVoting = (voting: Voting) => {
-    // Navegar a la página de votación en vivo
-    window.location.href = `/properties/${businessId}/voting-groups/${groupId}/votings/${voting.id}/live`;
-  };
-
-  const handleEditClick = (voting: Voting) => {
-    setSelectedVotingForEdit(voting);
-    setShowEditModal(true);
-  };
-
-  const handleEditSuccess = () => {
-    console.log('✅ Votación editada exitosamente');
-    loadVotings();
-  };
-
-  const handleEditClose = () => {
-    setShowEditModal(false);
-    setSelectedVotingForEdit(null);
-  };
-
-  const handleDeleteClick = (voting: Voting) => {
-    setSelectedVotingForDelete(voting);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteSuccess = () => {
-    console.log('✅ Votación eliminada exitosamente');
-    loadVotings();
-  };
-
-  const handleDeleteClose = () => {
-    setShowDeleteModal(false);
-    setSelectedVotingForDelete(null);
-  };
-
-  const handleActivateVoting = async (voting: Voting) => {
-    try {
-      const token = TokenStorage.getBusinessToken();
-
-      if (!token) {
-        console.error('❌ No se encontró el token de autenticación');
-        return;
-      }
-
-      console.log('🔄 Activando votación:', { votingId: voting.id, title: voting.title });
-
-      const result = await activateVotingAction({
-        token,
-        businessId,
-        groupId,
-        votingId: voting.id,
-      });
-
-      if (result.success) {
-        console.log('✅ Votación activada:', result.message);
-        // Actualizar la lista de votaciones
-        loadVotings();
-      } else {
-        console.error('❌ Error activando votación:', result.error);
-      }
-    } catch (err) {
-      console.error('❌ Error inesperado activando votación:', err);
+    if (key === 'ready') {
+      const ok = await setActive(voting, true);
+      if (!ok) return;
     }
+    // Navegación completa (como antes): con server actions en vuelo, router.push en `next dev`
+    // a veces cambia la URL y deja renderizada la página anterior.
+    window.location.assign(liveVotingPath(businessId, groupId, voting.id));
   };
 
-  const handleDeactivateVoting = async (voting: Voting) => {
-    try {
-      const token = TokenStorage.getBusinessToken();
-
-      if (!token) {
-        console.error('❌ No se encontró el token de autenticación');
-        return;
-      }
-
-      console.log('🔄 Desactivando votación:', { votingId: voting.id, title: voting.title });
-
-      const result = await deactivateVotingAction({
-        token,
-        businessId,
-        groupId,
-        votingId: voting.id,
-      });
-
-      if (result.success) {
-        console.log('✅ Votación desactivada:', result.message);
-        // Actualizar la lista de votaciones
-        loadVotings();
-      } else {
-        console.error('❌ Error desactivando votación:', result.error);
-      }
-    } catch (err) {
-      console.error('❌ Error inesperado desactivando votación:', err);
-    }
-  };
-
-  const getVotingTypeBadge = (type: string) => {
-    const types: Record<string, { label: string; type: 'primary' | 'success' | 'error' }> = {
-      simple: { label: 'Simple', type: 'primary' },
-      multiple: { label: 'Múltiple', type: 'success' },
-      weighted: { label: 'Ponderada', type: 'error' },
-    };
-    return types[type] || { label: type, type: 'primary' };
-  };
-
-  const primaryActionButton =
-    'inline-flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60';
-  const outlineButton =
-    'inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100';
-  const dangerButton =
-    'inline-flex items-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50';
-  const mutedTag =
-    'inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600';
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <Spinner size="lg" />
-        <span className="ml-3 text-gray-600">Cargando votaciones...</span>
-      </div>
-    );
-  }
+  const nextOrder = votings.reduce((max, v) => Math.max(max, v.displayOrder), 0) + 1;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6">
-        <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            🗳️ Votaciones ({votings.length})
-          </h3>
-          <p className="text-sm text-white/80 mt-1">
-            Gestiona las votaciones del grupo{' '}
-            <span className="font-medium text-white">{groupName}</span>
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-
-          <button
-            onClick={() => setShowCreateVotingModal(true)}
-            className={primaryActionButton}
-          >
-            <span className="text-base leading-none">＋</span>
-            Nueva votación
-          </button>
-        </div>
+    <div className="flex flex-col gap-2.5">
+      <div className="flex justify-between items-center pb-1">
+        <h3 className="m-0 text-[13px] font-semibold">
+          Votaciones <span className="font-normal" style={{ color: VT.muted }}>· {votings.length}</span>
+        </h3>
+        <button
+          type="button"
+          className={vtBtn.small}
+          onClick={() => {
+            setEditing(null);
+            setFormOpen(true);
+          }}
+        >
+          + Nueva votación
+        </button>
       </div>
 
+      {error && <VtNotice>{error}</VtNotice>}
+
       {votings.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-10 text-center">
-          <p className="mb-3 text-sm text-gray-500">
-            Aún no hay votaciones creadas para este grupo.
-          </p>
-          <button onClick={() => setShowCreateVotingModal(true)} className={primaryActionButton}>
-            Crear primera votación
-          </button>
+        <div className="rounded-lg py-8 text-center text-[13px] bg-white" style={{ border: `1px dashed ${VT.borderStrong}`, color: VT.muted }}>
+          Aún no hay votaciones en este grupo.
         </div>
       ) : (
-        <div className="space-y-4 px-6 pb-6">
+        <ul className="m-0 p-0 list-none flex flex-col gap-2.5" aria-label={`Votaciones de ${groupName}`}>
           {votings.map((voting) => {
-            const isExpanded = expandedVoting === voting.id;
-            const options = votingOptions[voting.id];
-            const optionList = options ?? [];
-            const optionsLoaded = options !== undefined;
-            const typeBadge = getVotingTypeBadge(voting.votingType);
-
-            // Calculate stats for chart
-            const votes = votingVotes[voting.id] || [];
-            const totalVotes = votes.length;
-
-            // Generate chart data
-            let currentAngle = 0;
-            const chartSegments = optionList.map((option, index) => {
-              const optionVotes = votes.filter(v => v.votingOptionId === option.id).length;
-              const percentage = totalVotes > 0 ? (optionVotes / totalVotes) * 100 : 0;
-              const degrees = (percentage / 100) * 360;
-              const start = currentAngle;
-              const end = currentAngle + degrees;
-              currentAngle = end;
-
-              // Colors for segments
-              const defaultColors = ['#3B82F6', '#6B7280', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
-              const color = option.color || defaultColors[index % defaultColors.length];
-
-              return { ...option, percentage, color, start, end, count: optionVotes };
+            const row = rows[voting.id];
+            const results = row?.results ?? null;
+            const status = getVotingStatus({
+              isActive: voting.isActive,
+              optionsCount: row ? row.options.length : null,
+              votedUnits: results ? results.votedUnits : null,
             });
-
-            const gradientString = totalVotes === 0
-              ? '#E5E7EB 0deg 360deg'
-              : chartSegments.map(s => `${s.color} ${s.start}deg ${s.end}deg`).join(', ');
+            const quorum = resolveQuorum(voting.requiredPercentage);
+            const winner = results ? getWinner(results.segments) : null;
+            const hasVotes = !!results && results.votedUnits > 0;
+            const metaParts = [
+              votingTypeLabel(voting.votingType),
+              `quórum ${quorum}%`,
+              voting.allowAbstention ? 'abstención permitida' : 'sin abstención',
+            ];
+            if (voting.isSecret) metaParts.push('secreta');
+            if (row && row.options.length === 0) metaParts.push('sin opciones aún');
+            const votesText = hasVotes
+              ? `${results!.votedUnits} / ${results!.totalUnits} votos`
+              : status.key === 'draft'
+                ? '0 opciones'
+                : status.key === 'live'
+                  ? `0 / ${results?.totalUnits ?? 0} votos`
+                  : 'Sin iniciar';
 
             return (
-              <div
+              <li
                 key={voting.id}
-                className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden"
+                aria-label={voting.title}
+                className="bg-white rounded-lg px-3.5 sm:px-[18px] py-3.5 grid grid-cols-[26px_minmax(0,1fr)] md:grid-cols-[32px_1fr_auto] lg:grid-cols-[32px_minmax(0,1fr)_minmax(180px,300px)_90px_auto] gap-x-3 md:gap-x-[18px] gap-y-3 items-center"
+                style={{ border: `1px solid ${VT.border}` }}
               >
-                <div className="p-6">
-                  {/* Fila 1: Título centrado */}
-                  <div className="flex items-center justify-center mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900 text-center">
-                      {voting.displayOrder}. {voting.title}
-                    </h3>
+                <div className={`${vtMono} text-[13px] font-medium`} style={{ color: VT.muted }}>
+                  {formatOrder(voting.displayOrder)}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[15px] font-semibold flex items-center gap-2.5 flex-wrap">
+                    <span className="min-w-0">{voting.title}</span>
+                    <VtBadge label={status.label} bg={status.bg} fg={status.fg} size="xs" />
                   </div>
-
-                  {/* Fila 2: Badge + Información + Botones */}
-                  <div className="flex items-center justify-between gap-3">
-                    {/* Lado izquierdo: Badge + Info */}
-                    <div className="flex items-center gap-3 flex-1 flex-wrap">
-                      {/* Badge de estado */}
-                      <span className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold whitespace-nowrap ${voting.isActive
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-500 text-white'
-                        }`}>
-                        {voting.isActive ? 'Activa' : 'Inactiva'}
-                      </span>
-
-                      {/* Información en una fila con efectos */}
-                      <div className="flex items-center gap-3 text-sm flex-wrap">
-                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 border border-gray-200 shadow-sm text-gray-700">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
-                          <span className="font-semibold">% Requerido:</span>
-                          <span className="font-medium">{voting.requiredPercentage}%</span>
-                        </span>
-                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 border border-gray-200 shadow-sm text-gray-700">
-                          <InformationCircleIcon className="w-4 h-4" />
-                          <span className="font-semibold">Abstención:</span>
-                          <span className="font-medium">{voting.allowAbstention ? 'Permitida' : 'No permitida'}</span>
-                        </span>
-                        <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 border border-gray-200 shadow-sm text-gray-700">
-                          <ListBulletIcon className="w-4 h-4" />
-                          <span className="font-semibold">Tipo:</span>
-                          <span className="font-medium">{typeBadge.label}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Lado derecho: Botón de votación + Botones de acción */}
-                    <div className="flex items-center gap-2">
-                      {/* Botón de votación en vivo */}
-                      <button
-                        onClick={() => handleLiveVoting(voting)}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 font-semibold text-white transition-all ${voting.isActive
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-gray-800 hover:bg-gray-900'
-                          }`}
-                      >
-                        {voting.isActive ? (
-                          <>
-                            <BoltIcon className="w-4 h-4 animate-pulse" />
-                            Votación en Vivo
-                          </>
-                        ) : (
-                          <>
-                            <PlayIcon className="w-4 h-4" />
-                            Iniciar Votación
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => handleEditClick(voting)}
-                        className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors"
-                        title="Editar votación"
-                      >
-                        <PencilSquareIcon className="w-5 h-5" />
-                      </button>
-
-                      <button
-                        onClick={() => voting.isActive ? handleDeactivateVoting(voting) : handleActivateVoting(voting)}
-                        className={`p-2 rounded-lg transition-colors ${voting.isActive
-                          ? 'bg-orange-500 text-white hover:bg-orange-600'
-                          : 'bg-green-500 text-white hover:bg-green-600'
-                          }`}
-                        title={voting.isActive ? 'Desactivar' : 'Activar'}
-                      >
-                        {voting.isActive ? (
-                          <StopIcon className="w-5 h-5" />
-                        ) : (
-                          <PlayIcon className="w-5 h-5" />
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteClick(voting)}
-                        className="p-2 bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
-                        title="Eliminar votación"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleVoting(voting.id)}
-                        className="p-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-all"
-                        style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                        title={isExpanded ? 'Contraer' : 'Ver detalles y resultados'}
-                      >
-                        <ChevronDownIcon className="w-5 h-5" />
-                      </button>
-                    </div>
+                  <div className={`${vtMono} text-[11px] mt-[3px]`} style={{ color: VT.muted }}>
+                    {metaParts.join(' · ')}
                   </div>
                 </div>
-
-                {/* Expanded Content (Results) */}
-                {isExpanded && (
-                  <div className="border-t border-gray-200 bg-gray-50 p-6">
-                    {/* Options Management Section */}
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 mb-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-                          <ListBulletIcon className="w-5 h-5" />
-                          Opciones de Votación ({optionList.length})
-                        </h4>
-                        <button
-                          onClick={() => handleAddOption(voting.id)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
-                        >
-                          <PlusCircleIcon className="w-4 h-4" />
-                          Agregar opción
-                        </button>
-                      </div>
-
-                      {!optionsLoaded ? (
-                        <div className="flex items-center justify-center py-6">
-                          <Spinner size="sm" />
-                          <span className="ml-2 text-sm text-gray-500">Cargando opciones...</span>
-                        </div>
-                      ) : optionList.length === 0 ? (
-                        <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
-                          <p className="text-sm text-gray-500 mb-2">No hay opciones configuradas</p>
-                          <button
-                            onClick={() => handleAddOption(voting.id)}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            + Crear primera opción
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {optionList.map((option) => (
-                            <div
-                              key={option.id}
-                              className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                                option.isActive
-                                  ? 'bg-white border-gray-200'
-                                  : 'bg-gray-50 border-gray-100 opacity-60'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                {/* Color indicator */}
-                                <span
-                                  className="w-4 h-4 rounded-full border border-gray-200 flex-shrink-0"
-                                  style={{ backgroundColor: option.color || '#6B7280' }}
-                                />
-                                <div>
-                                  <span className="font-medium text-gray-900">{option.optionText}</span>
-                                  <span className="ml-2 text-xs text-gray-400">({option.optionCode})</span>
-                                </div>
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                  option.isActive
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-gray-200 text-gray-500'
-                                }`}>
-                                  {option.isActive ? 'Activa' : 'Inactiva'}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5">
-                                {/* Toggle active/inactive */}
-                                <button
-                                  onClick={() => handleToggleOptionStatus(voting, option)}
-                                  disabled={optionStatusLoadingId === option.id}
-                                  className={`p-1.5 rounded-md text-xs font-medium transition-colors ${
-                                    option.isActive
-                                      ? 'bg-orange-50 text-orange-600 hover:bg-orange-100'
-                                      : 'bg-green-50 text-green-600 hover:bg-green-100'
-                                  } disabled:opacity-50`}
-                                  title={option.isActive ? 'Desactivar opción' : 'Activar opción'}
-                                >
-                                  {optionStatusLoadingId === option.id ? (
-                                    <Spinner size="sm" />
-                                  ) : option.isActive ? (
-                                    <PauseIcon className="w-4 h-4" />
-                                  ) : (
-                                    <PlayIcon className="w-4 h-4" />
-                                  )}
-                                </button>
-
-                                {/* Delete */}
-                                <button
-                                  onClick={() => handleDeleteOptionRequest(voting, option)}
-                                  className="p-1.5 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                                  title="Eliminar opción"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Left: Chart */}
-                      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h4 className="font-semibold mb-6 text-gray-800">Resultados de Votación ({totalVotes} votos)</h4>
-
-                        <div className="flex flex-col items-center">
-                          {/* Donut Chart */}
-                          <div
-                            className="relative w-56 h-56 rounded-full shadow-inner"
-                            style={{ background: `conic-gradient(${gradientString})` }}
-                          >
-                            <div className="absolute inset-8 bg-white rounded-full flex items-center justify-center flex-col shadow-sm">
-                              <span className="text-3xl font-bold text-gray-800">{totalVotes}</span>
-                              <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Votos Totales</span>
-                            </div>
-                          </div>
-
-                          {/* Legend */}
-                          <div className="flex flex-wrap justify-center gap-4 mt-8 w-full">
-                            {chartSegments.map((segment) => (
-                              <div key={segment.id} className="flex items-center gap-2 text-sm">
-                                <span
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: segment.color }}
-                                ></span>
-                                <span className="text-gray-600">{segment.optionText}:</span>
-                                <span className="font-bold text-gray-900">{segment.percentage.toFixed(1)}%</span>
-                                <span className="text-gray-400 text-xs">({segment.count} votos)</span>
-                              </div>
-                            ))}
-                            {totalVotes === 0 && (
-                              <span className="text-gray-400 text-sm italic">Sin votos registrados</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right: Individual Votes Table */}
-                      <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
-                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
-                          <h4 className="font-semibold text-gray-800">Votos Individuales</h4>
-                          <button
-                            onClick={() => handleViewVotes(voting)}
-                            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            Ver todos
-                          </button>
-                        </div>
-
-                        <div className="overflow-y-auto flex-1 p-0">
-                          {votes.length === 0 ? (
-                            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                              No hay votos registrados
-                            </div>
-                          ) : (
-                            <table className="w-full text-sm text-left">
-                              <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0 shadow-sm">
-                                <tr>
-                                  <th className="px-4 py-3 font-medium">ID</th>
-                                  <th className="px-4 py-3 font-medium">Opción</th>
-                                  <th className="px-4 py-3 font-medium">Fecha</th>
-                                  <th className="px-4 py-3 font-medium">Unidad</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-100">
-                                {votes.map((vote) => {
-                                  const option = optionList.find(o => o.id === vote.votingOptionId);
-                                  const segment = chartSegments.find(s => s.id === option?.id);
-
-                                  return (
-                                    <tr key={vote.id} className="hover:bg-gray-50 transition-colors">
-                                      <td className="px-4 py-3 font-medium text-emerald-600">#{vote.id}</td>
-                                      <td className="px-4 py-3">
-                                        <span
-                                          className="inline-block w-2 h-2 rounded-full mr-2"
-                                          style={{ backgroundColor: segment?.color || '#ccc' }}
-                                        ></span>
-                                        {option?.optionText || 'Desconocido'}
-                                      </td>
-                                      <td className="px-4 py-3 text-gray-500">
-                                        {new Date(vote.votedAt).toLocaleString('es-ES', {
-                                          day: '2-digit', month: '2-digit', year: 'numeric',
-                                          hour: '2-digit', minute: '2-digit'
-                                        })}
-                                      </td>
-                                      <td className="px-4 py-3 text-gray-600">
-                                        Unidad #{vote.propertyUnitId}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                <div className="col-span-2 md:col-span-3 lg:col-span-1 row-start-2 lg:row-start-auto">
+                  {hasVotes && results && (
+                    <StackedBar segments={results.segments} quorum={quorum} height={10} radius={3} markerOverflow={4} />
+                  )}
+                  <div className={`${vtMono} text-[11px] mt-[5px]`} style={{ color: VT.muted }}>
+                    {votesText}
                   </div>
-                )}
-              </div>
+                </div>
+                <div
+                  className={`${vtMono} hidden lg:block text-right text-xl leading-none font-semibold tracking-[-.03em]`}
+                  style={{ color: winner ? winner.color : VT.pendingBorder }}
+                  title={winner ? `${winner.label}: ${formatPct(winner.pct)}% del coeficiente` : 'Sin votos'}
+                >
+                  {winner ? `${formatPct(winner.pct)}%` : '—'}
+                </div>
+                <div className="col-span-2 row-start-3 md:col-span-1 md:row-start-auto flex gap-1.5 items-center justify-end">
+                  <button
+                    type="button"
+                    disabled={busyId === voting.id}
+                    onClick={() => handlePrimary(voting, status.key)}
+                    className="h-[30px] max-md:h-11 max-md:flex-1 max-md:text-sm justify-center px-3 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors disabled:opacity-60"
+                    style={
+                      status.primary
+                        ? { background: VT.ink, color: '#fff', border: `1px solid ${VT.ink}` }
+                        : { background: '#fff', color: VT.ink, border: `1px solid ${VT.borderStrong}` }
+                    }
+                    aria-label={`${status.action}: ${voting.title}`}
+                  >
+                    {status.primary && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: VT.accent }} />}
+                    {busyId === voting.id ? '…' : status.action}
+                  </button>
+                  <VtMenu
+                    label={`Más acciones de ${voting.title}`}
+                    items={[
+                      {
+                        label: 'Editar votación y opciones',
+                        onSelect: () => {
+                          setEditing(voting);
+                          setFormOpen(true);
+                        },
+                      },
+                      voting.isActive
+                        ? { label: 'Cerrar votación', onSelect: async () => (await setActive(voting, false)) && reloadAll() }
+                        : {
+                            label: 'Abrir votación',
+                            disabled: row?.options.length === 0,
+                            onSelect: async () => (await setActive(voting, true)) && reloadAll(),
+                          },
+                      { label: 'Ver votos', onSelect: () => setDetail(voting) },
+                      { label: 'Eliminar votación', danger: true, onSelect: () => setDeleting(voting) },
+                    ]}
+                  />
+                </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
 
-      {/* Modals */}
-      <CreateVotingModal
-        isOpen={showCreateVotingModal}
-        onClose={() => setShowCreateVotingModal(false)}
-        onSuccess={handleCreateVotingSuccess}
+      <VotingFormModal
+        isOpen={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSuccess={reloadAll}
         businessId={businessId}
         groupId={groupId}
+        groupName={groupName}
+        nextOrder={nextOrder}
+        voting={editing}
       />
 
-      {selectedVotingForOption && (
-        <CreateVotingOptionModal
-          isOpen={showCreateOptionModal}
-          onClose={() => {
-            setShowCreateOptionModal(false);
-            setSelectedVotingForOption(null);
-          }}
-          onSuccess={handleCreateOptionSuccess}
-          businessId={businessId}
-          groupId={groupId}
-          votingId={selectedVotingForOption}
-        />
-      )}
-
-      {/* Modal Ver Votos */}
-      {selectedVotingForDetails && (
-        <VotesDetailModal
-          isOpen={showVotesDetailModal}
-          onClose={() => {
-            setShowVotesDetailModal(false);
-            setSelectedVotingForDetails(null);
-          }}
-          businessId={businessId}
-          groupId={groupId}
-          votingId={selectedVotingForDetails.id}
-          votingTitle={selectedVotingForDetails.title}
-          options={votingOptions[selectedVotingForDetails.id] || []}
-        />
-      )}
-
-      {/* Modal Votar */}
-      {selectedVotingForDetails && (
-        <VoteModal
-          isOpen={showVoteModal}
-          onClose={() => {
-            setShowVoteModal(false);
-            setSelectedVotingForDetails(null);
-          }}
-          onSuccess={handleVoteSuccess}
-          businessId={businessId}
-          groupId={groupId}
-          votingId={selectedVotingForDetails.id}
-          votingTitle={selectedVotingForDetails.title}
-          votingType={selectedVotingForDetails.votingType}
-          allowAbstention={selectedVotingForDetails.allowAbstention}
-          options={votingOptions[selectedVotingForDetails.id] || []}
-        />
-      )}
-
-      {/* Modal Votación en Vivo */}
-      {selectedVotingForLive && (
-        <LiveVotingModal
-          isOpen={showLiveVotingModal}
-          onClose={() => {
-            setShowLiveVotingModal(false);
-            setSelectedVotingForLive(null);
-          }}
-          businessId={businessId}
-          voting={selectedVotingForLive}
-          options={votingOptions[selectedVotingForLive.id] || []}
-          votes={votingVotes[selectedVotingForLive.id] || []}
-          onVoteSuccess={handleVoteSuccess}
-        />
-      )}
-
-      {/* Modal Editar Votación */}
-      {selectedVotingForEdit && (
-        <EditVotingModal
-          isOpen={showEditModal}
-          onClose={handleEditClose}
-          onSuccess={handleEditSuccess}
-          businessId={businessId}
-          groupId={groupId}
-          voting={selectedVotingForEdit as any}
-        />
-      )}
-
-      {/* Modal Eliminar Votación */}
-      {selectedVotingForDelete && (
+      {deleting && (
         <DeleteVotingModal
-          isOpen={showDeleteModal}
-          onClose={handleDeleteClose}
-          onSuccess={handleDeleteSuccess}
+          isOpen={!!deleting}
+          onClose={() => setDeleting(null)}
+          onSuccess={() => {
+            setDeleting(null);
+            reloadAll();
+          }}
           businessId={businessId}
           groupId={groupId}
-          voting={selectedVotingForDelete as any}
+          voting={deleting}
         />
       )}
 
-      <ConfirmModal
-        isOpen={showDeleteOptionConfirm}
-        onClose={() => {
-          setShowDeleteOptionConfirm(false);
-          setOptionToDelete(null);
-        }}
-        onConfirm={handleDeleteOption}
-        title="Eliminar opción"
-        message={
-          optionToDelete
-            ? `¿Deseas eliminar la opción "${optionToDelete.option.optionText}"? Esta acción es permanente.`
-            : '¿Deseas eliminar esta opción de votación?'
-        }
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        type="danger"
-      />
+      {detail && (
+        <VotesDetailModal
+          isOpen={!!detail}
+          onClose={() => setDetail(null)}
+          businessId={businessId}
+          groupId={groupId}
+          votingId={detail.id}
+          votingTitle={detail.title}
+          options={rows[detail.id]?.options ?? []}
+        />
+      )}
     </div>
   );
 }
-
-

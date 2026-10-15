@@ -1,0 +1,27 @@
+# Infraestructura local de Rupü: una sola, compartida por el repo principal y todos los worktrees.
+# Cada worktree tiene su propia base (rupu_<nombre>) dentro de este mismo Postgres (scripts/worktree.sh).
+# Se maneja con: ./scripts/dev-services.sh start|stop infra
+name: rupu-local
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: rupu_postgres_local
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: rupu_local
+      POSTGRES_DB: postgres
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - rupu_pg_local:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  rupu_pg_local:
+    external: true

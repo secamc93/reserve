@@ -6,6 +6,7 @@ import (
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/request"
 	"central_reserve/services/auth/users/internal/infra/primary/handlers/response"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			page		query		int							false	"Número de página"	default(1)	minimum(1)
-//	@Param			page_size	query		int							false	"Tamaño de página"	default(10)	minimum(1)	maximum(100)
+//	@Param			page_size	query		int							false	"Tamaño de página"	default(10)	minimum(1)	maximum(200)
 //	@Param			name		query		string						false	"Filtrar por nombre (búsqueda parcial)"
 //	@Param			email		query		string						false	"Filtrar por email (búsqueda parcial)"
 //	@Param			phone		query		string						false	"Filtrar por teléfono (búsqueda parcial)"
@@ -48,6 +49,15 @@ func (h *handlers) GetUsersHandler(c *gin.Context) {
 		})
 		return
 	}
+
+	page, pageSize, err := pagination.Resolve(req.Page, req.PageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.UserErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+	req.Page, req.PageSize = page, pageSize
 
 	// Si no es super admin, ignorar business_id del query y usar el del token
 	isSuperAdmin := middleware.IsSuperAdmin(c)

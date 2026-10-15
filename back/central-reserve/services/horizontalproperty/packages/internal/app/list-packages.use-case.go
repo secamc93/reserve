@@ -5,6 +5,7 @@ import (
 
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 )
 
 // ListPackages lista paquetes con filtros y paginación
@@ -12,15 +13,7 @@ func (uc *packageUseCase) ListPackages(ctx context.Context, filters domain.Packa
 	ctx = log.WithFunctionCtx(ctx, "ListPackages")
 
 	// Validar paginación
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.PageSize < 1 {
-		filters.PageSize = 10
-	}
-	if filters.PageSize > 100 {
-		filters.PageSize = 100
-	}
+	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
 
 	// Llamar al repositorio
 	result, err := uc.packageRepo.ListPackages(ctx, filters)

@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { getParkingZonesAction } from '../infrastructure/actions/get-parking-zones.action';
 import { ParkingZoneListDTO } from '../domain';
 import { Table } from '@shared/ui/table';
+import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Button } from '@shared/ui/button';
 import { Alert } from '@shared/ui/alert';
 import { Spinner } from '@shared/ui/spinner';
@@ -17,11 +19,11 @@ interface ParkingZonesTableProps {
 }
 
 export function ParkingZonesTable({ businessId }: ParkingZonesTableProps) {
+  const isMobile = useIsMobile();
   const [zones, setZones] = useState<ParkingZoneListDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page, pageSize, setPage } = usePaginationParams();
   const [total, setTotal] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -129,10 +131,10 @@ export function ParkingZonesTable({ businessId }: ParkingZonesTableProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Zonas de Parqueo</h2>
-        <Button onClick={() => setShowCreateModal(true)}>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-4">
+        <h2 className="text-lg md:text-xl font-semibold">Zonas de Parqueo</h2>
+        <Button onClick={() => setShowCreateModal(true)} className="w-full md:w-auto min-h-[44px] md:min-h-0 justify-center">
           <PlusIcon className="w-4 h-4 mr-2" />
           Nueva Zona
         </Button>
@@ -146,18 +148,19 @@ export function ParkingZonesTable({ businessId }: ParkingZonesTableProps) {
 
       <Table
         data={zones}
-        columns={columns}
+        columns={isMobile ? mobileColumn<ParkingZoneListDTO>('Zonas', (zone) => (
+            <MobileCard
+              title={zone.name}
+              subtitle={zone.location || undefined}
+              badge={<span className={`text-sm font-medium ${zone.isActive ? 'text-green-600' : 'text-red-600'}`}>{zone.isActive ? 'Activa' : 'Inactiva'}</span>}
+              fields={[
+                { label: 'Código', value: zone.code },
+                { label: 'Espacios', value: String(zone.totalSlots) },
+              ]}
+            />
+          )) : columns}
         loading={loading}
-        pagination={{
-          currentPage: page,
-          totalPages,
-          totalItems: total,
-          itemsPerPage: pageSize,
-          onPageChange: setPage,
-          onItemsPerPageChange: setPageSize,
-          showItemsPerPageSelector: true,
-          itemsPerPageOptions: [5, 10, 25, 50, 100],
-        }}
+        pagination={{ total, totalPages }}
         emptyMessage="No hay zonas de parqueo registradas"
       />
 

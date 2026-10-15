@@ -2,10 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import { useBusinesses } from '../hooks';
-import { Table, TableColumn, PaginationProps, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
+import { Table, TableColumn, TableUrlPagination, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
+import { usePaginationParams } from '@shared/ui/pagination';
 import { Badge, Button } from '@shared/ui';
 import { BuildingOfficeIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { TokenStorage } from '@shared/config';
+import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
 import { useBusinessTypes } from '../../../business-types/ui/hooks';
 
 interface BusinessesTableProps {
@@ -35,8 +37,7 @@ interface Filters {
 
 export function BusinessesTable({ token }: BusinessesTableProps) {
   const businessToken = token || TokenStorage.getBusinessToken() || '';
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
   const [filters, setFilters] = useState<Filters>({});
 
   const { businessTypes } = useBusinessTypes();
@@ -233,16 +234,28 @@ export function BusinessesTable({ token }: BusinessesTableProps) {
     },
   ];
 
-  const pagination: PaginationProps = {
-    currentPage,
-    totalPages,
-    totalItems: total,
-    itemsPerPage: pageSize,
-    onPageChange: setCurrentPage,
-    onItemsPerPageChange: setPageSize,
-    showItemsPerPageSelector: true,
-    itemsPerPageOptions: [5, 10, 25, 50, 100],
-  };
+  const pagination: TableUrlPagination = { total: total, totalPages };
+
+  // Teléfono: cada negocio es una tarjeta (el botón "Ver" de escritorio aún no hace nada: se omite).
+  const isMobile = useIsMobile();
+  const mobileColumns = mobileColumn<Business>('Negocios', (business) => {
+    const businessType = businessTypes?.find(bt => bt.id === business.business_type_id);
+    return (
+      <div className="[contain:inline-size]">
+        <MobileCard
+          title={business.name || 'N/A'}
+          subtitle={business.description}
+          badge={<Badge type={business.is_active ? 'success' : 'error'}>{business.is_active ? 'Activo' : 'Inactivo'}</Badge>}
+          fields={[
+            { label: 'Tipo', value: business.business_type || businessType?.name || 'N/A' },
+            { label: 'Teléfono', value: business.phone || 'N/A' },
+            { label: 'Correo', value: business.email || 'N/A', full: true },
+            { label: 'Dirección', value: business.address || 'N/A', full: true },
+          ]}
+        />
+      </div>
+    );
+  });
 
   const tableFilters: TableFiltersProps = {
     availableFilters,
@@ -268,7 +281,7 @@ export function BusinessesTable({ token }: BusinessesTableProps) {
 
   return (
     <Table
-      columns={columns}
+      columns={isMobile ? mobileColumns : columns}
       data={businesses.filter(b => b != null)} // Filtrar elementos undefined/null
       loading={loading}
       pagination={pagination}

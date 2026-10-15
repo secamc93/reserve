@@ -118,7 +118,7 @@ export function DateRangePicker({
             </div>
             
             {isOpen && (
-                <div className="absolute z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl p-4 w-[320px]">
+                <div className="absolute z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl p-4 w-[320px] max-w-[calc(100vw-2rem)]">
                     <div className="space-y-4">
                         {/* Fecha inicio */}
                         <div>

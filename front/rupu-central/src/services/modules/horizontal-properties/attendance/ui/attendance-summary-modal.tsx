@@ -170,8 +170,8 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl w-[700px] max-w-[95vw] max-h-[90vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Resumen de Asistencia</h2>
+        <div className="flex justify-between items-center px-4 md:px-6 py-3 md:py-4 border-b border-gray-100">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900">Resumen de Asistencia</h2>
           <div className="flex items-center gap-3">
             {lastUpdated && (
               <span className="text-xs text-gray-400">
@@ -180,7 +180,8 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
             )}
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Cerrar"
+              className="w-11 h-11 md:w-8 md:h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -190,7 +191,7 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
         </div>
 
         {/* Content */}
-        <div className="flex-1 px-6 py-5 overflow-y-auto">
+        <div className="flex-1 px-4 md:px-6 py-4 md:py-5 overflow-y-auto">
           {loading && !summary && (
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
@@ -217,7 +218,7 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
           {summary && (
             <div className="space-y-6">
               {/* Row 1: Two pie charts side by side */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Pie: Asistencia por Cantidad */}
                 <div className="bg-gray-50 rounded-xl p-5 flex flex-col items-center">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Asistencia por Cantidad</h3>
@@ -268,7 +269,7 @@ export function AttendanceSummaryModal({ isOpen, onClose, attendanceListId, toke
               </div>
 
               {/* Row 2: Summary stats */}
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-center">
                   <p className="text-2xl font-bold text-blue-700">{summary.total_units}</p>
                   <p className="text-xs text-blue-600 mt-1">Total Unidades</p>

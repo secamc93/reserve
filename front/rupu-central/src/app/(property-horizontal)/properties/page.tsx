@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { ConsolidatedDashboard, useDashboardStats } from '@/services/modules/horizontal-properties/dashboard/ui';
 import { TokenStorage } from '@shared/config';
 import { Spinner, Button } from '@shared/ui';
+import { usePaginationParams } from '@shared/ui/pagination';
 
 export default function PropertiesPage() {
   const router = useRouter();
@@ -40,9 +41,8 @@ export default function PropertiesPage() {
     setShouldShowDashboard(true);
   }, [router]);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const { stats, loading, error, refresh, setPage, setPageSize: handleSetPageSize } = useDashboardStats({
+  const { page: currentPage, pageSize } = usePaginationParams();
+  const { stats, loading, error, refresh } = useDashboardStats({
     businessId: undefined,
     page: currentPage,
     pageSize: pageSize,
@@ -58,11 +58,11 @@ export default function PropertiesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-3 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Propiedad Horizontal</h1>
-          <p className="text-gray-600 mt-2">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Propiedad Horizontal</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">
             Selecciona un negocio en el dropdown superior para ver su detalle
           </p>
         </div>
@@ -82,10 +82,6 @@ export default function PropertiesPage() {
             <ConsolidatedDashboard
               data={stats}
               loading={loading}
-              currentPage={currentPage}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={handleSetPageSize}
             />
           ) : null}
         </div>

@@ -257,7 +257,7 @@ export function UpdateRoleForm({ role, onSubmit, onCancel, loading = false }: Up
       </div>
 
       {/* Acciones */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+      <div className="flex flex-col-reverse md:flex-row items-center justify-end gap-3 pt-4 border-t border-gray-200 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
         <Button
           type="button"
           variant="outline"

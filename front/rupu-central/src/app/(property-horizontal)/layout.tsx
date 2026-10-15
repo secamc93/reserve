@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
-import { Sidebar, Spinner, Alert } from '@shared/ui';
+import { Sidebar, Spinner, Alert, MobileTopBar, useActiveProperty, useMediaQuery, DESKTOP_MEDIA_QUERY } from '@shared/ui';
 import { BusinessDropdown } from '@/shared/ui/business-dropdown';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 
@@ -14,8 +14,11 @@ export default function PropertyHorizontalLayout({ children }: { children: React
   const router = useRouter();
   const [user, setUser] = useState<{ userId: string; name: string; email: string; role: string; avatarUrl?: string; is_super_admin?: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const { error: permissionsError } = usePermissions();
+  const activeProperty = useActiveProperty();
+  // El selector de propiedad se monta una sola vez: en la barra superior (escritorio) o en el
+  // menú de módulos (teléfono). Así no carga la lista dos veces.
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
 
   useEffect(() => {
     const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
@@ -38,14 +41,14 @@ export default function PropertyHorizontalLayout({ children }: { children: React
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar user={user} />
+      {/* Teléfono (< md): sin barra lateral; barra inferior + menú de módulos (con el selector de propiedad). */}
+      <Sidebar user={user} mobileNav mobileSheetExtra={isDesktop ? undefined : <BusinessDropdown />} />
       <main
-        className="flex-1 min-h-screen bg-gray-50 transition-all duration-300"
-        style={{ marginLeft: sidebarExpanded ? '250px' : '80px' }}
-        onMouseEnter={() => setSidebarExpanded(false)}
+        className="flex-1 min-w-0 min-h-screen bg-gray-50 transition-all duration-300 md:ml-20 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
-        <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-end">
-          <BusinessDropdown />
+        <MobileTopBar property={activeProperty} />
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-3 hidden md:flex items-center justify-end">
+          {isDesktop && <BusinessDropdown />}
         </div>
         {permissionsError && <div className="p-4"><Alert type="error" onClose={() => {}}>{permissionsError}</Alert></div>}
         {children}

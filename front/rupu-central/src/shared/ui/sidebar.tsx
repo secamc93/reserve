@@ -1,11 +1,14 @@
 /**
  * Sidebar de navegacion
- * Muestra items dinamicos segun el tipo de negocio activo
+ * Muestra items dinamicos segun el tipo de negocio activo.
+ * Con `mobileNav` (layouts de propiedad horizontal e IAM): en escritorio (>= md) es la barra
+ * lateral de siempre; en teléfono (< md) se oculta y en su lugar se muestra `MobileNav` (barra
+ * inferior con el logo de la propiedad y menú de módulos). Sin `mobileNav` se comporta como antes.
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { TokenStorage } from '@shared/config';
@@ -13,6 +16,9 @@ import { UserInfoModal } from '@/services/auth';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks';
 import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
 import type { SidebarItemConfig } from '@/shared/config/business-type-config';
+import { buildNavItems, resolveBusinessHref } from '@/shared/utils/navigation';
+import { MobileNav } from './mobile-nav';
+import { useActiveProperty } from './use-active-property';
 
 interface SidebarProps {
   user: {
@@ -23,14 +29,19 @@ interface SidebarProps {
     avatarUrl?: string;
     is_super_admin?: boolean;
   } | null;
+  /** Muestra la barra inferior en teléfono (< md) y oculta ahí la barra lateral. */
+  mobileNav?: boolean;
+  /** Contenido extra del menú de módulos del teléfono (p. ej. el selector de propiedad). */
+  mobileSheetExtra?: ReactNode;
 }
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const { hasResource } = usePermissions();
+  const activeProperty = useActiveProperty(mobileNav);
 
   const handleLogout = () => {
     TokenStorage.clearSession();
@@ -50,14 +61,20 @@ export function Sidebar({ user }: SidebarProps) {
   // Resolver {businessId} en los hrefs
   const dynamicItems: SidebarItemConfig[] = (typeConfig?.sidebarItems || []).map(item => ({
     ...item,
-    href: activeBizId !== null && activeBizId !== 0
-      ? item.href.replace('{businessId}', String(activeBizId))
-      : item.href.replace('/{businessId}', ''),
+    href: resolveBusinessHref(item.href, activeBizId),
   }));
 
   // Permisos IAM
   const canAccessIAM = hasResource('Usuarios') || hasResource('Roles') || hasResource('Permisos') || hasResource('Recursos') || hasResource('Tipos de Negocio') || hasResource('Negocios');
   const canAccessLogs = user?.is_super_admin || false;
+
+  // Mismos módulos para la barra inferior y el menú de módulos del teléfono.
+  const navItems = buildNavItems({
+    sidebarItems: typeConfig?.sidebarItems || [],
+    activeBusinessId: activeBizId,
+    canAccessIAM,
+    canAccessLogs,
+  });
 
   const renderNavItem = (href: string, iconPath: string, label: string) => {
     const active = isLinkActive(href);
@@ -93,7 +110,7 @@ export function Sidebar({ user }: SidebarProps) {
   return (
     <>
       <aside
-        className="fixed left-0 top-0 h-full transition-all duration-300 z-30"
+        className={`fixed left-0 top-0 h-full transition-all duration-300 z-30${mobileNav ? ' hidden md:block' : ''}`}
         style={{
           width: sidebarExpanded ? '250px' : '80px',
           backgroundColor: 'var(--color-primary)'
@@ -186,6 +203,19 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
         </div>
       </aside>
+
+      {mobileNav && (
+      <MobileNav
+        items={navItems}
+        property={activeProperty}
+        fallbackName={activeTypeName || undefined}
+        user={user}
+        onLogout={handleLogout}
+        onChangeModule={() => router.push('/select-type')}
+        onOpenProfile={() => setShowUserModal(true)}
+        sheetExtra={mobileSheetExtra}
+      />
+      )}
 
       <UserInfoModal
         isOpen={showUserModal}

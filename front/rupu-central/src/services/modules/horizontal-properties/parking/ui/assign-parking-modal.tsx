@@ -187,7 +187,7 @@ export function AssignParkingModal({
               required
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Marca"
                 value={formData.vehicleBrand || ''}
@@ -210,7 +210,7 @@ export function AssignParkingModal({
               placeholder="Ej: Blanco"
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Fecha Inicio *"
                 type="date"

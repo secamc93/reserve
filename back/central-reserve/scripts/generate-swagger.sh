@@ -100,9 +100,7 @@ generate_auth() {
     swag init -g ./cmd/main.go \
         --output ./shared/docs \
         --parseDependency \
-        --parseInternal \
-        --exclude services/reserve \
-        --exclude services/restaurants
+        --parseInternal
     
     # Filtrar solo rutas de auth y actualizar host/schemes desde variables de entorno
     mkdir -p ./shared/docs/auth
@@ -186,9 +184,7 @@ generate_properties() {
     swag init -g ./cmd/main.go \
         --output ./shared/docs \
         --parseDependency \
-        --parseInternal \
-        --exclude services/reserve \
-        --exclude services/restaurants
+        --parseInternal
     
     # Filtrar solo rutas de properties y actualizar host/schemes desde variables de entorno
     mkdir -p ./shared/docs/properties

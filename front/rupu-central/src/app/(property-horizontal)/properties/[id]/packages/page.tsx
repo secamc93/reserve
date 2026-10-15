@@ -9,7 +9,7 @@ export default function PackagesPage() {
 
   if (isNaN(businessId)) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="text-red-600">ID de propiedad inválido</div>
       </div>
     );
@@ -19,7 +19,7 @@ export default function PackagesPage() {
     <div>
       {/* Navegación */}
 
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <PackagesTable businessId={businessId} />
       </div>
     </div>

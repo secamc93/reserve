@@ -24,8 +24,8 @@ type CreateCommonAreaRequest struct {
 type ListCommonAreasRequest struct {
 	CommonAreaTypeID *uint `form:"common_area_type_id"`
 	IsActive         *bool `form:"is_active"`
-	Page             int   `form:"page,default=1" binding:"min=1"`
-	PageSize         int   `form:"page_size,default=10" binding:"min=1,max=100"`
+	Page             int   `form:"page,default=1"`
+	PageSize         int   `form:"page_size,default=10"`
 }
 
 // CreateReservationRequest - Request para crear reserva
@@ -58,8 +58,8 @@ type ListReservationsRequest struct {
 	ReservationStatusID *uint      `form:"reservation_status_id"`
 	StartDate           *time.Time `form:"start_date"`
 	EndDate             *time.Time `form:"end_date"`
-	Page                int        `form:"page,default=1" binding:"min=1"`
-	PageSize            int        `form:"page_size,default=10" binding:"min=1,max=100"`
+	Page                int        `form:"page,default=1"`
+	PageSize            int        `form:"page_size,default=10"`
 }
 
 // ApproveReservationRequest - Request para aprobar reserva

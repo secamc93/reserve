@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# reportes de pruebas (vitest junit, playwright)
+/reports/
+/test-results/
+/playwright-report/
+/blob-report/

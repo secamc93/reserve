@@ -138,9 +138,9 @@ export function AttendanceManagement({
 
   return (
     <div className="space-y-4">
-      <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between gap-4">
+      <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
         {/* Left Side: Title + List Info */}
-        <div className="flex items-center gap-6 overflow-hidden">
+        <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-6 overflow-hidden">
           <h3 className="text-lg font-bold text-gray-900 flex-shrink-0 flex items-center gap-2">
             📋 Gestión de Asistencia
           </h3>
@@ -154,7 +154,7 @@ export function AttendanceManagement({
 
           {/* Active List Info (Inline) */}
           {attendanceLists.length > 0 && (
-            <div className="flex items-center gap-4 text-sm border-l border-gray-300 pl-6">
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 text-sm md:border-l border-gray-300 md:pl-6">
               <span className="font-medium text-gray-900 whitespace-nowrap">
                 ID: {attendanceLists[0].id}
               </span>
@@ -172,7 +172,7 @@ export function AttendanceManagement({
         </div>
 
         {/* Right Side: List Actions + Create Button */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-3 flex-shrink-0 [&_button]:min-h-[44px] md:[&_button]:min-h-0">
           {attendanceLists.length > 0 && (
             <div className="flex items-center gap-2 mr-2">
               <button

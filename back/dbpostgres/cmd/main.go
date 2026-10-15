@@ -6,7 +6,6 @@ import (
 	"dbpostgres/app/infra/db"
 	"dbpostgres/pkg/env"
 	"dbpostgres/pkg/log"
-	"os"
 	"time"
 )
 
@@ -45,17 +44,8 @@ func main() {
 	// Crear caso de uso de migración (solo esquema)
 	migrationUseCase := usecases.NewMigrationUseCase(dbConn, logger)
 
-	// Verificar si hay argumento para migración parcial
-	args := os.Args[1:]
-	if len(args) > 0 && args[0] == "sport-training" {
-		logger.Info().Msg("🏃 Ejecutando migración SOLO para sport_training...")
-		if err := migrationUseCase.MigrateSportTrainingOnly(); err != nil {
-			logger.Fatal().Err(err).Msg("Error al ejecutar migración de sport_training")
-		}
-	} else {
-		if err := migrationUseCase.MigrateDB(); err != nil {
-			logger.Fatal().Err(err).Msg("Error al ejecutar migración")
-		}
+	if err := migrationUseCase.MigrateDB(); err != nil {
+		logger.Fatal().Err(err).Msg("Error al ejecutar migración")
 	}
 
 	logger.Info().Msg("✅ Migración completada exitosamente")

@@ -27,7 +27,7 @@ export default function IAMUsersPage() {
   }
 
   return (
-    <div className="p-8 w-full">
+    <div className="p-3 md:p-8 w-full">
       <div className="w-full">
         <UsersPage />
       </div>

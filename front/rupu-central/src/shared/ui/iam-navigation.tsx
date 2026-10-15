@@ -135,16 +135,17 @@ export function IAMNavigation() {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    // Teléfono (< md): queda debajo de la barra superior móvil (h-14) y el título va encima de las pestañas.
+    <div className="bg-white border-b border-gray-200 sticky top-14 md:top-0 z-10 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4 py-3">
+        <div className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between md:gap-4">
           {/* Título del módulo actual - Izquierda */}
           <div className="flex-shrink-0 min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 truncate">
+            <h1 className="text-xl font-bold text-gray-900 md:truncate">
               {currentModule.title}
             </h1>
             {currentModule.description && (
-              <p className="text-sm text-gray-500 truncate mt-0.5">
+              <p className="text-sm text-gray-500 md:truncate mt-0.5">
                 {currentModule.description}
               </p>
             )}

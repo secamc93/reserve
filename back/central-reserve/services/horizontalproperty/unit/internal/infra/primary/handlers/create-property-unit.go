@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/unit/internal/domain"
@@ -54,17 +55,22 @@ func (h *PropertyUnitHandler) CreatePropertyUnit(c *gin.Context) {
 
 	var businessID uint
 	if isSuperAdmin {
-		// Super admin: puede usar el business_id del token o debe especificarlo en el body
+		// Super admin: su token trae business_id = 0, así que el negocio llega en ?business_id
+		// (mismo criterio que voting-groups); si el token sí trae uno, se usa ese.
 		if exists && tokenBusinessID != 0 {
 			businessID = tokenBusinessID
 		} else {
-			h.logger.Error(ctx).Msg("business_id requerido para super admin")
-			c.JSON(http.StatusBadRequest, response.ErrorResponse{
-				Success: false,
-				Message: "business_id requerido",
-				Error:   "Debe tener business_id en el token para crear unidades",
-			})
-			return
+			bid64, err := strconv.ParseUint(c.Query("business_id"), 10, 32)
+			if err != nil || bid64 == 0 {
+				h.logger.Error(ctx).Str("business_id", c.Query("business_id")).Msg("business_id requerido para super admin")
+				c.JSON(http.StatusBadRequest, response.ErrorResponse{
+					Success: false,
+					Message: "business_id requerido",
+					Error:   "Proporcione ?business_id (numérico y > 0)",
+				})
+				return
+			}
+			businessID = uint(bid64)
 		}
 	} else {
 		// Usuario normal: business_id siempre del token

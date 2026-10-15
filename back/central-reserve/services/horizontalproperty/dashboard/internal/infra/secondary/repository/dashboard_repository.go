@@ -12,6 +12,7 @@ import (
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
+	"central_reserve/shared/pagination"
 
 	"gorm.io/gorm"
 )
@@ -308,15 +309,7 @@ func (r *DashboardRepository) GetBusinessSummaries(ctx context.Context, page, pa
 	conn := r.db.Conn(ctx)
 
 	// Validar y normalizar parámetros de paginación
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 {
-		pageSize = 10
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	// Filtrar solo businesses de tipo "Propiedad Horizontal" (business_type_id = 11)
 	// Obtener el ID del tipo de negocio "Propiedad Horizontal"

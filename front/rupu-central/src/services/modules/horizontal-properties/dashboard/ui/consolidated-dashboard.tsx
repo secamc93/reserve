@@ -8,6 +8,7 @@
 import { DashboardStats, BusinessSummary } from '../domain/entities';
 import { useRouter } from 'next/navigation';
 import { Table } from '@shared/ui/table';
+import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
 import { 
   BuildingOfficeIcon, 
   HomeIcon, 
@@ -24,20 +25,15 @@ import {
 interface ConsolidatedDashboardProps {
   data: DashboardStats;
   loading?: boolean;
-  currentPage?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
 }
+
+/** La paginación de la tabla de propiedades vive en la URL (?page=&page_size=). */
 
 export function ConsolidatedDashboard({ 
   data, 
   loading,
-  currentPage = 1,
-  pageSize = 10,
-  onPageChange,
-  onPageSizeChange,
 }: ConsolidatedDashboardProps) {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const { summary, voting_stats, attendance_stats, business_summaries = [], pagination } = data;
 
@@ -115,15 +111,15 @@ export function ConsolidatedDashboard({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Resumen General - Todas las estadísticas en una sola fila */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Resumen General</h2>
-        <div className="flex flex-wrap gap-3">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Resumen General</h2>
+        <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap">
           {allStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="bg-white rounded-lg shadow-sm p-3 border border-gray-200 flex-1 min-w-[140px]">
+              <div key={index} className="bg-white rounded-lg shadow-sm p-3 border border-gray-200 min-w-0 md:flex-1 md:min-w-[140px]">
                 <div className="flex items-center gap-2">
                   <div className={`${stat.color} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
                     <Icon className="w-4 h-4 text-gray-600" />
@@ -142,9 +138,28 @@ export function ConsolidatedDashboard({
       {/* Propiedades por Propiedad */}
       {business_summaries.length > 0 && (
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Propiedades</h2>
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Propiedades</h2>
           <Table
-            columns={[
+            columns={isMobile ? mobileColumn<BusinessSummary>('Propiedades', (business) => (
+              <MobileCard
+                title={business.business_name}
+                subtitle={`ID: ${business.business_id}`}
+                fields={[
+                  { label: 'Unidades', value: business.total_units.toLocaleString() },
+                  { label: 'Residentes', value: business.total_residents.toLocaleString() },
+                  { label: 'Votaciones activas', value: String(business.active_votings) },
+                  { label: 'Listas activas', value: String(business.active_attendance_lists) },
+                ]}
+                actions={
+                  <button
+                    onClick={() => router.push(`/properties/${business.business_id}`)}
+                    className="w-full rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium"
+                  >
+                    Ver detalle
+                  </button>
+                }
+              />
+            )) : [
               {
                 key: 'property',
                 label: 'Propiedad',
@@ -251,23 +266,14 @@ export function ConsolidatedDashboard({
             emptyMessage="No hay propiedades horizontales disponibles"
             loading={loading}
             pagination={
-              pagination && onPageChange && onPageSizeChange
-                ? {
-                    currentPage: pagination.page,
-                    totalPages: pagination.total_pages,
-                    totalItems: pagination.total,
-                    itemsPerPage: pagination.page_size,
-                    onPageChange: onPageChange,
-                    onItemsPerPageChange: onPageSizeChange,
-                  }
-                : undefined
+              pagination ? { total: pagination.total, totalPages: pagination.total_pages } : undefined
             }
           />
         </div>
       )}
 
       {/* Secciones Futuras - Placeholders */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Quejas - Pendiente */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">

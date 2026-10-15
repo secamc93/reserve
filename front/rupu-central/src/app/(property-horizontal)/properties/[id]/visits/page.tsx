@@ -10,7 +10,7 @@ export default function VisitsPage() {
 
   if (isNaN(businessId)) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="text-red-600">ID de propiedad inválido</div>
       </div>
     );
@@ -20,7 +20,7 @@ export default function VisitsPage() {
     <div>
       {/* Navegación */}
 
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <VisitsTable businessId={businessId} />
       </div>
     </div>

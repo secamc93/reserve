@@ -47,6 +47,9 @@ type VotingRepository interface {
 
 	// Reset voting
 	DeleteAllVotesByVoting(ctx context.Context, votingID uint) (int64, error)
+	// ValidateVoteTarget verifica que la opción sea de la votación y que la unidad sea de la misma
+	// propiedad (business) que la votación. Devuelve ErrOptionNotInVoting o ErrUnitNotInVotingBusiness.
+	ValidateVoteTarget(ctx context.Context, votingID, propertyUnitID, votingOptionID uint) error
 
 	// Previous voting
 	GetPreviousVoting(ctx context.Context, votingID uint, groupID uint) (*Voting, error)
