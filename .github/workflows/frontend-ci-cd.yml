@@ -29,8 +29,39 @@ env:
   API_BASE_URL: 'https://xn--rup-joa.com/api/v1'
 
 jobs:
+  # Solo pruebas UNITARIAS (Vitest): las e2e de Playwright corren únicamente en local
+  # (.claude/rules/testing.md). Si fallan, no se construye ni se despliega.
+  unit-tests:
+    name: Unit tests (Vitest)
+    runs-on: ubuntu-24.04-arm
+    defaults:
+      run:
+        working-directory: front/rupu-central
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: front/rupu-central/package.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: front/rupu-central/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        run: pnpm test
+
   build-and-push:
     name: Build (ARM64) and Push to ECR
+    needs: unit-tests
     runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo de GitHub (gratis en repos públicos)
     # En PRs solo se construye para validar; push a ECR solo desde main o manual
     env:

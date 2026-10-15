@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { TokenStorage } from '@shared/config';
 import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
 import { getBusinessesAction } from '@/services/auth/businesses/infrastructure/actions/get-businesses.action';
+import { getBusinessTypesAction } from '@/services/auth/business-types/infrastructure/actions/get-business-types.action';
 
 interface DropdownBusiness {
   id: number;
@@ -47,12 +48,11 @@ export function BusinessDropdown() {
             const sampleBusiness = allLocal.find(b => b.business_type_code === activeType);
             let businessTypeId = sampleBusiness?.business_type_id;
 
-            // Mapeo fallback por code
+            // Sin negocios locales de ese tipo: resolver el id por code desde la API
+            // (los ids cambian entre bases de datos, no se pueden fijar en código)
             if (!businessTypeId) {
-              const typeIdMap: Record<string, number> = {
-                'horizontal_property': 11,
-              };
-              businessTypeId = typeIdMap[activeType];
+              const typesResult = await getBusinessTypesAction({ token });
+              businessTypeId = typesResult.data?.businessTypes.find(t => t.code === activeType)?.id;
             }
 
             if (businessTypeId) {

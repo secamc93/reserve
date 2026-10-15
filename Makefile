@@ -1,7 +1,9 @@
 # Makefile Centralizado - Proyecto Reserve
 # Uso: make [comando]
 
-.PHONY: help run-centralback run-centralfront run-website run-migrations run-all stop-all run-backend run-frontend
+.PHONY: help run-centralback run-centralfront run-website run-migrations run-all stop-all run-backend run-frontend \
+        svc-start svc-stop svc-restart svc-status svc-logs svc-health wt-new wt-list wt-remove \
+        test-front test-e2e typecheck-front test-integration
 
 # ============================================
 # VARIABLES
@@ -245,3 +247,53 @@ dev-full: ## Alias corto: instrucciones para ejecutar todo
 run-backend: run-centralback ## Alias: make run-backend = make run-centralback
 
 run-frontend: run-centralfront ## Alias: make run-frontend = make run-centralfront
+
+# ============================================
+# SERVICIOS EN TMUX (un checkout = una sesión) — ver .claude/rules/servicios-y-worktrees.md
+# ============================================
+DEV_SVC=./scripts/dev-services.sh
+
+svc-start: ## Iniciar en tmux: make svc-start SVC=infra|backend|frontend|all
+	@$(DEV_SVC) start $(SVC)
+
+svc-stop: ## Detener: make svc-stop SVC=backend|frontend|all|infra
+	@$(DEV_SVC) stop $(SVC)
+
+svc-restart: ## Reiniciar: make svc-restart SVC=backend|frontend|all
+	@$(DEV_SVC) restart $(SVC)
+
+svc-status: ## Estado de servicios, puertos y BD de este checkout
+	@$(DEV_SVC) status
+
+svc-logs: ## Logs: make svc-logs SVC=backend [LINES=100]
+	@$(DEV_SVC) logs $(SVC) $(LINES)
+
+svc-health: ## Health check HTTP de este checkout
+	@$(DEV_SVC) health
+
+# ============================================
+# WORKTREES (un worktree por agente)
+# ============================================
+wt-new: ## Crear worktree: make wt-new NAME=tarea [FROM=rama-base]
+	@./scripts/worktree.sh new $(NAME) $(FROM)
+
+wt-list: ## Listar worktrees
+	@./scripts/worktree.sh list
+
+wt-remove: ## Borrar worktree (servicios, BD y carpeta): make wt-remove NAME=tarea
+	@./scripts/worktree.sh remove $(NAME)
+
+# ============================================
+# PRUEBAS DEL FRONT — ver .claude/rules/testing.md
+# ============================================
+typecheck-front: ## TypeScript sin emitir
+	@cd $(FRONT_CENTRAL_DIR) && pnpm typecheck
+
+test-front: ## Pruebas unitarias del front (Vitest)
+	@cd $(FRONT_CENTRAL_DIR) && pnpm test
+
+test-integration: ## Pruebas de integración del back (tag integration) contra la BD local del checkout. SOLO local, no corren en CI
+	@set -a && . $(BACK_CENTRAL_DIR)/.env && set +a && cd $(BACK_CENTRAL_DIR) && go test -tags=integration -count=1 ./...
+
+test-e2e: ## E2E Playwright contra el front/back levantados (carga .env.test)
+	@set -a && . ./.env.test && set +a && cd $(FRONT_CENTRAL_DIR) && pnpm test:e2e

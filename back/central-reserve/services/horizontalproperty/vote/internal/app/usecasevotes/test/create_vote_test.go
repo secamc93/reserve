@@ -164,6 +164,9 @@ func TestCreateVote_UnitHasNoAttendance(t *testing.T) {
 		t.Errorf("Expected nil result, got: %v", result)
 	}
 
+	if !errors.Is(err, domain.ErrUnitWithoutAttendance) {
+		t.Errorf("el handler público mapea por errors.Is a 403: se esperaba domain.ErrUnitWithoutAttendance, got: %v", err)
+	}
 	if err.Error() != "unidad no registra asistencia" {
 		t.Errorf("Expected 'unidad no registra asistencia', got: %v", err)
 	}
@@ -249,6 +252,9 @@ func TestCreateVote_UnitAlreadyVoted(t *testing.T) {
 		t.Errorf("Expected nil result, got: %v", result)
 	}
 
+	if !errors.Is(err, domain.ErrUnitAlreadyVoted) {
+		t.Errorf("el handler público mapea por errors.Is a 409: se esperaba domain.ErrUnitAlreadyVoted, got: %v", err)
+	}
 	if err.Error() != "la unidad ya votó en esta votación" {
 		t.Errorf("Expected 'la unidad ya votó en esta votación', got: %v", err)
 	}
@@ -415,4 +421,32 @@ func TestCreateVote_CachePublishError_VoteStillCreated(t *testing.T) {
 // Helper function
 func contains(s, substr string) bool {
 	return len(s) > 0 && len(substr) > 0 && (s == substr || len(s) >= len(substr) && s[:len(substr)] == substr || len(s) > len(substr) && s[len(s)-len(substr):] == substr || len(s) > len(substr)*2)
+}
+
+// Aislamiento: si la opción no es de la votación o la unidad es de otra propiedad, el voto se
+// rechaza antes de verificar asistencia y sin escribir nada.
+func TestCreateVote_RechazaUnidadUOpcionAjena(t *testing.T) {
+	for _, want := range []error{domain.ErrUnitNotInVotingBusiness, domain.ErrOptionNotInVoting} {
+		mockRepo := mocks.NewMockVotingRepository()
+		useCase := usecasevotes.New(mockRepo, mocks.NewMockVotingCacheService(), mocks.NewMockLogger())
+		creado := false
+		mockRepo.ValidateVoteTargetFn = func(ctx context.Context, votingID, propertyUnitID, votingOptionID uint) error {
+			return want
+		}
+		mockRepo.CheckUnitAttendanceForVotingFn = func(ctx context.Context, votingID, propertyUnitID uint) (bool, error) {
+			return true, nil
+		}
+		mockRepo.CreateVoteFn = func(ctx context.Context, vote domain.Vote) (*domain.Vote, error) {
+			creado = true
+			return &vote, nil
+		}
+
+		_, err := useCase.CreateVote(context.Background(), domain.CreateVoteDTO{VotingID: 1, PropertyUnitID: 100, VotingOptionID: 10})
+		if !errors.Is(err, want) {
+			t.Fatalf("se esperaba %v, got: %v", want, err)
+		}
+		if creado {
+			t.Fatalf("%v: no debe registrar el voto", want)
+		}
+	}
 }

@@ -119,7 +119,11 @@ type VotingResultDTO struct {
 	OptionCode     string
 	Color          string
 	VoteCount      int
-	Percentage     float64
+	Percentage     float64 // sobre el número de votos emitidos
+	// PercentageByCoefficient es la suma de los coeficientes de participación de las unidades que
+	// eligieron la opción, sobre el total de coeficientes de las unidades activas de la propiedad.
+	// Es el porcentaje legalmente relevante en una asamblea de propiedad horizontal.
+	PercentageByCoefficient float64
 }
 
 // VotingDetailByUnitDTO - DTO para detalle de votación por unidad
@@ -130,7 +134,7 @@ type VotingDetailByUnitDTO struct {
 	ResidentID               *uint
 	ResidentName             *string
 	HasVoted                 bool
-	HasAttendance            bool     // ✅ NUEVO: Indica si la unidad tiene asistencia marcada
+	HasAttendance            bool // ✅ NUEVO: Indica si la unidad tiene asistencia marcada
 	VotingOptionID           *uint
 	OptionText               *string
 	OptionCode               *string
@@ -260,13 +264,13 @@ type ImportPropertyUnitsResult struct {
 
 // CreateBulkVotesDTO - DTO para emitir votos masivos
 type CreateBulkVotesDTO struct {
-	VotingID            uint
-	PropertyUnitIDs     []uint
-	VotingOptionID      uint
-	AutoMarkAttendance  bool
-	IPAddress           string
-	UserAgent           string
-	Notes               string
+	VotingID           uint
+	PropertyUnitIDs    []uint
+	VotingOptionID     uint
+	AutoMarkAttendance bool
+	IPAddress          string
+	UserAgent          string
+	Notes              string
 }
 
 // BulkVoteResultDTO - DTO para resultado de votación masiva

@@ -142,6 +142,24 @@ func (uc *MigrationUseCase) seedInitialData() error {
 		}
 	}
 
+	// Tipos de residente. Propietario va primero: en una base nueva queda con id 1, que es el que
+	// asume la importación de residentes por Excel (bulk-create-residents-excel.go).
+	residentTypes := []models.ResidentType{
+		{Code: "owner", Name: "Propietario", Description: "Propietario de la unidad", IsActive: true},
+		{Code: "tenant", Name: "Arrendatario", Description: "Arrendatario de la unidad", IsActive: true},
+		{Code: "family", Name: "Familiar", Description: "Familiar del propietario o arrendatario", IsActive: true},
+	}
+	for _, rt := range residentTypes {
+		var existing models.ResidentType
+		if uc.db.Where("code = ?", rt.Code).First(&existing).Error != nil {
+			if err := uc.db.Create(&rt).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", rt.Code).Msg("Error creando tipo de residente")
+			} else {
+				uc.logger.Info().Str("code", rt.Code).Msg("Tipo de residente creado")
+			}
+		}
+	}
+
 	uc.logger.Info().Msg("✅ Datos iniciales sembrados correctamente")
 	return nil
 }

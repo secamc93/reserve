@@ -1,6 +1,7 @@
 package handlerpublic
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -212,6 +213,19 @@ func (h *PublicHandler) CreatePublicVote(c *gin.Context) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlers/create-public-vote.go - Error creando voto: %v\n", err)
 		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error creando voto público")
+		// Reglas de negocio: no son errores del servidor.
+		if errors.Is(err, domain.ErrUnitWithoutAttendance) {
+			c.JSON(http.StatusForbidden, response.ErrorResponse{Success: false, Message: "Tu unidad no tiene asistencia registrada para esta votación", Error: err.Error()})
+			return
+		}
+		if errors.Is(err, domain.ErrOptionNotInVoting) || errors.Is(err, domain.ErrUnitNotInVotingBusiness) {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "La opción o la unidad no corresponden a esta votación", Error: err.Error()})
+			return
+		}
+		if errors.Is(err, domain.ErrUnitAlreadyVoted) {
+			c.JSON(http.StatusConflict, response.ErrorResponse{Success: false, Message: "Tu unidad ya votó en esta votación", Error: err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error registrando voto",

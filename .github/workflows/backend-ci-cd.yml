@@ -29,8 +29,34 @@ env:
   IMAGE_NAME: rupu-backend
 
 jobs:
+  # Solo pruebas UNITARIAS: las de integración (build tag "integration") y las e2e corren
+  # únicamente en local (.claude/rules/testing.md). Si fallan, no se construye ni se despliega.
+  unit-tests:
+    name: Unit tests (Go)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: back/central-reserve/go.mod
+          cache-dependency-path: |
+            back/central-reserve/go.sum
+            back/dbpostgres/go.sum
+
+      - name: Vet
+        working-directory: back/central-reserve
+        run: go vet ./...
+
+      - name: Unit tests
+        working-directory: back/central-reserve
+        run: go test -count=1 ./...
+
   build-and-push:
     name: Build (ARM64) and Push to ECR
+    needs: unit-tests
     runs-on: ubuntu-24.04-arm  # Runner ARM64 nativo de GitHub (gratis en repos públicos)
     # En PRs solo se construye para validar; push a ECR solo desde main o manual
     env:

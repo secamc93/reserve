@@ -81,6 +81,8 @@ type VotingResultResponse struct {
 	Color          string  `json:"color" example:"#22c55e"`
 	VoteCount      int     `json:"vote_count" example:"45"`
 	Percentage     float64 `json:"percentage" example:"75.5"`
+	// Sobre el total de coeficientes de la propiedad (el porcentaje legal en la asamblea).
+	PercentageByCoefficient float64 `json:"percentage_by_coefficient" example:"60.0"`
 }
 
 // UnitWithResidentResponse - Response para unidad con residente
@@ -133,9 +135,9 @@ type VotingWithStatusResponse struct {
 
 // BulkVoteResultResponse - Response para resultado de votación masiva
 type BulkVoteResultResponse struct {
-	TotalProcessed int                        `json:"total_processed"`
-	Succeeded      int                        `json:"succeeded"`
-	Failed         int                        `json:"failed"`
+	TotalProcessed int                          `json:"total_processed"`
+	Succeeded      int                          `json:"succeeded"`
+	Failed         int                          `json:"failed"`
 	Results        []BulkVoteItemResultResponse `json:"results"`
 }
 
