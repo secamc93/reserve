@@ -62,6 +62,7 @@ func newRouter(lookup middleware.IRoleResourceLookup) *gin.Engine {
 	v1.Any("/horizontal-properties/voting-groups/:g/votings", ok)
 	v1.Any("/horizontal-properties/voting-groups/:g/credentials", ok)
 	v1.Any("/horizontal-properties/voting-groups/:g/credentials/generate", ok)
+	v1.Any("/horizontal-properties/voting-groups/:g/votings/:v/stream", ok)
 	v1.Any("/horizontal-properties/property-units", ok)
 	v1.Any("/horizontal-properties/residents", ok)
 	v1.Any("/horizontal-properties/packages", ok)
@@ -99,6 +100,8 @@ func TestModuleAccess_ConsejeroSoloVotaciones(t *testing.T) {
 		{"GET", "/api/v1/horizontal-properties/voting-groups/3/credentials", 200},
 		// pero no genera contraseñas
 		{"POST", "/api/v1/horizontal-properties/voting-groups/3/credentials/generate", 403},
+		// ni ve la votación en vivo
+		{"GET", "/api/v1/horizontal-properties/voting-groups/3/votings/8/stream", 403},
 		// lecturas que usa Votaciones
 		{"GET", "/api/v1/horizontal-properties/property-units", 200},
 		{"GET", "/api/v1/horizontal-properties/residents", 200},
@@ -183,6 +186,19 @@ func TestModuleAccess_GenerarContrasenasExigeSuRecurso(t *testing.T) {
 		t.Errorf("rol con el recurso = %d", got)
 	}
 	if got := do(r, "POST", "/api/v1/horizontal-properties/voting-groups/3/credentials/generate", "super"); got != 200 {
+		t.Errorf("super admin = %d", got)
+	}
+}
+
+func TestModuleAccess_VotacionEnVivoExigeSuRecurso(t *testing.T) {
+	lookup := &fakeLookup{byRole: map[uint][]string{
+		roleAdmin: {middleware.ResourceVotaciones, middleware.ResourceVotacionEnVivo},
+	}}
+	r := newRouter(lookup)
+	if got := do(r, "GET", "/api/v1/horizontal-properties/voting-groups/3/votings/8/stream", "admin"); got != 200 {
+		t.Errorf("rol con el recurso = %d", got)
+	}
+	if got := do(r, "GET", "/api/v1/horizontal-properties/voting-groups/3/votings/8/stream", "super"); got != 200 {
 		t.Errorf("super admin = %d", got)
 	}
 }

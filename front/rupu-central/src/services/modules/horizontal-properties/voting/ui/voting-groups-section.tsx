@@ -17,6 +17,7 @@ import type { Voting, VotingGroup } from '../domain/entities';
 import { VotingGroupFormModal } from './voting-group-form-modal';
 import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
+import { VOTING_LIVE_RESOURCE, permissionsInclude } from '@/services/auth/permissions/domain/entities';
 import { GroupQRModal } from './components/group-qr-modal';
 import { useGroupQr, GROUP_QR_VALID_HOURS } from './hooks';
 import {
@@ -330,6 +331,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
               groupName={group.name}
               votings={votings}
               onReload={loadVotings}
+              canViewLive={permissionsInclude(TokenStorage.getUserPermissions(), VOTING_LIVE_RESOURCE)}
             />
           )}
         </div>

@@ -18,17 +18,19 @@ const (
 	// Generar (o regenerar) las contraseñas de voto de un grupo: aparte de Votaciones para que un
 	// rol pueda operar la asamblea sin poder cambiar las contraseñas ya entregadas.
 	ResourceContrasenasVotacion = "Contraseñas de votación"
-	ResourceAsistencia          = "Asistencia"
-	ResourceVisitas             = "Visitas"
-	ResourcePaqueteria          = "Paquetería"
-	ResourceParqueaderos        = "Parqueaderos"
-	ResourceZonasComunes        = "Zonas Comunes"
-	ResourceUsuarios            = "Usuarios"
-	ResourceRoles               = "Roles"
-	ResourcePermisos            = "Permisos"
-	ResourceRecursos            = "Recursos"
-	ResourceTiposNegocio        = "Tipos de Negocio"
-	ResourceNegocios            = "Negocios"
+	// Panel en vivo de una votación (stream de votos en tiempo real).
+	ResourceVotacionEnVivo = "Votación en vivo"
+	ResourceAsistencia     = "Asistencia"
+	ResourceVisitas        = "Visitas"
+	ResourcePaqueteria     = "Paquetería"
+	ResourceParqueaderos   = "Parqueaderos"
+	ResourceZonasComunes   = "Zonas Comunes"
+	ResourceUsuarios       = "Usuarios"
+	ResourceRoles          = "Roles"
+	ResourcePermisos       = "Permisos"
+	ResourceRecursos       = "Recursos"
+	ResourceTiposNegocio   = "Tipos de Negocio"
+	ResourceNegocios       = "Negocios"
 )
 
 // moduleRule dice qué recursos abren un prefijo de ruta (relativo a /api/v1).
@@ -48,6 +50,7 @@ type moduleRule struct {
 // Las rutas que no coinciden con ninguna regla (/auth, /public…) no se restringen aquí.
 var moduleRules = []moduleRule{
 	{prefix: "/horizontal-properties/voting-groups", suffix: "/credentials/generate", resources: []string{ResourceContrasenasVotacion}},
+	{prefix: "/horizontal-properties/voting-groups", suffix: "/stream", resources: []string{ResourceVotacionEnVivo}},
 	{prefix: "/horizontal-properties/voting-groups", resources: []string{ResourceVotaciones}},
 	{prefix: "/horizontal-properties/property-units", resources: []string{ResourceUnidades}, readResources: []string{ResourceVotaciones, ResourceAsistencia}},
 	{prefix: "/horizontal-properties/residents", resources: []string{ResourceResidentes}, readResources: []string{ResourceVotaciones, ResourceAsistencia}},

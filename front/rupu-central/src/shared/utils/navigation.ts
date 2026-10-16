@@ -9,6 +9,7 @@
  */
 
 import type { SidebarItemConfig } from '../config/business-type-config';
+import { VOTING_LIVE_RESOURCE } from '@/services/auth/permissions/domain/entities';
 
 export interface NavItem {
   id: string;
@@ -54,6 +55,14 @@ export function buildNavItems({ sidebarItems, activeBusinessId, canAccessIAM }: 
   return items;
 }
 
+/**
+ * Pantallas dentro de un módulo que exigen un recurso propio (además del del módulo). Si el rol no
+ * lo tiene, la guarda lo devuelve al inicio del módulo.
+ */
+export const RESTRICTED_SUBROUTES: ReadonlyArray<{ pattern: RegExp; resource: string }> = [
+  { pattern: /\/voting-groups\/[^/]+\/votings\/[^/]+\/live(\/|$)/, resource: VOTING_LIVE_RESOURCE },
+];
+
 /** Módulos de la propiedad que el rol puede ver (`hasResource` ya deja pasar al super admin). */
 export function filterSidebarItemsByResource<T extends Pick<SidebarItemConfig, 'resource'>>(
   items: readonly T[],
@@ -74,8 +83,10 @@ export function resolveAllowedPath(
 ): string | null {
   const hrefs = items.map((i) => i.href);
   const owner = items.find((i) => isNavItemActive(i.href, pathname, hrefs));
-  if (!owner || hasResource(owner.resource)) return pathname;
-  return items.find((i) => hasResource(i.resource))?.href ?? null;
+  if (!owner) return pathname;
+  if (!hasResource(owner.resource)) return items.find((i) => hasResource(i.resource))?.href ?? null;
+  const restricted = RESTRICTED_SUBROUTES.find((r) => r.pattern.test(pathname));
+  return restricted && !hasResource(restricted.resource) ? owner.href : pathname;
 }
 
 /**

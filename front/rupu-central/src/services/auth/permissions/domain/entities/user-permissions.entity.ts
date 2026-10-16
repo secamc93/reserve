@@ -27,6 +27,9 @@ export interface UserPermissions {
  */
 export const VOTING_PASSWORDS_RESOURCE = 'Contraseñas de votación';
 
+/** Recurso para ver el panel en vivo de una votación (y su stream). También va aparte de Votaciones. */
+export const VOTING_LIVE_RESOURCE = 'Votación en vivo';
+
 /** ¿Los permisos (los de TokenStorage) incluyen el recurso? El super admin lo tiene todo. */
 export function permissionsInclude(
   permissions: Pick<UserPermissions, 'isSuperAdmin' | 'resources'> | null | undefined,

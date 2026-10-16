@@ -150,3 +150,16 @@ describe('permisos por módulo', () => {
     expect(resolveAllowedPath('/properties/7/units', items, () => false)).toBeNull();
   });
 });
+
+describe('votación en vivo', () => {
+  const items = SIDEBAR.map((i) => ({ ...i, href: resolveBusinessHref(i.href, 7) }));
+  const live = '/properties/7/voting-groups/2/votings/5/live';
+
+  it('un consejero (Votaciones sin "Votación en vivo") vuelve a Votaciones', () => {
+    expect(resolveAllowedPath(live, items, (r) => r === 'Votaciones')).toBe('/properties/7/voting-groups');
+  });
+
+  it('con el recurso entra al panel en vivo', () => {
+    expect(resolveAllowedPath(live, items, (r) => r === 'Votaciones' || r === 'Votación en vivo')).toBe(live);
+  });
+});
