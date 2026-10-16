@@ -19,6 +19,7 @@ import type { SidebarItemConfig } from '@/shared/config/business-type-config';
 import { buildNavItems, resolveBusinessHref } from '@/shared/utils/navigation';
 import { MobileNav } from './mobile-nav';
 import { useActiveProperty } from './use-active-property';
+import { PropertyLogo } from './property-logo';
 import { useAccessibleProperties } from './use-accessible-properties';
 import { canSwitchProperty, hasActiveProperty } from '../utils/properties';
 
@@ -41,7 +42,7 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const { hasResource } = usePermissions();
-  const activeProperty = useActiveProperty(mobileNav);
+  const activeProperty = useActiveProperty();
   const { properties } = useAccessibleProperties();
   const showChangeProperty = canSwitchProperty(properties);
   const goToPropertyPicker = () => router.push('/properties');
@@ -122,23 +123,14 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
         onMouseLeave={() => setSidebarExpanded(false)}
       >
         <div className="flex flex-col h-full">
-          {/* Usuario */}
-          <div
-            className="p-4 border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
-            onClick={() => setShowUserModal(true)}
-          >
+          {/* Propiedad activa (logo) */}
+          <div className="p-4 border-b border-white/10">
             <div className="flex items-center gap-3">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-white/20" />
-              ) : (
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0" style={{ backgroundColor: 'var(--color-secondary)' }}>
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <PropertyLogo name={activeProperty?.name || 'Rupü'} logoUrl={activeProperty?.logoUrl} size={48} />
               {sidebarExpanded && (
                 <div className="text-white overflow-hidden">
-                  <p className="font-semibold text-sm truncate">{user.name}</p>
-                  <p className="text-xs text-white/70 truncate">{user.email}</p>
+                  <p className="font-semibold text-sm truncate">{activeProperty?.name || 'Rupü'}</p>
+                  <p className="text-xs text-white/70 truncate">{activeProperty ? 'Propiedad horizontal' : 'Elige una propiedad'}</p>
                 </div>
               )}
             </div>
@@ -189,6 +181,29 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
               {sidebarExpanded && <span className="text-sm">Cambiar propiedad</span>}
             </button>
             )}
+
+            {/* Usuario */}
+            <button
+              type="button"
+              onClick={() => setShowUserModal(true)}
+              title={user.name}
+              aria-label={`Perfil de ${user.name}`}
+              className="w-full flex items-center gap-3 text-white hover:bg-white/10 p-2 rounded-lg transition-colors text-left"
+            >
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-white/20" />
+              ) : (
+                <span className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ backgroundColor: 'var(--color-secondary)' }}>
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+              {sidebarExpanded && (
+                <span className="overflow-hidden">
+                  <span className="block font-semibold text-sm truncate">{user.name}</span>
+                  <span className="block text-xs text-white/70 truncate">{user.email}</span>
+                </span>
+              )}
+            </button>
 
             {/* Logout */}
             <button
