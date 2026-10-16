@@ -1,27 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { VOTING_PASSWORDS_RESOURCE, permissionsInclude } from './user-permissions.entity';
+import { permissionsAllow, votingCapabilities } from './user-permissions.entity';
+
+const res = (resource: string, actions: string[], active = true) => ({ resource, actions, active });
 
 const consejero = {
   isSuperAdmin: false,
-  resources: [{ resource: 'Votaciones', actions: ['Read'], active: true }],
+  resources: [res('Votaciones', ['Read']), res('Asistencia', ['Update'])],
 };
 
-describe('permissionsInclude', () => {
-  it('un consejero (solo Votaciones) no puede generar contraseñas', () => {
-    expect(permissionsInclude(consejero, VOTING_PASSWORDS_RESOURCE)).toBe(false);
+describe('permisos de Votaciones', () => {
+  it('un consejero solo ve y marca asistencia', () => {
+    expect(votingCapabilities(consejero)).toEqual({
+      canManage: false,
+      canMarkAttendance: true,
+      canGeneratePasswords: false,
+      canViewLive: false,
+    });
   });
 
-  it('con el recurso activo sí; inactivo no', () => {
-    const con = (active: boolean) => ({
+  it('un administrador de votaciones puede todo lo que tenga asignado', () => {
+    const admin = {
       isSuperAdmin: false,
-      resources: [...consejero.resources, { resource: VOTING_PASSWORDS_RESOURCE, actions: ['Create'], active }],
+      resources: [
+        res('Votaciones', ['Create', 'Read', 'Update', 'Delete']),
+        res('Contraseñas de votación', ['Create']),
+        res('Votación en vivo', ['Read']),
+      ],
+    };
+    expect(votingCapabilities(admin)).toEqual({
+      canManage: true,
+      canMarkAttendance: true,
+      canGeneratePasswords: true,
+      canViewLive: true,
     });
-    expect(permissionsInclude(con(true), VOTING_PASSWORDS_RESOURCE)).toBe(true);
-    expect(permissionsInclude(con(false), VOTING_PASSWORDS_RESOURCE)).toBe(false);
   });
 
   it('el super admin lo tiene todo; sin permisos cargados, nada', () => {
-    expect(permissionsInclude({ isSuperAdmin: true, resources: [] }, VOTING_PASSWORDS_RESOURCE)).toBe(true);
-    expect(permissionsInclude(null, VOTING_PASSWORDS_RESOURCE)).toBe(false);
+    expect(Object.values(votingCapabilities({ isSuperAdmin: true, resources: [] })).every(Boolean)).toBe(true);
+    expect(Object.values(votingCapabilities(null)).some(Boolean)).toBe(false);
+  });
+
+  it('un recurso inactivo o sin la acción no cuenta', () => {
+    expect(permissionsAllow({ isSuperAdmin: false, resources: [res('Votaciones', ['Update'], false)] }, 'Votaciones', 'Update')).toBe(false);
+    expect(permissionsAllow(consejero, 'Votaciones', 'Update')).toBe(false);
+    expect(permissionsAllow(consejero, 'Votaciones')).toBe(true);
   });
 });

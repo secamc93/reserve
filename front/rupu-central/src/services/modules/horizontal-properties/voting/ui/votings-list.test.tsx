@@ -38,9 +38,9 @@ const voting = (id: number, isActive: boolean): Voting => ({
   updatedAt: '',
 });
 
-const renderIt = (canViewLive: boolean, votings: Voting[], onReload = vi.fn()) =>
+const renderIt = (canViewLive: boolean, votings: Voting[], onReload = vi.fn(), canManage = true) =>
   render(
-    <VotingsList businessId={1} groupId={2} groupName="Asamblea" votings={votings} onReload={onReload} canViewLive={canViewLive} />,
+    <VotingsList businessId={1} groupId={2} groupName="Asamblea" votings={votings} onReload={onReload} canViewLive={canViewLive} canManage={canManage} />,
   );
 
 describe('VotingsList: panel en vivo según el rol', () => {
@@ -72,5 +72,16 @@ describe('VotingsList: panel en vivo según el rol', () => {
     expect(actions.activateVotingAction).toHaveBeenCalledWith(expect.objectContaining({ votingId: 3 }));
     expect(assign).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
+  });
+
+  it('un consejero (solo ver) no crea, no inicia ni edita votaciones; solo "Ver votos"', async () => {
+    renderIt(false, [voting(1, true), voting(3, false)], vi.fn(), false);
+    await waitFor(() => expect(actions.getVotingOptionsAction).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole('button', { name: /Nueva votación/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Iniciar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /En vivo/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Más acciones de Punto 1' }));
+    expect(screen.getByRole('menuitem', { name: 'Ver votos' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Editar|Eliminar|Cerrar|Abrir/ })).not.toBeInTheDocument();
   });
 });

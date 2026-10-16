@@ -44,6 +44,8 @@ interface VotingsListProps {
   onReload: () => Promise<void> | void;
   /** El rol puede abrir el panel en vivo (recurso "Votación en vivo"). */
   canViewLive?: boolean;
+  /** Crear, configurar, iniciar, cerrar y eliminar votaciones (un consejero solo ve). */
+  canManage?: boolean;
 }
 
 interface RowData {
@@ -54,7 +56,7 @@ interface RowData {
 export const liveVotingPath = (businessId: number, groupId: number, votingId: number) =>
   `/properties/${businessId}/voting-groups/${groupId}/votings/${votingId}/live`;
 
-export function VotingsList({ businessId, groupId, groupName, votings, onReload, canViewLive = true }: VotingsListProps) {
+export function VotingsList({ businessId, groupId, groupName, votings, onReload, canViewLive = true, canManage = true }: VotingsListProps) {
   const [rows, setRows] = useState<Record<number, RowData>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Voting | null>(null);
@@ -142,16 +144,18 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload,
         <h3 className="m-0 text-[13px] font-semibold">
           Votaciones <span className="font-normal" style={{ color: VT.muted }}>· {votings.length}</span>
         </h3>
-        <button
-          type="button"
-          className={vtBtn.small}
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          + Nueva votación
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            className={vtBtn.small}
+            onClick={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
+          >
+            + Nueva votación
+          </button>
+        )}
       </div>
 
       {error && <VtNotice>{error}</VtNotice>}
@@ -223,7 +227,7 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload,
                   {winner ? `${formatPct(winner.pct)}%` : '—'}
                 </div>
                 <div className="col-span-2 row-start-3 md:col-span-1 md:row-start-auto flex gap-1.5 items-center justify-end">
-                  {(canViewLive || status.key === 'draft' || status.key === 'ready') && (
+                  {(status.key === 'draft' || status.key === 'ready' ? canManage : canViewLive) && (
                   <button
                     type="button"
                     disabled={busyId === voting.id}
@@ -242,7 +246,7 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload,
                   )}
                   <VtMenu
                     label={`Más acciones de ${voting.title}`}
-                    items={[
+                    items={!canManage ? [{ label: 'Ver votos', onSelect: () => setDetail(voting) }] : [
                       {
                         label: 'Editar votación y opciones',
                         onSelect: () => {

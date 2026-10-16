@@ -33,24 +33,55 @@ const (
 	ResourceNegocios       = "Negocios"
 )
 
-// moduleRule dice qué recursos abren un prefijo de ruta (relativo a /api/v1).
-//   - resources: dan acceso completo.
-//   - readResources: dan acceso solo de lectura (GET), p. ej. Votaciones lee unidades y residentes.
+// Acciones (tabla action) que exige cada método HTTP sobre el recurso del módulo.
+const (
+	ActionRead   = "Read"
+	ActionCreate = "Create"
+	ActionUpdate = "Update"
+	ActionDelete = "Delete"
+)
+
+// actionForMethod: GET/HEAD leen, POST crea, PUT/PATCH actualizan, DELETE borra.
+func actionForMethod(method string) string {
+	switch method {
+	case http.MethodGet, http.MethodHead:
+		return ActionRead
+	case http.MethodPost:
+		return ActionCreate
+	case http.MethodDelete:
+		return ActionDelete
+	default:
+		return ActionUpdate
+	}
+}
+
+// moduleRule dice qué recursos abren una ruta (relativa a /api/v1).
+//   - resources: el rol necesita uno de estos recursos con la acción del método (o `action`).
+//   - action: si no está vacía, la acción exigida en vez de la del método (p. ej. marcar
+//     asistencia es un POST pero cuenta como Update).
+//   - readResources: dan acceso solo de lectura (GET) con cualquier acción, p. ej. Votaciones
+//     lee unidades y residentes.
 //   - readAny: cualquier usuario con business token puede leer (GET).
 //   - suffix: si no está vacío, la regla solo aplica a rutas bajo prefix que terminan así.
 type moduleRule struct {
 	prefix        string
 	suffix        string
 	resources     []string
+	action        string
 	readResources []string
 	readAny       bool
 }
 
-// moduleRules: el primer prefijo que coincide manda, así que los más específicos van primero.
+// moduleRules: la primera regla que coincide manda, así que las más específicas van primero.
 // Las rutas que no coinciden con ninguna regla (/auth, /public…) no se restringen aquí.
 var moduleRules = []moduleRule{
-	{prefix: "/horizontal-properties/voting-groups", suffix: "/credentials/generate", resources: []string{ResourceContrasenasVotacion}},
-	{prefix: "/horizontal-properties/voting-groups", suffix: "/stream", resources: []string{ResourceVotacionEnVivo}},
+	{prefix: "/horizontal-properties/voting-groups", suffix: "/credentials/generate", resources: []string{ResourceContrasenasVotacion}, action: ActionCreate},
+	{prefix: "/horizontal-properties/voting-groups", suffix: "/stream", resources: []string{ResourceVotacionEnVivo}, action: ActionRead},
+	// Marcar asistencia y apoderados: lo único que puede modificar un rol con "Asistencia".
+	{prefix: "/horizontal-properties/voting-groups", suffix: "/attendance", resources: []string{ResourceAsistencia, ResourceVotaciones}, action: ActionUpdate},
+	{prefix: "/attendance/records", suffix: "/mark", resources: []string{ResourceAsistencia, ResourceVotaciones}, action: ActionUpdate},
+	{prefix: "/attendance/records", suffix: "/unmark", resources: []string{ResourceAsistencia, ResourceVotaciones}, action: ActionUpdate},
+	{prefix: "/attendance/records", suffix: "/proxy", resources: []string{ResourceAsistencia, ResourceVotaciones}, action: ActionUpdate},
 	{prefix: "/horizontal-properties/voting-groups", resources: []string{ResourceVotaciones}},
 	{prefix: "/horizontal-properties/property-units", resources: []string{ResourceUnidades}, readResources: []string{ResourceVotaciones, ResourceAsistencia}},
 	{prefix: "/horizontal-properties/residents", resources: []string{ResourceResidentes}, readResources: []string{ResourceVotaciones, ResourceAsistencia}},
@@ -59,7 +90,7 @@ var moduleRules = []moduleRule{
 	{prefix: "/horizontal-properties/parking", resources: []string{ResourceParqueaderos}},
 	{prefix: "/horizontal-properties/common-areas", resources: []string{ResourceZonasComunes}},
 	{prefix: "/horizontal-properties", resources: []string{ResourcePropiedades}, readAny: true},
-	{prefix: "/attendance", resources: []string{ResourceAsistencia, ResourceVotaciones}},
+	{prefix: "/attendance", resources: []string{ResourceVotaciones}, readResources: []string{ResourceAsistencia}},
 	{prefix: "/dashboard", resources: []string{ResourcePropiedades}},
 	{prefix: "/users", resources: []string{ResourceUsuarios}},
 	{prefix: "/roles", resources: []string{ResourceRoles}},
@@ -70,9 +101,10 @@ var moduleRules = []moduleRule{
 	{prefix: "/businesses", resources: []string{ResourceNegocios}, readAny: true},
 }
 
-// IRoleResourceLookup devuelve los nombres de recursos que un rol tiene activos en un negocio.
+// IRoleResourceLookup devuelve, por recurso, las acciones que un rol tiene en un negocio
+// (solo recursos activos en ese negocio).
 type IRoleResourceLookup interface {
-	GetRoleResourceNames(ctx context.Context, roleID, businessID uint) ([]string, error)
+	GetRoleResourceActions(ctx context.Context, roleID, businessID uint) (map[string][]string, error)
 }
 
 // matchModuleRule busca la regla del path (ya sin /api/v1). Coincide por segmento completo.
@@ -88,18 +120,28 @@ func matchModuleRule(path string) (moduleRule, bool) {
 	return moduleRule{}, false
 }
 
-func containsAny(have map[string]bool, want []string) bool {
-	for _, w := range want {
-		if have[w] {
+// allows: el rol tiene alguno de los recursos con la acción (o con cualquiera si action es "").
+func allows(have map[string][]string, resources []string, action string) bool {
+	for _, r := range resources {
+		actions, ok := have[r]
+		if !ok {
+			continue
+		}
+		if action == "" {
 			return true
+		}
+		for _, a := range actions {
+			if a == action {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-// ModuleAccessMiddleware restringe los módulos según los recursos del rol del business token.
-// El super admin (business_id = 0) pasa siempre. Si no hay business token válido deja pasar:
-// la autenticación la rechaza el middleware JWT de la ruta.
+// ModuleAccessMiddleware restringe los módulos según los recursos y acciones del rol del
+// business token. El super admin (business_id = 0) pasa siempre. Si no hay business token
+// válido deja pasar: la autenticación la rechaza el middleware JWT de la ruta.
 func ModuleAccessMiddleware(jwtService IJWTService, lookup IRoleResourceLookup, apiPrefix string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := strings.TrimPrefix(c.Request.URL.Path, apiPrefix)
@@ -129,7 +171,7 @@ func ModuleAccessMiddleware(jwtService IJWTService, lookup IRoleResourceLookup, 
 		deny := func() {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"success": false,
-				"message": "Tu rol no tiene acceso a este módulo",
+				"message": "Tu rol no tiene permiso para esta acción",
 				"error":   "forbidden",
 			})
 		}
@@ -138,7 +180,7 @@ func ModuleAccessMiddleware(jwtService IJWTService, lookup IRoleResourceLookup, 
 			deny()
 			return
 		}
-		names, err := lookup.GetRoleResourceNames(c.Request.Context(), claims.RoleID, claims.BusinessID)
+		have, err := lookup.GetRoleResourceActions(c.Request.Context(), claims.RoleID, claims.BusinessID)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 				"success": false,
@@ -147,12 +189,12 @@ func ModuleAccessMiddleware(jwtService IJWTService, lookup IRoleResourceLookup, 
 			})
 			return
 		}
-		have := make(map[string]bool, len(names))
-		for _, n := range names {
-			have[n] = true
-		}
 
-		if containsAny(have, rule.resources) || (isRead && containsAny(have, rule.readResources)) {
+		action := rule.action
+		if action == "" {
+			action = actionForMethod(c.Request.Method)
+		}
+		if allows(have, rule.resources, action) || (isRead && allows(have, rule.readResources, "")) {
 			c.Next()
 			return
 		}

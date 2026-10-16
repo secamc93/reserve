@@ -30,14 +30,42 @@ export const VOTING_PASSWORDS_RESOURCE = 'Contraseñas de votación';
 /** Recurso para ver el panel en vivo de una votación (y su stream). También va aparte de Votaciones. */
 export const VOTING_LIVE_RESOURCE = 'Votación en vivo';
 
-/** ¿Los permisos (los de TokenStorage) incluyen el recurso? El super admin lo tiene todo. */
-export function permissionsInclude(
-  permissions: Pick<UserPermissions, 'isSuperAdmin' | 'resources'> | null | undefined,
-  resource: string,
-): boolean {
+export const VOTING_RESOURCE = 'Votaciones';
+/** Marcar asistencia y apoderados (lo único que modifica un consejero). */
+export const ATTENDANCE_RESOURCE = 'Asistencia';
+
+type PermissionsLike = Pick<UserPermissions, 'isSuperAdmin' | 'resources'> | null | undefined;
+
+/**
+ * ¿El rol tiene el recurso (activo) y, si se pide, la acción? El super admin lo tiene todo.
+ * Las acciones son las de la tabla action: Create, Read, Update, Delete.
+ */
+export function permissionsAllow(permissions: PermissionsLike, resource: string, action?: string): boolean {
   if (!permissions) return false;
   if (permissions.isSuperAdmin) return true;
-  return permissions.resources.some((r) => r.resource === resource && r.active);
+  return permissions.resources.some(
+    (r) => r.resource === resource && r.active && (action === undefined || r.actions.includes(action)),
+  );
+}
+
+/** Qué puede hacer el rol en Votaciones (el back aplica las mismas reglas: module_access.go). */
+export interface VotingCapabilities {
+  /** Crear/editar/eliminar grupos y votaciones, iniciarlas o cerrarlas, QR y listas de asistencia. */
+  canManage: boolean;
+  /** Marcar asistencia y agregar o quitar apoderados. */
+  canMarkAttendance: boolean;
+  canGeneratePasswords: boolean;
+  canViewLive: boolean;
+}
+
+export function votingCapabilities(permissions: PermissionsLike): VotingCapabilities {
+  const canManage = permissionsAllow(permissions, VOTING_RESOURCE, 'Update');
+  return {
+    canManage,
+    canMarkAttendance: canManage || permissionsAllow(permissions, ATTENDANCE_RESOURCE, 'Update'),
+    canGeneratePasswords: permissionsAllow(permissions, VOTING_PASSWORDS_RESOURCE, 'Create'),
+    canViewLive: permissionsAllow(permissions, VOTING_LIVE_RESOURCE, 'Read'),
+  };
 }
 
 /**

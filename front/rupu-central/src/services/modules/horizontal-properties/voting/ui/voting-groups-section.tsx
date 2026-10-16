@@ -17,9 +17,8 @@ import type { Voting, VotingGroup } from '../domain/entities';
 import { VotingGroupFormModal } from './voting-group-form-modal';
 import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
-import { VOTING_LIVE_RESOURCE, permissionsInclude } from '@/services/auth/permissions/domain/entities';
 import { GroupQRModal } from './components/group-qr-modal';
-import { useGroupQr, GROUP_QR_VALID_HOURS } from './hooks';
+import { useGroupQr, useVotingCapabilities, GROUP_QR_VALID_HOURS } from './hooks';
 import {
   VT,
   VtBadge,
@@ -40,6 +39,7 @@ interface VotingGroupsSectionProps {
 export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
   const [groups, setGroups] = useState<VotingGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const caps = useVotingCapabilities();
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
@@ -101,16 +101,18 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
             </div>
             <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em]">Grupos de votación</h1>
           </div>
-          <button
-            type="button"
-            className={`${vtBtn.primary} max-md:w-full`}
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            + Nuevo grupo
-          </button>
+          {caps.canManage && (
+            <button
+              type="button"
+              className={`${vtBtn.primary} max-md:w-full`}
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              + Nuevo grupo
+            </button>
+          )}
         </div>
 
         {error && <VtNotice>{error}</VtNotice>}
@@ -122,12 +124,16 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
         ) : groups.length === 0 ? (
           <div className="bg-white rounded-[10px] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
             <h2 className="m-0 text-[17px] font-semibold">Aún no hay grupos de votación</h2>
-            <p className="mt-1.5 mb-5 text-[13px]" style={{ color: VT.muted }}>
-              Crea el grupo de la asamblea y agrega sus votaciones.
-            </p>
-            <button type="button" className={vtBtn.primary} onClick={() => setFormOpen(true)}>
-              + Nuevo grupo
-            </button>
+            {caps.canManage && (
+              <>
+                <p className="mt-1.5 mb-5 text-[13px]" style={{ color: VT.muted }}>
+                  Crea el grupo de la asamblea y agrega sus votaciones.
+                </p>
+                <button type="button" className={vtBtn.primary} onClick={() => setFormOpen(true)}>
+                  + Nuevo grupo
+                </button>
+              </>
+            )}
           </div>
         ) : (
           groups.map((group) => (
@@ -142,6 +148,8 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
                 setFormOpen(true);
               }}
               onDelete={() => setDeleting(group)}
+              canManage={caps.canManage}
+              canViewLive={caps.canViewLive}
             />
           ))
         )}
@@ -178,9 +186,12 @@ interface VotingGroupCardProps {
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  /** Editar/eliminar el grupo, QR y crear o iniciar votaciones (un consejero solo ve). */
+  canManage: boolean;
+  canViewLive: boolean;
 }
 
-function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDelete }: VotingGroupCardProps) {
+function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDelete, canManage, canViewLive }: VotingGroupCardProps) {
   const [votings, setVotings] = useState<Voting[] | null>(null);
   const [attendance, setAttendance] = useState<{ attended: number; total: number } | null>(null);
   const [showQr, setShowQr] = useState(false);
@@ -273,36 +284,46 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
                   <Link href={`/properties/${businessId}/voting-groups/${group.id}/attendance`} className={`${vtBtn.small} h-8 text-[13px]`}>
                     Asistencia
                   </Link>
-                  <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
-                    <VtIcon name="edit" size={15} />
-                  </button>
-                  <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
-                    <VtIcon name="trash" size={15} />
-                  </button>
-                  <div className="md:hidden">
-                    <VtMenu label={`Más acciones del grupo ${group.name}`} items={groupMenuItems} />
-                  </div>
+                  {canManage && (
+                    <>
+                      <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
+                        <VtIcon name="edit" size={15} />
+                      </button>
+                      <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
+                        <VtIcon name="trash" size={15} />
+                      </button>
+                      <div className="md:hidden">
+                        <VtMenu label={`Más acciones del grupo ${group.name}`} items={groupMenuItems} />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </>
           ) : (
           <>
-          <button type="button" className={`${vtBtn.small} h-8 text-[13px]`} onClick={openQr} disabled={qr.loading}>
-            <VtIcon name="qr" size={14} />
-            {qr.loading ? 'Generando…' : 'QR'}
-          </button>
+          {canManage && (
+            <button type="button" className={`${vtBtn.small} h-8 text-[13px]`} onClick={openQr} disabled={qr.loading}>
+              <VtIcon name="qr" size={14} />
+              {qr.loading ? 'Generando…' : 'QR'}
+            </button>
+          )}
           <Link href={`/properties/${businessId}/voting-groups/${group.id}/attendance`} className={`${vtBtn.small} h-8 text-[13px]`}>
             Asistencia
           </Link>
-          <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
-            <VtIcon name="edit" size={15} />
-          </button>
-          <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
-            <VtIcon name="trash" size={15} />
-          </button>
-                  <div className="md:hidden">
-                    <VtMenu label={`Más acciones del grupo ${group.name}`} items={groupMenuItems} />
-                  </div>
+          {canManage && (
+            <>
+              <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onEdit} aria-label={`Editar grupo ${group.name}`} title="Editar grupo">
+                <VtIcon name="edit" size={15} />
+              </button>
+              <button type="button" className={`${vtBtn.icon} max-md:hidden`} onClick={onDelete} aria-label={`Eliminar grupo ${group.name}`} title="Eliminar grupo">
+                <VtIcon name="trash" size={15} />
+              </button>
+              <div className="md:hidden">
+                <VtMenu label={`Más acciones del grupo ${group.name}`} items={groupMenuItems} />
+              </div>
+            </>
+          )}
           </>
           )}
           <button
@@ -331,7 +352,8 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
               groupName={group.name}
               votings={votings}
               onReload={loadVotings}
-              canViewLive={permissionsInclude(TokenStorage.getUserPermissions(), VOTING_LIVE_RESOURCE)}
+              canViewLive={canViewLive}
+              canManage={canManage}
             />
           )}
         </div>
