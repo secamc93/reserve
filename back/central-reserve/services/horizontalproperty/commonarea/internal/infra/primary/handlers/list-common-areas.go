@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/mappers"
 	"net/http"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/response"
@@ -39,12 +39,8 @@ func (h *CommonAreaHandler) ListCommonAreas(c *gin.Context) {
 	}
 	req.Page, req.PageSize = page, pageSize
 
-	businessID, exists := middleware.GetBusinessID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "business_id no disponible",
-		})
+	businessID, ok := h.resolveBusinessID(c)
+	if !ok {
 		return
 	}
 
@@ -52,6 +48,7 @@ func (h *CommonAreaHandler) ListCommonAreas(c *gin.Context) {
 		BusinessID:       businessID,
 		CommonAreaTypeID: req.CommonAreaTypeID,
 		IsActive:         req.IsActive,
+		Search:           req.Search,
 		Page:             req.Page,
 		PageSize:         req.PageSize,
 	}
@@ -69,15 +66,7 @@ func (h *CommonAreaHandler) ListCommonAreas(c *gin.Context) {
 
 	commonAreas := make([]response.CommonAreaListResponse, len(result.CommonAreas))
 	for i, area := range result.CommonAreas {
-		commonAreas[i] = response.CommonAreaListResponse{
-			ID:               area.ID,
-			Name:             area.Name,
-			TypeName:         area.TypeName,
-			Location:         area.Location,
-			MaxCapacity:      area.MaxCapacity,
-			IsActive:         area.IsActive,
-			RequiresApproval: area.RequiresApproval,
-		}
+		commonAreas[i] = mappers.CommonAreaListToResponse(area)
 	}
 
 	c.JSON(http.StatusOK, response.PaginatedCommonAreasResponse{

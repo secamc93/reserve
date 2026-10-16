@@ -18,7 +18,7 @@ func (uc *commonAreaUseCase) CheckAvailability(ctx context.Context, dto domain.C
 		return false, err
 	}
 	if !area.IsActive {
-		return false, fmt.Errorf("la zona común no está activa")
+		return false, domain.ErrCommonAreaInactive
 	}
 
 	// 2. Verificar horario según schedule
@@ -33,7 +33,7 @@ func (uc *commonAreaUseCase) CheckAvailability(ctx context.Context, dto domain.C
 
 	// Validar que el horario solicitado esté dentro del horario disponible
 	if dto.StartTime < schedule.StartTime || dto.EndTime > schedule.EndTime {
-		return false, fmt.Errorf("el horario solicitado está fuera del horario disponible (%s - %s)", schedule.StartTime, schedule.EndTime)
+		return false, fmt.Errorf("%w (%s - %s)", domain.ErrOutsideSchedule, schedule.StartTime, schedule.EndTime)
 	}
 
 	// 3. Verificar restricciones activas

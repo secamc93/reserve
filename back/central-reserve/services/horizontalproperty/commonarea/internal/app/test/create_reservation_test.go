@@ -135,6 +135,7 @@ func TestCreateReservation_ExceedsCapacity(t *testing.T) {
 		GetCommonAreaByIDFunc: func(ctx context.Context, id uint) (*domain.CommonArea, error) {
 			return &domain.CommonArea{
 				ID:          1,
+				BusinessID:  1,
 				MaxCapacity: maxCapacity,
 			}, nil
 		},
@@ -179,6 +180,7 @@ func TestCreateReservation_InvalidStartTime(t *testing.T) {
 		GetCommonAreaByIDFunc: func(ctx context.Context, id uint) (*domain.CommonArea, error) {
 			return &domain.CommonArea{
 				ID:          1,
+				BusinessID:  1,
 				MaxCapacity: 10,
 			}, nil
 		},
@@ -227,6 +229,7 @@ func TestCreateReservation_InvalidEndTime(t *testing.T) {
 		GetCommonAreaByIDFunc: func(ctx context.Context, id uint) (*domain.CommonArea, error) {
 			return &domain.CommonArea{
 				ID:          1,
+				BusinessID:  1,
 				MaxCapacity: 10,
 			}, nil
 		},
@@ -275,6 +278,7 @@ func TestCreateReservation_NotAvailable(t *testing.T) {
 		GetCommonAreaByIDFunc: func(ctx context.Context, id uint) (*domain.CommonArea, error) {
 			return &domain.CommonArea{
 				ID:          1,
+				BusinessID:  1,
 				MaxCapacity: 10,
 				IsActive:    true,
 			}, nil
@@ -345,6 +349,7 @@ func TestCreateReservation_CheckAvailabilityError(t *testing.T) {
 		GetCommonAreaByIDFunc: func(ctx context.Context, id uint) (*domain.CommonArea, error) {
 			return &domain.CommonArea{
 				ID:          1,
+				BusinessID:  1,
 				MaxCapacity: 10,
 				IsActive:    true,
 			}, nil
@@ -404,5 +409,36 @@ func TestCreateReservation_CheckAvailabilityError(t *testing.T) {
 
 	if !errors.Is(err, expectedErr) {
 		t.Errorf("expected error %v, got %v", expectedErr, err)
+	}
+}
+
+func TestCreateReservation_AreaFromOtherBusiness(t *testing.T) {
+	mockCommonAreaRepo := &mocks.MockCommonAreaRepository{
+		GetCommonAreaByIDFunc: func(ctx context.Context, id uint) (*domain.CommonArea, error) {
+			return &domain.CommonArea{ID: id, BusinessID: 2, MaxCapacity: 10, IsActive: true}, nil
+		},
+	}
+	created := false
+	uc := app.New(
+		mockCommonAreaRepo,
+		&mocks.MockScheduleRepository{},
+		&mocks.MockRestrictionRepository{},
+		&mocks.MockReservationRepository{
+			CreateReservationFunc: func(ctx context.Context, r *domain.CommonAreaReservation) (*domain.CommonAreaReservation, error) {
+				created = true
+				return r, nil
+			},
+		},
+		mocks.NewMockLogger(),
+	)
+
+	_, err := uc.CreateReservation(context.Background(), domain.CreateReservationDTO{
+		BusinessID: 1, CommonAreaID: 5, PropertyUnitID: 1, NumberOfGuests: 2,
+	})
+	if !errors.Is(err, domain.ErrCommonAreaNotFound) {
+		t.Fatalf("expected ErrCommonAreaNotFound, got %v", err)
+	}
+	if created {
+		t.Fatal("no debe crear una reserva en la zona de otra propiedad")
 	}
 }

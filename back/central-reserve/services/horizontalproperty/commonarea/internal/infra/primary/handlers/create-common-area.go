@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/response"
@@ -27,12 +26,8 @@ func (h *CommonAreaHandler) CreateCommonArea(c *gin.Context) {
 		return
 	}
 
-	businessID, exists := middleware.GetBusinessID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "business_id no disponible",
-		})
+	businessID, ok := h.resolveBusinessID(c)
+	if !ok {
 		return
 	}
 

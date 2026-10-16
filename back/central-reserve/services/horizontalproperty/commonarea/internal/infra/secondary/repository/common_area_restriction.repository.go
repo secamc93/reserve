@@ -10,6 +10,8 @@ import (
 	"central_reserve/shared/db"
 	"central_reserve/shared/log"
 	"dbpostgres/app/infra/models"
+
+	"gorm.io/gorm"
 )
 
 type CommonAreaRestrictionRepository struct {
@@ -77,4 +79,35 @@ func (r *CommonAreaRestrictionRepository) DeleteRestriction(ctx context.Context,
 		return fmt.Errorf("error eliminando restricción: %w", err)
 	}
 	return nil
+}
+
+// GetRestrictionByID obtiene una restricción por ID
+func (r *CommonAreaRestrictionRepository) GetRestrictionByID(ctx context.Context, id uint) (*domain.CommonAreaRestriction, error) {
+	var restriction models.CommonAreaRestriction
+	if err := r.db.Conn(ctx).First(&restriction, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, domain.ErrRestrictionNotFound
+		}
+		return nil, fmt.Errorf("error obteniendo restricción: %w", err)
+	}
+	return mappers.RestrictionToDomain(&restriction), nil
+}
+
+// ListRestrictions lista las restricciones activas de una zona que terminan en o después de fromDate
+func (r *CommonAreaRestrictionRepository) ListRestrictions(ctx context.Context, commonAreaID uint, fromDate time.Time) ([]*domain.CommonAreaRestriction, error) {
+	var restrictions []models.CommonAreaRestriction
+	if err := r.db.Conn(ctx).
+		Where("common_area_id = ? AND is_active = ?", commonAreaID, true).
+		Where("end_date >= ?", fromDate).
+		Order("start_date ASC").
+		Limit(100).
+		Find(&restrictions).Error; err != nil {
+		return nil, fmt.Errorf("error listando restricciones: %w", err)
+	}
+
+	result := make([]*domain.CommonAreaRestriction, len(restrictions))
+	for i, res := range restrictions {
+		result[i] = mappers.RestrictionToDomain(&res)
+	}
+	return result, nil
 }

@@ -5,9 +5,25 @@ import (
 	"dbpostgres/app/infra/models"
 )
 
+// NormalizeClock recorta una hora de Postgres ("08:00:00") a "HH:MM".
+func NormalizeClock(v string) string {
+	if len(v) >= 5 && v[2] == ':' {
+		return v[:5]
+	}
+	return v
+}
+
+func normalizeClockPtr(v *string) *string {
+	if v == nil {
+		return nil
+	}
+	n := NormalizeClock(*v)
+	return &n
+}
+
 // ReservationToDomain mapea modelo de reserva a entidad de dominio
 func ReservationToDomain(m *models.CommonAreaReservation) *domain.CommonAreaReservation {
-	return &domain.CommonAreaReservation{
+	r := &domain.CommonAreaReservation{
 		ID:                  m.ID,
 		BusinessID:          m.BusinessID,
 		CommonAreaID:        m.CommonAreaID,
@@ -15,8 +31,8 @@ func ReservationToDomain(m *models.CommonAreaReservation) *domain.CommonAreaRese
 		ResidentID:          m.ResidentID,
 		ReservationStatusID: m.ReservationStatusID,
 		ReservationDate:     m.ReservationDate,
-		StartTime:           m.StartTime,
-		EndTime:             m.EndTime,
+		StartTime:           NormalizeClock(m.StartTime),
+		EndTime:             NormalizeClock(m.EndTime),
 		DurationHours:       m.DurationHours,
 		RequiresApproval:    m.RequiresApproval,
 		ApprovedByUserID:    m.ApprovedByUserID,
@@ -55,11 +71,26 @@ func ReservationToDomain(m *models.CommonAreaReservation) *domain.CommonAreaRese
 		CreatedAt:           m.CreatedAt,
 		UpdatedAt:           m.UpdatedAt,
 	}
+	if m.CommonArea.ID != 0 {
+		r.CommonAreaName = m.CommonArea.Name
+	}
+	if m.PropertyUnit.ID != 0 {
+		r.PropertyUnitNumber = m.PropertyUnit.Number
+		r.PropertyUnitBlock = m.PropertyUnit.Block
+	}
+	if m.Resident != nil {
+		r.ResidentName = m.Resident.Name
+	}
+	if m.ReservationStatus.ID != 0 {
+		r.StatusCode = m.ReservationStatus.Code
+		r.StatusName = m.ReservationStatus.Name
+	}
+	return r
 }
 
 // CommonAreaToDomain mapea modelo a entidad de dominio
 func CommonAreaToDomain(m *models.CommonArea) *domain.CommonArea {
-	return &domain.CommonArea{
+	a := &domain.CommonArea{
 		ID:                   m.ID,
 		BusinessID:           m.BusinessID,
 		CommonAreaTypeID:     m.CommonAreaTypeID,
@@ -80,6 +111,11 @@ func CommonAreaToDomain(m *models.CommonArea) *domain.CommonArea {
 		CreatedAt:            m.CreatedAt,
 		UpdatedAt:            m.UpdatedAt,
 	}
+	if m.CommonAreaType.ID != 0 {
+		a.TypeName = m.CommonAreaType.Name
+		a.TypeCode = m.CommonAreaType.Code
+	}
+	return a
 }
 
 // CommonAreaTypeToDomain mapea modelo de tipo a entidad de dominio
@@ -105,8 +141,8 @@ func RestrictionToDomain(m *models.CommonAreaRestriction) *domain.CommonAreaRest
 		RestrictionType: m.RestrictionType,
 		StartDate:       m.StartDate,
 		EndDate:         m.EndDate,
-		StartTime:       m.StartTime,
-		EndTime:         m.EndTime,
+		StartTime:       normalizeClockPtr(m.StartTime),
+		EndTime:         normalizeClockPtr(m.EndTime),
 		Reason:          m.Reason,
 		CreatedByUserID: m.CreatedByUserID,
 		IsActive:        m.IsActive,
@@ -121,8 +157,8 @@ func ScheduleToDomain(m *models.CommonAreaSchedule) *domain.CommonAreaSchedule {
 		ID:           m.ID,
 		CommonAreaID: m.CommonAreaID,
 		DayOfWeek:    m.DayOfWeek,
-		StartTime:    m.StartTime,
-		EndTime:      m.EndTime,
+		StartTime:    NormalizeClock(m.StartTime),
+		EndTime:      NormalizeClock(m.EndTime),
 		IsActive:     m.IsActive,
 		CreatedAt:    m.CreatedAt,
 		UpdatedAt:    m.UpdatedAt,

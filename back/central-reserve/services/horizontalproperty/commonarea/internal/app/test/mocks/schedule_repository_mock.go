@@ -13,6 +13,7 @@ type MockScheduleRepository struct {
 	UpdateScheduleFunc             func(ctx context.Context, schedule *domain.CommonAreaSchedule) error
 	DeleteScheduleFunc             func(ctx context.Context, id uint) error
 	GetScheduleForDayFunc          func(ctx context.Context, commonAreaID uint, dayOfWeek int) (*domain.CommonAreaSchedule, error)
+	GetAllSchedulesFunc            func(ctx context.Context, commonAreaID uint) ([]*domain.CommonAreaSchedule, error)
 }
 
 func (m *MockScheduleRepository) CreateSchedule(ctx context.Context, schedule *domain.CommonAreaSchedule) (*domain.CommonAreaSchedule, error) {
@@ -46,6 +47,13 @@ func (m *MockScheduleRepository) DeleteSchedule(ctx context.Context, id uint) er
 func (m *MockScheduleRepository) GetScheduleForDay(ctx context.Context, commonAreaID uint, dayOfWeek int) (*domain.CommonAreaSchedule, error) {
 	if m.GetScheduleForDayFunc != nil {
 		return m.GetScheduleForDayFunc(ctx, commonAreaID, dayOfWeek)
+	}
+	return nil, nil
+}
+
+func (m *MockScheduleRepository) GetAllSchedulesByCommonAreaID(ctx context.Context, commonAreaID uint) ([]*domain.CommonAreaSchedule, error) {
+	if m.GetAllSchedulesFunc != nil {
+		return m.GetAllSchedulesFunc(ctx, commonAreaID)
 	}
 	return nil, nil
 }

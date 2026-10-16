@@ -15,6 +15,7 @@ type MockCommonAreaRepository struct {
 	ListCommonAreasFunc            func(ctx context.Context, filters domain.CommonAreaFiltersDTO) (*domain.PaginatedCommonAreasDTO, error)
 	GetCommonAreasByBusinessIDFunc func(ctx context.Context, businessID uint) ([]*domain.CommonArea, error)
 	GetCommonAreaTypesFunc         func(ctx context.Context) ([]*domain.CommonAreaType, error)
+	SearchUnitsFunc                func(ctx context.Context, businessID uint, search string, limit int) ([]domain.UnitLookupDTO, error)
 }
 
 func (m *MockCommonAreaRepository) CreateCommonArea(ctx context.Context, area *domain.CommonArea) (*domain.CommonArea, error) {
@@ -62,6 +63,13 @@ func (m *MockCommonAreaRepository) GetCommonAreasByBusinessID(ctx context.Contex
 func (m *MockCommonAreaRepository) GetCommonAreaTypes(ctx context.Context) ([]*domain.CommonAreaType, error) {
 	if m.GetCommonAreaTypesFunc != nil {
 		return m.GetCommonAreaTypesFunc(ctx)
+	}
+	return nil, nil
+}
+
+func (m *MockCommonAreaRepository) SearchUnits(ctx context.Context, businessID uint, search string, limit int) ([]domain.UnitLookupDTO, error) {
+	if m.SearchUnitsFunc != nil {
+		return m.SearchUnitsFunc(ctx, businessID, search, limit)
 	}
 	return nil, nil
 }

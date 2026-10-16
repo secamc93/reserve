@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
@@ -26,6 +27,10 @@ func (h *CommonAreaHandler) CheckAvailability(c *gin.Context) {
 		return
 	}
 
+	if _, ok := h.loadAreaInScope(c, req.CommonAreaID); !ok {
+		return
+	}
+
 	dto := domain.CheckAvailabilityDTO{
 		CommonAreaID:    req.CommonAreaID,
 		ReservationDate: req.ReservationDate,
@@ -35,7 +40,7 @@ func (h *CommonAreaHandler) CheckAvailability(c *gin.Context) {
 
 	available, err := h.useCase.CheckAvailability(ctx, dto)
 	if err != nil {
-		if err == domain.ErrScheduleNotConfigured || err == domain.ErrRestrictionActive {
+		if errors.Is(err, domain.ErrScheduleNotConfigured) || errors.Is(err, domain.ErrRestrictionActive) || errors.Is(err, domain.ErrOutsideSchedule) || errors.Is(err, domain.ErrCommonAreaInactive) {
 			c.JSON(http.StatusOK, response.CheckAvailabilityResponse{
 				Success:   true,
 				Available: false,

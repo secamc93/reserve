@@ -34,6 +34,8 @@ type CommonArea struct {
 	AllowsRecurring      bool
 	IsActive             bool
 	ImageURLs            string
+	TypeName             string // Nombre del tipo (solo lectura)
+	TypeCode             string // Código del tipo (solo lectura)
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
 }
@@ -114,6 +116,14 @@ type CommonAreaReservation struct {
 	ResidentNotes       string
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+
+	// Datos de lectura (relaciones precargadas)
+	CommonAreaName     string
+	PropertyUnitNumber string
+	PropertyUnitBlock  string
+	ResidentName       string
+	StatusCode         string
+	StatusName         string
 }
 
 // CommonAreaReservationStatus - Estado de reserva
