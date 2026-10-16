@@ -55,6 +55,8 @@ type VisitListDTO struct {
 	VisitorName        string
 	VisitorDNI         string
 	VisitorPhone       string
+	VisitorID          uint
+	PropertyUnitID     uint
 	PropertyUnitNumber string
 	PropertyUnitBlock  string
 	VisitTypeName      string

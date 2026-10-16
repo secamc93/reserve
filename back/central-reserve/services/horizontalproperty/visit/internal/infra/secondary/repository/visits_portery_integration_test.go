@@ -95,6 +95,9 @@ func TestVisitas_ExcedeTiempoPlacaTarjetasYVehiculo(t *testing.T) {
 	if first.VisitorVehiclePlate != vehicle.Plate || first.AuthorizationCode == "" || first.AuthorizedByName == "" || first.ResidentName == "" {
 		t.Errorf("faltan datos de la fila: %+v", first)
 	}
+	if first.PropertyUnitID != hp.UnitID(0) || first.VisitorID != visitor.ID {
+		t.Errorf("ids de unidad/visitante: %d %d", first.PropertyUnitID, first.VisitorID)
+	}
 	if first.StayLimitMinutes == nil || *first.StayLimitMinutes != 20 {
 		t.Errorf("límite = %v, se esperaban 20 min", first.StayLimitMinutes)
 	}

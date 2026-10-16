@@ -220,6 +220,8 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 		VisitorName        string
 		VisitorDNI         string
 		VisitorPhone       string
+		VisitorID          uint
+		PropertyUnitID     uint
 		PropertyUnitNumber string
 		PropertyUnitBlock  string
 		VisitTypeName      string
@@ -245,7 +247,7 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 	rows := []row{}
 	offset := (filters.Page - 1) * filters.PageSize
 	if err := base().
-		Select("v.id, vis.full_name as visitor_name, vis.dni as visitor_dni, COALESCE(vis.phone, '') as visitor_phone, " +
+		Select("v.id, vis.full_name as visitor_name, vis.dni as visitor_dni, COALESCE(vis.phone, '') as visitor_phone, v.visitor_id, v.property_unit_id, " +
 			"pu.number as property_unit_number, COALESCE(pu.block, '') as property_unit_block, " +
 			"vt.name as visit_type_name, vs.name as visit_status_name, vs.code as visit_status_code, " +
 			"v.scheduled_date, v.scheduled_start_time, v.scheduled_end_time, v.actual_entry_time, v.actual_exit_time, " +
@@ -268,6 +270,8 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 			VisitorName:         rw.VisitorName,
 			VisitorDNI:          rw.VisitorDNI,
 			VisitorPhone:        rw.VisitorPhone,
+			VisitorID:           rw.VisitorID,
+			PropertyUnitID:      rw.PropertyUnitID,
 			PropertyUnitNumber:  rw.PropertyUnitNumber,
 			PropertyUnitBlock:   rw.PropertyUnitBlock,
 			VisitTypeName:       rw.VisitTypeName,

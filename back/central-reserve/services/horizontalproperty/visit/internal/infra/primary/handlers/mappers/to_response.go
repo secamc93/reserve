@@ -36,6 +36,8 @@ func VisitListDTOsToResponse(visits []domain.VisitListDTO) []response.VisitListD
 			VisitorName:         v.VisitorName,
 			VisitorDNI:          v.VisitorDNI,
 			VisitorPhone:        v.VisitorPhone,
+			VisitorID:           v.VisitorID,
+			PropertyUnitID:      v.PropertyUnitID,
 			PropertyUnitNumber:  v.PropertyUnitNumber,
 			PropertyUnitBlock:   v.PropertyUnitBlock,
 			VisitTypeName:       v.VisitTypeName,

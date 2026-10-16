@@ -61,6 +61,8 @@ type VisitListData struct {
 	VisitorName         string     `json:"visitor_name"`
 	VisitorDNI          string     `json:"visitor_dni"`
 	VisitorPhone        string     `json:"visitor_phone"`
+	VisitorID           uint       `json:"visitor_id"`
+	PropertyUnitID      uint       `json:"property_unit_id"`
 	PropertyUnitNumber  string     `json:"property_unit_number"`
 	PropertyUnitBlock   string     `json:"property_unit_block"`
 	VisitTypeName       string     `json:"visit_type_name"`
