@@ -66,14 +66,12 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
 
   // Permisos IAM
   const canAccessIAM = hasResource('Usuarios') || hasResource('Roles') || hasResource('Permisos') || hasResource('Recursos') || hasResource('Tipos de Negocio') || hasResource('Negocios');
-  const canAccessLogs = user?.is_super_admin || false;
 
   // Mismos módulos para la barra inferior y el menú de módulos del teléfono.
   const navItems = buildNavItems({
     sidebarItems: typeConfig?.sidebarItems || [],
     activeBusinessId: activeBizId,
     canAccessIAM,
-    canAccessLogs,
   });
 
   const renderNavItem = (href: string, iconPath: string, label: string) => {
@@ -155,7 +153,7 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
               {dynamicItems.map((item) => renderNavItem(item.href, item.iconPath, item.label))}
 
               {/* Separador si hay items dinamicos y IAM */}
-              {dynamicItems.length > 0 && (canAccessIAM || canAccessLogs) && (
+              {dynamicItems.length > 0 && canAccessIAM && (
                 <li className="py-2">
                   <div className="border-t border-white/10" />
                 </li>
@@ -168,12 +166,6 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
                 'IAM'
               )}
 
-              {/* Logs */}
-              {canAccessLogs && renderNavItem(
-                '/iam/logs',
-                'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-                'Logs'
-              )}
             </ul>
           </nav>
 

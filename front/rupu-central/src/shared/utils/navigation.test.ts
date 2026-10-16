@@ -37,16 +37,17 @@ describe('resolveBusinessHref', () => {
 
 describe('buildNavItems', () => {
   it('módulos de la propiedad con href resuelto y etiqueta corta, en el orden del sidebar', () => {
-    const items = buildNavItems({ sidebarItems: SIDEBAR, activeBusinessId: 7, canAccessIAM: false, canAccessLogs: false });
+    const items = buildNavItems({ sidebarItems: SIDEBAR, activeBusinessId: 7, canAccessIAM: false });
     expect(items.map((i) => i.id)).toEqual(SIDEBAR.map((i) => i.id));
     expect(items[0]).toMatchObject({ id: 'resumen', label: 'Resumen', shortLabel: 'Inicio', href: '/properties/7' });
     expect(items.find((i) => i.id === 'residents')?.shortLabel).toBe('Residentes');
   });
 
-  it('agrega IAM y Logs al final según permisos', () => {
-    const items = buildNavItems({ sidebarItems: SIDEBAR, activeBusinessId: 7, canAccessIAM: true, canAccessLogs: true });
-    expect(items.slice(-2).map((i) => i.href)).toEqual(['/iam', '/iam/logs']);
-    const onlyIam = buildNavItems({ sidebarItems: [], activeBusinessId: null, canAccessIAM: true, canAccessLogs: false });
+  it('agrega IAM al final según permisos (no hay módulo de Logs)', () => {
+    const items = buildNavItems({ sidebarItems: SIDEBAR, activeBusinessId: 7, canAccessIAM: true });
+    expect(items.slice(-1).map((i) => i.href)).toEqual(['/iam']);
+    expect(items.some((i) => i.href.includes('logs'))).toBe(false);
+    const onlyIam = buildNavItems({ sidebarItems: [], activeBusinessId: null, canAccessIAM: true });
     expect(onlyIam.map((i) => i.id)).toEqual(['iam']);
   });
 
@@ -56,7 +57,7 @@ describe('buildNavItems', () => {
 });
 
 describe('pickBottomBarItems', () => {
-  const all = buildNavItems({ sidebarItems: SIDEBAR, activeBusinessId: 7, canAccessIAM: true, canAccessLogs: true });
+  const all = buildNavItems({ sidebarItems: SIDEBAR, activeBusinessId: 7, canAccessIAM: true });
 
   it('en la propiedad: Inicio y Residentes a la izquierda, Paquetes y Votaciones a la derecha', () => {
     const { left, right } = pickBottomBarItems(all);
@@ -70,11 +71,10 @@ describe('pickBottomBarItems', () => {
     expect([...left, ...right].map((i) => i.id)).toEqual(['resumen', 'residents', 'units', 'visits']);
   });
 
-  it('en IAM sin propiedad: solo IAM y Logs, uno a cada lado', () => {
-    const iam = buildNavItems({ sidebarItems: [], activeBusinessId: 0, canAccessIAM: true, canAccessLogs: true });
+  it('en IAM sin propiedad: solo IAM', () => {
+    const iam = buildNavItems({ sidebarItems: [], activeBusinessId: 0, canAccessIAM: true });
     const { left, right } = pickBottomBarItems(iam);
-    expect(left.map((i) => i.id)).toEqual(['iam']);
-    expect(right.map((i) => i.id)).toEqual(['logs']);
+    expect([...left, ...right].map((i) => i.id)).toEqual(['iam']);
   });
 
   it('sin módulos: barra vacía', () => {

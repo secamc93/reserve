@@ -14,7 +14,6 @@ import {
   CubeTransparentIcon,
   BuildingOfficeIcon,
   TagIcon,
-  DocumentTextIcon,
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
@@ -76,13 +75,6 @@ const navItems: NavItem[] = [
     title: 'Gestión de Negocios',
     description: 'Administra los negocios del sistema',
     icon: BuildingOfficeIcon,
-  },
-  {
-    href: '/iam/logs',
-    label: 'Logs',
-    title: 'Monitoreo de Logs',
-    description: 'Visualiza los logs del sistema en tiempo real',
-    icon: DocumentTextIcon,
   },
 ];
 

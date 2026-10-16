@@ -23,7 +23,6 @@ const items = buildNavItems({
   sidebarItems: BUSINESS_TYPE_CONFIG.horizontal_property.sidebarItems,
   activeBusinessId: 7,
   canAccessIAM: true,
-  canAccessLogs: false,
 });
 
 function setup(props: Partial<MobileNavProps> = {}) {

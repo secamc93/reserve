@@ -1,7 +1,7 @@
 /**
  * Lógica pura de la navegación del shell (barra lateral de escritorio y barra inferior del teléfono).
  *
- * - `buildNavItems`: los módulos que ve el usuario (los del tipo de negocio activo + IAM y Logs
+ * - `buildNavItems`: los módulos que ve el usuario (los del tipo de negocio activo + IAM
  *   según permisos), con `{businessId}` ya resuelto. Lo usan la barra lateral y el menú de módulos.
  * - `pickBottomBarItems`: qué módulos van como accesos rápidos en la barra inferior del teléfono
  *   (2 a cada lado del logo).
@@ -28,15 +28,6 @@ export const IAM_NAV_ITEM: NavItem = {
     'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
 };
 
-export const LOGS_NAV_ITEM: NavItem = {
-  id: 'logs',
-  label: 'Logs',
-  shortLabel: 'Logs',
-  href: '/iam/logs',
-  iconPath:
-    'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-};
-
 /** Resuelve `{businessId}`: con propiedad activa la sustituye; sin ella (null o 0) quita el segmento. */
 export function resolveBusinessHref(href: string, activeBusinessId: number | null): string {
   return activeBusinessId !== null && activeBusinessId !== 0
@@ -48,11 +39,10 @@ export interface BuildNavItemsInput {
   sidebarItems: readonly SidebarItemConfig[];
   activeBusinessId: number | null;
   canAccessIAM: boolean;
-  canAccessLogs: boolean;
 }
 
-/** Módulos navegables, en el mismo orden que la barra lateral: los del tipo, luego IAM y Logs. */
-export function buildNavItems({ sidebarItems, activeBusinessId, canAccessIAM, canAccessLogs }: BuildNavItemsInput): NavItem[] {
+/** Módulos navegables, en el mismo orden que la barra lateral: los del tipo, luego IAM. */
+export function buildNavItems({ sidebarItems, activeBusinessId, canAccessIAM }: BuildNavItemsInput): NavItem[] {
   const items: NavItem[] = sidebarItems.map((item) => ({
     id: item.id,
     label: item.label,
@@ -61,7 +51,6 @@ export function buildNavItems({ sidebarItems, activeBusinessId, canAccessIAM, ca
     iconPath: item.iconPath,
   }));
   if (canAccessIAM) items.push({ ...IAM_NAV_ITEM });
-  if (canAccessLogs) items.push({ ...LOGS_NAV_ITEM });
   return items;
 }
 
@@ -70,7 +59,7 @@ export function buildNavItems({ sidebarItems, activeBusinessId, canAccessIAM, ca
  * Inicio (Resumen) y Residentes a la izquierda; Paquetería y Votaciones a la derecha.
  * Son los módulos de uso diario en portería y administración. El resto queda en el menú
  * de módulos (logo central). Si el usuario no tiene alguno, se completa con los demás
- * módulos en el orden de la barra lateral (p. ej. en IAM sin propiedad: IAM y Logs).
+ * módulos en el orden de la barra lateral (p. ej. en IAM sin propiedad: solo IAM).
  */
 export const BOTTOM_BAR_PREFERRED_IDS = ['resumen', 'residents', 'packages', 'voting-groups'] as const;
 export const BOTTOM_BAR_MAX_ITEMS = 4;
