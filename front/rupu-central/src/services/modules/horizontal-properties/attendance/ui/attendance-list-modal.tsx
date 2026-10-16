@@ -281,9 +281,6 @@ export function AttendanceListModal({
 
       // Buscar el record_id del registro de asistencia para esta unidad
       const record = units.find(u => u.id === unit.id);
-      console.log('🔍 Unidad seleccionada:', unit);
-      console.log('🔍 Record encontrado:', record);
-      console.log('🔍 attendanceRecordId:', record?.attendanceRecordId);
       
       if (!record?.attendanceRecordId) {
         setError('No se encontró el registro de asistencia para esta unidad.');

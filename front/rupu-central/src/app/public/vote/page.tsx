@@ -65,7 +65,6 @@ function PublicVotePageContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🔍 [PUBLIC VOTE] Iniciando validación de parámetros...');
 
     // Extraer parámetros de la URL
     const token = searchParams.get('token');
@@ -73,12 +72,6 @@ function PublicVotePageContent() {
     let businessId = searchParams.get('hp_id');
     const groupId = searchParams.get('group_id');
 
-    console.log('📥 [PUBLIC VOTE] Parámetros recibidos de la URL:', {
-      token: token ? `${token.substring(0, 20)}...` : null,
-      voting_id: votingId,
-      hp_id: businessId,
-      group_id: groupId
-    });
 
     if (!token) {
       console.error('❌ [PUBLIC VOTE] Token no encontrado en la URL');
@@ -91,13 +84,11 @@ function PublicVotePageContent() {
     // Si voting_id o hp_id no vienen en la URL, intentar extraerlos del token JWT
     let isGroup = false; // Variable local para detectar token de grupo
     if (!votingId || !businessId) {
-      console.log('🔓 [PUBLIC VOTE] voting_id o hp_id no en URL, extrayendo del token...');
       try {
         // Decodificar el token JWT (solo la parte del payload, no validamos la firma aquí)
         const parts = token.split('.');
         if (parts.length === 3) {
           const payload = JSON.parse(atob(parts[1]));
-          console.log('📋 [PUBLIC VOTE] Payload del token:', payload);
 
           votingId = votingId || payload.voting_id?.toString();
           businessId = businessId || payload.hp_id?.toString();
@@ -106,12 +97,6 @@ function PublicVotePageContent() {
           isGroup = !payload.voting_id;
           setIsGroupToken(isGroup);
 
-          console.log('✅ [PUBLIC VOTE] Datos extraídos del token:', {
-            votingId,
-            businessId,
-            groupId: payload.voting_group_id,
-            isGroupToken: isGroup
-          });
         }
       } catch (err) {
         console.error('❌ [PUBLIC VOTE] Error decodificando token:', err);
@@ -128,19 +113,12 @@ function PublicVotePageContent() {
       return;
     }
 
-    console.log('✅ [PUBLIC VOTE] Parámetros validados correctamente:', {
-      token: 'OK',
-      voting_id: votingId,
-      hp_id: businessId,
-      group_id: groupId
-    });
 
     setVotingParams({ token, voting_id: votingId, hp_id: businessId, group_id: groupId || undefined });
     setLoading(false);
   }, [searchParams]);
 
   const handleValidationSuccess = (authToken: string, resident: ResidentData) => {
-    console.log('✅ [PUBLIC VOTE] Validación exitosa, token de grupo:', isGroupToken);
     setVotingAuthToken(authToken);
     setResidentData(resident);
 

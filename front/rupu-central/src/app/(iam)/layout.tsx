@@ -40,17 +40,9 @@ export default function IamLayout({
     const businessesData = TokenStorage.getBusinessesData();
     const isBusinessUser = scope === 'business';
 
-    console.log('🔍 IAM Layout - Validación:', {
-      scope,
-      isBusinessUser,
-      isSuperAdmin,
-      hasBusinessToken: !!businessToken,
-      businessesCount: businessesData?.length || 0,
-    });
 
     // Si es super admin y no tiene business token, generarlo automáticamente
     if (isSuperAdmin && !businessToken) {
-      console.log('🔑 IAM Layout - Generando business token para super admin');
       (async () => {
         try {
           const { generateBusinessTokenAction } = await import('@/services/auth/login/infrastructure/actions');
@@ -62,7 +54,6 @@ export default function IamLayout({
             TokenStorage.setBusinessToken(result.data.token);
             TokenStorage.removeUserPermissions(); // Limpiar permisos anteriores
             TokenStorage.setActiveBusiness(0);
-            console.log('✅ Business token generado para super admin');
             window.location.reload();
             return;
           }
@@ -86,7 +77,6 @@ export default function IamLayout({
 
       // Tiene negocios pero no tiene business token: mostrar selector
       if (!businessToken) {
-        console.log('✅ IAM Layout - Mostrando selector de negocios');
         setShowBusinessSelector(true);
         setLoading(false);
         return;

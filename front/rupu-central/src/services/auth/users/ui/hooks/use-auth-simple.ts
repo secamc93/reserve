@@ -13,8 +13,6 @@ export function useAuthSimple() {
     const storedToken = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
     const storedUser = TokenStorage.getUser();
 
-    console.log('🔍 useAuthSimple - Token almacenado:', storedToken ? `${storedToken.substring(0, 20)}...` : 'null');
-    console.log('🔍 useAuthSimple - Usuario almacenado:', storedUser);
 
     if (storedToken) {
       setToken(storedToken);

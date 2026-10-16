@@ -37,7 +37,6 @@ export function applyBusinessTheme(business: Business): void {
     // Disparar evento para que otros componentes se enteren
     window.dispatchEvent(new Event('businessChanged'));
 
-    console.log(`✅ Tema aplicado para: ${business.name}`, colors);
   }
 }
 

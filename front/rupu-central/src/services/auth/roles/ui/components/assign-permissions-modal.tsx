@@ -67,10 +67,6 @@ export function AssignPermissionsModal({
         token
       );
 
-      console.log('🔍 loadPermissions - Resultados:', {
-        allPermissions: allPermissionsResult.success ? allPermissionsResult.data?.permissions.length : 0,
-        rolePermissions: rolePermissionsResult.success ? rolePermissionsResult.data?.permissions.length : 0
-      });
 
       if (allPermissionsResult.success && allPermissionsResult.data) {
         setPermissions(allPermissionsResult.data.permissions);

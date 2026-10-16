@@ -44,7 +44,6 @@ export function DeleteVotingModal({
         return;
       }
 
-      console.log('🗑️ Eliminando votación:', { votingId: voting.id, title: voting.title });
 
       const result = await deleteVotingAction({
         token,
@@ -54,7 +53,6 @@ export function DeleteVotingModal({
       });
 
       if (result.success) {
-        console.log('✅ Votación eliminada:', result.message);
         onSuccess();
         onClose();
       } else {

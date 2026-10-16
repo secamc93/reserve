@@ -66,7 +66,6 @@ export function UserInfoModal({ isOpen, onClose, onLogout, user }: UserInfoModal
       const reader = new FileReader();
       reader.onloadend = () => {
         // Aquí puedes actualizar el avatar del usuario
-        console.log('Nueva imagen seleccionada:', reader.result);
         // TODO: Implementar subida de imagen al backend
       };
       reader.readAsDataURL(file);

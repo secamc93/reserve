@@ -193,7 +193,6 @@ export function LiveVotingModal({
       if (result.success && result.data) {
         setVotingDetails(result.data);
         setProcessedVoteIds(new Set()); // Limpiar votos procesados al cargar nueva votación
-        console.log('✅ Datos de votación cargados:', result.data);
       } else {
         setDetailsError(result.error || 'Error al cargar los detalles de votación');
       }
@@ -210,12 +209,8 @@ export function LiveVotingModal({
   const [processedDeletedVoteIds, setProcessedDeletedVoteIds] = useState<Set<number>>(new Set());
 
   const updateVotingDetailsFromSSE = useCallback(() => {
-    console.log('🔄 [updateVotingDetailsFromSSE] Ejecutándose');
-    console.log('🔄 [updateVotingDetailsFromSSE] votingDetails:', votingDetails);
-    console.log('🔄 [updateVotingDetailsFromSSE] sseVotes.length:', sseVotes.length);
 
     if (!votingDetails || !sseVotes.length) {
-      console.log(`⚠️ No se puede actualizar: votingDetails=${!!votingDetails}, sseVotes.length=${sseVotes.length}`);
       return;
     }
 
@@ -260,7 +255,6 @@ export function LiveVotingModal({
             currentUnit.option_color !== 'null';
 
           if (hasValidData) {
-            console.log(`⏭️ [SSE] Saltando unidad ${currentUnit.property_unit_number} - ya tiene datos válidos`);
             return; // No sobrescribir datos válidos existentes
           }
 
@@ -271,11 +265,9 @@ export function LiveVotingModal({
             sseVote.color !== 'undefined';
 
           if (!sseDataValid) {
-            console.log(`⚠️ [SSE] Datos inválidos para unidad ${currentUnit.property_unit_number}, ignorando`);
             return; // No actualizar con datos inválidos
           }
 
-          console.log(`✅ [SSE] Actualizando unidad ${currentUnit.property_unit_number} con voto "${sseVote.option_text}"`);
 
           updatedUnits[unitIndex] = {
             ...updatedUnits[unitIndex],
@@ -342,7 +334,6 @@ export function LiveVotingModal({
 
     if (newDeletedVotes.length === 0) return;
 
-    console.log('🗑️ Procesando votos eliminados del SSE:', newDeletedVotes);
 
     // Marcar como procesados
     setProcessedDeletedVoteIds(prev => {
@@ -359,7 +350,6 @@ export function LiveVotingModal({
         const wasDeleted = newDeletedVotes.some(dv => dv.property_unit_id === unit.property_unit_id);
 
         if (wasDeleted) {
-          console.log(`🔄 Reseteando voto de unidad ${unit.property_unit_number}`);
           // Resetear el voto de esta unidad
           return {
             ...unit,
@@ -633,7 +623,6 @@ export function LiveVotingModal({
 
   // Handler para abrir modal de voto desde la tarjeta de unidad
   const handleVoteFromCard = (unit: ResidentialUnit) => {
-    console.log('🗳️ Votando desde tarjeta:', unit);
     setSelectedUnitForVote(unit);
     setShowVoteModal(true);
   };
@@ -665,7 +654,6 @@ export function LiveVotingModal({
         return;
       }
 
-      console.log('🗑️ Eliminando voto:', voteToDelete);
 
       const { deleteVoteAction } = await import('@/services/modules/horizontal-properties/voting/infrastructure/actions');
 
@@ -678,7 +666,6 @@ export function LiveVotingModal({
       });
 
       if (result.success) {
-        console.log('✅ Voto eliminado exitosamente');
 
         // Actualizar solo la tarjeta específica sin recargar toda la página
         setVotingDetails(prevDetails => {
@@ -721,7 +708,6 @@ export function LiveVotingModal({
           return newMap;
         });
 
-        console.log('🔄 Estados actualizados: voto eliminado de processedVoteIds y validVoteData');
 
         // Cerrar modal de confirmación
         setShowDeleteVoteModal(false);
@@ -757,7 +743,6 @@ export function LiveVotingModal({
       });
 
       if (result.success) {
-        console.log(`✅ Votación reseteada: ${result.data?.deletedCount} votos eliminados`);
 
         // Recargar toda la página para limpiar SSE y estado completamente
         window.location.reload();
@@ -774,7 +759,6 @@ export function LiveVotingModal({
   };
 
   const handleVoteSuccess = () => {
-    console.log('✅ Voto registrado exitosamente. Cerrando modal.');
     // Cerrar el modal después de votar
     setShowVoteModal(false);
     setSelectedUnitForVote(null);

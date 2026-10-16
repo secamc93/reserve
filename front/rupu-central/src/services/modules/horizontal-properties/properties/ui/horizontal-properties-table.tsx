@@ -252,7 +252,6 @@ export function HorizontalPropertiesTable() {
   };
 
   const handleEditProperty = (property: HorizontalProperty) => {
-    console.log('Editar propiedad:', property);
   };
 
   const handleCreateProperty = () => {
@@ -266,15 +265,9 @@ export function HorizontalPropertiesTable() {
 
   // Renderizar tarjetas de propiedades en lugar de tabla tradicional
   const renderPropertyCards = () => {
-    console.log('🔍 Propiedades para renderizar:', properties);
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {properties.map((property) => {
-          console.log(`🏢 Propiedad ${property.name}:`, {
-            id: property.id,
-            name: property.name,
-            logoUrl: property.logoUrl
-          });
           return (
             <div
               key={property.id}
@@ -289,11 +282,9 @@ export function HorizontalPropertiesTable() {
                       alt={`Logo de ${property.name}`}
                       className="absolute inset-0 w-full h-full object-cover"
                       onError={(e) => {
-                        console.log('❌ Error cargando imagen:', property.logoUrl);
                         e.currentTarget.style.display = 'none';
                       }}
                       onLoad={() => {
-                        console.log('✅ Imagen cargada correctamente:', property.logoUrl);
                       }}
                     />
                     {/* Overlay sutil solo para el badge */}

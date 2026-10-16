@@ -493,7 +493,6 @@ export function RolesTable({ token }: RolesTableProps) {
 
             if (result.success) {
               // Recargar los permisos del rol para actualizar la vista
-              console.log('Permiso removido exitosamente');
             } else {
               console.error('Error removiendo permiso:', result.error);
               alert(`Error al remover permiso: ${result.error}`);
