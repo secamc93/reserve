@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // ParkingZoneRepository - Puerto para repositorio de zonas de parqueo
 type ParkingZoneRepository interface {
@@ -22,6 +25,10 @@ type ParkingSlotRepository interface {
 	GetParkingSlotsByZoneID(ctx context.Context, zoneID uint) ([]*ParkingSlot, error)
 	GetParkingSlotsByBusinessID(ctx context.Context, businessID uint) ([]*ParkingSlot, error)
 	IsSlotAvailable(ctx context.Context, slotID uint, date string, startTime, endTime string, excludeReservationID *uint) (bool, error)
+	// ExistingSlotNumbers devuelve cuáles de los números ya existen en la zona.
+	ExistingSlotNumbers(ctx context.Context, zoneID uint, numbers []string) ([]string, error)
+	// CreateParkingSlotsBulk crea los cupos en una sola transacción.
+	CreateParkingSlotsBulk(ctx context.Context, slots []*ParkingSlot) error
 }
 
 // ParkingAssignmentRepository - Puerto para repositorio de asignaciones
@@ -34,6 +41,7 @@ type ParkingAssignmentRepository interface {
 	GetActiveAssignmentBySlotID(ctx context.Context, slotID uint) (*ParkingAssignment, error)
 	GetAssignmentsByPropertyUnitID(ctx context.Context, propertyUnitID uint) ([]*ParkingAssignment, error)
 	GetAssignmentsByResidentID(ctx context.Context, residentID uint) ([]*ParkingAssignment, error)
+	GetAssignmentSummary(ctx context.Context, businessID uint, today time.Time) (*ParkingAssignmentSummaryDTO, error)
 }
 
 // ParkingReservationRepository - Puerto para repositorio de reservas
@@ -71,11 +79,16 @@ type ParkingUseCase interface {
 	GetParkingZoneByID(ctx context.Context, id uint) (*ParkingZone, error)
 	ListParkingZones(ctx context.Context, filters ParkingZoneFiltersDTO) (*PaginatedParkingZonesDTO, error)
 	CreateParkingSlot(ctx context.Context, dto CreateParkingSlotDTO) (*ParkingSlot, error)
+	CreateParkingSlotsBulk(ctx context.Context, dto CreateParkingSlotsBulkDTO) ([]*ParkingSlot, error)
 	GetParkingSlotByID(ctx context.Context, id uint) (*ParkingSlot, error)
 	ListParkingSlots(ctx context.Context, filters ParkingSlotFiltersDTO) (*PaginatedParkingSlotsDTO, error)
 	AssignParking(ctx context.Context, dto AssignParkingDTO) (*ParkingAssignment, error)
 	GetParkingAssignmentByID(ctx context.Context, id uint) (*ParkingAssignment, error)
 	ListParkingAssignments(ctx context.Context, filters ParkingAssignmentFiltersDTO) (*PaginatedParkingAssignmentsDTO, error)
+	GetParkingAssignmentSummary(ctx context.Context, businessID uint, today time.Time) (*ParkingAssignmentSummaryDTO, error)
+	UpdateParkingAssignment(ctx context.Context, dto UpdateParkingAssignmentDTO) (*ParkingAssignment, error)
+	// ReleaseParkingAssignment libera el cupo: desactiva la asignación y le pone fin hoy.
+	ReleaseParkingAssignment(ctx context.Context, businessID, assignmentID uint, today time.Time) (*ParkingAssignment, error)
 	CreateParkingReservation(ctx context.Context, dto CreateParkingReservationDTO) (*ParkingReservation, error)
 	GetParkingReservationByID(ctx context.Context, id uint) (*ParkingReservation, error)
 	ListParkingReservations(ctx context.Context, filters ParkingReservationFiltersDTO) (*PaginatedParkingReservationsDTO, error)

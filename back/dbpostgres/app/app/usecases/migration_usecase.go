@@ -30,6 +30,12 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		return err
 	}
 
+	// El índice único viejo (parking_slot_id, is_active) solo permitía UNA asignación liberada por
+	// cupo en toda su historia; lo reemplaza idx_slot_one_active_assignment (parcial, solo activas).
+	if err := uc.db.Exec(`DROP INDEX IF EXISTS horizontal_property.idx_slot_active_assignment`).Error; err != nil {
+		uc.logger.Warn().Err(err).Msg("No se pudo borrar el índice viejo de asignaciones de parqueadero")
+	}
+
 	// Auto-migrar todos los modelos
 	if err := uc.db.AutoMigrate(
 		&models.BusinessType{},

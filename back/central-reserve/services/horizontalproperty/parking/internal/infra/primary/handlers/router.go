@@ -23,6 +23,7 @@ func (h *ParkingHandler) RegisterRoutes(router *gin.RouterGroup) {
 		slots := parking.Group("/slots")
 		{
 			slots.POST("", middleware.JWT(), h.CreateParkingSlot)
+			slots.POST("/bulk", middleware.JWT(), h.CreateParkingSlotsBulk)
 			slots.GET("", middleware.JWT(), h.ListParkingSlots)
 		}
 
@@ -31,6 +32,9 @@ func (h *ParkingHandler) RegisterRoutes(router *gin.RouterGroup) {
 		{
 			assignments.POST("", middleware.JWT(), h.AssignParking)
 			assignments.GET("", middleware.JWT(), h.ListParkingAssignments)
+			assignments.GET("/summary", middleware.JWT(), h.GetParkingAssignmentsSummary)
+			assignments.PUT("/:id", middleware.JWT(), h.UpdateParkingAssignment)
+			assignments.POST("/:id/release", middleware.JWT(), h.ReleaseParkingAssignment)
 		}
 
 		// Reservas temporales

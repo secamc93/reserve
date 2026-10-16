@@ -2,20 +2,22 @@ package mocks
 
 import (
 	"context"
+	"time"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
 )
 
 // ParkingAssignmentRepositoryMock - Mock del repositorio de asignaciones de parqueo
 type ParkingAssignmentRepositoryMock struct {
-	CreateParkingAssignmentFn         func(ctx context.Context, assignment *domain.ParkingAssignment) (*domain.ParkingAssignment, error)
-	GetParkingAssignmentByIDFn        func(ctx context.Context, id uint) (*domain.ParkingAssignment, error)
-	UpdateParkingAssignmentFn         func(ctx context.Context, assignment *domain.ParkingAssignment) error
-	DeleteParkingAssignmentFn         func(ctx context.Context, id uint) error
-	ListParkingAssignmentsFn          func(ctx context.Context, filters domain.ParkingAssignmentFiltersDTO) (*domain.PaginatedParkingAssignmentsDTO, error)
-	GetActiveAssignmentBySlotIDFn     func(ctx context.Context, slotID uint) (*domain.ParkingAssignment, error)
-	GetAssignmentsByPropertyUnitIDFn  func(ctx context.Context, propertyUnitID uint) ([]*domain.ParkingAssignment, error)
-	GetAssignmentsByResidentIDFn      func(ctx context.Context, residentID uint) ([]*domain.ParkingAssignment, error)
+	CreateParkingAssignmentFn        func(ctx context.Context, assignment *domain.ParkingAssignment) (*domain.ParkingAssignment, error)
+	GetParkingAssignmentByIDFn       func(ctx context.Context, id uint) (*domain.ParkingAssignment, error)
+	UpdateParkingAssignmentFn        func(ctx context.Context, assignment *domain.ParkingAssignment) error
+	DeleteParkingAssignmentFn        func(ctx context.Context, id uint) error
+	ListParkingAssignmentsFn         func(ctx context.Context, filters domain.ParkingAssignmentFiltersDTO) (*domain.PaginatedParkingAssignmentsDTO, error)
+	GetActiveAssignmentBySlotIDFn    func(ctx context.Context, slotID uint) (*domain.ParkingAssignment, error)
+	GetAssignmentsByPropertyUnitIDFn func(ctx context.Context, propertyUnitID uint) ([]*domain.ParkingAssignment, error)
+	GetAssignmentsByResidentIDFn     func(ctx context.Context, residentID uint) ([]*domain.ParkingAssignment, error)
+	GetAssignmentSummaryFn           func(ctx context.Context, businessID uint, today time.Time) (*domain.ParkingAssignmentSummaryDTO, error)
 }
 
 func (m *ParkingAssignmentRepositoryMock) CreateParkingAssignment(ctx context.Context, assignment *domain.ParkingAssignment) (*domain.ParkingAssignment, error) {
@@ -72,4 +74,11 @@ func (m *ParkingAssignmentRepositoryMock) GetAssignmentsByResidentID(ctx context
 		return m.GetAssignmentsByResidentIDFn(ctx, residentID)
 	}
 	return []*domain.ParkingAssignment{}, nil
+}
+
+func (m *ParkingAssignmentRepositoryMock) GetAssignmentSummary(ctx context.Context, businessID uint, today time.Time) (*domain.ParkingAssignmentSummaryDTO, error) {
+	if m.GetAssignmentSummaryFn != nil {
+		return m.GetAssignmentSummaryFn(ctx, businessID, today)
+	}
+	return &domain.ParkingAssignmentSummaryDTO{}, nil
 }
