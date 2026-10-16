@@ -7,3 +7,4 @@ export * from './voting-form';
 export * from './public-flow';
 export * from './attendance';
 export * from './ui';
+export * from './copy-text';

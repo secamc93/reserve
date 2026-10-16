@@ -11,6 +11,7 @@ type MockVotingCacheService struct {
 	PublishVoteFn      func(votingID uint, vote domain.VoteDTO) error
 	RemoveVoteFn       func(votingID uint, voteID uint) error
 	ClearVotingFn      func(votingID uint) error
+	ResetVotesFn       func(votingID uint) error
 	SubscribeFn        func(ctx context.Context, votingID uint) (<-chan domain.VoteEvent, error)
 	GetVotingStateFn   func(votingID uint) ([]domain.VoteDTO, error)
 	InitializeVotingFn func(votingID uint, votes []domain.VoteDTO) error
@@ -38,6 +39,13 @@ func (m *MockVotingCacheService) RemoveVote(votingID uint, voteID uint) error {
 func (m *MockVotingCacheService) ClearVoting(votingID uint) error {
 	if m.ClearVotingFn != nil {
 		return m.ClearVotingFn(votingID)
+	}
+	return nil
+}
+
+func (m *MockVotingCacheService) ResetVotes(votingID uint) error {
+	if m.ResetVotesFn != nil {
+		return m.ResetVotesFn(votingID)
 	}
 	return nil
 }

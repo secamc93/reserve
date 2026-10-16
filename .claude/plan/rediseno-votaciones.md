@@ -20,8 +20,7 @@ con tokens, fuentes Public Sans / JetBrains Mono solo en el módulo, barra apila
 
 - [ ] Revisión visual en local con datos (propiedad con unidades por torre y una votación con
       votos): `.claude/testing/votaciones/front/CU-02` y `CU-03`.
-- [ ] Bug previo: `usePublicVotingSSE` no cierra el stream al desmontar (con 1g → progreso
-      quedan dos conexiones abiertas).
+- [x] 2026-10-15: `usePublicVotingSSE` no cerraba el stream al desmontar → resuelto con `useEventStream` (cierra al desmontar, reintento con backoff).
 - [ ] 1h muestra una sola votación (la API pública solo da la del token); para una barra por
       votación del grupo hace falta un endpoint público de resultados por grupo.
 - [ ] Contador "01 / 04": el panel no conoce el total de votaciones del grupo.
@@ -30,3 +29,5 @@ con tokens, fuentes Public Sans / JetBrains Mono solo en el módulo, barra apila
       selectores del panel actual cambian con él). La ronda de API ya cubre registrar/anular/masiva.
 - [ ] Usar `percentage_by_coefficient` del back (nuevo, `b0da089e`) en vez de recalcular en el front.
 - [ ] PR a `main` después del PR #69.
+- [ ] El cierre de un punto no llega por el SSE (el back no emite `voting_closed`); R4 lo revisa cada 8 s. Emitirlo en el back al desactivar la votación (el front ya lo escucha).
+- [ ] La vista 1h (detalle por unidad con token individual) quedó sin detalle: el SSE público ya no expone votos individuales (a propósito, por privacidad).

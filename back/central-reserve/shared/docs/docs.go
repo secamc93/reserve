@@ -6344,10 +6344,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Establece una conexión SSE para recibir votos en tiempo real de una votación específica",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Stream SSE de una votación para el admin. Requiere el business token en el header Authorization. La votación debe ser del grupo de la ruta y el grupo del negocio del token (super admin: ?business_id= opcional). Eventos: connected, initial_data ({voting_id, total_votes, results[], votes[]}), new_vote y vote_deleted ({voting_id, total_votes, results[], vote}), votes_reset ({voting_id, total_votes, results[]}), heartbeat.",
                 "produces": [
                     "text/event-stream"
                 ],
@@ -6369,6 +6366,12 @@ const docTemplate = `{
                         "name": "voting_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del negocio (solo super admin, opcional)",
+                        "name": "business_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -6381,13 +6384,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     }
                 }
@@ -7806,7 +7815,7 @@ const docTemplate = `{
         },
         "/public/validate-resident": {
             "post": {
-                "description": "Valida que un residente pertenezca a una unidad usando su DNI y retorna token temporal para votar. TODA la información viene del token.",
+                "description": "Valida a quien vota por QR y devuelve el token de votación (voting_auth_token). Si el grupo del token tiene require_document_validation=true, ` + "`" + `dni` + "`" + ` es obligatorio (400 \"Documento requerido\") y debe ser de un residente activo de la unidad (404 si no). Si es false, ` + "`" + `dni` + "`" + ` se ignora: basta que la unidad exista, sea de la propiedad (404) y esté activa (400); si no tiene residentes igual puede votar (resident_id 0, resident_name \"Unidad \u003cnúmero\u003e\").",
                 "consumes": [
                     "application/json"
                 ],
@@ -7816,7 +7825,7 @@ const docTemplate = `{
                 "tags": [
                     "Votaciones Públicas"
                 ],
-                "summary": "Validar residente para votación pública",
+                "summary": "Validar residente/unidad para votación pública",
                 "parameters": [
                     {
                         "description": "Datos de validación",
@@ -7829,7 +7838,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Token de votación pública (Bearer token)",
+                        "description": "Token público del QR (Bearer token)",
                         "name": "Authorization",
                         "in": "header",
                         "required": true
@@ -7845,25 +7854,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     }
                 }
@@ -8186,10 +8201,7 @@ const docTemplate = `{
         },
         "/public/voting-stream": {
             "get": {
-                "description": "Establece una conexión SSE para recibir votos en tiempo real. Toda la información viene del token.",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Stream SSE con los resultados de una votación. Acepta el token de votación del residente (el que devuelve /public/validate-resident) por ?token= o header Authorization. Con token de GRUPO se debe indicar ?voting_id= (la votación debe pertenecer al grupo del token); con token de votación individual voting_id es opcional y debe coincidir. Eventos: connected, initial_data, new_vote, vote_deleted, votes_reset, heartbeat. El data de cada evento de resultados es {voting_id, total_votes, results[]} (results con vote_count, percentage y percentage_by_coefficient); el stream público no incluye votos individuales.",
                 "produces": [
                     "text/event-stream"
                 ],
@@ -8200,10 +8212,21 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Token de autenticación de votación (Bearer token)",
+                        "description": "Token de votación del residente (alternativa al header)",
+                        "name": "token",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la votación (obligatorio con token de grupo)",
+                        "name": "voting_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token de votación del residente (Bearer token)",
                         "name": "Authorization",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -8213,16 +8236,22 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse"
                         }
                     }
                 }
@@ -12804,6 +12833,11 @@ const docTemplate = `{
                 "quorum_percentage": {
                     "type": "number"
                 },
+                "require_document_validation": {
+                    "description": "RequireDocumentValidation: el voto público por QR exige el documento de un residente de la\nunidad. Opcional: al crear, por defecto false; al actualizar, si no se envía se conserva.",
+                    "type": "boolean",
+                    "example": false
+                },
                 "requires_quorum": {
                     "type": "boolean"
                 },
@@ -13157,11 +13191,11 @@ const docTemplate = `{
         "services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.ValidateResidentRequest": {
             "type": "object",
             "required": [
-                "dni",
                 "property_unit_id"
             ],
             "properties": {
                 "dni": {
+                    "description": "Dni es obligatorio solo si el grupo tiene require_document_validation = true; si no, se ignora.",
                     "type": "string",
                     "example": "123456789"
                 },

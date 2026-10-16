@@ -1,5 +1,6 @@
 import { expect, test, devices, type APIRequestContext } from "@playwright/test";
 import { API, apiBusinessToken, apiFindBusiness, requireCredentials } from "./helpers";
+import { identify as identifyInR1 } from "./votaciones-seed";
 
 // CU-03 (.claude/testing/votaciones/front/CU-03-voto-movil-por-qr.md): un residente vota desde el
 // celular con el enlace del QR del grupo, y el voto queda contado para el admin. Los datos (grupo,
@@ -45,6 +46,8 @@ async function seedVoting(request: APIRequestContext): Promise<Seed> {
     name: `Asamblea e2e ${RUN}`, description: "e2e voto móvil",
     voting_start_date: new Date(now - 60_000).toISOString(), voting_end_date: new Date(now + 86_400_000).toISOString(),
     requires_quorum: true, quorum_percentage: 51,
+    // Este grupo exige el documento (cédula) en R1: configuración del grupo.
+    require_document_validation: true,
   });
   const vp = `/horizontal-properties/voting-groups/${group.id}/votings`;
   const votingTitle = `Presupuesto e2e ${RUN}`;
@@ -79,14 +82,19 @@ test.describe("votaciones — voto desde el celular por QR", () => {
     if (seed) await api(request, "DELETE", `/horizontal-properties/voting-groups/${seed.groupId}${seed.q}`, seed.token).catch(() => {});
   });
 
-  /** R1: elige la unidad en la lista y escribe el documento. */
+  /** R1: elige la unidad en la lista y escribe el documento (el grupo lo exige). */
   async function identify(page: import("@playwright/test").Page, unit: string, dni: string) {
     await page.goto(seed.publicUrl);
-    await page.getByLabel("Tu unidad").fill(unit);
-    await page.getByRole("option", { name: new RegExp(`^${unit}`) }).click();
-    await page.getByLabel("Documento de identidad").fill(dni);
-    await page.getByRole("button", { name: "Continuar" }).click();
+    await identifyInR1(page, unit, dni);
   }
+
+  // Depende del back con `require_document_validation` por grupo (voting-context la trae).
+  test("CU-03: grupo que exige documento: R1 muestra el campo desde el inicio", async ({ page }) => {
+    await page.goto(seed.publicUrl);
+    await expect(page.getByLabel("Tu unidad")).toBeEnabled({ timeout: 30_000 });
+    await expect(page.getByLabel("Documento de identidad")).toBeVisible();
+    await expect(page.getByText("El documento debe coincidir con el de la unidad.", { exact: false })).toBeVisible();
+  });
 
   test("CU-03: DNI que no coincide no deja continuar", async ({ page }) => {
     await identify(page, UNIT_NUMBER, "111");

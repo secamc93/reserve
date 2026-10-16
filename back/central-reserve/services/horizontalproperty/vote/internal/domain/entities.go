@@ -15,6 +15,8 @@ type VotingGroup struct {
 	QuorumPercentage *float64
 	CreatedByUserID  *uint
 	Notes            string
+	// RequireDocumentValidation: el voto público exige el documento de un residente de la unidad.
+	RequireDocumentValidation bool
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -71,4 +73,13 @@ type UnvotedUnit struct {
 	UnitNumber   string
 	ResidentID   uint
 	ResidentName string
+}
+
+// VotingCredential - Contraseña de voto de una unidad dentro de un grupo de votación
+type VotingCredential struct {
+	ID             uint
+	BusinessID     uint
+	VotingGroupID  uint
+	PropertyUnitID uint
+	Password       string
 }

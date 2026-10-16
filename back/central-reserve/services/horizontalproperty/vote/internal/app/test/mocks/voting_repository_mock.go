@@ -54,6 +54,15 @@ type MockVotingRepository struct {
 	ListPropertyUnitsFn                func(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error)
 	GetResidentByUnitAndDniFn          func(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
 	ListVotingsByGroupWithVoteStatusFn func(ctx context.Context, groupID uint, propertyUnitID uint) ([]domain.VotingWithStatusDTO, error)
+	GetPublicVoterUnitFn               func(ctx context.Context, hpID, propertyUnitID uint) (*domain.PublicVoterUnitDTO, error)
+
+	// Voting credentials
+	ListActiveUnitIDsByBusinessFn func(ctx context.Context, businessID uint) ([]uint, error)
+	ListVotingCredentialUnitIDsFn func(ctx context.Context, groupID uint) ([]uint, error)
+	SaveVotingCredentialsFn       func(ctx context.Context, groupID uint, credentials []domain.VotingCredential, replaceAll bool) error
+	CountVotingCredentialsFn      func(ctx context.Context, groupID uint) (int64, error)
+	GetVotingCredentialPasswordFn func(ctx context.Context, groupID, propertyUnitID uint) (string, error)
+	ListVotingCredentialsFn       func(ctx context.Context, groupID uint, page, pageSize int) ([]domain.VotingCredentialDTO, int64, error)
 }
 
 // NewMockVotingRepository crea una nueva instancia del mock del repositorio
@@ -336,4 +345,53 @@ func (m *MockVotingRepository) ValidateVoteTarget(ctx context.Context, votingID,
 		return m.ValidateVoteTargetFn(ctx, votingID, propertyUnitID, votingOptionID)
 	}
 	return nil
+}
+
+func (m *MockVotingRepository) GetPublicVoterUnit(ctx context.Context, hpID, propertyUnitID uint) (*domain.PublicVoterUnitDTO, error) {
+	if m.GetPublicVoterUnitFn != nil {
+		return m.GetPublicVoterUnitFn(ctx, hpID, propertyUnitID)
+	}
+	return nil, nil
+}
+
+func (m *MockVotingRepository) ListActiveUnitIDsByBusiness(ctx context.Context, businessID uint) ([]uint, error) {
+	if m.ListActiveUnitIDsByBusinessFn != nil {
+		return m.ListActiveUnitIDsByBusinessFn(ctx, businessID)
+	}
+	return nil, nil
+}
+
+func (m *MockVotingRepository) ListVotingCredentialUnitIDs(ctx context.Context, groupID uint) ([]uint, error) {
+	if m.ListVotingCredentialUnitIDsFn != nil {
+		return m.ListVotingCredentialUnitIDsFn(ctx, groupID)
+	}
+	return nil, nil
+}
+
+func (m *MockVotingRepository) SaveVotingCredentials(ctx context.Context, groupID uint, credentials []domain.VotingCredential, replaceAll bool) error {
+	if m.SaveVotingCredentialsFn != nil {
+		return m.SaveVotingCredentialsFn(ctx, groupID, credentials, replaceAll)
+	}
+	return nil
+}
+
+func (m *MockVotingRepository) CountVotingCredentials(ctx context.Context, groupID uint) (int64, error) {
+	if m.CountVotingCredentialsFn != nil {
+		return m.CountVotingCredentialsFn(ctx, groupID)
+	}
+	return 0, nil
+}
+
+func (m *MockVotingRepository) GetVotingCredentialPassword(ctx context.Context, groupID, propertyUnitID uint) (string, error) {
+	if m.GetVotingCredentialPasswordFn != nil {
+		return m.GetVotingCredentialPasswordFn(ctx, groupID, propertyUnitID)
+	}
+	return "", nil
+}
+
+func (m *MockVotingRepository) ListVotingCredentials(ctx context.Context, groupID uint, page, pageSize int) ([]domain.VotingCredentialDTO, int64, error) {
+	if m.ListVotingCredentialsFn != nil {
+		return m.ListVotingCredentialsFn(ctx, groupID, page, pageSize)
+	}
+	return nil, 0, nil
 }

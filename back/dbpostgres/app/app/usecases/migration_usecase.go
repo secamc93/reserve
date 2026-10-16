@@ -64,6 +64,7 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		&models.Proxy{},
 		&models.AttendanceRecord{},
 		&models.AttendanceList{},
+		&models.VotingCredential{},
 		// Modelos de Sistema de Visitas
 		&models.VisitType{},
 		&models.VisitStatus{},

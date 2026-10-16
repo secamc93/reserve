@@ -332,6 +332,9 @@ type VotingGroup struct {
 	QuorumPercentage *float64  `gorm:"type:decimal(5,2);default:50.00"` // Porcentaje de quórum requerido
 	CreatedByUserID  *uint     `gorm:"index"`                           // Usuario que creó el grupo
 	Notes            string    `gorm:"size:2000"`                       // Notas adicionales
+	// RequireDocumentValidation: si es true, el voto público por QR exige el documento (DNI)
+	// de un residente de la unidad; si es false basta con elegir la unidad (el voto es por unidad).
+	RequireDocumentValidation bool `gorm:"not null;default:false"`
 
 	// Relaciones
 	Business        Business         `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -448,6 +451,34 @@ type AttendanceList struct {
 // TableName especifica el nombre de tabla con esquema para AttendanceList
 func (AttendanceList) TableName() string {
 	return "horizontal_property.attendance_lists"
+}
+
+// ───────────────────────────────────────────
+//
+//	VOTING CREDENTIALS - Contraseña de voto por unidad en un grupo
+//
+// ───────────────────────────────────────────
+//
+// VotingCredential es la contraseña que el sistema genera para cada unidad de un grupo de
+// votación. Se entrega impresa en la asistencia (PDF con QR, unidad, propietario y contraseña) y
+// el voto público por QR la exige cuando el grupo tiene contraseñas generadas. Se guarda en claro
+// porque hay que poder reimprimirla.
+type VotingCredential struct {
+	gorm.Model
+	BusinessID     uint   `gorm:"not null;index"`
+	VotingGroupID  uint   `gorm:"not null;uniqueIndex:idx_voting_credential_group_unit,priority:1"`
+	PropertyUnitID uint   `gorm:"not null;uniqueIndex:idx_voting_credential_group_unit,priority:2"`
+	Password       string `gorm:"size:20;not null"`
+
+	// Relaciones
+	Business     Business     `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	VotingGroup  VotingGroup  `gorm:"foreignKey:VotingGroupID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	PropertyUnit PropertyUnit `gorm:"foreignKey:PropertyUnitID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+// TableName especifica el nombre de tabla con esquema para VotingCredential
+func (VotingCredential) TableName() string {
+	return "horizontal_property.voting_credentials"
 }
 
 // ───────────────────────────────────────────

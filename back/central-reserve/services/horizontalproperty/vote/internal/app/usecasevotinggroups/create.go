@@ -37,6 +37,9 @@ func (u *VotingGroupUseCase) CreateVotingGroup(ctx context.Context, dto domain.C
 		CreatedByUserID:  dto.CreatedByUserID,
 		Notes:            dto.Notes,
 	}
+	if dto.RequireDocumentValidation != nil {
+		entity.RequireDocumentValidation = *dto.RequireDocumentValidation
+	}
 
 	created, err := u.repo.CreateVotingGroup(ctx, entity)
 	if err != nil {
@@ -45,18 +48,19 @@ func (u *VotingGroupUseCase) CreateVotingGroup(ctx context.Context, dto domain.C
 	}
 
 	return &domain.VotingGroupDTO{
-		ID:               created.ID,
-		BusinessID:       created.BusinessID,
-		Name:             created.Name,
-		Description:      created.Description,
-		VotingStartDate:  created.VotingStartDate,
-		VotingEndDate:    created.VotingEndDate,
-		IsActive:         created.IsActive,
-		RequiresQuorum:   created.RequiresQuorum,
-		QuorumPercentage: created.QuorumPercentage,
-		CreatedByUserID:  created.CreatedByUserID,
-		Notes:            created.Notes,
-		CreatedAt:        created.CreatedAt,
-		UpdatedAt:        created.UpdatedAt,
+		ID:                        created.ID,
+		BusinessID:                created.BusinessID,
+		Name:                      created.Name,
+		Description:               created.Description,
+		VotingStartDate:           created.VotingStartDate,
+		VotingEndDate:             created.VotingEndDate,
+		IsActive:                  created.IsActive,
+		RequiresQuorum:            created.RequiresQuorum,
+		QuorumPercentage:          created.QuorumPercentage,
+		CreatedByUserID:           created.CreatedByUserID,
+		Notes:                     created.Notes,
+		RequireDocumentValidation: created.RequireDocumentValidation,
+		CreatedAt:                 created.CreatedAt,
+		UpdatedAt:                 created.UpdatedAt,
 	}, nil
 }

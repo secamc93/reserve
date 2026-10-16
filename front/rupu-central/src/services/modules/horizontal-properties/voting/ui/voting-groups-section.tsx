@@ -226,6 +226,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
   const meta = useMemo(() => {
     const parts = [formatDateRange(group.votingStartDate, group.votingEndDate)];
     parts.push(group.requiresQuorum ? `quórum ${group.quorumPercentage}%` : 'sin quórum');
+    if (group.requireDocumentValidation) parts.push('con documento');
     if (votings) parts.push(`${votings.length} ${votings.length === 1 ? 'votación' : 'votaciones'}`);
     parts.push(attendance ? `asistencia ${attendance.attended}/${attendance.total}` : 'sin lista de asistencia');
     return parts.join(' · ');

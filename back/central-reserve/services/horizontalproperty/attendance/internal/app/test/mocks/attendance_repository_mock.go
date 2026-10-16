@@ -34,6 +34,8 @@ type AttendanceRepositoryMock struct {
 	UpdateAttendanceRecordSimpleFn        func(ctx context.Context, id uint, attendedAsOwner, attendedAsProxy bool) (*domain.AttendanceRecord, error)
 	UpdateAttendanceRecordsByPropertyUnitFn func(ctx context.Context, propertyUnitID uint, proxyID *uint) error
 	DeleteAttendanceRecordFn              func(ctx context.Context, id uint) error
+	SetAttendanceRecordProxyFn            func(ctx context.Context, recordID uint, proxyID *uint) (*domain.AttendanceRecord, error)
+	GetAttendanceListBusinessIDFn         func(ctx context.Context, attendanceListID uint) (uint, error)
 
 	// Bulk operations
 	CreateAttendanceRecordsInBatchFn      func(ctx context.Context, records []domain.AttendanceRecord) error
@@ -227,4 +229,18 @@ func (m *AttendanceRepositoryMock) GetVotingGroupTitleByListID(ctx context.Conte
 		return m.GetVotingGroupTitleByListIDFn(ctx, attendanceListID)
 	}
 	return "", nil
+}
+
+func (m *AttendanceRepositoryMock) SetAttendanceRecordProxy(ctx context.Context, recordID uint, proxyID *uint) (*domain.AttendanceRecord, error) {
+	if m.SetAttendanceRecordProxyFn != nil {
+		return m.SetAttendanceRecordProxyFn(ctx, recordID, proxyID)
+	}
+	return nil, nil
+}
+
+func (m *AttendanceRepositoryMock) GetAttendanceListBusinessID(ctx context.Context, attendanceListID uint) (uint, error) {
+	if m.GetAttendanceListBusinessIDFn != nil {
+		return m.GetAttendanceListBusinessIDFn(ctx, attendanceListID)
+	}
+	return 0, nil
 }

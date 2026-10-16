@@ -2097,6 +2097,12 @@ definitions:
         type: string
       quorum_percentage:
         type: number
+      require_document_validation:
+        description: |-
+          RequireDocumentValidation: el voto público por QR exige el documento de un residente de la
+          unidad. Opcional: al crear, por defecto false; al actualizar, si no se envía se conserva.
+        example: false
+        type: boolean
       requires_quorum:
         type: boolean
       voting_end_date:
@@ -2351,13 +2357,14 @@ definitions:
   services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.ValidateResidentRequest:
     properties:
       dni:
+        description: Dni es obligatorio solo si el grupo tiene require_document_validation
+          = true; si no, se ignora.
         example: "123456789"
         type: string
       property_unit_id:
         example: 1
         type: integer
     required:
-    - dni
     - property_unit_id
     type: object
 host: localhost:3050
@@ -6707,10 +6714,12 @@ paths:
       - Votaciones
   /horizontal-properties/voting-groups/{group_id}/votings/{voting_id}/stream:
     get:
-      consumes:
-      - application/json
-      description: Establece una conexión SSE para recibir votos en tiempo real de
-        una votación específica
+      description: 'Stream SSE de una votación para el admin. Requiere el business
+        token en el header Authorization. La votación debe ser del grupo de la ruta
+        y el grupo del negocio del token (super admin: ?business_id= opcional). Eventos:
+        connected, initial_data ({voting_id, total_votes, results[], votes[]}), new_vote
+        y vote_deleted ({voting_id, total_votes, results[], vote}), votes_reset ({voting_id,
+        total_votes, results[]}), heartbeat.'
       parameters:
       - description: ID del grupo de votación
         in: path
@@ -6722,6 +6731,10 @@ paths:
         name: voting_id
         required: true
         type: integer
+      - description: ID del negocio (solo super admin, opcional)
+        in: query
+        name: business_id
+        type: integer
       produces:
       - text/event-stream
       responses:
@@ -6732,11 +6745,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            type: object
-        "500":
-          description: Internal Server Error
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
-            type: object
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Stream de resultados de votación en tiempo real (SSE)
@@ -7495,8 +7512,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: Valida que un residente pertenezca a una unidad usando su DNI y
-        retorna token temporal para votar. TODA la información viene del token.
+      description: 'Valida a quien vota por QR y devuelve el token de votación (voting_auth_token).
+        Si el grupo del token tiene require_document_validation=true, `dni` es obligatorio
+        (400 "Documento requerido") y debe ser de un residente activo de la unidad
+        (404 si no). Si es false, `dni` se ignora: basta que la unidad exista, sea
+        de la propiedad (404) y esté activa (400); si no tiene residentes igual puede
+        votar (resident_id 0, resident_name "Unidad <número>").'
       parameters:
       - description: Datos de validación
         in: body
@@ -7504,7 +7525,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.ValidateResidentRequest'
-      - description: Token de votación pública (Bearer token)
+      - description: Token público del QR (Bearer token)
         in: header
         name: Authorization
         required: true
@@ -7519,20 +7540,24 @@ paths:
         "400":
           description: Bad Request
           schema:
-            type: object
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            type: object
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            type: object
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: object
-      summary: Validar residente para votación pública
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+      summary: Validar residente/unidad para votación pública
       tags:
       - Votaciones Públicas
   /public/vote:
@@ -7753,15 +7778,27 @@ paths:
       - Votaciones Públicas
   /public/voting-stream:
     get:
-      consumes:
-      - application/json
-      description: Establece una conexión SSE para recibir votos en tiempo real. Toda
-        la información viene del token.
+      description: 'Stream SSE con los resultados de una votación. Acepta el token
+        de votación del residente (el que devuelve /public/validate-resident) por
+        ?token= o header Authorization. Con token de GRUPO se debe indicar ?voting_id=
+        (la votación debe pertenecer al grupo del token); con token de votación individual
+        voting_id es opcional y debe coincidir. Eventos: connected, initial_data,
+        new_vote, vote_deleted, votes_reset, heartbeat. El data de cada evento de
+        resultados es {voting_id, total_votes, results[]} (results con vote_count,
+        percentage y percentage_by_coefficient); el stream público no incluye votos
+        individuales.'
       parameters:
-      - description: Token de autenticación de votación (Bearer token)
+      - description: Token de votación del residente (alternativa al header)
+        in: query
+        name: token
+        type: string
+      - description: ID de la votación (obligatorio con token de grupo)
+        in: query
+        name: voting_id
+        type: integer
+      - description: Token de votación del residente (Bearer token)
         in: header
         name: Authorization
-        required: true
         type: string
       produces:
       - text/event-stream
@@ -7770,14 +7807,18 @@ paths:
           description: Event stream
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            type: object
-        "500":
-          description: Internal Server Error
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
           schema:
-            type: object
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
       summary: Stream público de resultados de votación en tiempo real (SSE)
       tags:
       - Votaciones Públicas

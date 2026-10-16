@@ -1,6 +1,6 @@
 /**
  * Modal A2: grupo de votación (nuevo o edición).
- * Campos de siempre: nombre, descripción, periodo, quórum y notas.
+ * Campos: nombre, descripción, periodo, quórum, exigir documento para votar por QR y notas.
  */
 
 'use client';
@@ -27,6 +27,7 @@ const nextHour = () => {
 export type VotingGroupFormValue = Pick<
   VotingGroup,
   'id' | 'name' | 'description' | 'votingStartDate' | 'votingEndDate' | 'requiresQuorum' | 'quorumPercentage' | 'notes'
+> & Partial<Pick<VotingGroup, 'requireDocumentValidation'>
 >;
 
 interface VotingGroupFormModalProps {
@@ -46,6 +47,7 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
   const [end, setEnd] = useState('');
   const [requiresQuorum, setRequiresQuorum] = useState(true);
   const [quorum, setQuorum] = useState('51');
+  const [requireDocument, setRequireDocument] = useState(false);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,7 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
       setEnd(toLocalInput(new Date(group.votingEndDate)));
       setRequiresQuorum(group.requiresQuorum);
       setQuorum(String(group.quorumPercentage || 51));
+      setRequireDocument(group.requireDocumentValidation === true);
       setNotes(group.notes || '');
     } else {
       const s = nextHour();
@@ -69,6 +72,7 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
       setEnd(toLocalInput(new Date(s.getTime() + 4 * 3600_000)));
       setRequiresQuorum(true);
       setQuorum('51');
+      setRequireDocument(false);
       setNotes('');
     }
   }, [isOpen, group]);
@@ -102,6 +106,7 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
         votingEndDate: endDate.toISOString(),
         requiresQuorum,
         quorumPercentage: requiresQuorum ? quorumNumber : undefined,
+        requireDocumentValidation: requireDocument,
         notes: notes.trim() || undefined,
       };
       const result = group
@@ -216,6 +221,21 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
               </div>
             </div>
           )}
+        </div>
+
+        <div className="rounded-lg p-3.5 flex justify-between items-center gap-4" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
+          <div>
+            <div className="text-[13px] font-semibold">Exigir documento (cédula) para votar</div>
+            <div className="text-xs" style={{ color: VT.muted }}>
+              Por el QR, el residente escribe su documento además de elegir la unidad
+            </div>
+          </div>
+          <VtSwitch
+            checked={requireDocument}
+            onChange={setRequireDocument}
+            label="Exigir documento (cédula) para votar"
+            disabled={saving}
+          />
         </div>
 
         <div>

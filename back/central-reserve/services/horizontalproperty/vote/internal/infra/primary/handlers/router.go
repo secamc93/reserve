@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlercredentials"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerpublic"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerresults"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotes"
@@ -20,6 +21,8 @@ type VotingHandler struct {
 	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler
 	votesHandler         handlervotes.IVotesHandler
 	publicHandler        handlerpublic.IPublicHandler
+	credentialsHandler   handlercredentials.ICredentialsHandler
+	scopeGuard           gin.HandlerFunc
 }
 
 // New crea el handler principal que orquesta todos los handlers modulares
@@ -30,6 +33,9 @@ func New(
 	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler,
 	votesHandler handlervotes.IVotesHandler,
 	publicHandler handlerpublic.IPublicHandler,
+	credentialsHandler handlercredentials.ICredentialsHandler,
+	groupLookup GroupLookup,
+	votingLookup VotingLookup,
 ) *VotingHandler {
 	return &VotingHandler{
 		votingGroupsHandler:  votingGroupsHandler,
@@ -38,6 +44,8 @@ func New(
 		votingOptionsHandler: votingOptionsHandler,
 		votesHandler:         votesHandler,
 		publicHandler:        publicHandler,
+		credentialsHandler:   credentialsHandler,
+		scopeGuard:           ScopeGuard(groupLookup, votingLookup),
 	}
 }
 
@@ -46,6 +54,9 @@ func New(
 func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 	// Rutas privadas (requieren autenticación admin)
 	groups := router.Group("/horizontal-properties/voting-groups")
+	// Aislamiento multi-tenant: toda ruta con :group_id (y :voting_id) se valida contra la propiedad
+	// del token antes del handler. JWT primero para que el guard conozca el negocio.
+	groups.Use(middleware.JWT(), h.scopeGuard)
 	{
 		// handler-voting-groups: /horizontal-properties/voting-groups
 		h.votingGroupsHandler.Router(groups)
@@ -53,6 +64,9 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// ✅ NUEVO: Ruta para generar QR de grupo (privada, requiere JWT)
 		// /horizontal-properties/voting-groups/:group_id/generate-public-url
 		groups.POST("/:group_id/generate-public-url", middleware.JWT(), h.publicHandler.GeneratePublicGroupURL)
+
+		// handler-credentials: /horizontal-properties/voting-groups/:group_id/credentials{,/generate}
+		h.credentialsHandler.Router(groups)
 
 		// handler-votings: /horizontal-properties/voting-groups/:group_id/votings
 		votings := groups.Group("/:group_id/votings")

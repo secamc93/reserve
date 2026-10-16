@@ -139,13 +139,28 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 
 	logEvent.Msg("✅ [VOTACION PUBLICA] Contexto obtenido exitosamente")
 
+	// Si el grupo tiene contraseñas generadas, /public/validate-resident exige la de la unidad.
+	requirePassword, err := h.publicUseCase.GroupRequiresPassword(c.Request.Context(), groupID)
+	if err != nil {
+		h.logger.Error().Err(err).Uint("group_id", groupID).Msg("Error consultando si el grupo exige contraseña")
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+			Success: false,
+			Message: "Error obteniendo contexto de votación",
+			Error:   err.Error(),
+		})
+		return
+	}
+
 	responseData := gin.H{
+		"require_password": requirePassword,
 		"property": gin.H{
 			"id":      hp.ID,
 			"name":    hp.Name,
 			"address": hp.Address,
 		},
 		"is_group_token": isGroupToken,
+		// Si es true, /public/validate-resident exige el documento (dni) del residente.
+		"require_document_validation": group != nil && group.RequireDocumentValidation,
 	}
 
 	// Solo agregar info de votación si es token individual
@@ -160,9 +175,10 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 	// Agregar info de grupo si está disponible
 	if group != nil {
 		responseData["voting_group"] = gin.H{
-			"id":          group.ID,
-			"name":        group.Name,
-			"description": group.Description,
+			"id":                          group.ID,
+			"name":                        group.Name,
+			"description":                 group.Description,
+			"require_document_validation": group.RequireDocumentValidation,
 		}
 	}
 

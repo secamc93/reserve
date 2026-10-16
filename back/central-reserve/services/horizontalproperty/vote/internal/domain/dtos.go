@@ -13,23 +13,26 @@ type CreateVotingGroupDTO struct {
 	QuorumPercentage *float64
 	CreatedByUserID  *uint
 	Notes            string
+	// RequireDocumentValidation: nil = no enviado (al crear queda en false; al actualizar se conserva).
+	RequireDocumentValidation *bool
 }
 
 // VotingGroupDTO - DTO para respuesta de grupo de votaciones
 type VotingGroupDTO struct {
-	ID               uint
-	BusinessID       uint
-	Name             string
-	Description      string
-	VotingStartDate  time.Time
-	VotingEndDate    time.Time
-	IsActive         bool
-	RequiresQuorum   bool
-	QuorumPercentage *float64
-	CreatedByUserID  *uint
-	Notes            string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	ID                        uint
+	BusinessID                uint
+	Name                      string
+	Description               string
+	VotingStartDate           time.Time
+	VotingEndDate             time.Time
+	IsActive                  bool
+	RequiresQuorum            bool
+	QuorumPercentage          *float64
+	CreatedByUserID           *uint
+	Notes                     string
+	RequireDocumentValidation bool
+	CreatedAt                 time.Time
+	UpdatedAt                 time.Time
 }
 
 // CreateVotingDTO - DTO para crear una votación
@@ -108,9 +111,16 @@ type VoteDTO struct {
 
 // VoteEvent - Evento de voto para SSE
 type VoteEvent struct {
-	Type string // "new_vote" o "vote_deleted"
+	Type string // VoteEventNewVote, VoteEventVoteDeleted o VoteEventVotesReset
 	Vote VoteDTO
 }
+
+// Tipos de VoteEvent (son también los nombres de los eventos SSE).
+const (
+	VoteEventNewVote     = "new_vote"
+	VoteEventVoteDeleted = "vote_deleted"
+	VoteEventVotesReset  = "votes_reset"
+)
 
 // VotingResultDTO - DTO para resultados de votación
 type VotingResultDTO struct {
@@ -164,6 +174,28 @@ type ResidentBasicDTO struct {
 	Name               string
 	PropertyUnitID     uint
 	PropertyUnitNumber string
+}
+
+// PublicVoterUnitDTO - Unidad de una propiedad para el voto público sin documento, con su
+// residente (principal primero) si tiene. ResidentID = 0 y ResidentName = "" si no tiene ninguno.
+type PublicVoterUnitDTO struct {
+	PropertyUnitID     uint
+	PropertyUnitNumber string
+	IsActive           bool
+	ResidentID         uint
+	ResidentName       string
+}
+
+// ValidatedVoterDTO - Resultado de validar a quien vota por QR. El voto es por unidad: ResidentID
+// puede ser 0 cuando el grupo no exige documento y la unidad no tiene residentes.
+type ValidatedVoterDTO struct {
+	ResidentID                uint
+	ResidentName              string
+	PropertyUnitID            uint
+	PropertyUnitNumber        string
+	RequireDocumentValidation bool
+	// RequirePassword: el grupo tiene contraseñas generadas y se validó la de la unidad.
+	RequirePassword bool
 }
 
 // PropertyUnitDetailDTO - DTO para respuesta detallada de unidad
@@ -318,4 +350,28 @@ type VotingWithStatusDTO struct {
 	RequiredPercentage *float64
 	OptionsCount       int
 	HasVoted           bool
+}
+
+// VotingCredentialDTO - Contraseña de una unidad con los datos que se imprimen en la credencial
+type VotingCredentialDTO struct {
+	PropertyUnitID uint
+	UnitNumber     string
+	UnitBlock      string // Etiqueta del tipo de unidad ("Casa", "Local"...) o bloque/torre
+	OwnerName      string // Residente principal de la unidad (vacío si no tiene)
+	Password       string
+}
+
+// PaginatedVotingCredentialsDTO - Página de contraseñas de un grupo
+type PaginatedVotingCredentialsDTO struct {
+	Credentials []VotingCredentialDTO
+	Total       int64
+	Page        int
+	PageSize    int
+	TotalPages  int
+}
+
+// GenerateCredentialsResultDTO - Resultado de generar contraseñas para un grupo
+type GenerateCredentialsResultDTO struct {
+	Generated int   // Contraseñas creadas en esta llamada
+	Total     int64 // Contraseñas que tiene el grupo después de generar
 }

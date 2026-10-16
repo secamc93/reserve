@@ -1,5 +1,9 @@
 /**
- * R1 · Identificación del residente (unidad + documento), desde el QR.
+ * R1 · Identificación del residente desde el QR.
+ * Si el grupo exige documento (`require_document_validation`), unidad + documento; si no, basta
+ * la unidad. Si el back responde que el documento es requerido (p. ej. se activó después de
+ * abrir esta pantalla), aparece el campo. Si el grupo tiene contraseñas generadas
+ * (`require_password`), pide además la contraseña de la credencial impresa de la unidad.
  */
 
 'use client';
@@ -10,7 +14,20 @@ import {
   getPropertyUnitsForPublicVotingAction,
   validateResidentAction,
 } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
-import { VT, VtIcon, VtNotice, unitFloor, votingFontRoot, vtMono } from '../design';
+import {
+  VT,
+  VtIcon,
+  VtNotice,
+  identificationError,
+  normalizePassword,
+  requiresDocument,
+  requiresPassword,
+  unitFloor,
+  validateResidentFailure,
+  validateResidentPayload,
+  votingFontRoot,
+  vtMono,
+} from '../design';
 
 interface PropertyUnit {
   id: number;
@@ -29,8 +46,10 @@ interface ResidentData {
 interface VotingContextData {
   property: { id: number; name: string; address: string };
   voting?: { id: number; title: string; description: string } | null;
-  voting_group?: { id: number; name: string; description: string } | null;
+  voting_group?: { id: number; name: string; description: string; require_document_validation?: boolean } | null;
   is_group_token?: boolean;
+  require_document_validation?: boolean;
+  require_password?: boolean;
 }
 
 interface PublicVotingValidationProps {
@@ -46,6 +65,11 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
   const [term, setTerm] = useState('');
   const [selected, setSelected] = useState<PropertyUnit | null>(null);
   const [dni, setDni] = useState('');
+  const [requireDocument, setRequireDocument] = useState(() => requiresDocument(votingContext));
+  const dniRef = useRef<HTMLInputElement>(null);
+  const [password, setPassword] = useState('');
+  const [requirePassword, setRequirePassword] = useState(() => requiresPassword(votingContext));
+  const passwordRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const onErrorRef = useRef(onError);
@@ -81,25 +105,39 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!selected) return setError('Elige tu unidad de la lista');
-    if (!dni.trim()) return setError('Escribe tu documento de identidad');
+    const localError = identificationError({ hasUnit: !!selected, dni, requireDocument, password, requirePassword });
+    if (localError || !selected) {
+      setError(localError);
+      if (selected && requireDocument && !dni.trim()) dniRef.current?.focus();
+      else if (selected && requirePassword) passwordRef.current?.focus();
+      return;
+    }
+    const payload = validateResidentPayload({ propertyUnitId: selected.id, dni, requireDocument, password, requirePassword });
     setSubmitting(true);
     try {
-      const result = await validateResidentAction({ publicToken, propertyUnitId: selected.id, dni: dni.trim() });
+      const result = await validateResidentAction({ publicToken, ...payload });
       if (result.success && result.data) {
-        const { voting_auth_token, resident_id, resident_name, property_unit_number, voting_id, hp_id, group_id } = result.data;
+        const { voting_auth_token, resident_id, resident_name, property_unit_number, voting_id, hp_id, voting_group_id, group_id } = result.data;
         onSuccess(voting_auth_token, {
           id: resident_id,
+          // Sin residentes registrados el back responde "Unidad <número>".
           name: resident_name,
           unitNumber: property_unit_number,
-          votingId: voting_id,
+          votingId: voting_id ?? 0,
           businessId: hp_id,
-          groupId: group_id,
+          groupId: voting_group_id ?? group_id,
         });
       } else {
-        setError(
-          `${result.error || result.message || 'No pudimos validar tus datos'}. Revisa que la unidad y el documento coincidan con los registrados.`
-        );
+        const failure = validateResidentFailure(result.status, result.message || result.error, !!payload.dni);
+        setError(failure.message);
+        if (failure.requireDocument && !requireDocument) {
+          setRequireDocument(true);
+          setTimeout(() => dniRef.current?.focus(), 0);
+        }
+        if (failure.requirePassword) {
+          setRequirePassword(true);
+          setTimeout(() => passwordRef.current?.focus(), 0);
+        }
       }
     } catch {
       setError('Error de conexión. Intenta de nuevo.');
@@ -109,9 +147,10 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
   };
 
   const title = votingContext.voting_group?.name || votingContext.voting?.title || 'Votación';
+  const how = requireDocument ? 'Identifícate' : 'Elige tu unidad';
   const intro = votingContext.voting
-    ? `Identifícate para votar en «${votingContext.voting.title}».`
-    : 'Identifícate una vez para votar en todos los puntos de la asamblea.';
+    ? `${how} para votar en «${votingContext.voting.title}».`
+    : `${how} una vez para votar en todos los puntos de la asamblea.`;
 
   return (
     <div className={`min-h-screen ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
@@ -135,7 +174,7 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
                   setTerm(e.target.value);
                   setSelected(null);
                 }}
-                placeholder={loadingUnits ? 'Cargando unidades…' : 'Ej. T2-804'}
+                placeholder={loadingUnits ? 'Cargando unidades…' : 'Ej. 126'}
                 disabled={loadingUnits}
                 className={`${vtMono} w-full h-[52px] rounded-[10px] bg-white px-3.5 pr-11 text-base font-medium outline-none`}
                 style={{ border: `1px solid ${term ? VT.ink : VT.borderStrong}` }}
@@ -181,9 +220,11 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
               <p className="mt-1.5 mb-0 text-xs" style={{ color: VT.muted }}>No encontramos una unidad con «{term}».</p>
             )}
           </div>
+          {requireDocument && (
           <div>
             <label htmlFor="r1-dni" className="block text-xs font-semibold mb-1.5">Documento de identidad</label>
             <input
+              ref={dniRef}
               id="r1-dni"
               type="text"
               inputMode="numeric"
@@ -193,8 +234,30 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
               placeholder="Número sin puntos"
               className="w-full h-[52px] rounded-[10px] bg-white px-3.5 text-base outline-none focus:border-[#1a1a1a]"
               style={{ border: `1px solid ${VT.borderStrong}` }}
+              aria-required="true"
             />
           </div>
+          )}
+          {requirePassword && (
+          <div>
+            <label htmlFor="r1-password" className="block text-xs font-semibold mb-1.5">Contraseña de votación</label>
+            <input
+              ref={passwordRef}
+              id="r1-password"
+              type="text"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              value={password}
+              onChange={(e) => setPassword(normalizePassword(e.target.value))}
+              placeholder="La de tu credencial impresa"
+              maxLength={20}
+              className={`${vtMono} w-full h-[52px] rounded-[10px] bg-white px-3.5 text-base tracking-[.2em] outline-none focus:border-[#1a1a1a]`}
+              style={{ border: `1px solid ${VT.borderStrong}` }}
+              aria-required="true"
+            />
+          </div>
+          )}
           {error && <VtNotice>{error}</VtNotice>}
         </div>
 
@@ -208,7 +271,11 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
             {submitting ? 'Validando…' : 'Continuar'}
           </button>
           <p className="m-0 text-center text-xs leading-snug" style={{ color: VT.muted }}>
-            Solo residentes registrados. El documento debe coincidir con el de la unidad.
+            {requirePassword
+              ? 'La contraseña es la que te entregaron en la mesa de registro, junto con este código QR.'
+              : requireDocument
+                ? 'Solo residentes registrados. El documento debe coincidir con el de la unidad.'
+                : 'Solo unidades registradas en la propiedad.'}
           </p>
         </div>
       </form>

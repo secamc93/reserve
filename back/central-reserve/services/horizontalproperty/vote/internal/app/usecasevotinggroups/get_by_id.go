@@ -19,18 +19,19 @@ func (uc *VotingGroupUseCase) GetVotingGroupByID(ctx context.Context, id uint) (
 	}
 
 	return &domain.VotingGroupDTO{
-		ID:               group.ID,
-		BusinessID:       group.BusinessID,
-		Name:             group.Name,
-		Description:      group.Description,
-		VotingStartDate:  group.VotingStartDate,
-		VotingEndDate:    group.VotingEndDate,
-		IsActive:         group.IsActive,
-		RequiresQuorum:   group.RequiresQuorum,
-		QuorumPercentage: group.QuorumPercentage,
-		CreatedByUserID:  group.CreatedByUserID,
-		Notes:            group.Notes,
-		CreatedAt:        group.CreatedAt,
-		UpdatedAt:        group.UpdatedAt,
+		ID:                        group.ID,
+		BusinessID:                group.BusinessID,
+		Name:                      group.Name,
+		Description:               group.Description,
+		VotingStartDate:           group.VotingStartDate,
+		VotingEndDate:             group.VotingEndDate,
+		IsActive:                  group.IsActive,
+		RequiresQuorum:            group.RequiresQuorum,
+		QuorumPercentage:          group.QuorumPercentage,
+		CreatedByUserID:           group.CreatedByUserID,
+		Notes:                     group.Notes,
+		RequireDocumentValidation: group.RequireDocumentValidation,
+		CreatedAt:                 group.CreatedAt,
+		UpdatedAt:                 group.UpdatedAt,
 	}, nil
 }

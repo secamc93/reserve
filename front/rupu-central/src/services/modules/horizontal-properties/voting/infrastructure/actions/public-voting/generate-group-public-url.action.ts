@@ -6,6 +6,7 @@
 
 import { headers } from 'next/headers';
 import { env } from '@shared/config';
+import { resolvePublicBaseUrl } from '../../http/public-base-url';
 
 export interface GenerateGroupPublicUrlInput {
   token: string;
@@ -34,11 +35,8 @@ export async function generateGroupPublicUrlAction(
   input: GenerateGroupPublicUrlInput
 ): Promise<GenerateGroupPublicUrlResult> {
   try {
-    // Obtener host dinámicamente desde headers
-    const headersList = await headers();
-    const host = headersList.get('host') || 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const baseUrl = `${protocol}://${host}`;
+    // Origen público del front según la petición (proxy HTTPS en producción; http por IP en la red local)
+    const baseUrl = resolvePublicBaseUrl(await headers());
 
     const response = await fetch(
       `${env.API_BASE_URL}/horizontal-properties/voting-groups/${input.groupId}/generate-public-url`,

@@ -6,7 +6,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 // Using CSS classes for buttons instead of Button component
-import { markAttendanceSimpleAction, unmarkAttendanceSimpleAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction, createProxyAction, updateProxyAction, deleteProxyAction } from '../infrastructure/actions/index';
+import { markAttendanceSimpleAction, unmarkAttendanceSimpleAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction, assignRecordProxyAction, removeRecordProxyAction } from '../infrastructure/actions/index';
+import { VotingCredentialsActions } from '../../voting/ui/credentials/voting-credentials-actions';
 import { envPublic } from '@shared/config';
 import { PaginationControls } from '@shared/ui/pagination';
 import { fetchAllPages } from '@shared/utils/pagination';
@@ -59,7 +60,7 @@ export function AttendanceListModal({
   } | null>(null);
   const [editingProxyUnitId, setEditingProxyUnitId] = useState<number | null>(null);
   const [proxyInput, setProxyInput] = useState<string>('');
-  const [proxyIdsByUnit, setProxyIdsByUnit] = useState<Map<number, number>>(new Map());
+  const [proxyDniInput, setProxyDniInput] = useState<string>('');
   const proxyInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -145,15 +146,6 @@ export function AttendanceListModal({
           }
         }
         
-        // Mapear proxy_ids para edición
-        for (const r of records) {
-          const record = r as unknown as Record<string, unknown>;
-          const unitId = record?.propertyUnitId ?? record?.property_unit_id;
-          if (typeof unitId === 'number' && (record?.proxyId || record?.proxy_id)) {
-            proxyIdsByUnit.set(unitId, Number(record?.proxyId ?? record?.proxy_id));
-          }
-        }
-
         if (summaryRes.success && summaryRes.data) {
           const summaryData = summaryRes.data as unknown as Record<string, unknown>;
           setSummary({
@@ -201,57 +193,78 @@ export function AttendanceListModal({
     if (isOpen) loadData(search);
   }, [isOpen, businessId, token, search, attendedFilter, page, pageSize, attendanceList.id]);
 
-  const submitCreateProxy = async (unit: PropertyUnit) => {
-    if (!proxyInput.trim()) return;
-    try {
-      const res = await createProxyAction({
-        token,
-        data: {
-          businessId,
-          propertyUnitId: unit.id,
-          proxyName: proxyInput.trim(),
-          proxyDni: '',
-          proxyType: 'external' as const,
-          startDate: new Date().toISOString(),
-        },
+  const closeProxyEditor = () => {
+    setEditingProxyUnitId(null);
+    setProxyInput('');
+    setProxyDniInput('');
+  };
+
+  const openProxyEditor = (unit: PropertyUnit) => {
+    setEditingProxyUnitId(unit.id);
+    setProxyInput(unit.proxyName || '');
+    setProxyDniInput('');
+  };
+
+  const refreshSummary = async () => {
+    const summaryRes = await getAttendanceListSummaryAction({ token, id: attendanceList.id });
+    if (summaryRes.success && summaryRes.data) {
+      const summaryData = summaryRes.data as unknown as Record<string, unknown>;
+      setSummary({
+        total_units: Number(summaryData.total_units) || 0,
+        attended_units: Number(summaryData.attended_units) || 0,
+        attendance_rate: Number(summaryData.attendance_rate_by_coef) || 0,
+        absence_rate: Number(summaryData.absence_rate_by_coef) || 0,
+        attended_as_owner: Number(summaryData.attended_as_owner) || 0,
+        attended_as_proxy: Number(summaryData.attended_as_proxy) || 0,
       });
-      if (res.success && res.data) {
-        // La respuesta ahora es: { business_id, property_unit_id, proxy_name }
-        const proxyName = String((res.data as unknown as Record<string, unknown>).proxy_name) || proxyInput.trim();
-        setUnits(prev => prev.map(u => u.id === unit.id ? { ...u, proxyName } : u));
-        setEditingProxyUnitId(null);
-        setProxyInput('');
-      }
-    } catch {}
+    }
   };
 
-  const submitUpdateProxy = async (unit: PropertyUnit) => {
-    const proxyId = proxyIdsByUnit.get(unit.id);
-    if (!proxyId || !proxyInput.trim()) return submitCreateProxy(unit);
+  // El apoderado queda en el registro de esta lista y la unidad queda presente como apoderado.
+  const submitProxy = async (unit: PropertyUnit) => {
+    if (!proxyInput.trim() || !unit.attendanceRecordId) return;
+    setLoading(true);
+    setError(null);
     try {
-      const res = await updateProxyAction({ token, id: proxyId, data: { proxyName: proxyInput.trim() } as Record<string, unknown> });
-      if (res.success && res.data) {
-        setUnits(prev => prev.map(u => u.id === unit.id ? { ...u, proxyName: res.data!.proxyName || proxyInput.trim() } : u));
-        setEditingProxyUnitId(null);
-        setProxyInput('');
+      const res = await assignRecordProxyAction({
+        token,
+        recordId: unit.attendanceRecordId,
+        proxyName: proxyInput,
+        proxyDni: proxyDniInput,
+      });
+      if (!res.success || !res.data) {
+        setError(res.error || 'No se pudo guardar el apoderado');
+        return;
       }
-    } catch {}
+      const r = res.data;
+      setUnits(prev => prev.map(u => u.id === unit.id
+        ? { ...u, proxyName: r.proxyName || proxyInput.trim(), hasAttended: r.attendedAsOwner || r.attendedAsProxy, attendedAsOwner: r.attendedAsOwner, attendedAsProxy: r.attendedAsProxy }
+        : u));
+      closeProxyEditor();
+      await refreshSummary();
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const submitDeleteProxy = async (unit: PropertyUnit) => {
-    const proxyId = proxyIdsByUnit.get(unit.id);
-    if (!proxyId) { setEditingProxyUnitId(null); setProxyInput(''); return; }
+  const removeProxy = async (unit: PropertyUnit) => {
+    if (!unit.attendanceRecordId || !unit.proxyName) { closeProxyEditor(); return; }
+    setLoading(true);
+    setError(null);
     try {
-      const res = await deleteProxyAction({ token, id: proxyId });
-      if (res.success) {
-        setUnits(prev => prev.map(u => u.id === unit.id ? { ...u, proxyName: null } : u));
-        const mapCopy = new Map(proxyIdsByUnit);
-        mapCopy.delete(unit.id);
-        setProxyIdsByUnit(mapCopy);
-        setEditingProxyUnitId(null);
-        setProxyInput('');
+      const res = await removeRecordProxyAction({ token, recordId: unit.attendanceRecordId });
+      if (!res.success) {
+        setError(res.error || 'No se pudo quitar el apoderado');
+        return;
       }
-    } catch {}
+      setUnits(prev => prev.map(u => u.id === unit.id
+        ? { ...u, proxyName: null, hasAttended: false, attendedAsOwner: false, attendedAsProxy: false }
+        : u));
+      closeProxyEditor();
+      await refreshSummary();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleToggleAttendance = async (unit: PropertyUnit) => {
@@ -293,8 +306,8 @@ export function AttendanceListModal({
           ? { 
               ...u, 
               hasAttended: !unit.hasAttended,
-              attendedAsOwner: !unit.hasAttended,
-              attendedAsProxy: false,
+              attendedAsOwner: !unit.hasAttended && !unit.proxyName,
+              attendedAsProxy: !unit.hasAttended && !!unit.proxyName,
             }
           : u
       ));
@@ -414,6 +427,11 @@ export function AttendanceListModal({
             </div>
           </div>
 
+          {/* Contraseñas de voto y credenciales impresas del grupo */}
+          <div className="mb-4">
+            <VotingCredentialsActions token={token} businessId={businessId} groupId={attendanceList.votingGroupId} />
+          </div>
+
           {/* Search */}
           <div className="mb-4 flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-3">
             <input
@@ -519,10 +537,18 @@ export function AttendanceListModal({
                         className="input w-full min-h-[44px] text-gray-900"
                         aria-label="Nombre del apoderado"
                       />
+                      <input
+                        value={proxyDniInput}
+                        onChange={(e) => setProxyDniInput(e.target.value)}
+                        placeholder="Documento (opcional)"
+                        inputMode="numeric"
+                        className="input w-full min-h-[44px] text-gray-900"
+                        aria-label="Documento del apoderado"
+                      />
                       <div className="grid grid-cols-3 gap-2 [&>button]:min-h-[44px]">
-                        <button onClick={() => submitUpdateProxy(unit)} className="btn btn-primary btn-sm" disabled={loading || !proxyInput.trim()}>Guardar</button>
-                        <button onClick={() => submitDeleteProxy(unit)} className="btn btn-outline btn-sm">Quitar</button>
-                        <button onClick={() => { setEditingProxyUnitId(null); setProxyInput(''); }} className="btn btn-secondary btn-sm">Cancelar</button>
+                        <button onClick={() => submitProxy(unit)} className="btn btn-primary btn-sm" disabled={loading || !proxyInput.trim()}>Guardar</button>
+                        <button onClick={() => removeProxy(unit)} className="btn btn-outline btn-sm" disabled={loading}>Quitar</button>
+                        <button onClick={closeProxyEditor} className="btn btn-secondary btn-sm">Cancelar</button>
                       </div>
                     </div>
                   ) : (
@@ -531,7 +557,7 @@ export function AttendanceListModal({
                         Apoderado: {unit.proxyName || '-'}
                       </span>
                       <button
-                        onClick={() => { setEditingProxyUnitId(unit.id); setProxyInput(unit.proxyName || ''); }}
+                        onClick={() => openProxyEditor(unit)}
                         className="btn btn-outline btn-sm min-h-[44px] shrink-0"
                       >
                         {unit.proxyName ? 'Editar' : '+ Apoderado'}
@@ -578,19 +604,35 @@ export function AttendanceListModal({
                               value={proxyInput}
                               onChange={(e) => setProxyInput(e.target.value)}
                               placeholder="Nombre del apoderado"
-                              className="input w-64 md:w-80 text-gray-900"
+                              aria-label="Nombre del apoderado"
+                              className="input w-56 text-gray-900"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
-                                  submitUpdateProxy(unit);
+                                  submitProxy(unit);
                                 } else if (e.key === 'Escape') {
-                                  setEditingProxyUnitId(null);
-                                  setProxyInput('');
+                                  closeProxyEditor();
+                                }
+                              }}
+                            />
+                            <input
+                              value={proxyDniInput}
+                              onChange={(e) => setProxyDniInput(e.target.value)}
+                              placeholder="Documento (opcional)"
+                              aria-label="Documento del apoderado"
+                              inputMode="numeric"
+                              className="input w-40 text-gray-900"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  submitProxy(unit);
+                                } else if (e.key === 'Escape') {
+                                  closeProxyEditor();
                                 }
                               }}
                             />
                             <button
-                              onClick={() => submitUpdateProxy(unit)}
+                              onClick={() => submitProxy(unit)}
                               className="btn btn-primary btn-icon btn-sm"
                               title="Guardar"
                               disabled={loading || !proxyInput.trim()}
@@ -598,14 +640,15 @@ export function AttendanceListModal({
                               💾
                             </button>
                             <button
-                              onClick={() => submitDeleteProxy(unit)}
+                              onClick={() => removeProxy(unit)}
                               className="btn btn-outline btn-icon btn-sm"
-                              title="Eliminar"
+                              title="Quitar apoderado"
+                              disabled={loading}
                             >
                               🗑️
                             </button>
                             <button
-                              onClick={() => { setEditingProxyUnitId(null); setProxyInput(''); }}
+                              onClick={closeProxyEditor}
                               className="btn btn-secondary btn-icon btn-sm"
                               title="Cancelar"
                             >
@@ -618,14 +661,14 @@ export function AttendanceListModal({
                             {unit.proxyName ? (
                               <div className="flex items-center gap-1">
                                 <button
-                                  onClick={() => { setEditingProxyUnitId(unit.id); setProxyInput(unit.proxyName || ''); }}
+                                  onClick={() => openProxyEditor(unit)}
                                   className="w-6 h-6 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors"
                                   title="Editar apoderado"
                                 >
                                   ✏️
                                 </button>
                                 <button
-                                  onClick={() => submitDeleteProxy(unit)}
+                                  onClick={() => removeProxy(unit)}
                                   className="w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors"
                                   title="Eliminar apoderado"
                                 >
@@ -634,7 +677,8 @@ export function AttendanceListModal({
                               </div>
                             ) : (
                               <button
-                                onClick={() => { setEditingProxyUnitId(unit.id); setProxyInput(''); }}
+                                onClick={() => openProxyEditor(unit)}
+                                aria-label={`Agregar apoderado a ${unit.unitNumber}`}
                                 className="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors"
                                 title="Agregar apoderado"
                               >

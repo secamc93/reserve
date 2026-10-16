@@ -12,6 +12,8 @@ export interface BackendVotingGroup {
   is_active: boolean;
   requires_quorum: boolean;
   quorum_percentage: number;
+  /** Puede no venir de un back anterior al cambio: se trata como false. */
+  require_document_validation?: boolean;
   created_by_user_id: number;
   notes?: string;
   created_at: string;

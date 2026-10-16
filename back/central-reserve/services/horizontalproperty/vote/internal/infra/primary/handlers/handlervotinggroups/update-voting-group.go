@@ -46,13 +46,14 @@ func (h *VotingGroupsHandler) UpdateVotingGroup(c *gin.Context) {
 		return
 	}
 	dto := domain.CreateVotingGroupDTO{
-		Name:             req.Name,
-		Description:      req.Description,
-		VotingStartDate:  req.VotingStartDate,
-		VotingEndDate:    req.VotingEndDate,
-		RequiresQuorum:   req.RequiresQuorum,
-		QuorumPercentage: req.QuorumPercentage,
-		Notes:            req.Notes,
+		Name:                      req.Name,
+		Description:               req.Description,
+		VotingStartDate:           req.VotingStartDate,
+		VotingEndDate:             req.VotingEndDate,
+		RequiresQuorum:            req.RequiresQuorum,
+		QuorumPercentage:          req.QuorumPercentage,
+		Notes:                     req.Notes,
+		RequireDocumentValidation: req.RequireDocumentValidation,
 	}
 	updated, err := h.votingUseCase.UpdateVotingGroup(c.Request.Context(), uint(id64), dto)
 	if err != nil {

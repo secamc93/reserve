@@ -1,6 +1,7 @@
 package vote
 
 import (
+	"central_reserve/services/horizontalproperty/vote/internal/app/usecasecredentials"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasepublic"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecaseresults"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecaseshared"
@@ -9,6 +10,7 @@ import (
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasevotingoptions"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasevotings"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlercredentials"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerpublic"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerresults"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotes"
@@ -36,13 +38,14 @@ func New(db db.IDatabase, jwtSecret string, logger log.ILogger, router *gin.Rout
 	publicUseCase := usecasepublic.New(repo, votingCache, logger)
 	resultsUseCase := usecaseresults.New(repo, votingCache, logger)
 	sharedUseCase := usecaseshared.New(repo, votingCache, logger)
+	credentialsUseCase := usecasecredentials.New(repo, logger, nil)
 
 	// Crear instancias modulares de handlers
 	votingGroupsHandler := handlervotinggroups.New(votingGroupsUseCase, logger)
 	votingsHandler := handlervotings.New(votingsUseCase, logger)
 	votingOptionsHandler := handlervotingoptions.New(votingOptionsUseCase, logger)
 	votesHandler := handlervotes.New(votesUseCase, logger)
-	resultsHandler := handlerresults.New(resultsUseCase, votingsUseCase, votesUseCase, votingCache, logger)
+	resultsHandler := handlerresults.New(resultsUseCase, votingsUseCase, votesUseCase, votingGroupsUseCase, votingCache, logger)
 	publicHandler := handlerpublic.New(publicUseCase, votingGroupsUseCase, votingsUseCase, votesUseCase, resultsUseCase, sharedUseCase, votingCache, jwtSecret, logger)
 
 	// Crear handler orquestador
@@ -53,6 +56,9 @@ func New(db db.IDatabase, jwtSecret string, logger log.ILogger, router *gin.Rout
 		votingOptionsHandler,
 		votesHandler,
 		publicHandler,
+		handlercredentials.New(credentialsUseCase, logger),
+		votingGroupsUseCase,
+		votingsUseCase,
 	)
 	handler.RegisterRoutes(router)
 }

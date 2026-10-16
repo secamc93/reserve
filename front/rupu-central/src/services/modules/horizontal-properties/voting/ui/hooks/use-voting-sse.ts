@@ -1,22 +1,18 @@
 /**
- * Hook personalizado para manejar Server-Sent Events (SSE) de votaciones
+ * Votos en tiempo real del panel en vivo (A6).
+ *
+ * El navegador se conecta a un route handler del mismo origen
+ * (`/properties/:businessId/voting-groups/:groupId/votings/:votingId/live/stream`), que abre el
+ * stream contra el back con `API_BASE_URL` del servidor. Así funciona también desde otro
+ * dispositivo de la red (antes se usaba NEXT_PUBLIC_API_BASE_URL = localhost:3050).
+ * Reintenta con backoff si se corta y cierra el EventSource al desmontar.
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import { TokenStorage } from '@shared/config';
+'use client';
 
-// Leer variable de entorno pública directamente
-// NEXT_PUBLIC_* se inyecta en build time por Next.js
-const getApiBaseUrl = (): string => {
-  const url = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!url) {
-    throw new Error(
-      '❌ NEXT_PUBLIC_API_BASE_URL no definida.\n' +
-      'Agrégala a .env.local y ejecuta: rm -rf .next && pnpm run dev'
-    );
-  }
-  return url;
-};
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { TokenStorage } from '@shared/config';
+import { useEventStream, type EventStreamStatus } from './use-event-stream';
 
 interface SSEVote {
   id: number;
@@ -32,202 +28,126 @@ interface SSEVote {
   notes?: string;
 }
 
-interface SSEEvent {
-  type: 'connected' | 'initial_data' | 'new_vote' | 'vote_deleted' | 'preload_complete' | 'heartbeat';
-  data: unknown;
-}
+export type VotingSSEConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error';
 
 interface UseVotingSSEReturn {
   votes: SSEVote[];
   isConnected: boolean;
   totalVotes: number;
   error: string | null;
-  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
-  deletedVotes: Array<{ id: number; property_unit_id: number }>; // ✅ NUEVO: Votos eliminados
+  connectionStatus: VotingSSEConnectionStatus;
+  deletedVotes: Array<{ id: number; property_unit_id: number }>;
+}
+
+interface UseVotingSSEOptions {
+  /** La conexión volvió después de un corte: conviene recargar el detalle (votos anulados mientras tanto). */
+  onReconnect?: () => void;
+  /** El administrador reseteó la votación (`votes_reset`): la conexión sigue, hay que recargar. */
+  onReset?: () => void;
+}
+
+const STATUS_MAP: Record<EventStreamStatus, VotingSSEConnectionStatus> = {
+  idle: 'disconnected',
+  connecting: 'connecting',
+  live: 'connected',
+  reconnecting: 'reconnecting',
+  failed: 'error',
+};
+
+/** Ruta relativa (mismo origen) del stream del panel en vivo. */
+export function liveVotingStreamPath(businessId: number, groupId: number, votingId: number, token: string): string {
+  return `/properties/${businessId}/voting-groups/${groupId}/votings/${votingId}/live/stream?token=${encodeURIComponent(token)}`;
 }
 
 export function useVotingSSE(
   businessId: number,
   groupId: number,
   votingId: number,
-  enabled: boolean = true
+  enabled: boolean = true,
+  { onReconnect, onReset }: UseVotingSSEOptions = {}
 ): UseVotingSSEReturn {
   const [votes, setVotes] = useState<SSEVote[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
   const [totalVotes, setTotalVotes] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   const [deletedVotes, setDeletedVotes] = useState<Array<{ id: number; property_unit_id: number }>>([]);
+  // undefined: aún no leído; null: no hay token.
+  const [token, setToken] = useState<string | null | undefined>(undefined);
 
-  const connectToSSE = useCallback(async () => {
-    if (!enabled || !businessId || !groupId || !votingId) {
-      return;
-    }
-
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) {
-        setError('No se encontró el token de autenticación');
-        setConnectionStatus('error');
-        return;
-      }
-
-      setConnectionStatus('connecting');
-      setError(null);
-
-      const url = `${getApiBaseUrl()}/horizontal-properties/voting-groups/${groupId}/votings/${votingId}/stream${
-        businessId !== undefined ? `?business_id=${businessId}` : ''
-      }`;
-
-      console.log('🔌 Conectando a SSE:', url);
-
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'text/event-stream',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      if (!response.body) {
-        throw new Error('No se pudo obtener el stream de datos');
-      }
-
-      setConnectionStatus('connected');
-      setIsConnected(true);
-      console.log('✅ Conectado al SSE de votación');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let eventType = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          console.log('🔌 Conexión SSE cerrada por el servidor');
-          setConnectionStatus('disconnected');
-          setIsConnected(false);
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('event:')) {
-            eventType = line.substring(6).trim();
-            continue;
-          }
-
-          if (line.startsWith('data:')) {
-            try {
-              const data = JSON.parse(line.substring(5));
-              
-              switch (eventType) {
-                case 'connected':
-                  console.log('✅ SSE: Conectado a votación', data);
-                  setIsConnected(true);
-                  setConnectionStatus('connected');
-                  break;
-
-                case 'initial_data':
-                  console.log('📊 SSE: Datos iniciales recibidos', data.votes?.length, 'votos');
-                  // Los datos iniciales vienen con estructura { votes: [...], results: [...] }
-                  if (data.votes && Array.isArray(data.votes)) {
-                    setVotes(data.votes);
-                    setTotalVotes(data.votes.length);
-                  }
-                  break;
-
-                case 'vote':
-                case 'new_vote':
-                  console.log('📊 SSE: Nuevo voto recibido', data);
-                  // El evento new_vote puede venir con estructura { vote: {...}, results: [...] }
-                  const voteData = data.vote || data;
-                  setVotes(prev => {
-                    // Evitar votos duplicados
-                    const exists = prev.some(v => v.id === voteData.id);
-                    if (exists) return prev;
-                    return [...prev, voteData];
-                  });
-                  setTotalVotes(prev => prev + 1);
-                  break;
-
-                case 'vote_deleted':
-                  console.log('🗑️ SSE: Voto eliminado recibido', data);
-                  // El evento vote_deleted viene con estructura { vote: {...}, results: [...] }
-                  const deletedVoteData = data.vote || data;
-                  console.log('🗑️ Voto a eliminar:', deletedVoteData);
-                  
-                  // Agregar a la lista de votos eliminados
-                  setDeletedVotes(prev => [...prev, {
-                    id: deletedVoteData.id,
-                    property_unit_id: deletedVoteData.property_unit_id
-                  }]);
-                  
-                  // Remover el voto de la lista de votos
-                  setVotes(prev => prev.filter(v => v.id !== deletedVoteData.id));
-                  setTotalVotes(prev => Math.max(0, prev - 1));
-                  break;
-
-                case 'preload_complete':
-                  console.log('✅ SSE: Precarga completada', data.total_votes, 'votos');
-                  setTotalVotes(data.total_votes || 0);
-                  break;
-
-                case 'heartbeat':
-                  console.log('💓 SSE: Heartbeat', data.timestamp);
-                  // Mantener conexión viva
-                  break;
-
-                default:
-                  console.log('🔔 SSE: Evento desconocido', eventType, data);
-              }
-            } catch (parseError) {
-              console.error('❌ Error parseando evento SSE:', parseError, 'Línea:', line);
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error('❌ Error en SSE:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido en la conexión');
-      setConnectionStatus('error');
-      setIsConnected(false);
-    }
-  }, [enabled, businessId, groupId, votingId]);
-
+  // El token vive en el navegador (localStorage): se lee después de montar.
   useEffect(() => {
-    if (enabled) {
-      connectToSSE();
-    } else {
-      setConnectionStatus('disconnected');
-      setIsConnected(false);
-      setVotes([]);
-      setTotalVotes(0);
-      setDeletedVotes([]);
-      setError(null);
-    }
+    if (enabled) setToken(TokenStorage.getBusinessToken());
+  }, [enabled]);
 
-    // Cleanup al desmontar
-    return () => {
-      setConnectionStatus('disconnected');
-      setIsConnected(false);
-    };
-  }, [enabled, connectToSSE]);
+  const url = useMemo(
+    () => (enabled && businessId && groupId && votingId && token ? liveVotingStreamPath(businessId, groupId, votingId, token) : null),
+    [enabled, businessId, groupId, votingId, token]
+  );
+
+  // Al desactivar o cambiar de votación, se limpia el estado.
+  useEffect(() => {
+    setVotes([]);
+    setTotalVotes(0);
+    setDeletedVotes([]);
+  }, [url]);
+
+  const onInitial = useCallback((raw: unknown) => {
+    const data = raw as { votes?: SSEVote[] | null };
+    const list = Array.isArray(data?.votes) ? data.votes : [];
+    setVotes(list);
+    setTotalVotes(list.length);
+  }, []);
+
+  const onNewVote = useCallback((raw: unknown) => {
+    const data = raw as { vote?: SSEVote } & SSEVote;
+    const vote = data?.vote || data;
+    if (!vote || typeof vote.id !== 'number') return;
+    setVotes((prev) => (prev.some((v) => v.id === vote.id) ? prev : [...prev, vote]));
+    setTotalVotes((prev) => prev + 1);
+  }, []);
+
+  const onVoteDeleted = useCallback((raw: unknown) => {
+    const data = raw as { vote?: SSEVote } & SSEVote;
+    const vote = data?.vote || data;
+    if (!vote || typeof vote.id !== 'number') return;
+    setDeletedVotes((prev) => [...prev, { id: vote.id, property_unit_id: vote.property_unit_id }]);
+    setVotes((prev) => prev.filter((v) => v.id !== vote.id));
+    setTotalVotes((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const onPreloadComplete = useCallback((raw: unknown) => {
+    const data = raw as { total_votes?: number };
+    if (typeof data?.total_votes === 'number') setTotalVotes(data.total_votes);
+  }, []);
+
+  const onResetRef = useRef(onReset);
+  onResetRef.current = onReset;
+  const onVotesReset = useCallback(() => {
+    setVotes([]);
+    setTotalVotes(0);
+    onResetRef.current?.();
+  }, []);
+
+  const { status } = useEventStream(
+    url,
+    {
+      initial_data: onInitial,
+      new_vote: onNewVote,
+      vote: onNewVote,
+      vote_deleted: onVoteDeleted,
+      preload_complete: onPreloadComplete,
+      votes_reset: onVotesReset,
+    },
+    { onReconnect }
+  );
+
+  const noToken = enabled && token === null;
+  const connectionStatus: VotingSSEConnectionStatus = noToken ? 'error' : STATUS_MAP[status];
 
   return {
     votes,
-    isConnected,
+    isConnected: status === 'live',
     totalVotes,
-    error,
+    error: noToken ? 'No se encontró el token de autenticación' : status === 'failed' ? 'Sin conexión en vivo' : null,
     connectionStatus,
     deletedVotes,
   };
 }
-
-

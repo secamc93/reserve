@@ -27,8 +27,10 @@ type VotingGroupResponse struct {
 	QuorumPercentage *float64  `json:"quorum_percentage,omitempty" example:"50.0"`
 	CreatedByUserID  *uint     `json:"created_by_user_id,omitempty" example:"5"`
 	Notes            string    `json:"notes,omitempty" example:"Notas adicionales"`
-	CreatedAt        time.Time `json:"created_at" example:"2025-01-15T10:30:00Z"`
-	UpdatedAt        time.Time `json:"updated_at" example:"2025-01-15T10:30:00Z"`
+	// El voto público por QR exige el documento de un residente de la unidad.
+	RequireDocumentValidation bool      `json:"require_document_validation" example:"false"`
+	CreatedAt                 time.Time `json:"created_at" example:"2025-01-15T10:30:00Z"`
+	UpdatedAt                 time.Time `json:"updated_at" example:"2025-01-15T10:30:00Z"`
 }
 
 // VotingResponse - Response para votación
@@ -182,3 +184,27 @@ type VotingOptionsSuccess = SuccessResponse[[]VotingOptionResponse]
 type VoteSuccess = SuccessResponse[VoteResponse]
 type VotesSuccess = SuccessResponse[[]VoteResponse]
 type UnvotedUnitsSuccess = SuccessResponse[[]UnvotedUnitResponse]
+
+// VotingCredentialResponse - Contraseña de voto de una unidad (para imprimir la credencial)
+type VotingCredentialResponse struct {
+	PropertyUnitID uint   `json:"property_unit_id" example:"12"`
+	UnitNumber     string `json:"unit_number" example:"126"`
+	UnitBlock      string `json:"unit_block" example:"Casa"`
+	OwnerName      string `json:"owner_name" example:"CAMACHO MATEUS SEBASTIAN"`
+	Password       string `json:"password" example:"K7M2QX"`
+}
+
+// PaginatedVotingCredentialsResponse - Página de contraseñas de un grupo
+type PaginatedVotingCredentialsResponse struct {
+	Credentials []VotingCredentialResponse `json:"credentials"`
+	Total       int64                      `json:"total" example:"194"`
+	Page        int                        `json:"page" example:"1"`
+	PageSize    int                        `json:"page_size" example:"200"`
+	TotalPages  int                        `json:"total_pages" example:"1"`
+}
+
+// GenerateVotingCredentialsResponse - Resultado de generar contraseñas
+type GenerateVotingCredentialsResponse struct {
+	Generated int   `json:"generated" example:"194"`
+	Total     int64 `json:"total" example:"194"`
+}

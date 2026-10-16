@@ -68,15 +68,16 @@ func (h *VotingGroupsHandler) CreateVotingGroup(c *gin.Context) {
 	}
 
 	dto := domain.CreateVotingGroupDTO{
-		BusinessID:       businessID,
-		Name:             req.Name,
-		Description:      req.Description,
-		VotingStartDate:  req.VotingStartDate,
-		VotingEndDate:    req.VotingEndDate,
-		RequiresQuorum:   req.RequiresQuorum,
-		QuorumPercentage: req.QuorumPercentage,
-		CreatedByUserID:  req.CreatedByUserID,
-		Notes:            req.Notes,
+		BusinessID:                businessID,
+		Name:                      req.Name,
+		Description:               req.Description,
+		VotingStartDate:           req.VotingStartDate,
+		VotingEndDate:             req.VotingEndDate,
+		RequiresQuorum:            req.RequiresQuorum,
+		QuorumPercentage:          req.QuorumPercentage,
+		CreatedByUserID:           req.CreatedByUserID,
+		Notes:                     req.Notes,
+		RequireDocumentValidation: req.RequireDocumentValidation,
 	}
 
 	created, err := h.votingUseCase.CreateVotingGroup(c.Request.Context(), dto)

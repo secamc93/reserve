@@ -34,7 +34,7 @@ func (r *Repository) GetResidentByUnitAndDni(ctx context.Context, hpID, property
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("residente no encontrado")
+			return nil, domain.ErrResidentNotFound
 		}
 		r.logger.Error().Err(err).Uint("hp_id", hpID).Uint("property_unit_id", propertyUnitID).Str("dni", dni).Msg("Error obteniendo residente")
 		return nil, fmt.Errorf("error obteniendo residente: %w", err)

@@ -32,7 +32,7 @@ func (vc *VotingCache) PublishVote(votingID uint, vote domain.VoteDTO) error {
 
 	// Crear evento de nuevo voto
 	event := domain.VoteEvent{
-		Type: "new_vote",
+		Type: domain.VoteEventNewVote,
 		Vote: vote,
 	}
 
@@ -57,10 +57,7 @@ func (vc *VotingCache) RemoveVote(votingID uint, voteID uint) error {
 	defer vc.mu.Unlock()
 
 	// Buscar y eliminar el voto del cache
-	votes, exists := vc.votings[votingID]
-	if !exists {
-		return nil // No hay votos en esta votación
-	}
+	votes := vc.votings[votingID]
 
 	// Crear nuevo slice sin el voto eliminado
 	var newVotes []domain.VoteDTO
@@ -77,10 +74,16 @@ func (vc *VotingCache) RemoveVote(votingID uint, voteID uint) error {
 	// Actualizar el cache
 	vc.votings[votingID] = newVotes
 
+	// Si el voto no estaba en el cache (p. ej. ningún stream había cargado la votación), igual
+	// se avisa a los suscriptores con lo mínimo: así los resultados se recalculan siempre.
+	if removedVote == nil {
+		removedVote = &domain.VoteDTO{ID: voteID, VotingID: votingID}
+	}
+
 	// Crear evento de voto eliminado
 	if removedVote != nil {
 		event := domain.VoteEvent{
-			Type: "vote_deleted",
+			Type: domain.VoteEventVoteDeleted,
 			Vote: *removedVote,
 		}
 
@@ -97,6 +100,23 @@ func (vc *VotingCache) RemoveVote(votingID uint, voteID uint) error {
 		}
 	}
 
+	return nil
+}
+
+// ResetVotes vacía los votos de una votación en el cache y avisa a los suscriptores con un
+// evento "votes_reset" (sin cerrar sus canales: los streams siguen abiertos).
+func (vc *VotingCache) ResetVotes(votingID uint) error {
+	vc.mu.Lock()
+	defer vc.mu.Unlock()
+
+	vc.votings[votingID] = []domain.VoteDTO{}
+	event := domain.VoteEvent{Type: domain.VoteEventVotesReset, Vote: domain.VoteDTO{VotingID: votingID}}
+	for _, ch := range vc.subscribers[votingID] {
+		select {
+		case ch <- event:
+		default:
+		}
+	}
 	return nil
 }
 
