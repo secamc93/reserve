@@ -7,6 +7,8 @@ import {
   IVisitsRepository,
   SearchVisitorParams,
   GetVisitsParams,
+  GetVisitsSummaryParams,
+  VisitsSummary,
   GetVisitByIdParams,
   GetVisitByQRCodeParams,
   CreateVisitParams,
@@ -36,7 +38,9 @@ import {
   BackendVisitor,
   BackendVisit,
   BackendVisitList,
+  BackendVisitsSummaryResponse,
 } from './response/visits.response';
+import { mapBackendVisitList, mapBackendVisitsSummary } from './mappers/visit-list.mapper';
 
 export class VisitsRepository implements IVisitsRepository {
   private baseUrl = env.API_BASE_URL;
@@ -108,18 +112,7 @@ export class VisitsRepository implements IVisitsRepository {
   }
 
   private mapBackendVisitList(visit: BackendVisitList): VisitListDTO {
-    return {
-      id: visit.id,
-      visitorName: visit.visitor_name,
-      visitorDni: visit.visitor_dni,
-      propertyUnitNumber: visit.property_unit_number,
-      visitTypeName: visit.visit_type_name,
-      visitStatusName: visit.visit_status_name,
-      scheduledDate: visit.scheduled_date,
-      actualEntryTime: visit.actual_entry_time,
-      actualExitTime: visit.actual_exit_time,
-      createdAt: visit.created_at,
-    };
+    return mapBackendVisitList(visit);
   }
 
   async searchVisitor(params: SearchVisitorParams): Promise<Visitor> {
@@ -185,11 +178,18 @@ export class VisitsRepository implements IVisitsRepository {
       visitStatusId,
       startDate,
       endDate,
+      state,
+      search,
     } = params;
 
     const queryParams = new URLSearchParams();
     queryParams.set('page', page.toString());
     queryParams.set('page_size', pageSize.toString());
+    // Solo lo usa el super admin (business_id 0 en el token); a un usuario normal el back le
+    // aplica siempre el negocio de su token.
+    if (businessId) queryParams.set('business_id', businessId.toString());
+    if (state) queryParams.set('state', state);
+    if (search && search.trim()) queryParams.set('q', search.trim());
 
     if (visitorId) queryParams.append('visitor_id', visitorId.toString());
     if (propertyUnitId) queryParams.append('property_unit_id', propertyUnitId.toString());
@@ -248,6 +248,33 @@ export class VisitsRepository implements IVisitsRepository {
       });
       throw error;
     }
+  }
+
+  async getVisitsSummary(params: GetVisitsSummaryParams): Promise<VisitsSummary> {
+    const { businessId, token, date } = params;
+    const queryParams = new URLSearchParams();
+    if (businessId) queryParams.set('business_id', businessId.toString());
+    if (date) queryParams.set('date', date);
+
+    const url = `${this.baseUrl}/horizontal-properties/visits/summary?${queryParams.toString()}`;
+    const method = 'GET';
+    const startTime = Date.now();
+    logHttpRequest({ method, url });
+
+    const response = await fetch(url, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    const duration = Date.now() - startTime;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logHttpError({ status: response.status, statusText: response.statusText, duration, data: errorData });
+      throw new Error(errorData.message || errorData.error || `Error obteniendo el resumen de visitas: ${response.statusText}`);
+    }
+    const data: BackendVisitsSummaryResponse = await response.json();
+    logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
+    return mapBackendVisitsSummary(data.data);
   }
 
   async getVisitById(params: GetVisitByIdParams): Promise<Visit> {

@@ -37,40 +37,34 @@ packages/
 │   │   ├── get-package-by-id.action.ts
 │   │   └── index.ts
 │   └── index.ts
-├── ui/                           # Componentes React
-│   ├── packages-table.tsx        # Tabla principal con filtros
-│   ├── receive-package-modal.tsx # Modal para recibir
-│   ├── deliver-package-modal.tsx # Modal para entregar
-│   ├── package-detail-modal.tsx  # Modal de detalles
+├── ui/                           # Componentes React ("PH - Visitas y Paquetes", P1–P4)
+│   ├── packages-table.tsx        # P1/P4: lista (por entregar primero), chips, buscador, tarjetas móviles
+│   ├── receive-package-modal.tsx # P2: recibir (modal 560 px)
+│   ├── package-detail-panel.tsx  # P3: detalle + entregar / devolver (panel lateral 420 px)
+│   ├── package-state.ts          # Lógica pura: grupo, antigüedad (+3 días), acciones, línea de tiempo
+│   ├── packages-filters.ts       # Filtros en la URL (?group=&q=)
+│   ├── unit-picker.tsx           # Buscador de unidad ("Casa 126")
+│   ├── side-panel.tsx            # Panel lateral + línea de tiempo (candidato a shared/ui/ds)
 │   └── index.ts
 └── index.ts
 ```
 
 ## Componentes UI
 
-### PackagesTable
-Tabla principal de paquetes con:
-- Paginacion
-- Filtros por estado, fecha
-- Acciones: ver detalles, entregar, eliminar
+### PackagesTable (P1 / P4)
+- Por entregar primero, del más antiguo al más reciente (orden del back); antigüedad con
+  alerta a partir de 3 días.
+- Chips Todos / Por entregar / Entregados / Devueltos con conteos (`GET /packages/summary`).
+- Buscador por guía, transportadora, unidad o residente; filtros y paginación en la URL.
+- Teléfono: tarjetas con "Entregar".
 
-### ReceivePackageModal
-Formulario para registrar nuevo paquete:
-- Unidad destino
-- Transportadora
-- Numero de tracking
-- Descripcion/notas
+### ReceivePackageModal (P2)
+Unidad, residente (opcional), transportadora (frecuentes con un toque), guía, descripción,
+notas y aviso al residente.
 
-### DeliverPackageModal
-Confirmacion de entrega:
-- Notas opcionales
-- Registro de usuario
-
-### PackageDetailModal
-Vista detallada del paquete:
-- Informacion de envio
-- Destino
-- Timeline de eventos
+### PackageDetailPanel (P3)
+Envío, línea de tiempo (recibido → notificado → entregado / devuelto) y la entrega en el mismo
+panel con notas, o marcar como devuelto. "Notificado" no se entrega directo (regla del back).
 
 ## Flujo de Datos
 

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useId } from 'react';
 import { getPropertyUnitsAction } from '@/services/modules/horizontal-properties/units/infrastructure/actions';
 import { PropertyUnit } from '@/services/modules/horizontal-properties/units/domain';
 import { MagnifyingGlassIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { vtInput, vtLabel } from '@/shared/ui/ds';
+import { unitLabel } from './visit-state';
 
 interface UnitAutocompleteProps {
   value?: number;
@@ -20,8 +22,10 @@ export function UnitAutocomplete({
   businessId,
   token,
   required = false,
-  label = 'Unidad de Propiedad *',
+  label = 'Unidad',
 }: UnitAutocompleteProps) {
+  const inputId = useId();
+  const listId = useId();
   const [searchTerm, setSearchTerm] = useState('');
   const [units, setUnits] = useState<PropertyUnit[]>([]);
   const [filteredUnits, setFilteredUnits] = useState<PropertyUnit[]>([]);
@@ -118,7 +122,8 @@ export function UnitAutocomplete({
       const number = unit.number?.toLowerCase() || '';
       const block = unit.block?.toLowerCase() || '';
       const floor = unit.floor?.toString() || '';
-      return number.includes(searchLower) || block.includes(searchLower) || floor.includes(searchLower);
+      const label = unitLabel(unit.block, unit.number).toLowerCase();
+      return number.includes(searchLower) || block.includes(searchLower) || floor.includes(searchLower) || label.includes(searchLower);
     });
 
     setFilteredUnits(localFiltered);
@@ -199,12 +204,7 @@ export function UnitAutocomplete({
     }
   };
 
-  const getUnitLabel = (unit: PropertyUnit) => {
-    const parts = [unit.number];
-    if (unit.block) parts.push(`Bloque ${unit.block}`);
-    if (unit.floor) parts.push(`Piso ${unit.floor}`);
-    return parts.join(' - ');
-  };
+  const getUnitLabel = (unit: PropertyUnit) => unitLabel(unit.block, unit.number);
 
   const handleSelect = (unit: PropertyUnit) => {
     // Establecer flag ANTES de cualquier actualización
@@ -255,63 +255,64 @@ export function UnitAutocomplete({
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label htmlFor={inputId} className={vtLabel}>
         {label}
+        {required && <span aria-hidden="true"> *</span>}
       </label>
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8a8580]">
+          <MagnifyingGlassIcon className="h-4 w-4" />
         </div>
         <input
+          id={inputId}
           type="text"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls={listId}
+          aria-autocomplete="list"
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          placeholder="Buscar por número, bloque o piso..."
-          className="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+          placeholder="Buscar por número: 126, Casa 126…"
+          className={`${vtInput} pl-9 pr-14`}
           required={required}
+          autoComplete="off"
         />
         {selectedUnit && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 right-8 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+            aria-label="Quitar unidad"
+            className="absolute inset-y-0 right-8 px-1 flex items-center text-[#8a8580] hover:text-[#1a1a1a]"
           >
-            <span className="text-xl">×</span>
+            <span className="text-lg leading-none">×</span>
           </button>
         )}
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <ChevronDownIcon className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#8a8580]">
+          <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-[70] w-full mt-1 bg-white border border-[#e4e2dd] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,.12)] max-h-60 overflow-auto">
           {loading ? (
-            <div className="p-4 text-center text-gray-500">
-              Buscando unidades...
-            </div>
+            <div className="p-3 text-center text-[13px] text-[#8a8580]">Buscando unidades…</div>
           ) : filteredUnits.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              No se encontraron unidades
-            </div>
+            <div className="p-3 text-center text-[13px] text-[#8a8580]">No se encontraron unidades</div>
           ) : (
-            <ul className="py-1">
+            <ul id={listId} role="listbox" aria-label="Unidades" className="py-1">
               {filteredUnits.map((unit) => (
                 <li
                   key={unit.id}
+                  role="option"
+                  aria-selected={selectedUnit?.id === unit.id}
                   onClick={() => handleSelect(unit)}
-                  className={`px-4 py-3 cursor-pointer hover:bg-blue-50 transition-colors ${
-                    selectedUnit?.id === unit.id ? 'bg-blue-100' : ''
-                  }`}
+                  className={`px-3 py-2 max-md:py-3 cursor-pointer text-[13px] hover:bg-[#f5f5f4] ${selectedUnit?.id === unit.id ? 'bg-[#f5f5f4] font-semibold' : ''}`}
                 >
-                  <div className="font-medium text-gray-900">{getUnitLabel(unit)}</div>
-                  {unit.unitType && (
-                    <div className="text-sm text-gray-500">Tipo: {unit.unitType}</div>
-                  )}
+                  {getUnitLabel(unit)}
                 </li>
               ))}
             </ul>

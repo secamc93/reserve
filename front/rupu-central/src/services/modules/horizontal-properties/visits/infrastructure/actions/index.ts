@@ -12,4 +12,4 @@ export * from './get-visit-types.action';
 export * from './get-visit-statuses.action';
 export * from './get-companions.action';
 export * from './create-companion.action';
-export * from './delete-companion.action';
+export * from './delete-companion.action';export * from './get-visits-summary.action';

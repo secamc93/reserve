@@ -1,4 +1,3 @@
 export * from './visits-table';
-export * from './visitor-search';
-export * from './create-visit-modal';
-export * from './visit-detail-modal';
+export * from './visit-form-modal';
+export * from './visit-detail-panel';

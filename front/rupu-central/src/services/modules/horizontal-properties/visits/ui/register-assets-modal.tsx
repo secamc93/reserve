@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal, Button, Input, Alert } from '@shared/ui';
+import { VtDialog, VtNotice, VtIcon, vtBtn, vtInput, vtLabel, dsMono } from '@/shared/ui/ds';
 import { registerAssetsAction } from '../infrastructure/actions';
 import { CreateVisitAssetDTO } from '../domain';
-import { TokenStorage } from '@shared/config';
-import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useBusinessToken } from './use-business-token';
 
 interface RegisterAssetsModalProps {
   isOpen: boolean;
@@ -41,30 +39,7 @@ export function RegisterAssetsModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getBusinessToken = async (): Promise<string> => {
-    let businessToken = TokenStorage.getBusinessToken();
-    if (businessToken) return businessToken;
-
-    const sessionToken = TokenStorage.getSessionToken();
-    if (!sessionToken) throw new Error('No session token available');
-
-    const user = TokenStorage.getUser();
-    const isSuperAdmin = user?.is_super_admin;
-    const business_id = isSuperAdmin ? 0 : businessId;
-
-    const result = await generateBusinessTokenAction({
-      business_id,
-      session_token: sessionToken,
-    });
-
-    if (!result.success || !result.data) {
-      throw new Error(result.error || 'No se pudo generar business token');
-    }
-
-    TokenStorage.setBusinessToken(result.data.token);
-    TokenStorage.setActiveBusiness(business_id);
-    return result.data.token;
-  };
+  const getBusinessToken = useBusinessToken(businessId);
 
   const handleAddAsset = () => {
     setAssets([...assets, { ...emptyAsset }]);
@@ -125,80 +100,62 @@ export function RegisterAssetsModal({
     onClose();
   };
 
+  const field = (index: number, key: keyof AssetForm, label: string, required = false) => (
+    <div>
+      <label htmlFor={`asset-${index}-${key}`} className={vtLabel}>
+        {label}
+        {required && <span aria-hidden="true"> *</span>}
+      </label>
+      <input id={`asset-${index}-${key}`} className={vtInput} value={assets[index][key]} onChange={(e) => handleAssetChange(index, key, e.target.value)} />
+    </div>
+  );
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Registrar Activos/Equipos" size="lg">
-      <div className="space-y-4">
-        {error && (
-          <Alert type="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        <p className="text-sm text-gray-600">
-          Registre los equipos, herramientas o activos que el visitante ingresa a la propiedad.
-        </p>
-
-        <div className="space-y-4 max-h-96 overflow-y-auto">
-          {assets.map((asset, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3">
+    <VtDialog
+      open={isOpen}
+      onClose={handleClose}
+      busy={loading}
+      layer="over"
+      eyebrow="Visita"
+      title="Equipos que ingresa"
+      subtitle="Herramientas o equipos que se revisan a la salida"
+      footer={
+        <>
+          <button type="button" className={vtBtn.secondary} onClick={handleClose} disabled={loading}>
+            Cancelar
+          </button>
+          <button type="button" className={vtBtn.primary} onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Registrando…' : 'Registrar equipos'}
+          </button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        {error && <VtNotice tone="error">{error}</VtNotice>}
+        <div className="flex flex-col gap-3 max-h-[50dvh] overflow-y-auto">
+          {assets.map((_, index) => (
+            <div key={index} className="rounded-lg border border-[#e4e2dd] p-3.5 flex flex-col gap-3">
               <div className="flex justify-between items-center">
-                <span className="font-medium text-gray-700">Activo #{index + 1}</span>
+                <span className={`${dsMono} text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`}>Equipo {index + 1}</span>
                 {assets.length > 1 && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleRemoveAsset(index)}
-                    title="Eliminar activo"
-                  >
-                    <TrashIcon className="h-4 w-4 text-red-600" />
-                  </Button>
+                  <button type="button" className={vtBtn.icon} onClick={() => handleRemoveAsset(index)} aria-label={`Quitar equipo ${index + 1}`}>
+                    <VtIcon name="trash" size={14} />
+                  </button>
                 )}
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input
-                  label="Nombre del activo *"
-                  value={asset.assetName}
-                  onChange={(e) => handleAssetChange(index, 'assetName', e.target.value)}
-                  placeholder="Ej: Laptop, Taladro, Caja de herramientas"
-                />
-                <Input
-                  label="Marca"
-                  value={asset.assetBrand}
-                  onChange={(e) => handleAssetChange(index, 'assetBrand', e.target.value)}
-                  placeholder="Ej: Dell, Bosch"
-                />
-                <Input
-                  label="Serial / Identificador"
-                  value={asset.assetSerial}
-                  onChange={(e) => handleAssetChange(index, 'assetSerial', e.target.value)}
-                  placeholder="Ej: ABC123456"
-                />
-                <Input
-                  label="Descripcion"
-                  value={asset.assetDescription}
-                  onChange={(e) => handleAssetChange(index, 'assetDescription', e.target.value)}
-                  placeholder="Descripcion adicional"
-                />
+                {field(index, 'assetName', 'Nombre', true)}
+                {field(index, 'assetBrand', 'Marca')}
+                {field(index, 'assetSerial', 'Serial')}
+                {field(index, 'assetDescription', 'Descripción')}
               </div>
             </div>
           ))}
         </div>
-
-        <Button variant="outline" onClick={handleAddAsset} className="w-full">
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Agregar otro activo
-        </Button>
-
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Registrando...' : 'Registrar Activos'}
-          </Button>
-        </div>
+        <button type="button" className={vtBtn.secondary} onClick={handleAddAsset}>
+          + Agregar otro equipo
+        </button>
       </div>
-    </Modal>
+    </VtDialog>
   );
 }

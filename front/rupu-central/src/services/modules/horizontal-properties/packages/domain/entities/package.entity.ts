@@ -34,12 +34,29 @@ export interface PackageListDTO {
   trackingNumber: string;
   carrier: string;
   propertyUnitNumber: string;
+  /** Tipo de unidad en Tayazal ("Casa", "Dúplex", "Local", "Jardín"); se muestra "Casa 126". */
+  propertyUnitBlock?: string;
   residentName: string;
+  description?: string;
   statusName: string;
   statusCode: string;
   receivedAt?: string;
   deliveredAt?: string;
   createdAt: string;
+}
+
+/** Grupo de estados de paquete: por entregar, entregados o devueltos/perdidos. */
+export type PackageStatusGroup = 'pending' | 'delivered' | 'closed';
+
+/** Conteos de la portería de paquetes. */
+export interface PackagesSummary {
+  pending: number;
+  /** Por entregar recibidos hace más de 3 días. */
+  pendingOverdue: number;
+  deliveredToday: number;
+  delivered: number;
+  closed: number;
+  total: number;
 }
 
 export interface PackagesPaginated {

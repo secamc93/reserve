@@ -4,3 +4,4 @@ export { GetPackagesUseCase } from './get-packages.use-case';
 export { GetPackageStatusesUseCase } from './get-package-statuses.use-case';
 export { DeletePackageUseCase } from './delete-package.use-case';
 export { GetPackageByIdUseCase } from './get-package-by-id.use-case';
+export { GetPackagesSummaryUseCase } from './get-packages-summary.use-case';

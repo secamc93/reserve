@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { VisitsTable } from '@/services/modules/horizontal-properties/visits/ui/visits-table';
 
@@ -9,20 +8,9 @@ export default function VisitsPage() {
   const businessId = parseInt(params.id as string);
 
   if (isNaN(businessId)) {
-    return (
-      <div className="p-3 md:p-6">
-        <div className="text-red-600">ID de propiedad inválido</div>
-      </div>
-    );
+    return <div className="p-6 text-[#c8382d]">ID de propiedad inválido</div>;
   }
 
-  return (
-    <div>
-      {/* Navegación */}
-
-      <div className="p-3 md:p-6">
-        <VisitsTable businessId={businessId} />
-      </div>
-    </div>
-  );
+  // La barra superior (miga de pan "Propiedad / Visitas") la pone el layout
+  return <VisitsTable businessId={businessId} />;
 }

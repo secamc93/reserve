@@ -52,13 +52,37 @@ export interface VisitListDTO {
   id: number;
   visitorName: string;
   visitorDni: string;
+  visitorPhone?: string;
   propertyUnitNumber: string;
+  /** Tipo de unidad en Tayazal ("Casa", "Dúplex", "Local", "Jardín"); se muestra "Casa 126". */
+  propertyUnitBlock?: string;
   visitTypeName: string;
   visitStatusName: string;
+  /** pending, authorized, in_progress, completed, cancelled, expired, rejected */
+  visitStatusCode?: string;
   scheduledDate: string;
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
   actualEntryTime?: string;
   actualExitTime?: string;
+  purpose?: string;
+  numberOfVisitors?: number;
   createdAt: string;
+}
+
+/** Estado de una visita tal como lo ve la portería. */
+export type VisitState = 'inside' | 'expected' | 'left' | 'cancelled';
+
+/** Conteos de las visitas de un día por estado de portería. */
+export interface VisitsSummary {
+  date: string;
+  inside: number;
+  expected: number;
+  left: number;
+  cancelled: number;
+  total: number;
+  /** Visitantes dentro ahora, sin importar el día programado. */
+  insideNow: number;
 }
 
 export interface VisitsPaginated {

@@ -1,284 +1,226 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Modal, Button, Input, Alert, Select } from '@shared/ui';
+/**
+ * P2 · Recibir paquete (Patrón B: modal de 560 px): unidad, residente (opcional),
+ * transportadora, guía, descripción, notas y aviso al residente.
+ */
+
+import { useEffect, useId, useState } from 'react';
+import { VtDialog, VtNotice, VtSwitch, vtBtn, vtInput, vtLabel, vtTextarea, dsMono } from '@/shared/ui/ds';
 import { receivePackageAction } from '../infrastructure/actions';
-import { CreatePackageDTO } from '../domain';
-import { TokenStorage } from '@shared/config';
-import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
-import { getPropertyUnitsAction } from '@/services/modules/horizontal-properties/units/infrastructure/actions';
-import { PropertyUnit } from '@/services/modules/horizontal-properties/units/domain';
+import type { CreatePackageDTO } from '../domain';
 import { getResidentsAction } from '@/services/modules/horizontal-properties/residents/infrastructure/actions';
-import { Resident } from '@/services/modules/horizontal-properties/residents/domain';
-import { GetResidentsParams } from '@/services/modules/horizontal-properties/residents/domain';
+import type { Resident } from '@/services/modules/horizontal-properties/residents/domain';
+import { useBusinessToken } from './use-business-token';
+import { UnitPicker, type PickedUnit } from './unit-picker';
 
 interface ReceivePackageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  /** Se llama tras guardar con el texto de confirmación. */
+  onSuccess: (message: string) => void;
   businessId: number;
 }
 
+/** Transportadoras frecuentes para elegir con un toque. */
+export const COMMON_CARRIERS = ['Servientrega', 'Interrapidísimo', 'Coordinadora', 'Envía', 'Mercado Libre', 'Amazon', 'DHL'];
+
+export interface ReceiveFormValues {
+  unit: PickedUnit | null;
+  residentId?: number;
+  carrier: string;
+  trackingNumber: string;
+  description: string;
+  notes: string;
+  notifyResident: boolean;
+}
+
+export const emptyReceiveForm = (): ReceiveFormValues => ({
+  unit: null,
+  residentId: undefined,
+  carrier: '',
+  trackingNumber: '',
+  description: '',
+  notes: '',
+  notifyResident: true,
+});
+
+/** Primer error del formulario o null. */
+export function validateReceiveForm(f: ReceiveFormValues): string | null {
+  if (!f.unit) return 'Elige la unidad a la que llega el paquete';
+  if (!f.carrier.trim()) return 'Escribe la transportadora';
+  if (!f.trackingNumber.trim()) return 'Escribe el número de guía';
+  return null;
+}
+
+export function receiveFormToDTO(f: ReceiveFormValues): CreatePackageDTO {
+  return {
+    propertyUnitId: f.unit!.id,
+    residentId: f.residentId,
+    carrier: f.carrier.trim(),
+    trackingNumber: f.trackingNumber.trim(),
+    description: f.description.trim() || undefined,
+    notes: f.notes.trim() || undefined,
+    notifyResident: f.notifyResident,
+  };
+}
+
 export function ReceivePackageModal({ isOpen, onClose, onSuccess, businessId }: ReceivePackageModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [propertyUnits, setPropertyUnits] = useState<PropertyUnit[]>([]);
+  const getToken = useBusinessToken(businessId);
+  const ids = { resident: useId(), carrier: useId(), tracking: useId(), description: useId(), notes: useId() };
+  const [form, setForm] = useState<ReceiveFormValues>(emptyReceiveForm);
   const [residents, setResidents] = useState<Resident[]>([]);
-  const [selectedUnitId, setSelectedUnitId] = useState<number | undefined>(undefined);
-  
-  const [formData, setFormData] = useState<CreatePackageDTO>({
-    propertyUnitId: 0,
-    residentId: undefined,
-    carrier: '',
-    trackingNumber: '',
-    description: '',
-    notes: '',
-    notifyResident: true,
-  });
-
-  const getBusinessToken = useCallback(async (): Promise<string> => {
-    let businessToken = TokenStorage.getBusinessToken();
-    if (businessToken) return businessToken;
-
-    const sessionToken = TokenStorage.getSessionToken();
-    if (!sessionToken) throw new Error('No session token available');
-
-    const user = TokenStorage.getUser();
-    const isSuperAdmin = user?.is_super_admin;
-    const business_id = isSuperAdmin ? 0 : businessId;
-
-    const result = await generateBusinessTokenAction({
-      business_id,
-      session_token: sessionToken,
-    });
-
-    if (!result.success || !result.data) {
-      throw new Error(result.error || 'No se pudo generar business token');
-    }
-
-    TokenStorage.setBusinessToken(result.data.token);
-    TokenStorage.setActiveBusiness(business_id);
-    return result.data.token;
-  }, [businessId]);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      loadPropertyUnits();
-      setFormData({
-        propertyUnitId: 0,
-        residentId: undefined,
-        carrier: '',
-        trackingNumber: '',
-        description: '',
-        notes: '',
-        notifyResident: true,
-      });
+      setForm(emptyReceiveForm());
+      setResidents([]);
       setError(null);
+      setSaving(false);
     }
   }, [isOpen]);
 
+  // Residentes de la unidad elegida (opcional)
+  const unitId = form.unit?.id;
   useEffect(() => {
-    if (selectedUnitId) {
-      loadResidents(selectedUnitId);
-    } else {
+    if (!unitId) {
       setResidents([]);
-    }
-  }, [selectedUnitId]);
-
-  const loadPropertyUnits = async () => {
-    try {
-      const token = await getBusinessToken();
-      const result = await getPropertyUnitsAction({
-        businessId,
-        token,
-        page: 1,
-        pageSize: 100,
-      });
-      setPropertyUnits(result.units || []);
-    } catch (err) {
-      console.error('Error cargando unidades:', err);
-    }
-  };
-
-  const loadResidents = async (unitId: number) => {
-    try {
-      const token = await getBusinessToken();
-      const params: GetResidentsParams = {
-        businessId,
-        token,
-        propertyUnitId: unitId,
-        page: 1,
-        pageSize: 100,
-      };
-      const result = await getResidentsAction(params);
-      setResidents(result.residents || []);
-    } catch (err) {
-      console.error('Error cargando residentes:', err);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.propertyUnitId || !formData.carrier || !formData.trackingNumber) {
-      setError('Por favor complete todos los campos requeridos');
       return;
     }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await getResidentsAction({ businessId, token, propertyUnitId: unitId, page: 1, pageSize: 100 });
+        if (!cancelled) setResidents(res.residents || []);
+      } catch {
+        if (!cancelled) setResidents([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [unitId, businessId, getToken]);
 
-    setLoading(true);
+  const set = <K extends keyof ReceiveFormValues>(k: K, v: ReceiveFormValues[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    const problem = validateReceiveForm(form);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setSaving(true);
     setError(null);
-
     try {
-      const token = await getBusinessToken();
-      
-      await receivePackageAction({
-        businessId,
-        data: formData,
-        token,
-      });
-
-      onSuccess();
-    } catch (err: any) {
-      console.error('Error recibiendo paquete:', err);
-      setError(err?.message || 'Error al recibir el paquete. Por favor, intenta nuevamente.');
+      const token = await getToken();
+      await receivePackageAction({ businessId, data: receiveFormToDTO(form), token });
+      onSuccess(`Paquete para ${form.unit!.label} recibido`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo registrar el paquete');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
+    <VtDialog
+      open={isOpen}
       onClose={onClose}
-      title="Recibir Paquete"
-      size="lg"
+      busy={saving}
+      eyebrow="Paquetería"
+      title="Recibir paquete"
+      subtitle="Queda por entregar hasta que el residente lo recoja"
+      footer={
+        <>
+          <button type="button" className={vtBtn.secondary} onClick={onClose} disabled={saving}>
+            Cancelar
+          </button>
+          <button type="button" className={vtBtn.primary} onClick={submit} disabled={saving}>
+            {saving ? 'Guardando…' : 'Recibir paquete'}
+          </button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <Alert type="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Unidad de Propiedad *
-          </label>
-          <Select
-            value={formData.propertyUnitId.toString()}
-            onChange={(e) => {
-              const unitId = parseInt(e.target.value);
-              setSelectedUnitId(unitId);
-              setFormData({ ...formData, propertyUnitId: unitId, residentId: undefined });
-            }}
-            required
-            options={[
-              { value: '0', label: 'Seleccione una unidad' },
-              ...propertyUnits.map((unit) => ({
-                value: unit.id.toString(),
-                label: `${unit.number}${unit.block ? ` - Bloque ${unit.block}` : ''}`,
-              })),
-            ]}
-            placeholder="Seleccione una unidad"
-          />
-        </div>
-
-        {selectedUnitId && residents.length > 0 && (
+      <form
+        className="flex flex-col gap-3.5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        {error && <VtNotice tone="error">{error}</VtNotice>}
+        <UnitPicker
+          businessId={businessId}
+          getToken={getToken}
+          value={form.unit}
+          onChange={(u) => setForm((f) => ({ ...f, unit: u, residentId: undefined }))}
+        />
+        {residents.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Residente
+            <label htmlFor={ids.resident} className={vtLabel}>
+              Para
             </label>
-            <Select
-              value={formData.residentId?.toString() || ''}
-              onChange={(e) => {
-                const residentId = e.target.value ? parseInt(e.target.value) : undefined;
-                setFormData({ ...formData, residentId });
-              }}
-              options={[
-                { value: '', label: 'Seleccione un residente (opcional)' },
-                ...residents.map((resident) => ({
-                  value: resident.id.toString(),
-                  label: resident.name,
-                })),
-              ]}
-              placeholder="Seleccione un residente (opcional)"
-            />
+            <select id={ids.resident} className={vtInput} value={form.residentId ?? ''} onChange={(e) => set('residentId', e.target.value ? Number(e.target.value) : undefined)}>
+              <option value="">Cualquier residente de la unidad</option>
+              {residents.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
           </div>
         )}
-
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Empresa de Envío *
+          <label htmlFor={ids.carrier} className={vtLabel}>
+            Transportadora <span aria-hidden="true">*</span>
           </label>
-          <Input
-            type="text"
-            value={formData.carrier}
-            onChange={(e) => setFormData({ ...formData, carrier: e.target.value })}
-            placeholder="Ej: DHL, FedEx, Servientrega"
-            required
-          />
+          <input id={ids.carrier} className={vtInput} list={`${ids.carrier}-list`} value={form.carrier} onChange={(e) => set('carrier', e.target.value)} placeholder="Servientrega, Interrapidísimo…" />
+          <datalist id={`${ids.carrier}-list`}>
+            {COMMON_CARRIERS.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+          <div className="flex flex-wrap gap-1 mt-2" role="group" aria-label="Transportadoras frecuentes">
+            {COMMON_CARRIERS.slice(0, 5).map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={form.carrier === c}
+                onClick={() => set('carrier', c)}
+                className={`px-2.5 py-1 max-md:py-2 rounded-[5px] text-xs font-medium ${form.carrier === c ? 'bg-[#1a1a1a] text-white' : 'bg-[#f5f5f4] text-[#4b4a46] hover:bg-[#e9e7e2]'}`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Número de Tracking *
+          <label htmlFor={ids.tracking} className={vtLabel}>
+            Número de guía <span aria-hidden="true">*</span>
           </label>
-          <Input
-            type="text"
-            value={formData.trackingNumber}
-            onChange={(e) => setFormData({ ...formData, trackingNumber: e.target.value })}
-            placeholder="Número de seguimiento"
-            required
-          />
+          <input id={ids.tracking} className={`${vtInput} ${dsMono}`} autoComplete="off" value={form.trackingNumber} onChange={(e) => set('trackingNumber', e.target.value)} />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={ids.description} className={vtLabel}>
             Descripción
           </label>
-          <Input
-            type="text"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Descripción del paquete"
-          />
+          <input id={ids.description} className={vtInput} placeholder="Caja mediana, sobre, nevera de icopor…" value={form.description} onChange={(e) => set('description', e.target.value)} />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={ids.notes} className={vtLabel}>
             Notas
           </label>
-          <textarea
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            rows={3}
-            placeholder="Notas adicionales"
-          />
+          <textarea id={ids.notes} rows={2} className={vtTextarea} value={form.notes} onChange={(e) => set('notes', e.target.value)} />
         </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="notifyResident"
-            checked={formData.notifyResident}
-            onChange={(e) => setFormData({ ...formData, notifyResident: e.target.checked })}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="notifyResident" className="ml-2 block text-sm text-gray-700">
-            Notificar al residente
-          </label>
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f5f5f4] px-3.5 py-3">
+          <span className="text-[13px]">Avisar al residente</span>
+          <VtSwitch label="Avisar al residente" checked={form.notifyResident} onChange={(v) => set('notifyResident', v)} />
         </div>
-
-        <div className="flex flex-col-reverse md:flex-row md:justify-end gap-3 pt-4 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
-          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Recibiendo...' : 'Recibir Paquete'}
-          </Button>
-        </div>
+        <button type="submit" className="hidden" tabIndex={-1} aria-hidden="true" />
       </form>
-    </Modal>
+    </VtDialog>
   );
 }
