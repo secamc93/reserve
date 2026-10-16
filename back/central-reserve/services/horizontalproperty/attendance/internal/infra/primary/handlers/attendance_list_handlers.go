@@ -320,7 +320,7 @@ func (h *AttendanceHandler) ExportAttendanceExcel(c *gin.Context) {
 	// filas
 	for _, r := range records {
 		// Casa = property_unit_id (si tienes número en cache, se podría enriquecer luego)
-		unit := r.UnitNumber
+		unit := mappers.UnitLabel(r.UnitNumber, r.UnitBlock)
 		owner := r.ResidentName
 		proxy := r.ProxyName
 		firma := ""

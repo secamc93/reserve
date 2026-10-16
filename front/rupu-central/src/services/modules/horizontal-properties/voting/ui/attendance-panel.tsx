@@ -112,6 +112,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
       const units = (unitsRes?.units ?? []).map((u) => ({
         id: u.id,
         number: u.number,
+        block: u.block,
         coefficient: u.coefficient ?? 0,
         residentName: residentByUnit.get(u.number) ?? null,
       }));

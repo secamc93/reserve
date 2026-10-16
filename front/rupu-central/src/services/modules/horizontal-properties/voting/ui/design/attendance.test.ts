@@ -46,3 +46,25 @@ describe('asistencia', () => {
     expect(summarizeAttendance(setRowPresence(next, 280, false)).presentCoefPct).toBeCloseTo(50);
   });
 });
+
+describe('asistencia: nombre completo de la unidad', () => {
+  const unitsConTipo = [
+    { id: 1, number: '12', block: 'Casa', coefficient: 1 },
+    { id: 2, number: '3', block: 'Dúplex', coefficient: 1 },
+    { id: 3, number: '1001', block: 'Local', coefficient: 1 },
+    { id: 4, number: '50', block: '', coefficient: 1 },
+  ];
+  const conRegistro = [
+    { id: 9, property_unit_id: 1, unit_number: '12', unit_block: 'Casa', resident_name: 'Ana', attended_as_owner: true },
+  ];
+
+  it('muestra tipo + número ("Casa 12", "Dúplex 3", "Local 1001") con o sin registro', () => {
+    const rows = buildAttendanceRows(conRegistro, unitsConTipo);
+    expect(rows.map((r) => r.unitNumber)).toEqual(['50', 'Casa 12', 'Dúplex 3', 'Local 1001']);
+  });
+
+  it('se puede buscar por el nombre completo', () => {
+    const rows = buildAttendanceRows(conRegistro, unitsConTipo);
+    expect(filterAttendanceRows(rows, 'all', 'dúplex').map((r) => r.unitNumber)).toEqual(['Dúplex 3']);
+  });
+});

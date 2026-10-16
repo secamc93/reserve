@@ -333,6 +333,7 @@ func (uc *AttendanceUseCase) GetAttendanceRecordByID(ctx context.Context, id uin
 		ResidentName:      record.ResidentName,
 		ProxyName:         record.ProxyName,
 		UnitNumber:        record.UnitNumber,
+		UnitBlock:         record.UnitBlock,
 	}
 	return dto, nil
 }
@@ -367,6 +368,7 @@ func (uc *AttendanceUseCase) GetAttendanceRecordsByListPaged(ctx context.Context
 			ResidentName:             r.ResidentName,
 			ProxyName:                r.ProxyName,
 			UnitNumber:               r.UnitNumber,
+			UnitBlock:                r.UnitBlock,
 			ParticipationCoefficient: r.ParticipationCoefficient,
 		}
 	}
@@ -503,6 +505,7 @@ func (uc *AttendanceUseCase) MarkAttendanceSimple(ctx context.Context, recordID 
 		ResidentName:      updated.ResidentName,
 		ProxyName:         updated.ProxyName,
 		UnitNumber:        updated.UnitNumber,
+		UnitBlock:         updated.UnitBlock,
 	}
 	return dto, nil
 }

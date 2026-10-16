@@ -28,6 +28,7 @@ func MapAttendanceRecordDTOToResponse(dto domain.AttendanceRecordDTO) response.A
 		ResidentName:      dto.ResidentName,
 		ProxyName:         dto.ProxyName,
 		UnitNumber:        dto.UnitNumber,
+		UnitBlock:         dto.UnitBlock,
 	}
 }
 
