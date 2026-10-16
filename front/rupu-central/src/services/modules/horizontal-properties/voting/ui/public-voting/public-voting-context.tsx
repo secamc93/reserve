@@ -40,14 +40,12 @@ export function PublicVotingContext({
   useEffect(() => {
     const loadContext = async () => {
       try {
-        console.log('🏢 [CONTEXT] Cargando contexto de votación...');
         setLoading(true);
 
         const result = await getVotingContextAction({
           publicToken
         });
 
-        console.log('📥 [CONTEXT] Resultado de contexto:', result);
 
         if (result.success && result.data) {
           const logData: any = {
@@ -65,7 +63,6 @@ export function PublicVotingContext({
             logData.group = result.data.voting_group.name;
           }
 
-          console.log('✅ [CONTEXT] Contexto cargado:', logData);
 
           onContextLoaded(result.data);
         } else {

@@ -22,6 +22,10 @@ import {
   ParkingSlotsPaginated,
   ParkingAssignmentsPaginated,
   ParkingReservationsPaginated,
+  AssignmentStatusFilter,
+  ParkingAssignmentSummary,
+  UpdateParkingAssignmentDTO,
+  CreateParkingSlotsBulkDTO,
 } from '../entities';
 
 export interface GetParkingZonesParams {
@@ -50,6 +54,9 @@ export interface GetParkingAssignmentsParams {
   propertyUnitId?: number;
   residentId?: number;
   isActive?: boolean;
+  status?: AssignmentStatusFilter;
+  /** Placa, unidad, residente o cupo. */
+  q?: string;
   page?: number;
   pageSize?: number;
 }
@@ -83,6 +90,10 @@ export interface IParkingRepository {
   // Asignaciones
   getParkingAssignments(params: GetParkingAssignmentsParams): Promise<ParkingAssignmentsPaginated>;
   assignParking(params: { businessId: number; token: string; data: AssignParkingDTO }): Promise<ParkingAssignment>;
+  getParkingAssignmentSummary(params: { businessId: number; token: string }): Promise<ParkingAssignmentSummary>;
+  updateParkingAssignment(params: { id: number; businessId: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingAssignment>;
+  releaseParkingAssignment(params: { id: number; businessId: number; token: string }): Promise<ParkingAssignment>;
+  createParkingSlotsBulk(params: { businessId: number; token: string; data: CreateParkingSlotsBulkDTO }): Promise<{ created: number }>;
 
   // Reservas
   getParkingReservations(params: GetParkingReservationsParams): Promise<ParkingReservationsPaginated>;

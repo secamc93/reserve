@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"strings"
+
+	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/mappers"
 	"net/http"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/response"
@@ -39,12 +41,8 @@ func (h *CommonAreaHandler) ListReservations(c *gin.Context) {
 	}
 	req.Page, req.PageSize = page, pageSize
 
-	businessID, exists := middleware.GetBusinessID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "business_id no disponible",
-		})
+	businessID, ok := h.resolveBusinessID(c)
+	if !ok {
 		return
 	}
 
@@ -54,6 +52,7 @@ func (h *CommonAreaHandler) ListReservations(c *gin.Context) {
 		PropertyUnitID:      req.PropertyUnitID,
 		ResidentID:          req.ResidentID,
 		ReservationStatusID: req.ReservationStatusID,
+		StatusCodes:         splitCodes(req.Status),
 		StartDate:           req.StartDate,
 		EndDate:             req.EndDate,
 		Page:                req.Page,
@@ -73,18 +72,7 @@ func (h *CommonAreaHandler) ListReservations(c *gin.Context) {
 
 	reservations := make([]response.ReservationListResponse, len(result.Reservations))
 	for i, res := range result.Reservations {
-		reservations[i] = response.ReservationListResponse{
-			ID:                 res.ID,
-			CommonAreaName:     res.CommonAreaName,
-			PropertyUnitNumber: res.PropertyUnitNumber,
-			ResidentName:       res.ResidentName,
-			StatusName:         res.StatusName,
-			ReservationDate:    res.ReservationDate,
-			StartTime:          res.StartTime,
-			EndTime:            res.EndTime,
-			NumberOfGuests:     res.NumberOfGuests,
-			CreatedAt:          res.CreatedAt,
-		}
+		reservations[i] = mappers.ReservationListToResponse(res)
 	}
 
 	c.JSON(http.StatusOK, response.PaginatedReservationsResponse{
@@ -95,4 +83,15 @@ func (h *CommonAreaHandler) ListReservations(c *gin.Context) {
 		PageSize:   result.PageSize,
 		TotalPages: result.TotalPages,
 	})
+}
+
+// splitCodes convierte "pending, approved" en ["pending","approved"].
+func splitCodes(raw string) []string {
+	var codes []string
+	for _, part := range strings.Split(raw, ",") {
+		if code := strings.TrimSpace(part); code != "" {
+			codes = append(codes, code)
+		}
+	}
+	return codes
 }

@@ -6,6 +6,8 @@ import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/confi
 import {
   IPackagesRepository,
   GetPackagesParams,
+  GetPackagesSummaryParams,
+  PackagesSummary,
   GetPackageByIdParams,
   GetPackageByQRCodeParams,
   ReceivePackageParams,
@@ -23,7 +25,9 @@ import {
   BackendPackagesPaginatedResponse,
   BackendPackage,
   BackendPackageList,
+  BackendPackagesSummaryResponse,
 } from './response/packages.response';
+import { mapBackendPackageList, mapBackendPackagesSummary } from './mappers/package-list.mapper';
 
 export class PackagesRepository implements IPackagesRepository {
   private baseUrl = env.API_BASE_URL;
@@ -49,33 +53,30 @@ export class PackagesRepository implements IPackagesRepository {
       createdAt: pkg.created_at,
       updatedAt: pkg.updated_at,
       propertyUnitNumber: pkg.property_unit_number,
+      propertyUnitBlock: pkg.property_unit_block,
       residentName: pkg.resident_name,
+      receivedByName: pkg.received_by_name,
+      deliveredByName: pkg.delivered_by_name,
       statusName: pkg.status_name,
       statusCode: pkg.status_code,
     };
   }
 
   private mapBackendPackageList(pkg: BackendPackageList): PackageListDTO {
-    return {
-      id: pkg.id,
-      trackingNumber: pkg.tracking_number,
-      carrier: pkg.carrier,
-      propertyUnitNumber: pkg.property_unit_number,
-      residentName: pkg.resident_name,
-      statusName: pkg.status_name,
-      statusCode: pkg.status_code,
-      receivedAt: pkg.received_at,
-      deliveredAt: pkg.delivered_at,
-      createdAt: pkg.created_at,
-    };
+    return mapBackendPackageList(pkg);
   }
 
   async getPackages(params: GetPackagesParams): Promise<PackagesPaginated> {
-    const { businessId, token, page = 1, pageSize = 10, propertyUnitId, residentId, packageStatusId, startDate, endDate } = params;
+    const { businessId, token, page = 1, pageSize = 10, propertyUnitId, residentId, packageStatusId, startDate, endDate, statusGroup, search, deliveredToday } = params;
 
     const queryParams = new URLSearchParams();
     queryParams.set('page', page.toString());
     queryParams.set('page_size', pageSize.toString());
+    // Solo lo usa el super admin; a un usuario normal el back le aplica el negocio de su token.
+    if (businessId) queryParams.set('business_id', businessId.toString());
+    if (statusGroup) queryParams.set('status_group', statusGroup);
+    if (deliveredToday) queryParams.set('delivered_today', 'true');
+    if (search && search.trim()) queryParams.set('q', search.trim());
     if (propertyUnitId) queryParams.set('property_unit_id', propertyUnitId.toString());
     if (residentId) queryParams.set('resident_id', residentId.toString());
     if (packageStatusId) queryParams.set('package_status_id', packageStatusId.toString());
@@ -130,6 +131,32 @@ export class PackagesRepository implements IPackagesRepository {
       });
       throw error;
     }
+  }
+
+  async getPackagesSummary(params: GetPackagesSummaryParams): Promise<PackagesSummary> {
+    const { businessId, token } = params;
+    const queryParams = new URLSearchParams();
+    if (businessId) queryParams.set('business_id', businessId.toString());
+
+    const url = `${this.baseUrl}/horizontal-properties/packages/summary?${queryParams.toString()}`;
+    const method = 'GET';
+    const startTime = Date.now();
+    logHttpRequest({ method, url });
+
+    const response = await fetch(url, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    const duration = Date.now() - startTime;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logHttpError({ status: response.status, statusText: response.statusText, duration, data: errorData });
+      throw new Error(errorData.message || `Error obteniendo el resumen de paquetes: ${response.statusText}`);
+    }
+    const data: BackendPackagesSummaryResponse = await response.json();
+    logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
+    return mapBackendPackagesSummary(data.data);
   }
 
   async getPackageById(params: GetPackageByIdParams): Promise<Package> {

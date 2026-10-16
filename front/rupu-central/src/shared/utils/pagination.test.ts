@@ -15,6 +15,7 @@ import {
   normalizePaginationParams,
   paginationFromSearchParams,
   parseGoToPage,
+  pageSlice,
 } from './pagination';
 
 describe('constantes', () => {
@@ -303,5 +304,30 @@ describe('fetchAllPages', () => {
 
   it('propaga el error del back', async () => {
     await expect(fetchAllPages(async () => { throw new Error('400 page_size'); })).rejects.toThrow('400 page_size');
+  });
+});
+
+describe('pageSlice', () => {
+  const items = Array.from({ length: 194 }, (_, i) => i + 1);
+
+  it('devuelve la página pedida con el tamaño pedido', () => {
+    expect(pageSlice(items, 1, 10)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(pageSlice(items, 3, 10)).toEqual([21, 22, 23, 24, 25, 26, 27, 28, 29, 30]);
+  });
+
+  it('la última página trae solo lo que queda', () => {
+    expect(pageSlice(items, 20, 10)).toEqual([191, 192, 193, 194]);
+  });
+
+  it('una página fuera de rango muestra la última', () => {
+    expect(pageSlice(items, 99, 10)).toEqual([191, 192, 193, 194]);
+  });
+
+  it('nunca muestra más de 200 filas', () => {
+    expect(pageSlice(Array.from({ length: 500 }, (_, i) => i), 1, 1000)).toHaveLength(200);
+  });
+
+  it('lista vacía', () => {
+    expect(pageSlice([], 1, 10)).toEqual([]);
   });
 });

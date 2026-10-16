@@ -112,7 +112,7 @@ func (r *ParkingSlotRepository) ListParkingSlots(ctx context.Context, filters do
 		Select("parking_slots.*, pz.name as parking_zone_name, pt.name as parking_type_name").
 		Joins("JOIN horizontal_property.parking_zones pz ON pz.id = parking_slots.parking_zone_id").
 		Joins("JOIN horizontal_property.parking_types pt ON pt.id = parking_slots.parking_type_id")
-	
+
 	// Aplicar filtro de business_id solo si no es 0 (super admin puede ver todo si business_id = 0)
 	if filters.BusinessID != 0 {
 		query = query.Where("pz.business_id = ?", filters.BusinessID)
@@ -151,7 +151,7 @@ func (r *ParkingSlotRepository) ListParkingSlots(ctx context.Context, filters do
 	}
 
 	var rows []row
-	if err := query.Offset(offset).Limit(pageSize).Find(&rows).Error; err != nil {
+	if err := query.Order("parking_slots.parking_zone_id ASC, parking_slots.slot_number ASC").Offset(offset).Limit(pageSize).Find(&rows).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error listando espacios de parqueo")
 		return nil, fmt.Errorf("error listando espacios de parqueo: %w", err)
 	}
@@ -182,6 +182,9 @@ func (r *ParkingSlotRepository) ListParkingSlots(ctx context.Context, filters do
 			SlotNumber:      row.SlotNumber,
 			IsCovered:       row.IsCovered,
 			HasCharger:      row.HasCharger,
+			Width:           row.Width,
+			Length:          row.Length,
+			Height:          row.Height,
 			IsActive:        row.IsActive,
 			IsAvailable:     isAvailable,
 			IsAssigned:      isAssigned,
@@ -262,3 +265,46 @@ func (r *ParkingSlotRepository) IsSlotAvailable(ctx context.Context, slotID uint
 	return count == 0, nil
 }
 
+// ExistingSlotNumbers devuelve cuáles de los números ya existen en la zona (incluidos borrados
+// lógicamente: el índice único (zona, número) también los cuenta).
+func (r *ParkingSlotRepository) ExistingSlotNumbers(ctx context.Context, zoneID uint, numbers []string) ([]string, error) {
+	var existing []string
+	if len(numbers) == 0 {
+		return existing, nil
+	}
+	if err := r.db.Conn(ctx).Unscoped().Model(&models.ParkingSlot{}).
+		Where("parking_zone_id = ? AND slot_number IN ?", zoneID, numbers).
+		Pluck("slot_number", &existing).Error; err != nil {
+		return nil, fmt.Errorf("error verificando números de cupo: %w", err)
+	}
+	return existing, nil
+}
+
+// CreateParkingSlotsBulk crea los cupos en una transacción (todos o ninguno).
+func (r *ParkingSlotRepository) CreateParkingSlotsBulk(ctx context.Context, slots []*domain.ParkingSlot) error {
+	rows := make([]models.ParkingSlot, len(slots))
+	for i, s := range slots {
+		rows[i] = models.ParkingSlot{
+			ParkingZoneID: s.ParkingZoneID,
+			ParkingTypeID: s.ParkingTypeID,
+			SlotNumber:    s.SlotNumber,
+			IsCovered:     s.IsCovered,
+			Width:         s.Width,
+			Length:        s.Length,
+			Height:        s.Height,
+			HasCharger:    s.HasCharger,
+			IsActive:      true,
+		}
+	}
+	if err := r.db.Conn(ctx).Transaction(func(tx *gorm.DB) error {
+		return tx.CreateInBatches(rows, 100).Error
+	}); err != nil {
+		r.logger.Error().Err(err).Msg("Error creando cupos en lote")
+		return fmt.Errorf("error creando cupos: %w", err)
+	}
+	for i := range slots {
+		slots[i].ID = rows[i].ID
+		slots[i].IsActive = true
+	}
+	return nil
+}

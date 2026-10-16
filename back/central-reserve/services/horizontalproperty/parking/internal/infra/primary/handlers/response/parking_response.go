@@ -54,18 +54,21 @@ type ParkingSlotResponse struct {
 
 // ParkingSlotListResponse - Response de lista de espacios de parqueo
 type ParkingSlotListResponse struct {
-	ID              uint   `json:"id"`
-	ParkingZoneID   uint   `json:"parking_zone_id"`
-	ParkingZoneName string `json:"parking_zone_name"`
-	ParkingTypeID   uint   `json:"parking_type_id"`
-	ParkingTypeName string `json:"parking_type_name"`
-	SlotNumber      string `json:"slot_number"`
-	IsCovered       bool   `json:"is_covered"`
-	HasCharger      bool   `json:"has_charger"`
-	IsActive        bool   `json:"is_active"`
-	IsAvailable     bool   `json:"is_available"`
-	IsAssigned      bool   `json:"is_assigned"`
-	IsOccupied      bool   `json:"is_occupied"`
+	ID              uint     `json:"id"`
+	ParkingZoneID   uint     `json:"parking_zone_id"`
+	ParkingZoneName string   `json:"parking_zone_name"`
+	ParkingTypeID   uint     `json:"parking_type_id"`
+	ParkingTypeName string   `json:"parking_type_name"`
+	SlotNumber      string   `json:"slot_number"`
+	IsCovered       bool     `json:"is_covered"`
+	HasCharger      bool     `json:"has_charger"`
+	Width           *float64 `json:"width"`
+	Length          *float64 `json:"length"`
+	Height          *float64 `json:"height"`
+	IsActive        bool     `json:"is_active"`
+	IsAvailable     bool     `json:"is_available"`
+	IsAssigned      bool     `json:"is_assigned"`
+	IsOccupied      bool     `json:"is_occupied"`
 }
 
 // PaginatedParkingSlotsResponse - Response paginado de espacios de parqueo
@@ -102,13 +105,17 @@ type ParkingAssignmentListResponse struct {
 	ID                 uint       `json:"id"`
 	ParkingSlotID      uint       `json:"parking_slot_id"`
 	ParkingSlotNumber  string     `json:"parking_slot_number"`
+	ParkingZoneName    string     `json:"parking_zone_name"`
 	PropertyUnitID     *uint      `json:"property_unit_id"`
 	PropertyUnitNumber string     `json:"property_unit_number"`
+	PropertyUnitBlock  string     `json:"property_unit_block"`
 	ResidentID         *uint      `json:"resident_id"`
 	ResidentName       string     `json:"resident_name"`
 	VehiclePlate       string     `json:"vehicle_plate"`
 	VehicleBrand       string     `json:"vehicle_brand"`
 	VehicleModel       string     `json:"vehicle_model"`
+	VehicleColor       string     `json:"vehicle_color"`
+	Notes              string     `json:"notes"`
 	StartDate          time.Time  `json:"start_date"`
 	EndDate            *time.Time `json:"end_date"`
 	IsActive           bool       `json:"is_active"`
@@ -212,4 +219,18 @@ type ParkingTypeResponse struct {
 type ParkingTypesResponse struct {
 	Success bool                  `json:"success"`
 	Data    []ParkingTypeResponse `json:"data"`
+}
+
+// ParkingAssignmentSummaryResponse - Conteos para los chips de asignaciones
+type ParkingAssignmentSummaryResponse struct {
+	Active           int64 `json:"active"`
+	Expiring30       int64 `json:"expiring_30"`
+	Expired          int64 `json:"expired"`
+	UnitsWithoutSlot int64 `json:"units_without_slot"`
+}
+
+// BulkParkingSlotsResponse - Cupos creados en lote
+type BulkParkingSlotsResponse struct {
+	Created int                   `json:"created"`
+	Slots   []ParkingSlotResponse `json:"slots"`
 }

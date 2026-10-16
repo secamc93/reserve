@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
+	"time"
 
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/secondary/repository/mappers"
@@ -107,8 +109,9 @@ func (r *ParkingAssignmentRepository) ListParkingAssignments(ctx context.Context
 	var total int64
 
 	query := r.db.Conn(ctx).Model(&models.ParkingAssignment{}).
-		Select("parking_assignments.*, ps.slot_number as parking_slot_number, pu.number as property_unit_number, r.name as resident_name").
+		Select("parking_assignments.*, ps.slot_number as parking_slot_number, pz.name as parking_zone_name, pu.number as property_unit_number, pu.block as property_unit_block, r.name as resident_name").
 		Joins("LEFT JOIN horizontal_property.parking_slots ps ON ps.id = parking_assignments.parking_slot_id").
+		Joins("LEFT JOIN horizontal_property.parking_zones pz ON pz.id = ps.parking_zone_id").
 		Joins("LEFT JOIN horizontal_property.property_units pu ON pu.id = parking_assignments.property_unit_id").
 		Joins("LEFT JOIN horizontal_property.residents r ON r.id = parking_assignments.resident_id").
 		Where("parking_assignments.business_id = ?", filters.BusinessID)
@@ -124,6 +127,11 @@ func (r *ParkingAssignmentRepository) ListParkingAssignments(ctx context.Context
 	}
 	if filters.IsActive != nil {
 		query = query.Where("parking_assignments.is_active = ?", *filters.IsActive)
+	}
+	query = applyAssignmentStatus(query, filters.Status, filters.Today)
+	if q := strings.TrimSpace(filters.Search); q != "" {
+		like := "%" + strings.ToLower(q) + "%"
+		query = query.Where("(LOWER(parking_assignments.vehicle_plate) LIKE ? OR LOWER(pu.number) LIKE ? OR LOWER(r.name) LIKE ? OR LOWER(ps.slot_number) LIKE ?)", like, like, like, like)
 	}
 
 	// Contar total
@@ -145,12 +153,14 @@ func (r *ParkingAssignmentRepository) ListParkingAssignments(ctx context.Context
 	type row struct {
 		models.ParkingAssignment
 		ParkingSlotNumber  string
+		ParkingZoneName    string
 		PropertyUnitNumber string
+		PropertyUnitBlock  string
 		ResidentName       string
 	}
 
 	var rows []row
-	if err := query.Offset(offset).Limit(pageSize).Find(&rows).Error; err != nil {
+	if err := query.Order("ps.slot_number ASC, parking_assignments.id DESC").Offset(offset).Limit(pageSize).Find(&rows).Error; err != nil {
 		r.logger.Error().Err(err).Msg("Error listando asignaciones")
 		return nil, fmt.Errorf("error listando asignaciones: %w", err)
 	}
@@ -161,13 +171,17 @@ func (r *ParkingAssignmentRepository) ListParkingAssignments(ctx context.Context
 			ID:                 row.ID,
 			ParkingSlotID:      row.ParkingSlotID,
 			ParkingSlotNumber:  row.ParkingSlotNumber,
+			ParkingZoneName:    row.ParkingZoneName,
 			PropertyUnitID:     row.PropertyUnitID,
 			PropertyUnitNumber: row.PropertyUnitNumber,
+			PropertyUnitBlock:  row.PropertyUnitBlock,
 			ResidentID:         row.ResidentID,
 			ResidentName:       row.ResidentName,
 			VehiclePlate:       row.VehiclePlate,
 			VehicleBrand:       row.VehicleBrand,
 			VehicleModel:       row.VehicleModel,
+			VehicleColor:       row.VehicleColor,
+			Notes:              row.Notes,
 			StartDate:          row.StartDate,
 			EndDate:            row.EndDate,
 			IsActive:           row.IsActive,
@@ -234,3 +248,49 @@ func (r *ParkingAssignmentRepository) GetAssignmentsByResidentID(ctx context.Con
 	return result, nil
 }
 
+// applyAssignmentStatus filtra por estado de vigencia respecto a `today` (solo asignaciones
+// activas; las liberadas son historial):
+//   - active: sin fecha de fin o que termina hoy o después.
+//   - expiring: termina entre hoy y dentro de 30 días.
+//   - expired: la fecha de fin ya pasó y no se liberó.
+func applyAssignmentStatus(query *gorm.DB, status string, today time.Time) *gorm.DB {
+	day := today.Format("2006-01-02")
+	in30 := today.AddDate(0, 0, 30).Format("2006-01-02")
+	switch status {
+	case domain.AssignmentStatusActive:
+		return query.Where("parking_assignments.is_active = TRUE AND (parking_assignments.end_date IS NULL OR parking_assignments.end_date::date >= ?)", day)
+	case domain.AssignmentStatusExpiring:
+		return query.Where("parking_assignments.is_active = TRUE AND parking_assignments.end_date::date BETWEEN ? AND ?", day, in30)
+	case domain.AssignmentStatusExpired:
+		return query.Where("parking_assignments.is_active = TRUE AND parking_assignments.end_date::date < ?", day)
+	}
+	return query
+}
+
+// GetAssignmentSummary cuenta asignaciones por estado y las unidades activas sin cupo.
+// Tabla consultada fuera del módulo: property_units (solo lectura).
+func (r *ParkingAssignmentRepository) GetAssignmentSummary(ctx context.Context, businessID uint, today time.Time) (*domain.ParkingAssignmentSummaryDTO, error) {
+	base := func() *gorm.DB {
+		return r.db.Conn(ctx).Model(&models.ParkingAssignment{}).Where("parking_assignments.business_id = ?", businessID)
+	}
+	out := &domain.ParkingAssignmentSummaryDTO{}
+	for _, c := range []struct {
+		status string
+		dst    *int64
+	}{
+		{domain.AssignmentStatusActive, &out.Active},
+		{domain.AssignmentStatusExpiring, &out.Expiring30},
+		{domain.AssignmentStatusExpired, &out.Expired},
+	} {
+		if err := applyAssignmentStatus(base(), c.status, today).Count(c.dst).Error; err != nil {
+			return nil, fmt.Errorf("error contando asignaciones (%s): %w", c.status, err)
+		}
+	}
+	if err := r.db.Conn(ctx).Model(&models.PropertyUnit{}).
+		Where("business_id = ? AND is_active = TRUE", businessID).
+		Where("NOT EXISTS (SELECT 1 FROM horizontal_property.parking_assignments pa WHERE pa.property_unit_id = property_units.id AND pa.is_active = TRUE AND pa.deleted_at IS NULL)").
+		Count(&out.UnitsWithoutSlot).Error; err != nil {
+		return nil, fmt.Errorf("error contando unidades sin cupo: %w", err)
+	}
+	return out, nil
+}

@@ -57,16 +57,88 @@ type ErrorResponse struct {
 
 // VisitListData - Datos de visita para lista
 type VisitListData struct {
-	ID                 uint       `json:"id"`
-	VisitorName        string     `json:"visitor_name"`
-	VisitorDNI         string     `json:"visitor_dni"`
-	PropertyUnitNumber string     `json:"property_unit_number"`
-	VisitTypeName      string     `json:"visit_type_name"`
-	VisitStatusName    string     `json:"visit_status_name"`
-	ScheduledDate      time.Time  `json:"scheduled_date"`
-	ActualEntryTime    *time.Time `json:"actual_entry_time"`
-	ActualExitTime     *time.Time `json:"actual_exit_time"`
-	CreatedAt          time.Time  `json:"created_at"`
+	ID                  uint       `json:"id"`
+	VisitorName         string     `json:"visitor_name"`
+	VisitorDNI          string     `json:"visitor_dni"`
+	VisitorPhone        string     `json:"visitor_phone"`
+	VisitorID           uint       `json:"visitor_id"`
+	PropertyUnitID      uint       `json:"property_unit_id"`
+	PropertyUnitNumber  string     `json:"property_unit_number"`
+	PropertyUnitBlock   string     `json:"property_unit_block"`
+	VisitTypeName       string     `json:"visit_type_name"`
+	VisitStatusName     string     `json:"visit_status_name"`
+	VisitStatusCode     string     `json:"visit_status_code"`
+	ScheduledDate       time.Time  `json:"scheduled_date"`
+	ScheduledStartTime  time.Time  `json:"scheduled_start_time"`
+	ScheduledEndTime    *time.Time `json:"scheduled_end_time"`
+	ActualEntryTime     *time.Time `json:"actual_entry_time"`
+	ActualExitTime      *time.Time `json:"actual_exit_time"`
+	Purpose             string     `json:"purpose"`
+	NumberOfVisitors    int        `json:"number_of_visitors"`
+	CreatedAt           time.Time  `json:"created_at"`
+	VisitorVehiclePlate string     `json:"visitor_vehicle_plate"`
+	AuthorizationCode   string     `json:"authorization_code"`
+	EntryGate           string     `json:"entry_gate"`
+	ResidentName        string     `json:"resident_name"`
+	AuthorizedByName    string     `json:"authorized_by_name"`
+	StayLimitMinutes    *int       `json:"stay_limit_minutes"`
+	ExceedsTime         bool       `json:"exceeds_time"`
+}
+
+// VisitsSummaryData - Conteos de visitas de un día por estado de portería
+type VisitsSummaryData struct {
+	Date      string `json:"date"`
+	Inside    int64  `json:"inside"`
+	Expected  int64  `json:"expected"`
+	Left      int64  `json:"left"`
+	Cancelled int64  `json:"cancelled"`
+	Total     int64  `json:"total"`
+	InsideNow int64  `json:"inside_now"`
+	// Tarjetas del día
+	Exceeded       int64      `json:"exceeded"`
+	NextExpectedAt *time.Time `json:"next_expected_at"`
+	NextUnitNumber string     `json:"next_unit_number"`
+	NextUnitBlock  string     `json:"next_unit_block"`
+	AvgStayMinutes *int       `json:"avg_stay_minutes"`
+}
+
+// VisitAssetData - Activo declarado de una visita
+type VisitAssetData struct {
+	ID               uint       `json:"id"`
+	AssetName        string     `json:"asset_name"`
+	AssetDescription string     `json:"asset_description"`
+	AssetSerial      string     `json:"asset_serial"`
+	AssetBrand       string     `json:"asset_brand"`
+	EntryRegistered  bool       `json:"entry_registered"`
+	ExitRegistered   bool       `json:"exit_registered"`
+	ExitRegisteredAt *time.Time `json:"exit_registered_at"`
+}
+
+// VisitAssetsResponse - Activos de una visita
+type VisitAssetsResponse struct {
+	Success bool             `json:"success"`
+	Data    []VisitAssetData `json:"data"`
+}
+
+// VisitorVehicleData - Vehículo de un visitante
+type VisitorVehicleData struct {
+	ID        uint   `json:"id"`
+	VisitorID *uint  `json:"visitor_id"`
+	Plate     string `json:"plate"`
+	Brand     string `json:"brand"`
+	Color     string `json:"color"`
+}
+
+// VisitorVehicleResponse - Respuesta al registrar un vehículo
+type VisitorVehicleResponse struct {
+	Success bool               `json:"success"`
+	Data    VisitorVehicleData `json:"data"`
+}
+
+// VisitsSummaryResponse - Respuesta del resumen de visitas
+type VisitsSummaryResponse struct {
+	Success bool              `json:"success"`
+	Data    VisitsSummaryData `json:"data"`
 }
 
 // PaginatedVisitsResponse - Respuesta paginada de visitas

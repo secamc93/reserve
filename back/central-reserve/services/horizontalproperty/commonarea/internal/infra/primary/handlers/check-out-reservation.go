@@ -28,6 +28,10 @@ func (h *CommonAreaHandler) CheckOutReservation(c *gin.Context) {
 		return
 	}
 
+	if _, ok := h.loadReservationInScope(c, uint(id)); !ok {
+		return
+	}
+
 	userID, exists := middleware.GetUserID(c)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, response.ErrorResponse{

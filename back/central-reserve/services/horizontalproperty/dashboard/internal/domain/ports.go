@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // DashboardRepository define los métodos para obtener datos del dashboard
 type DashboardRepository interface {
@@ -18,6 +21,10 @@ type DashboardRepository interface {
 
 	// GetBusinessSummary obtiene resumen de un business específico
 	GetBusinessSummary(ctx context.Context, businessID uint) (*BusinessSummary, error)
+
+	// GetTodaySummary obtiene lo que pasa hoy en la propiedad (visitas dentro, paquetes por
+	// entregar, reservas del día, votación activa y ocupación). today es la fecha de la propiedad.
+	GetTodaySummary(ctx context.Context, businessID uint, today time.Time) (*TodaySummary, error)
 }
 
 // DashboardUseCase define los casos de uso del dashboard
@@ -27,6 +34,9 @@ type DashboardUseCase interface {
 
 	// GetDashboardByBusiness obtiene el dashboard de un business específico (solo super admin)
 	GetDashboardByBusiness(ctx context.Context, businessID uint) (*DashboardResponseDTO, error)
+
+	// GetToday obtiene el resumen de hoy de una propiedad.
+	GetToday(ctx context.Context, businessID uint, today time.Time) (*TodaySummary, error)
 }
 
 

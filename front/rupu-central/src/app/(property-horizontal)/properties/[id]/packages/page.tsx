@@ -8,20 +8,9 @@ export default function PackagesPage() {
   const businessId = parseInt(params.id as string);
 
   if (isNaN(businessId)) {
-    return (
-      <div className="p-3 md:p-6">
-        <div className="text-red-600">ID de propiedad inválido</div>
-      </div>
-    );
+    return <div className="p-6 text-[#c8382d]">ID de propiedad inválido</div>;
   }
 
-  return (
-    <div>
-      {/* Navegación */}
-
-      <div className="p-3 md:p-6">
-        <PackagesTable businessId={businessId} />
-      </div>
-    </div>
-  );
+  // La barra superior (miga de pan "Propiedad / Paquetería") la pone el layout
+  return <PackagesTable businessId={businessId} />;
 }

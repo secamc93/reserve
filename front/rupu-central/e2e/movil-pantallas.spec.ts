@@ -107,8 +107,8 @@ for (const [device, profile] of PHONES) {
       });
 
       const screens: [string, string, RegExp][] = [
-        ["unidades", "units", /^Agregar$/],
-        ["residentes", "residents", /Agregar Residente/],
+        ["unidades", "units", /Nueva unidad/],
+        ["residentes", "residents", /Nuevo residente/],
         ["paqueteria", "packages", /Recibir Paquete/],
         ["visitas", "visits", /Nueva Visita/],
       ];

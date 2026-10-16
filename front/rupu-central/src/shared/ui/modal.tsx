@@ -31,7 +31,6 @@ const sizeClasses = {
 };
 
 export function Modal({ isOpen, onClose, title, children, size = 'md', glass = false, className = '' }: ModalProps) {
-  console.log('🔧 Modal - isOpen:', isOpen, 'title:', title);
   
   // Cerrar con ESC
   useEffect(() => {

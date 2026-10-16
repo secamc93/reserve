@@ -1,2 +1,2 @@
-export * from './common-areas-table';
-export * from './reservations-table';
+export * from './common-areas-screen';
+export * from './reservations-screen';

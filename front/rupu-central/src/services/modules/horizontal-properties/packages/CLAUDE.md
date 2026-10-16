@@ -37,40 +37,36 @@ packages/
 │   │   ├── get-package-by-id.action.ts
 │   │   └── index.ts
 │   └── index.ts
-├── ui/                           # Componentes React
-│   ├── packages-table.tsx        # Tabla principal con filtros
-│   ├── receive-package-modal.tsx # Modal para recibir
-│   ├── deliver-package-modal.tsx # Modal para entregar
-│   ├── package-detail-modal.tsx  # Modal de detalles
+├── ui/                           # Componentes React ("PH - Visitas y Paquetes", P1–P4)
+│   ├── packages-table.tsx        # P1/P4: lista (por entregar primero), chips, buscador, tarjetas móviles
+│   ├── receive-package-modal.tsx # P2: recibir (modal 560 px)
+│   ├── package-detail-panel.tsx  # P3: detalle + entregar / devolver (panel lateral 420 px)
+│   ├── package-state.ts          # Lógica pura: grupo, antigüedad (+3 días), acciones, línea de tiempo
+│   ├── packages-filters.ts       # Pestañas y búsqueda en la URL (?tab=&q=)
+│   ├── unit-picker.tsx           # Buscador de unidad ("Casa 126")
+│   ├── side-panel.tsx            # Panel lateral + línea de tiempo (candidato a shared/ui/ds)
 │   └── index.ts
 └── index.ts
 ```
 
-## Componentes UI
+## Componentes UI ("PH - Visitas y Paquetes", P1–P4)
 
-### PackagesTable
-Tabla principal de paquetes con:
-- Paginacion
-- Filtros por estado, fecha
-- Acciones: ver detalles, entregar, eliminar
+### PackagesTable (P1 / P4)
+- Pestañas Por entregar (por defecto, del más antiguo al más reciente) · Entregados hoy · Todos,
+  con conteos (`GET /packages/summary`); filtros y paginación en la URL (`?tab=&q=`).
+- Columnas unidad, residente (+ descripción), transportadora, guía, días en portería ("hoy",
+  "1 día", "6 días": terracota desde 5, gris oscuro desde 2) y "Entregar" + ⋮ (detalle, devolver).
+- "Recordar a residentes" deshabilitado: no hay servicio de notificaciones.
+- Teléfono: buscador grande por unidad, tarjetas con "Entregar" y "+ Recibir paquete" fijo.
 
-### ReceivePackageModal
-Formulario para registrar nuevo paquete:
-- Unidad destino
-- Transportadora
-- Numero de tracking
-- Descripcion/notas
+### ReceivePackageModal (P2)
+Un paso: unidad y "Para", transportadora en chips (Otra → campo), guía opcional, foto
+(deshabilitada hasta que haya subida de archivos), descripción y aviso al residente.
 
-### DeliverPackageModal
-Confirmacion de entrega:
-- Notas opcionales
-- Registro de usuario
-
-### PackageDetailModal
-Vista detallada del paquete:
-- Informacion de envio
-- Destino
-- Timeline de eventos
+### PackageDetailPanel (P3)
+Panel de 460 px: unidad en grande, guía y días en portería, descripción y quién recibió,
+"Entregar a" (residentes de la unidad u otra persona: queda en la nota de la entrega), nota,
+"Confirmar entrega · HH:MM" y "Devolver". "Notificado" no se entrega directo (regla del back).
 
 ## Flujo de Datos
 

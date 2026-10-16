@@ -5,7 +5,6 @@ import (
 	"central_reserve/services/auth/business"
 	"central_reserve/services/auth/dashboard"
 	"central_reserve/services/auth/login"
-	"central_reserve/services/auth/logs"
 	"central_reserve/services/auth/permisions"
 	"central_reserve/services/auth/resources"
 	"central_reserve/services/auth/roles"
@@ -24,7 +23,6 @@ func New(db db.IDatabase, env env.IConfig, logger log.ILogger, s3 storage.IS3Ser
 	actions.New(db, logger, v1Group)
 	business.New(db, env, logger, s3, v1Group)
 	dashboard.New(db, logger, v1Group)
-	logs.New(env, logger, v1Group)
 	login.New(db, env, logger, jwtService, v1Group)
 	permisions.New(db, logger, v1Group)
 	resources.New(db, logger, v1Group)

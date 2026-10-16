@@ -7,34 +7,35 @@ import (
 	"central_reserve/shared/log"
 )
 
-// StatusCancelled ID del estado "cancelled" en la base de datos
-const StatusCancelled uint = 5
+// visitStatusCancelled es el código del estado de una visita cancelada. Se cambia por código
+// (ChangeVisitStatus): los ids de visit_statuses cambian entre bases.
+const visitStatusCancelled = "cancelled"
 
-// DeleteVisit elimina una visita (soft delete - cambia estado a cancelled)
+// DeleteVisit cancela una visita (no la borra: cambia su estado a cancelled).
+// No se puede cancelar una visita con el visitante dentro (hay que registrar la salida) ni
+// una visita en estado final.
 func (uc *visitUseCase) DeleteVisit(ctx context.Context, visitID uint) error {
 	ctx = log.WithFunctionCtx(ctx, "DeleteVisit")
 
-	// Obtener la visita existente
-	visit, err := uc.visitRepo.GetVisitByID(ctx, visitID)
+	visit, _, status, err := uc.visitRepo.GetVisitWithRelations(ctx, visitID)
 	if err != nil {
-		uc.logger.Error(ctx).Err(err).Uint("visit_id", visitID).Msg("Error obteniendo visita para eliminar")
+		uc.logger.Error(ctx).Err(err).Uint("visit_id", visitID).Msg("Error obteniendo visita para cancelar")
 		return err
 	}
-
-	if visit == nil {
+	if visit == nil || status == nil {
 		return domain.ErrVisitNotFound
 	}
 
-	// Validar que la visita no esté en progreso (entrada registrada pero no salida)
+	// Visitante dentro: primero se registra la salida
 	if visit.ActualEntryTime != nil && visit.ActualExitTime == nil {
 		return domain.ErrVisitNotInProgress
 	}
 
-	// Cambiar estado a cancelled (soft delete)
-	visit.VisitStatusID = StatusCancelled
+	if err := domain.NewVisitStateMachine().ValidateTransition(status, visitStatusCancelled); err != nil {
+		return err
+	}
 
-	err = uc.visitRepo.UpdateVisit(ctx, visit)
-	if err != nil {
+	if err := uc.visitRepo.ChangeVisitStatus(ctx, visitID, visitStatusCancelled); err != nil {
 		uc.logger.Error(ctx).Err(err).Uint("visit_id", visitID).Msg("Error cancelando visita")
 		return err
 	}

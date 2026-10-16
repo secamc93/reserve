@@ -63,6 +63,7 @@ type CommonAreaFiltersDTO struct {
 	BusinessID       uint
 	CommonAreaTypeID *uint
 	IsActive         *bool
+	Search           string // Coincidencia parcial por nombre o ubicación
 	Page             int
 	PageSize         int
 }
@@ -74,6 +75,7 @@ type ReservationFiltersDTO struct {
 	PropertyUnitID      *uint
 	ResidentID          *uint
 	ReservationStatusID *uint
+	StatusCodes         []string // Códigos de estado (pending, approved...)
 	StartDate           *time.Time
 	EndDate             *time.Time
 	Page                int
@@ -91,13 +93,25 @@ type PaginatedCommonAreasDTO struct {
 
 // CommonAreaListDTO - DTO para lista de zonas comunes
 type CommonAreaListDTO struct {
-	ID               uint
-	Name             string
-	TypeName         string
-	Location         string
-	MaxCapacity      int
-	IsActive         bool
-	RequiresApproval bool
+	ID                   uint
+	Name                 string
+	TypeName             string
+	TypeCode             string
+	Description          string
+	Location             string
+	MaxCapacity          int
+	AreaSqm              *float64
+	HasEquipment         bool
+	EquipmentDescription string
+	HourlyRate           *float64
+	RequiresDeposit      bool
+	DepositAmount        *float64
+	AllowsRecurring      bool
+	IsActive             bool
+	RequiresApproval     bool
+	ImageURLs            string
+	Schedules            []CommonAreaSchedule    // Horario semanal activo
+	Restrictions         []CommonAreaRestriction // Bloqueos activos que terminan hoy o después
 }
 
 // PaginatedReservationsDTO - Resultado paginado de reservas
@@ -112,13 +126,77 @@ type PaginatedReservationsDTO struct {
 // ReservationListDTO - DTO para lista de reservas
 type ReservationListDTO struct {
 	ID                 uint
+	CommonAreaID       uint
 	CommonAreaName     string
+	PropertyUnitID     uint
 	PropertyUnitNumber string
+	PropertyUnitBlock  string
 	ResidentName       string
+	StatusCode         string
 	StatusName         string
 	ReservationDate    time.Time
 	StartTime          string
 	EndTime            string
 	NumberOfGuests     int
+	Purpose            string
+	RequiresApproval   bool
+	TotalAmount        *float64
+	DepositAmount      *float64
+	DepositPaid        bool
+	FullPaymentPaid    bool
+	CheckedInAt        *time.Time
 	CreatedAt          time.Time
+}
+
+// UpdateCommonAreaDTO - DTO para editar una zona común
+type UpdateCommonAreaDTO struct {
+	ID                   uint
+	CommonAreaTypeID     uint
+	Name                 string
+	Description          string
+	Location             string
+	MaxCapacity          int
+	AreaSqm              *float64
+	HasEquipment         bool
+	EquipmentDescription string
+	HourlyRate           *float64
+	RequiresApproval     bool
+	RequiresDeposit      bool
+	DepositAmount        *float64
+	AllowsRecurring      bool
+	IsActive             bool
+	ImageURLs            string
+}
+
+// ScheduleInputDTO - Horario de un día de la semana (0=domingo … 6=sábado)
+type ScheduleInputDTO struct {
+	DayOfWeek int
+	StartTime string // HH:MM
+	EndTime   string // HH:MM
+	IsActive  bool
+}
+
+// CreateRestrictionDTO - DTO para bloquear una zona (mantenimiento, evento…)
+type CreateRestrictionDTO struct {
+	CommonAreaID    uint
+	RestrictionType string
+	StartDate       time.Time
+	EndDate         time.Time
+	StartTime       *string
+	EndTime         *string
+	Reason          string
+	CreatedByUserID uint
+}
+
+// UpdatePaymentsDTO - Marcas de pago de una reserva (nil = sin cambio)
+type UpdatePaymentsDTO struct {
+	DepositPaid     *bool
+	FullPaymentPaid *bool
+}
+
+// UnitLookupDTO - Unidad para el buscador de reservas ("Casa 126")
+type UnitLookupDTO struct {
+	ID     uint
+	Number string
+	Block  string
 }

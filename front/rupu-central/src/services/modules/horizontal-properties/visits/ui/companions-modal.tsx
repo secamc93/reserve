@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Modal, Button, Input, Alert, Badge, Spinner } from '@shared/ui';
+import { VtDialog, VtNotice, VtBadge, VtIcon, vtBtn, vtInput, vtLabel, DS, dsMono } from '@/shared/ui/ds';
 import { getCompanionsAction, createCompanionAction, deleteCompanionAction } from '../infrastructure/actions';
 import { VisitCompanion, CreateVisitCompanionDTO } from '../domain';
-import { TokenStorage } from '@shared/config';
-import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
-import { PlusIcon, TrashIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { useBusinessToken } from './use-business-token';
 
 interface CompanionsModalProps {
   isOpen: boolean;
@@ -48,30 +46,7 @@ export function CompanionsModal({
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<CompanionForm>({ ...emptyCompanion });
 
-  const getBusinessToken = useCallback(async (): Promise<string> => {
-    let businessToken = TokenStorage.getBusinessToken();
-    if (businessToken) return businessToken;
-
-    const sessionToken = TokenStorage.getSessionToken();
-    if (!sessionToken) throw new Error('No session token available');
-
-    const user = TokenStorage.getUser();
-    const isSuperAdmin = user?.is_super_admin;
-    const business_id = isSuperAdmin ? 0 : businessId;
-
-    const result = await generateBusinessTokenAction({
-      business_id,
-      session_token: sessionToken,
-    });
-
-    if (!result.success || !result.data) {
-      throw new Error(result.error || 'No se pudo generar business token');
-    }
-
-    TokenStorage.setBusinessToken(result.data.token);
-    TokenStorage.setActiveBusiness(business_id);
-    return result.data.token;
-  }, [businessId]);
+  const getBusinessToken = useBusinessToken(businessId);
 
   const loadCompanions = useCallback(async () => {
     setLoading(true);
@@ -136,7 +111,7 @@ export function CompanionsModal({
   };
 
   const handleDeleteCompanion = async (companionId: number) => {
-    if (!confirm('¿Está seguro de eliminar este acompañante?')) return;
+    if (!window.confirm('¿Quitar este acompañante?')) return;
 
     setSaving(true);
     setError(null);
@@ -165,106 +140,84 @@ export function CompanionsModal({
     onClose();
   };
 
-  return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Acompañantes de la Visita" size="lg">
-      <div className="space-y-4">
-        {error && (
-          <Alert type="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+  const field = (key: keyof Omit<CompanionForm, 'isMinor'>, label: string, required = false) => (
+    <div>
+      <label htmlFor={`companion-${key}`} className={vtLabel}>
+        {label}
+        {required && <span aria-hidden="true"> *</span>}
+      </label>
+      <input id={`companion-${key}`} className={vtInput} value={formData[key]} onChange={(e) => setFormData({ ...formData, [key]: e.target.value })} />
+    </div>
+  );
 
+  return (
+    <VtDialog
+      open={isOpen}
+      onClose={handleClose}
+      busy={saving}
+      layer="over"
+      eyebrow="Visita"
+      title="Acompañantes"
+      subtitle="Quienes entran con el visitante"
+      footer={
+        <button type="button" className={vtBtn.secondary} onClick={handleClose} disabled={saving}>
+          Cerrar
+        </button>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        {error && <VtNotice tone="error">{error}</VtNotice>}
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Spinner size="lg" />
-          </div>
+          <div className="py-6 text-center text-[13px] text-[#8a8580]">Cargando…</div>
         ) : (
           <>
-            {/* Lista de acompañantes */}
             {companions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <UserGroupIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                <p>No hay acompañantes registrados</p>
-              </div>
+              <div className="py-4 text-center text-[13px] text-[#8a8580]">Sin acompañantes registrados</div>
             ) : (
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {companions.map((companion) => (
-                  <div
-                    key={companion.id}
-                    className="flex items-center justify-between border border-gray-200 rounded-lg p-3"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{companion.companionName}</span>
-                        {companion.isMinor && (
-                          <Badge type="warning">Menor</Badge>
-                        )}
+              <ul className="m-0 p-0 list-none flex flex-col divide-y divide-[#efedea] border border-[#e4e2dd] rounded-lg max-h-64 overflow-y-auto">
+                {companions.map((c) => (
+                  <li key={c.id} className="flex items-center gap-3 px-3.5 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 text-[13px] font-semibold">
+                        {c.companionName}
+                        {c.isMinor && <VtBadge label="Menor" bg={DS.missingBg} fg={DS.missingFg} size="xs" />}
                       </div>
-                      <div className="text-sm text-gray-500">
-                        DNI: {companion.companionDni}
-                        {companion.companionPhone && ` | Tel: ${companion.companionPhone}`}
-                        {companion.relationship && ` | ${companion.relationship}`}
+                      <div className={`${dsMono} text-[11px] text-[#8a8580]`}>
+                        {c.companionDni}
+                        {c.companionPhone && ` · ${c.companionPhone}`}
+                        {c.relationship && ` · ${c.relationship}`}
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteCompanion(companion.id)}
+                    <button
+                      type="button"
+                      className={vtBtn.icon}
+                      onClick={() => handleDeleteCompanion(c.id)}
                       disabled={saving}
-                      title="Eliminar acompañante"
+                      aria-label={`Quitar a ${c.companionName}`}
                     >
-                      <TrashIcon className="h-4 w-4 text-red-600" />
-                    </Button>
-                  </div>
+                      <VtIcon name="trash" size={14} />
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
 
-            {/* Formulario para agregar */}
             {showForm ? (
-              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 space-y-3">
-                <h4 className="font-medium text-blue-800">Nuevo Acompañante</h4>
+              <div className="rounded-lg border border-[#e4e2dd] p-3.5 flex flex-col gap-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input
-                    label="Nombre completo *"
-                    value={formData.companionName}
-                    onChange={(e) => setFormData({ ...formData, companionName: e.target.value })}
-                    placeholder="Nombre del acompañante"
-                  />
-                  <Input
-                    label="DNI / Documento *"
-                    value={formData.companionDni}
-                    onChange={(e) => setFormData({ ...formData, companionDni: e.target.value })}
-                    placeholder="Número de documento"
-                  />
-                  <Input
-                    label="Teléfono"
-                    value={formData.companionPhone}
-                    onChange={(e) => setFormData({ ...formData, companionPhone: e.target.value })}
-                    placeholder="Teléfono de contacto"
-                  />
-                  <Input
-                    label="Relación"
-                    value={formData.relationship}
-                    onChange={(e) => setFormData({ ...formData, relationship: e.target.value })}
-                    placeholder="Ej: Familiar, Asistente"
-                  />
+                  {field('companionName', 'Nombre completo', true)}
+                  {field('companionDni', 'Documento', true)}
+                  {field('companionPhone', 'Teléfono')}
+                  {field('relationship', 'Relación')}
                 </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isMinor"
-                    checked={formData.isMinor}
-                    onChange={(e) => setFormData({ ...formData, isMinor: e.target.checked })}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <label htmlFor="isMinor" className="text-sm text-gray-700">
-                    Es menor de edad
-                  </label>
-                </div>
-                <div className="flex flex-col-reverse md:flex-row md:justify-end gap-2 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
-                  <Button
-                    variant="outline"
+                <label className="flex items-center gap-2 text-[13px]">
+                  <input type="checkbox" checked={formData.isMinor} onChange={(e) => setFormData({ ...formData, isMinor: e.target.checked })} className="h-4 w-4 accent-[#1a1a1a]" />
+                  Es menor de edad
+                </label>
+                <div className="flex justify-end gap-2 max-md:[&>*]:flex-1">
+                  <button
+                    type="button"
+                    className={vtBtn.secondary}
                     onClick={() => {
                       setShowForm(false);
                       setFormData({ ...emptyCompanion });
@@ -272,27 +225,20 @@ export function CompanionsModal({
                     disabled={saving}
                   >
                     Cancelar
-                  </Button>
-                  <Button onClick={handleAddCompanion} disabled={saving}>
-                    {saving ? 'Guardando...' : 'Agregar'}
-                  </Button>
+                  </button>
+                  <button type="button" className={vtBtn.primary} onClick={handleAddCompanion} disabled={saving}>
+                    {saving ? 'Guardando…' : 'Agregar'}
+                  </button>
                 </div>
               </div>
             ) : (
-              <Button variant="outline" onClick={() => setShowForm(true)} className="w-full">
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Agregar Acompañante
-              </Button>
+              <button type="button" className={vtBtn.secondary} onClick={() => setShowForm(true)}>
+                + Agregar acompañante
+              </button>
             )}
           </>
         )}
-
-        <div className="flex justify-end pt-4 border-t">
-          <Button variant="outline" onClick={handleClose}>
-            Cerrar
-          </Button>
-        </div>
       </div>
-    </Modal>
+    </VtDialog>
   );
 }

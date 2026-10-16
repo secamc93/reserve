@@ -3,7 +3,7 @@
  * Define los métodos para gestionar residentes
  */
 
-import { Resident, ResidentsPaginated, CreateResidentDTO, UpdateResidentDTO, BulkUpdateResidentDTO } from '../entities/';
+import { Resident, ResidentOverview, ResidentsPaginated, ResidentsSummary, CreateResidentDTO, UpdateResidentDTO, BulkUpdateResidentDTO } from '../entities/';
 
 export interface GetResidentsParams {
   businessId: number;
@@ -17,6 +17,12 @@ export interface GetResidentsParams {
   isActive?: boolean;
   isMainResident?: boolean;
   dni?: string; // Filtro por DNI parcial
+  /** Búsqueda general: nombre, documento o número de unidad. */
+  query?: string;
+  /** Bloque/torre de la unidad. */
+  block?: string;
+  /** true: solo residentes sin correo. */
+  withoutEmail?: boolean;
 }
 
 export interface GetResidentByIdParams {
@@ -65,6 +71,11 @@ export interface BulkUpdateResidentsResponse {
   };
 }
 
+export interface GetResidentsSummaryParams {
+  businessId: number;
+  token: string;
+}
+
 export interface IResidentsRepository {
   getResidents(params: GetResidentsParams): Promise<ResidentsPaginated>;
   getResidentById(params: GetResidentByIdParams): Promise<Resident>;
@@ -72,5 +83,7 @@ export interface IResidentsRepository {
   updateResident(params: UpdateResidentParams): Promise<Resident>;
   deleteResident(params: DeleteResidentParams): Promise<void>;
   bulkUpdateResidents(params: BulkUpdateResidentsParams): Promise<BulkUpdateResidentsResponse>;
+  getResidentsSummary(params: GetResidentsSummaryParams): Promise<ResidentsSummary>;
+  getResidentOverview(params: GetResidentByIdParams): Promise<ResidentOverview>;
 }
 

@@ -39,6 +39,13 @@ func (r *CommonAreaScheduleRepository) CreateSchedule(ctx context.Context, sched
 		r.logger.Error().Err(err).Msg("Error creando horario")
 		return nil, fmt.Errorf("error creando horario: %w", err)
 	}
+	// is_active tiene default:true en el modelo: GORM omite el false en Create.
+	if !schedule.IsActive {
+		if err := r.db.Conn(ctx).Model(model).Update("is_active", false).Error; err != nil {
+			return nil, fmt.Errorf("error creando horario: %w", err)
+		}
+		model.IsActive = false
+	}
 
 	return mappers.ScheduleToDomain(model), nil
 }
@@ -48,6 +55,24 @@ func (r *CommonAreaScheduleRepository) GetSchedulesByCommonAreaID(ctx context.Co
 	var schedules []models.CommonAreaSchedule
 	if err := r.db.Conn(ctx).
 		Where("common_area_id = ? AND is_active = ?", commonAreaID, true).
+		Order("day_of_week ASC").
+		Find(&schedules).Error; err != nil {
+		return nil, fmt.Errorf("error obteniendo horarios: %w", err)
+	}
+
+	result := make([]*domain.CommonAreaSchedule, len(schedules))
+	for i, s := range schedules {
+		result[i] = mappers.ScheduleToDomain(&s)
+	}
+
+	return result, nil
+}
+
+// GetAllSchedulesByCommonAreaID obtiene los horarios de la zona, activos e inactivos
+func (r *CommonAreaScheduleRepository) GetAllSchedulesByCommonAreaID(ctx context.Context, commonAreaID uint) ([]*domain.CommonAreaSchedule, error) {
+	var schedules []models.CommonAreaSchedule
+	if err := r.db.Conn(ctx).
+		Where("common_area_id = ?", commonAreaID).
 		Order("day_of_week ASC").
 		Find(&schedules).Error; err != nil {
 		return nil, fmt.Errorf("error obteniendo horarios: %w", err)

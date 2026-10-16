@@ -12,4 +12,5 @@ export * from './get-visit-types.use-case';
 export * from './get-visit-statuses.use-case';
 export * from './get-companions.use-case';
 export * from './create-companion.use-case';
-export * from './delete-companion.use-case';
+export * from './delete-companion.use-case';export * from './get-visits-summary.use-case';
+export * from './visit-extras.use-case';

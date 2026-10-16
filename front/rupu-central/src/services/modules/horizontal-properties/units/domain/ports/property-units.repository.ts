@@ -3,7 +3,7 @@
  * Define los métodos para gestionar unidades de propiedad
  */
 
-import { PropertyUnit, PropertyUnitsPaginated, CreatePropertyUnitDTO, UpdatePropertyUnitDTO } from '../entities';
+import { PropertyUnit, PropertyUnitsPaginated, PropertyUnitsSummary, CreatePropertyUnitDTO, UpdatePropertyUnitDTO } from '../entities';
 
 export interface GetPropertyUnitsParams {
   businessId: number;
@@ -15,6 +15,12 @@ export interface GetPropertyUnitsParams {
   floor?: number;
   block?: string;
   isActive?: boolean;
+  /** Número de unidad o nombre de un residente. */
+  query?: string;
+  /** true: solo unidades sin residentes. */
+  withoutResidents?: boolean;
+  /** Ordena primero por bloque (para agrupar las filas). */
+  groupByBlock?: boolean;
 }
 
 export interface GetPropertyUnitByIdParams {
@@ -42,11 +48,17 @@ export interface DeletePropertyUnitParams {
   token: string;
 }
 
+export interface GetPropertyUnitsSummaryParams {
+  businessId: number;
+  token: string;
+}
+
 export interface IPropertyUnitsRepository {
   getPropertyUnits(params: GetPropertyUnitsParams): Promise<PropertyUnitsPaginated>;
   getPropertyUnitById(params: GetPropertyUnitByIdParams): Promise<PropertyUnit>;
   createPropertyUnit(params: CreatePropertyUnitParams): Promise<PropertyUnit>;
   updatePropertyUnit(params: UpdatePropertyUnitParams): Promise<PropertyUnit>;
   deletePropertyUnit(params: DeletePropertyUnitParams): Promise<void>;
+  getPropertyUnitsSummary(params: GetPropertyUnitsSummaryParams): Promise<PropertyUnitsSummary>;
 }
 

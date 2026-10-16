@@ -55,6 +55,9 @@ type ResidentFiltersRequest struct {
 	ResidentTypeID     *uint  `form:"resident_type_id" example:"1"`
 	IsActive           *bool  `form:"is_active" example:"true"`
 	IsMainResident     *bool  `form:"is_main_resident" example:"true"`
+	Q                  string `form:"q" example:"126"`
+	PropertyUnitBlock  string `form:"property_unit_block" example:"Casa"`
+	WithoutEmail       *bool  `form:"without_email" example:"true"`
 	Page               int    `form:"page" example:"1"`
 	PageSize           int    `form:"page_size" example:"10"`
 }

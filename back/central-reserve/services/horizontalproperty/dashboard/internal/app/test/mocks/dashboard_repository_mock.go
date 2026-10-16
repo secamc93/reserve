@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"time"
 
 	"central_reserve/services/horizontalproperty/dashboard/internal/domain"
 )
@@ -13,6 +14,7 @@ type DashboardRepositoryMock struct {
 	GetAttendanceStatisticsFunc func(ctx context.Context, businessID uint) (*domain.AttendanceStatistics, error)
 	GetBusinessSummariesFunc    func(ctx context.Context, page, pageSize int) ([]domain.BusinessSummary, int64, error)
 	GetBusinessSummaryFunc      func(ctx context.Context, businessID uint) (*domain.BusinessSummary, error)
+	GetTodaySummaryFunc         func(ctx context.Context, businessID uint, today time.Time) (*domain.TodaySummary, error)
 }
 
 // GetDashboardSummary obtiene el resumen general del dashboard para un business
@@ -53,4 +55,12 @@ func (m *DashboardRepositoryMock) GetBusinessSummary(ctx context.Context, busine
 		return m.GetBusinessSummaryFunc(ctx, businessID)
 	}
 	return &domain.BusinessSummary{}, nil
+}
+
+// GetTodaySummary obtiene el resumen de hoy de una propiedad
+func (m *DashboardRepositoryMock) GetTodaySummary(ctx context.Context, businessID uint, today time.Time) (*domain.TodaySummary, error) {
+	if m.GetTodaySummaryFunc != nil {
+		return m.GetTodaySummaryFunc(ctx, businessID, today)
+	}
+	return &domain.TodaySummary{}, nil
 }

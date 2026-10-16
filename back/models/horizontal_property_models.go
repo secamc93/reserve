@@ -942,9 +942,9 @@ func (CommonAreaType) TableName() string {
 // ───────────────────────────────────────────
 type CommonArea struct {
 	gorm.Model
-	BusinessID           uint     `gorm:"not null;index;uniqueIndex:idx_business_area_name,priority:1"`
+	BusinessID           uint     `gorm:"not null;index;uniqueIndex:idx_business_area_name_active,priority:1,where:deleted_at IS NULL"`
 	CommonAreaTypeID     uint     `gorm:"not null;index"`
-	Name                 string   `gorm:"size:150;not null;uniqueIndex:idx_business_area_name,priority:2"` // Nombre específico (ej: "Piscina Principal", "Gimnasio Piso 2")
+	Name                 string   `gorm:"size:150;not null;uniqueIndex:idx_business_area_name_active,priority:2"` // Nombre específico (ej: "Piscina Principal", "Gimnasio Piso 2")
 	Description          string   `gorm:"size:1000"`
 	Location             string   `gorm:"size:255"` // Ubicación física (ej: "Piso 1, Bloque A")
 	MaxCapacity          int      `gorm:"not null"` // Capacidad máxima de personas
@@ -1249,7 +1249,7 @@ func (ParkingSlot) TableName() string {
 type ParkingAssignment struct {
 	gorm.Model
 	BusinessID       uint       `gorm:"not null;index"`
-	ParkingSlotID    uint       `gorm:"not null;index;uniqueIndex:idx_slot_active_assignment"` // Espacio asignado
+	ParkingSlotID    uint       `gorm:"not null;index;uniqueIndex:idx_slot_one_active_assignment,where:is_active = true AND deleted_at IS NULL"` // Espacio asignado (una sola asignación activa por cupo; las liberadas quedan como historial)
 	PropertyUnitID   *uint      `gorm:"index"`                                                 // Unidad propietaria (opcional)
 	ResidentID       *uint      `gorm:"index"`                                                 // Residente asignado (opcional)
 	VehiclePlate     string     `gorm:"size:20;not null;index"`                                // Placa del vehículo
@@ -1258,7 +1258,7 @@ type ParkingAssignment struct {
 	VehicleColor     string     `gorm:"size:30"`                                               // Color del vehículo
 	StartDate        time.Time  `gorm:"not null"`                                              // Fecha de inicio de asignación
 	EndDate          *time.Time // Fecha de fin (null si es permanente)
-	IsActive         bool       `gorm:"default:true;uniqueIndex:idx_slot_active_assignment"` // Solo una asignación activa por slot
+	IsActive         bool       `gorm:"default:true"`                                        // false = liberada (historial)
 	Notes            string     `gorm:"size:1000"`                                           // Notas adicionales
 	AssignedByUserID *uint      `gorm:"index"`                                               // Usuario que realizó la asignación
 

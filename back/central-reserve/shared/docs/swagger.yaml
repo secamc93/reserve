@@ -994,6 +994,19 @@ definitions:
       success:
         type: boolean
     type: object
+  central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.AssignRecordProxyRequest:
+    properties:
+      proxy_dni:
+        example: "52123456"
+        maxLength: 30
+        type: string
+      proxy_name:
+        example: María Gómez
+        maxLength: 255
+        type: string
+    required:
+    - proxy_name
+    type: object
   central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.CreateAttendanceListRequest:
     properties:
       created_by_user_id:
@@ -1123,6 +1136,87 @@ definitions:
       start_date:
         example: "2025-01-15T00:00:00Z"
         type: string
+    type: object
+  central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordResponse:
+    properties:
+      attendance_list_id:
+        example: 1
+        type: integer
+      attended_as_owner:
+        example: true
+        type: boolean
+      attended_as_proxy:
+        example: false
+        type: boolean
+      created_at:
+        example: "2025-01-15T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_valid:
+        example: true
+        type: boolean
+      notes:
+        example: Notas adicionales
+        type: string
+      property_unit_id:
+        example: 123
+        type: integer
+      proxy_id:
+        example: 789
+        type: integer
+      proxy_name:
+        example: María García
+        type: string
+      resident_id:
+        example: 456
+        type: integer
+      resident_name:
+        example: Juan Pérez
+        type: string
+      signature:
+        example: Firma digital
+        type: string
+      signature_date:
+        example: "2025-01-15T14:30:00Z"
+        type: string
+      signature_method:
+        example: digital
+        type: string
+      unit_number:
+        example: CASA 126
+        type: string
+      updated_at:
+        example: "2025-01-15T10:30:00Z"
+        type: string
+      verification_date:
+        example: "2025-01-15T15:00:00Z"
+        type: string
+      verification_notes:
+        example: Verificado por administrador
+        type: string
+      verified_by:
+        example: 5
+        type: integer
+    type: object
+  central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordSuccess:
+    properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   central_reserve_services_horizontalproperty_horizontalpropertiy_internal_infra_primary_handlers_response.CommitteeResponse:
     properties:
@@ -2163,6 +2257,15 @@ definitions:
     - title
     - voting_type
     type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.GenerateVotingCredentialsRequest:
+    properties:
+      regenerate:
+        description: |-
+          Regenerate reemplaza todas las contraseñas del grupo (las credenciales impresas antes dejan
+          de servir). Si es false solo se generan para las unidades que aún no tienen.
+        example: false
+        type: boolean
+    type: object
   central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.MarkAttendanceRequest:
     properties:
       mark_attendance:
@@ -2219,6 +2322,34 @@ definitions:
       success:
         type: boolean
     type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.GenerateVotingCredentialsResponse:
+    properties:
+      generated:
+        example: 194
+        type: integer
+      total:
+        example: 194
+        type: integer
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PaginatedVotingCredentialsResponse:
+    properties:
+      credentials:
+        items:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VotingCredentialResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 200
+        type: integer
+      total:
+        example: 194
+        type: integer
+      total_pages:
+        example: 1
+        type: integer
+    type: object
   central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse:
     properties:
       previous_voting_id:
@@ -2266,6 +2397,24 @@ definitions:
       success:
         type: boolean
     type: object
+  ? central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.SuccessResponse-central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response_GenerateVotingCredentialsResponse
+  : properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.GenerateVotingCredentialsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  ? central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.SuccessResponse-central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response_PaginatedVotingCredentialsResponse
+  : properties:
+      data:
+        $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PaginatedVotingCredentialsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse:
     properties:
       color:
@@ -2301,6 +2450,24 @@ definitions:
       voting_option_id:
         example: 1
         type: integer
+    type: object
+  central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VotingCredentialResponse:
+    properties:
+      owner_name:
+        example: CAMACHO MATEUS SEBASTIAN
+        type: string
+      password:
+        example: K7M2QX
+        type: string
+      property_unit_id:
+        example: 12
+        type: integer
+      unit_block:
+        example: Casa
+        type: string
+      unit_number:
+        example: "126"
+        type: string
     type: object
   services_horizontalproperty_vote_internal_infra_primary_handlers_handlerpublic.CreatePublicVoteRequest:
     properties:
@@ -2360,6 +2527,12 @@ definitions:
         description: Dni es obligatorio solo si el grupo tiene require_document_validation
           = true; si no, se ignora.
         example: "123456789"
+        type: string
+      password:
+        description: |-
+          Password es obligatoria solo si el grupo tiene contraseñas generadas (la de la credencial
+          impresa de la unidad).
+        example: K7M2QX
         type: string
       property_unit_id:
         example: 1
@@ -3186,6 +3359,89 @@ paths:
       security:
       - BearerAuth: []
       summary: Marcar asistencia
+      tags:
+      - Asistencia
+  /attendance/records/{id}/proxy:
+    delete:
+      description: Quita el apoderado de la unidad en esta lista; la unidad queda
+        sin asistencia.
+      parameters:
+      - description: ID del registro de asistencia
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Opcional para super admin
+        in: query
+        name: business_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Quitar apoderado de un registro de asistencia
+      tags:
+      - Asistencia
+    put:
+      consumes:
+      - application/json
+      description: Crea o edita el apoderado que asiste por la unidad en esta lista
+        y la marca presente como apoderado. El apoderado queda solo en esta lista.
+      parameters:
+      - description: ID del registro de asistencia
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Opcional para super admin
+        in: query
+        name: business_id
+        type: integer
+      - description: Apoderado
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.AssignRecordProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Asignar apoderado a un registro de asistencia
       tags:
       - Asistencia
   /attendance/records/{id}/unmark:
@@ -6131,6 +6387,99 @@ paths:
       summary: Actualizar un grupo de votación
       tags:
       - Votaciones
+  /horizontal-properties/voting-groups/{group_id}/credentials:
+    get:
+      description: Lista, por número de unidad, la contraseña de cada unidad con su
+        tipo/bloque y su propietario (residente principal). Se usa para imprimir las
+        credenciales (PDF).
+      parameters:
+      - description: ID del grupo
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: Requerido para super admin
+        in: query
+        name: business_id
+        type: integer
+      - description: Página (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Tamaño de página (default 10, máximo 200)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.SuccessResponse-central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response_PaginatedVotingCredentialsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar contraseñas de voto del grupo
+      tags:
+      - Votaciones
+  /horizontal-properties/voting-groups/{group_id}/credentials/generate:
+    post:
+      consumes:
+      - application/json
+      description: Genera una contraseña aleatoria para cada unidad activa de la propiedad
+        que aún no tenga una en el grupo. Con regenerate=true reemplaza todas. Desde
+        que el grupo tiene contraseñas, el voto público por QR exige la de la unidad.
+      parameters:
+      - description: ID del grupo
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: Requerido para super admin
+        in: query
+        name: business_id
+        type: integer
+      - description: Opciones
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.GenerateVotingCredentialsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.SuccessResponse-central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response_GenerateVotingCredentialsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Generar contraseñas de voto del grupo
+      tags:
+      - Votaciones
   /horizontal-properties/voting-groups/{group_id}/deactivate:
     patch:
       consumes:
@@ -7106,65 +7455,6 @@ paths:
       summary: Obtener detalles completos de votación (Admin)
       tags:
       - Votaciones
-  /logs/stream:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene un stream de logs del sistema en tiempo real usando Server-Sent
-        Events (SSE)
-      parameters:
-      - description: Nivel de log (error, warn, info, debug)
-        in: query
-        name: level
-        type: string
-      - description: Filtrar por servicio
-        in: query
-        name: service
-        type: string
-      - description: Filtrar por módulo
-        in: query
-        name: module
-        type: string
-      - description: Filtrar por función
-        in: query
-        name: function
-        type: string
-      - description: Filtrar por business_id
-        in: query
-        name: business_id
-        type: integer
-      - description: Filtrar por user_id
-        in: query
-        name: user_id
-        type: integer
-      - description: Buscar en mensaje
-        in: query
-        name: search
-        type: string
-      produces:
-      - text/event-stream
-      responses:
-        "200":
-          description: Stream de logs en formato SSE
-          schema:
-            type: string
-        "401":
-          description: Token de acceso requerido
-          schema:
-            type: object
-        "403":
-          description: Solo super administradores pueden ver logs
-          schema:
-            type: object
-        "500":
-          description: Error interno del servidor
-          schema:
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Stream de logs en tiempo real
-      tags:
-      - Logs
   /permissions:
     get:
       consumes:
@@ -7513,7 +7803,9 @@ paths:
       consumes:
       - application/json
       description: 'Valida a quien vota por QR y devuelve el token de votación (voting_auth_token).
-        Si el grupo del token tiene require_document_validation=true, `dni` es obligatorio
+        Si el grupo tiene contraseñas generadas, `password` es obligatoria (400 "Contraseña
+        requerida") y debe ser la de la unidad (403 "Contraseña incorrecta"). Si el
+        grupo del token tiene require_document_validation=true, `dni` es obligatorio
         (400 "Documento requerido") y debe ser de un residente activo de la unidad
         (404 si no). Si es false, `dni` se ignora: basta que la unidad exista, sea
         de la propiedad (404) y esté activa (400); si no tiene residentes igual puede

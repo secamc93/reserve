@@ -25,9 +25,18 @@ async function totalUnits(request: APIRequestContext): Promise<number> {
   return data.total as number;
 }
 
-/** Filas de la tabla de unidades: una por botón "Editar". */
+/** Filas de la tabla de unidades. */
+/** Login y elegir la propiedad en el selector (sin propiedad elegida no hay menú ni módulos). */
+async function loginAndChooseProperty(page: Page) {
+  await login(page);
+  await page.goto("/properties");
+  await page.getByRole("button", { name: new RegExp(`${PROPERTY_NAME}.*Abrir propiedad`) }).click();
+  await page.waitForURL(new RegExp(`/properties/${businessId}`), { timeout: 30_000 });
+}
+
 function rows(page: Page) {
-  return page.getByRole("main").getByRole("button", { name: "Editar", exact: true });
+  // Una fila por unidad: cada una tiene su lápiz "Editar <unidad>".
+  return page.getByRole("table", { name: "Unidades" }).getByRole("button", { name: /^Editar / });
 }
 
 test.describe("paginación de tablas (unidades)", () => {
@@ -60,7 +69,7 @@ test.describe("paginación de tablas (unidades)", () => {
     const total = await totalUnits(request);
     expect(total).toBeGreaterThanOrEqual(CREATED);
 
-    await login(page);
+    await loginAndChooseProperty(page);
     await page.goto(`/properties/${businessId}/units`);
 
     const nav = page.getByRole("navigation", { name: "Paginación" });
@@ -101,7 +110,7 @@ test.describe("paginación de tablas (unidades)", () => {
   test("?page_size=500 en la URL se normaliza a 200", async ({ page, request }) => {
     const total = await totalUnits(request);
 
-    await login(page);
+    await loginAndChooseProperty(page);
     await page.goto(`/properties/${businessId}/units?page_size=500`);
 
     const nav = page.getByRole("navigation", { name: "Paginación" });

@@ -27,6 +27,9 @@ import {
   ParkingSlotsPaginated,
   ParkingAssignmentsPaginated,
   ParkingReservationsPaginated,
+  ParkingAssignmentSummary,
+  UpdateParkingAssignmentDTO,
+  CreateParkingSlotsBulkDTO,
 } from '../../domain';
 import {
   BackendParkingTypesResponse,
@@ -49,6 +52,12 @@ import {
   BackendParkingReservationList,
   BackendCheckParkingAvailabilityResponse,
 } from './response/parking.response';
+
+/** Mensaje de error del back ("message" o "error"), o el código HTTP si no viene. */
+async function backendErrorMessage(response: Response): Promise<string> {
+  const body = await response.json().catch(() => null) as { message?: string; error?: string } | null;
+  return body?.message || body?.error || `Error ${response.status}`;
+}
 
 export class ParkingRepository implements IParkingRepository {
   private baseUrl = env.API_BASE_URL;
@@ -135,6 +144,9 @@ export class ParkingRepository implements IParkingRepository {
       slotNumber: slot.slot_number,
       isCovered: slot.is_covered,
       hasCharger: slot.has_charger,
+      width: slot.width ?? null,
+      length: slot.length ?? null,
+      height: slot.height ?? null,
       isActive: slot.is_active,
       isAvailable: slot.is_available,
       isAssigned: slot.is_assigned,
@@ -167,13 +179,17 @@ export class ParkingRepository implements IParkingRepository {
       id: assignment.id,
       parkingSlotId: assignment.parking_slot_id,
       parkingSlotNumber: assignment.parking_slot_number,
+      parkingZoneName: assignment.parking_zone_name,
       propertyUnitId: assignment.property_unit_id,
       propertyUnitNumber: assignment.property_unit_number,
+      propertyUnitBlock: assignment.property_unit_block,
       residentId: assignment.resident_id,
       residentName: assignment.resident_name,
       vehiclePlate: assignment.vehicle_plate,
       vehicleBrand: assignment.vehicle_brand,
       vehicleModel: assignment.vehicle_model,
+      vehicleColor: assignment.vehicle_color,
+      notes: assignment.notes,
       startDate: assignment.start_date,
       endDate: assignment.end_date,
       isActive: assignment.is_active,
@@ -247,7 +263,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const data: BackendParkingTypesResponse = await response.json();
@@ -290,7 +306,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const data: BackendParkingZonesPaginatedResponse = await response.json();
@@ -331,7 +347,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendParkingZoneResponse = await response.json();
@@ -383,7 +399,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const data: BackendParkingSlotsPaginatedResponse = await response.json();
@@ -421,7 +437,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendParkingSlotResponse = await response.json();
@@ -452,6 +468,12 @@ export class ParkingRepository implements IParkingRepository {
     if (params.isActive !== undefined) {
       queryParams.append('is_active', params.isActive.toString());
     }
+    if (params.status) {
+      queryParams.append('status', params.status);
+    }
+    if (params.q?.trim()) {
+      queryParams.append('q', params.q.trim());
+    }
     if (params.page) {
       queryParams.append('page', params.page.toString());
     }
@@ -473,7 +495,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const data: BackendParkingAssignmentsPaginatedResponse = await response.json();
@@ -514,7 +536,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendParkingAssignmentResponse = await response.json();
@@ -575,7 +597,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const data: BackendParkingReservationsPaginatedResponse = await response.json();
@@ -616,7 +638,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendParkingReservationResponse = await response.json();
@@ -648,7 +670,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendCheckParkingAvailabilityResponse = await response.json();
@@ -681,7 +703,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendParkingReservationResponse = await response.json();
@@ -711,7 +733,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendParkingReservationResponse = await response.json();
@@ -742,7 +764,7 @@ export class ParkingRepository implements IParkingRepository {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(await backendErrorMessage(response));
       }
 
       const result: BackendParkingReservationResponse = await response.json();
@@ -755,5 +777,67 @@ export class ParkingRepository implements IParkingRepository {
       logHttpError({ status: 0, statusText: 'Error', duration, data: { error: error instanceof Error ? error.message : String(error) } });
       throw error;
     }
+  }
+
+  /** Petición JSON al back: lanza Error con el mensaje del back si falla. */
+  private async send<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH', path: string, token: string, body?: unknown): Promise<T> {
+    const url = `${this.baseUrl}${path}`;
+    const startTime = Date.now();
+    logHttpRequest({ method, url });
+    const response = await fetch(url, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      cache: 'no-store',
+    });
+    const data = await response.json().catch(() => ({}));
+    const duration = Date.now() - startTime;
+    if (!response.ok) {
+      logHttpError({ status: response.status, statusText: response.statusText, duration, data });
+      throw new Error(data.message || data.error || `Error ${response.status}`);
+    }
+    logHttpSuccess({ status: response.status, statusText: response.statusText, duration });
+    return data as T;
+  }
+
+  async getParkingAssignmentSummary(params: { businessId: number; token: string }): Promise<ParkingAssignmentSummary> {
+    const res = await this.send<{ data: { active: number; expiring_30: number; expired: number; units_without_slot: number } }>(
+      'GET', `/horizontal-properties/parking/assignments/summary?business_id=${params.businessId}`, params.token);
+    return { active: res.data.active, expiring30: res.data.expiring_30, expired: res.data.expired, unitsWithoutSlot: res.data.units_without_slot };
+  }
+
+  async updateParkingAssignment(params: { id: number; businessId: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingAssignment> {
+    const res = await this.send<{ data: BackendParkingAssignment }>('PUT', `/horizontal-properties/parking/assignments/${params.id}?business_id=${params.businessId}`, params.token, {
+      vehicle_plate: params.data.vehiclePlate,
+      vehicle_brand: params.data.vehicleBrand ?? '',
+      vehicle_model: params.data.vehicleModel ?? '',
+      vehicle_color: params.data.vehicleColor ?? '',
+      end_date: params.data.endDate,
+      notes: params.data.notes ?? '',
+    });
+    return this.mapBackendParkingAssignment(res.data);
+  }
+
+  async releaseParkingAssignment(params: { id: number; businessId: number; token: string }): Promise<ParkingAssignment> {
+    const res = await this.send<{ data: BackendParkingAssignment }>('POST', `/horizontal-properties/parking/assignments/${params.id}/release?business_id=${params.businessId}`, params.token);
+    return this.mapBackendParkingAssignment(res.data);
+  }
+
+  async createParkingSlotsBulk(params: { businessId: number; token: string; data: CreateParkingSlotsBulkDTO }): Promise<{ created: number }> {
+    const d = params.data;
+    const res = await this.send<{ data: { created: number } }>('POST', `/horizontal-properties/parking/slots/bulk?business_id=${params.businessId}`, params.token, {
+      parking_zone_id: d.parkingZoneId,
+      parking_type_id: d.parkingTypeId,
+      prefix: d.prefix,
+      from: d.from,
+      to: d.to,
+      pad: d.pad,
+      is_covered: Boolean(d.isCovered),
+      has_charger: Boolean(d.hasCharger),
+      width: d.width ?? null,
+      length: d.length ?? null,
+      height: d.height ?? null,
+    });
+    return { created: res.data.created };
   }
 }

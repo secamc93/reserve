@@ -8,14 +8,16 @@ import (
 
 // ParkingSlotRepositoryMock - Mock del repositorio de espacios de parqueo
 type ParkingSlotRepositoryMock struct {
-	CreateParkingSlotFn            func(ctx context.Context, slot *domain.ParkingSlot) (*domain.ParkingSlot, error)
-	GetParkingSlotByIDFn           func(ctx context.Context, id uint) (*domain.ParkingSlot, error)
-	UpdateParkingSlotFn            func(ctx context.Context, slot *domain.ParkingSlot) error
-	DeleteParkingSlotFn            func(ctx context.Context, id uint) error
-	ListParkingSlotsFn             func(ctx context.Context, filters domain.ParkingSlotFiltersDTO) (*domain.PaginatedParkingSlotsDTO, error)
-	GetParkingSlotsByZoneIDFn      func(ctx context.Context, zoneID uint) ([]*domain.ParkingSlot, error)
-	GetParkingSlotsByBusinessIDFn  func(ctx context.Context, businessID uint) ([]*domain.ParkingSlot, error)
-	IsSlotAvailableFn              func(ctx context.Context, slotID uint, date string, startTime, endTime string, excludeReservationID *uint) (bool, error)
+	CreateParkingSlotFn           func(ctx context.Context, slot *domain.ParkingSlot) (*domain.ParkingSlot, error)
+	GetParkingSlotByIDFn          func(ctx context.Context, id uint) (*domain.ParkingSlot, error)
+	UpdateParkingSlotFn           func(ctx context.Context, slot *domain.ParkingSlot) error
+	DeleteParkingSlotFn           func(ctx context.Context, id uint) error
+	ListParkingSlotsFn            func(ctx context.Context, filters domain.ParkingSlotFiltersDTO) (*domain.PaginatedParkingSlotsDTO, error)
+	GetParkingSlotsByZoneIDFn     func(ctx context.Context, zoneID uint) ([]*domain.ParkingSlot, error)
+	GetParkingSlotsByBusinessIDFn func(ctx context.Context, businessID uint) ([]*domain.ParkingSlot, error)
+	IsSlotAvailableFn             func(ctx context.Context, slotID uint, date string, startTime, endTime string, excludeReservationID *uint) (bool, error)
+	ExistingSlotNumbersFn         func(ctx context.Context, zoneID uint, numbers []string) ([]string, error)
+	CreateParkingSlotsBulkFn      func(ctx context.Context, slots []*domain.ParkingSlot) error
 }
 
 func (m *ParkingSlotRepositoryMock) CreateParkingSlot(ctx context.Context, slot *domain.ParkingSlot) (*domain.ParkingSlot, error) {
@@ -72,4 +74,18 @@ func (m *ParkingSlotRepositoryMock) IsSlotAvailable(ctx context.Context, slotID 
 		return m.IsSlotAvailableFn(ctx, slotID, date, startTime, endTime, excludeReservationID)
 	}
 	return true, nil
+}
+
+func (m *ParkingSlotRepositoryMock) ExistingSlotNumbers(ctx context.Context, zoneID uint, numbers []string) ([]string, error) {
+	if m.ExistingSlotNumbersFn != nil {
+		return m.ExistingSlotNumbersFn(ctx, zoneID, numbers)
+	}
+	return nil, nil
+}
+
+func (m *ParkingSlotRepositoryMock) CreateParkingSlotsBulk(ctx context.Context, slots []*domain.ParkingSlot) error {
+	if m.CreateParkingSlotsBulkFn != nil {
+		return m.CreateParkingSlotsBulkFn(ctx, slots)
+	}
+	return nil
 }

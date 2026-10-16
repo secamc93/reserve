@@ -11,6 +11,8 @@ import {
   DeliverPackageDTO,
   UpdatePackageStatusDTO,
   PackageStatus,
+  PackageStatusGroup,
+  PackagesSummary,
 } from '../entities';
 
 export interface GetPackagesParams {
@@ -23,6 +25,16 @@ export interface GetPackagesParams {
   packageStatusId?: number;
   startDate?: string;
   endDate?: string;
+  statusGroup?: PackageStatusGroup;
+  /** Solo los entregados hoy (hora de Colombia). */
+  deliveredToday?: boolean;
+  /** Busca por guía, transportadora, unidad ("Casa 126") o residente. */
+  search?: string;
+}
+
+export interface GetPackagesSummaryParams {
+  businessId: number;
+  token: string;
 }
 
 export interface GetPackageByIdParams {
@@ -68,6 +80,7 @@ export interface DeletePackageParams {
 
 export interface IPackagesRepository {
   getPackages(params: GetPackagesParams): Promise<PackagesPaginated>;
+  getPackagesSummary(params: GetPackagesSummaryParams): Promise<PackagesSummary>;
   getPackageById(params: GetPackageByIdParams): Promise<Package>;
   getPackageByQRCode(params: GetPackageByQRCodeParams): Promise<Package>;
   receivePackage(params: ReceivePackageParams): Promise<Package>;

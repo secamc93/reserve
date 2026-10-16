@@ -52,7 +52,6 @@ export function CreatePropertyModal({ isOpen, onClose, onSuccess }: CreateProper
       });
 
       if (result.success) {
-        console.log('✅ Propiedad creada:', result.data);
         resetForm();
         onSuccess();
         onClose();

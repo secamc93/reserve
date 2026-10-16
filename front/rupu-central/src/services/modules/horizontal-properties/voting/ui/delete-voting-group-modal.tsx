@@ -43,7 +43,6 @@ export function DeleteVotingGroupModal({
         return;
       }
 
-      console.log('🗑️ Eliminando grupo de votación:', { groupId: group.id, name: group.name });
 
       const result = await deleteVotingGroupAction({
         token,
@@ -52,7 +51,6 @@ export function DeleteVotingGroupModal({
       });
 
       if (result.success) {
-        console.log('✅ Grupo de votación eliminado:', result.message);
         onSuccess();
         onClose();
       } else {

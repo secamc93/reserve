@@ -1,20 +1,18 @@
 /**
- * Página: Detalle de Propiedad Horizontal
+ * Página: Resumen de la propiedad ("PH - Shell y Resumen").
+ * Pestañas: Hoy (S1, qué está pasando hoy) y Ficha (S2, datos de la propiedad).
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { VotingGroupsSection } from '@/services/modules/horizontal-properties/voting/ui';
-import { PropertyUnitsTable } from '@/services/modules/horizontal-properties/units/ui';
-import { ResidentsTable } from '@/services/modules/horizontal-properties/residents/ui';
+import { use, useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { getHorizontalPropertyByIdAction } from '@/services/modules/horizontal-properties/properties/infrastructure/actions';
-import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
-import { DashboardStats, useDashboardStats } from '@/services/modules/horizontal-properties/dashboard/ui';
+import { getTodaySummaryAction } from '@/services/modules/horizontal-properties/dashboard/infrastructure/actions';
+import { TodayView } from '@/services/modules/horizontal-properties/dashboard/ui/today-view';
+import type { TodaySummary } from '@/services/modules/horizontal-properties/dashboard/domain/entities';
 import { TokenStorage } from '@shared/config';
-import { Spinner, Badge, Button } from '@shared/ui';
-import { use } from 'react';
+import { DsBody, DsCard, DsEyebrow, DsPage, DsSectionHeader, VtNotice, dsMono, vtBtn } from '@shared/ui/ds';
 
 interface PropertyDetailPageProps {
   params: Promise<{ id: string }>;
@@ -24,7 +22,6 @@ interface PropertyData {
   id: number;
   name: string;
   code: string;
-  businessTypeName: string;
   address: string;
   description?: string;
   totalUnits: number;
@@ -36,277 +33,156 @@ interface PropertyData {
   hasSocialArea?: boolean;
   logoUrl?: string;
   primaryColor?: string;
-  secondaryColor?: string;
-  tertiaryColor?: string;
-  quaternaryColor?: string;
   customDomain?: string;
-  isActive: boolean;
   createdAt: string;
-  updatedAt?: string;
 }
+
+type Tab = 'today' | 'info';
+
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : `${String(d.getDate()).padStart(2, '0')} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+};
 
 export default function PropertyDetailPage({ params }: PropertyDetailPageProps) {
-  const router = useRouter();
   const { id } = use(params);
-  const [property, setProperty] = useState<PropertyData | null>(null);
-  const [loading, setLoading] = useState(true);
   const businessId = parseInt(id);
-  
-  // Hook para obtener estadísticas del dashboard
-  const { stats: dashboardStats, loading: dashboardLoading, error: dashboardError, refresh: refreshDashboard } = useDashboardStats({
-    businessId: businessId,
-    autoLoad: true,
-  });
+  const basePath = `/properties/${businessId}`;
+  const [tab, setTab] = useState<Tab>('today');
+  const [property, setProperty] = useState<PropertyData | null>(null);
+  const [today, setToday] = useState<TodaySummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    const isSuperAdmin = Boolean(TokenStorage.getUser()?.is_super_admin);
+    const [propertyRes, todayRes] = await Promise.all([
+      getHorizontalPropertyByIdAction({ token, id: businessId, business_id: isSuperAdmin ? undefined : businessId }),
+      getTodaySummaryAction({ token, businessId }),
+    ]);
+    if (propertyRes.success && propertyRes.data) setProperty(propertyRes.data as PropertyData);
+    else setError(propertyRes.error || 'No se pudo cargar la propiedad');
+    if (todayRes.success && todayRes.data) setToday(todayRes.data);
+    else if (!todayRes.success) setError((e) => e ?? todayRes.error ?? 'No se pudo cargar el resumen de hoy');
+    setLoading(false);
+  }, [businessId]);
 
   useEffect(() => {
-    loadProperty();
-  }, [id]);
+    load();
+  }, [load]);
 
-  const loadProperty = async () => {
-    setLoading(true);
-    try {
-      const user = TokenStorage.getUser();
-      const isSuperAdmin = user?.is_super_admin;
-
-      let businessToken = TokenStorage.getBusinessToken();
-
-      // Si no hay business token, intentar generarlo:
-      // - super admin: business_id = 0
-      // - usuario normal: usar el businessId de la ruta
-      if (!businessToken) {
-        const sessionToken = TokenStorage.getSessionToken();
-        if (sessionToken) {
-          try {
-            const resultBT = await generateBusinessTokenAction({
-              business_id: isSuperAdmin ? 0 : businessId,
-              session_token: sessionToken,
-            });
-            if (resultBT.success && resultBT.data) {
-              businessToken = resultBT.data.token;
-              TokenStorage.setBusinessToken(resultBT.data.token);
-              TokenStorage.setActiveBusiness(isSuperAdmin ? 0 : businessId);
-            }
-          } catch (err) {
-            console.error('❌ No se pudo generar business token', err);
-          }
-        }
-      }
-
-      if (!businessToken) {
-        console.error('❌ No hay business token disponible');
-        setLoading(false);
-        return;
-      }
-
-      const result = await getHorizontalPropertyByIdAction({
-        token: businessToken,
-        id: businessId,
-        business_id: isSuperAdmin ? undefined : businessId,
-      });
-
-      if (result.success && result.data) {
-        setProperty(result.data as PropertyData);
-      } else {
-        console.error('❌ Error en la respuesta:', result.error);
-      }
-    } catch (error) {
-      console.error('❌ Error al cargar propiedad:', error);
-    }
-    setLoading(false);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="xl" text="Cargando detalles de la propiedad..." />
-      </div>
-    );
-  }
-
-  if (!property) {
-    return (
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            <p className="font-medium">No se pudo cargar la información de la propiedad</p>
-            <p className="text-sm mt-1">Por favor, intenta nuevamente.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const amenities: [string, boolean | undefined][] = property
+    ? [
+        ['Ascensor', property.hasElevator],
+        ['Parqueadero', property.hasParking],
+        ['Salón social', property.hasSocialArea],
+        ['Piscina', property.hasPool],
+        ['Gimnasio', property.hasGym],
+      ]
+    : [];
 
   return (
-    <div>
-      {/* Navegación */}
+    <DsPage>
+      <DsSectionHeader<Tab>
+        ariaLabel="Secciones del resumen"
+        tabs={[
+          { id: 'today', label: 'Hoy' },
+          { id: 'info', label: 'Ficha' },
+        ]}
+        active={tab}
+        onChange={setTab}
+        actions={
+          <>
+            <Link href={`${basePath}/visits`} className={vtBtn.secondary}>Registrar visita</Link>
+            <Link href={`${basePath}/packages`} className={vtBtn.secondary}>Recibir paquete</Link>
+          </>
+        }
+      />
+      <DsBody className="!pt-7">
+        {error && (
+          <div className="flex items-center gap-3">
+            <VtNotice>{error}</VtNotice>
+            <button type="button" className={vtBtn.small} onClick={load}>Reintentar</button>
+          </div>
+        )}
+        {loading && !today && !property && <p className="py-10 text-center text-sm text-[#8a8580]">Cargando…</p>}
 
-      {/* Contenido del Dashboard */}
-      <div className="p-3 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Dashboard Stats */}
-          {dashboardLoading && !dashboardStats ? (
-            <div className="flex items-center justify-center py-12">
-              <Spinner size="lg" text="Cargando estadísticas del dashboard..." />
+        {tab === 'today' && today && <TodayView summary={today} propertyName={property?.name ?? 'la propiedad'} basePath={basePath} />}
+
+        {tab === 'info' && property && (
+          <div className="grid gap-[22px] lg:grid-cols-2 items-start">
+            <div className="lg:col-span-2">
+              <DsEyebrow className="mb-1.5 !text-[11px]">
+                {property.code}
+                {property.createdAt && ` · creada ${formatDate(property.createdAt)}`}
+              </DsEyebrow>
+              <h1 className="m-0 text-2xl font-semibold tracking-[-.02em]">{property.name}</h1>
             </div>
-          ) : dashboardError ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-8">
-              <p className="font-medium">Error al cargar estadísticas del dashboard</p>
-              <p className="text-sm mt-1">{dashboardError}</p>
-              <Button onClick={refreshDashboard} className="mt-3" variant="outline">
-                Reintentar
-              </Button>
-            </div>
-          ) : dashboardStats ? (
-            <div className="mb-4 md:mb-8">
-              <DashboardStats data={dashboardStats} />
-            </div>
-          ) : null}
-
-          {/* Información General */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-            {/* Header con gradiente */}
-            <div className="px-4 py-3 md:px-6 md:py-4" style={{ background: 'var(--color-primary)' }}>
-              <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                <span className="text-xl md:text-2xl">📋</span>
-                Información General
-              </h3>
-            </div>
-
-            {/* Contenido */}
-            <div className="p-3 md:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                {/* Columna Izquierda */}
-                <div className="space-y-3 md:space-y-5">
-                  {/* Nombre */}
-                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          Nombre
-                        </p>
-                        <p className="text-base md:text-lg font-bold text-gray-900 break-words md:truncate" title={property.name}>
-                          {property.name}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Código */}
-                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          Código
-                        </p>
-                        <p className="text-sm md:text-lg font-bold text-gray-900 break-all md:break-normal md:truncate font-mono" title={property.code}>
-                          {property.code}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dirección */}
-                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          Dirección
-                        </p>
-                        <p className="text-base md:text-lg font-semibold text-gray-900 break-words">
-                          {property.address}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+            <DsCard className="px-[22px] py-5 flex flex-col gap-3.5">
+              <span className="text-[13px] font-semibold">Datos generales</span>
+              {[
+                ['Nombre', property.name, false],
+                ['Código', property.code, true],
+                ['Zona horaria', property.timezone || 'America/Bogota', false],
+                ['Dirección', property.address, false],
+                ['Unidades', String(property.totalUnits ?? 0), true],
+              ].map(([label, value, mono]) => (
+                <div key={label as string}>
+                  <div className="text-xs font-semibold mb-1.5">{label}</div>
+                  <div className={`min-h-[38px] border border-[#d6d3cd] rounded-[7px] px-3 py-2 text-sm bg-[#faf9f7] ${mono ? dsMono : ''}`}>{value || '—'}</div>
                 </div>
-
-                {/* Columna Derecha */}
-                <div className="space-y-3 md:space-y-5">
-                  {/* Tipo de Negocio */}
-                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                          Tipo de Negocio
-                        </p>
-                        <Badge className="bg-gray-200 text-gray-700 px-3 py-1 text-sm font-semibold">
-                          {property.businessTypeName}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Total de Unidades */}
-                  <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          Total de Unidades
-                        </p>
-                        <div className="flex items-baseline gap-2">
-                          <p className="text-2xl font-bold text-gray-900">
-                            {property.totalUnits || 0}
-                          </p>
-                          <span className="text-sm text-gray-500">unidades</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Descripción */}
-                  {property.description && (
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                      <div className="flex items-start gap-3">
-                        <div className="bg-gray-100 rounded-lg p-2 flex-shrink-0">
-                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                            Descripción
-                          </p>
-                          <p className="text-base text-gray-700 leading-relaxed">
-                            {property.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              ))}
+              <div>
+                <div className="text-xs font-semibold mb-1.5">Amenidades</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {amenities.map(([label, on]) => (
+                    <span key={label} className={`px-2.5 py-[5px] rounded-[5px] text-xs font-medium ${on ? 'bg-[#1a1a1a] text-white' : 'border border-[#d6d3cd] text-[#4b4a46]'}`}>
+                      {label}
+                    </span>
+                  ))}
                 </div>
               </div>
+            </DsCard>
+            <div className="flex flex-col gap-[22px]">
+              <DsCard className="px-[22px] py-5 flex flex-col gap-3.5">
+                <div className="flex justify-between items-baseline gap-3">
+                  <span className="text-[13px] font-semibold">Identidad del negocio</span>
+                  <span className="text-[11px] text-[#8a8580]">se aplica a toda la app y al voto público</span>
+                </div>
+                <div className="grid grid-cols-[88px_1fr] gap-4 items-center">
+                  <div className="w-[88px] h-[88px] rounded-xl border border-dashed border-[#c9c6c0] flex items-center justify-center overflow-hidden text-[11px] text-[#8a8580] text-center">
+                    {property.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={property.logoUrl} alt={`Logo de ${property.name}`} className="w-full h-full object-contain" />
+                    ) : (
+                      <>Sin logo</>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold">Color de marca</span>
+                    <div className="flex items-center gap-2">
+                      <span className="w-[34px] h-[34px] rounded-lg" style={{ background: property.primaryColor || '#1a1a1a' }} />
+                      <span className={`${dsMono} h-[34px] px-2.5 border border-[#d6d3cd] rounded-[7px] flex items-center text-xs`}>{(property.primaryColor || '#1A1A1A').toUpperCase()}</span>
+                    </div>
+                    <span className="text-[11px] text-[#8a8580]">Los colores de voto (Sí / No / Abstención) no cambian.</span>
+                  </div>
+                </div>
+              </DsCard>
+              <DsCard className="px-[22px] py-5 flex flex-col gap-2.5">
+                <span className="text-[13px] font-semibold">Dominio público</span>
+                <div className={`${dsMono} min-h-[38px] border border-[#d6d3cd] rounded-[7px] px-3 py-2 text-[13px] bg-[#faf9f7]`}>{property.customDomain || '—'}</div>
+                <span className="text-[11px] text-[#8a8580]">Usado en los enlaces de votación y reservas que reciben los residentes.</span>
+              </DsCard>
+              <p className="text-xs text-[#8a8580]">Para editar estos datos: IAM → Negocios.</p>
             </div>
           </div>
-
-        </div>
-      </div>
-    </div>
+        )}
+      </DsBody>
+    </DsPage>
   );
 }
-

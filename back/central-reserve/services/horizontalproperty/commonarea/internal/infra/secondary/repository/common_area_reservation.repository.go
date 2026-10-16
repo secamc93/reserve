@@ -217,61 +217,47 @@ func (r *CommonAreaReservationRepository) ChangeReservationStatus(ctx context.Co
 
 // ListReservations lista reservas con filtros y paginación
 func (r *CommonAreaReservationRepository) ListReservations(ctx context.Context, filters domain.ReservationFiltersDTO) (*domain.PaginatedReservationsDTO, error) {
+	applyFilters := func(q *gorm.DB) *gorm.DB {
+		q = q.Where("business_id = ?", filters.BusinessID)
+		if filters.CommonAreaID != nil {
+			q = q.Where("common_area_id = ?", *filters.CommonAreaID)
+		}
+		if filters.PropertyUnitID != nil {
+			q = q.Where("property_unit_id = ?", *filters.PropertyUnitID)
+		}
+		if filters.ResidentID != nil {
+			q = q.Where("resident_id = ?", *filters.ResidentID)
+		}
+		if filters.ReservationStatusID != nil {
+			q = q.Where("reservation_status_id = ?", *filters.ReservationStatusID)
+		}
+		if len(filters.StatusCodes) > 0 {
+			statusIDs := r.db.Conn(ctx).Model(&models.CommonAreaReservationStatus{}).Select("id").Where("code IN ?", filters.StatusCodes)
+			q = q.Where("reservation_status_id IN (?)", statusIDs)
+		}
+		if filters.StartDate != nil {
+			q = q.Where("reservation_date >= ?", *filters.StartDate)
+		}
+		if filters.EndDate != nil {
+			q = q.Where("reservation_date <= ?", *filters.EndDate)
+		}
+		return q
+	}
+
 	// Conteo total
 	var total int64
-	countQuery := r.db.Conn(ctx).Model(&models.CommonAreaReservation{}).Where("business_id = ?", filters.BusinessID)
-
-	if filters.CommonAreaID != nil {
-		countQuery = countQuery.Where("common_area_id = ?", *filters.CommonAreaID)
-	}
-	if filters.PropertyUnitID != nil {
-		countQuery = countQuery.Where("property_unit_id = ?", *filters.PropertyUnitID)
-	}
-	if filters.ResidentID != nil {
-		countQuery = countQuery.Where("resident_id = ?", *filters.ResidentID)
-	}
-	if filters.ReservationStatusID != nil {
-		countQuery = countQuery.Where("reservation_status_id = ?", *filters.ReservationStatusID)
-	}
-	if filters.StartDate != nil {
-		countQuery = countQuery.Where("reservation_date >= ?", *filters.StartDate)
-	}
-	if filters.EndDate != nil {
-		countQuery = countQuery.Where("reservation_date <= ?", *filters.EndDate)
-	}
-
-	if err := countQuery.Count(&total).Error; err != nil {
+	if err := applyFilters(r.db.Conn(ctx).Model(&models.CommonAreaReservation{})).Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("error contando reservas: %w", err)
 	}
 
 	// Consulta paginada usando modelos GORM con Preload
 	var reservationsModels []models.CommonAreaReservation
-	query := r.db.Conn(ctx).
+	query := applyFilters(r.db.Conn(ctx).
 		Model(&models.CommonAreaReservation{}).
 		Preload("CommonArea").
 		Preload("PropertyUnit").
 		Preload("Resident").
-		Preload("ReservationStatus").
-		Where("business_id = ?", filters.BusinessID)
-
-	if filters.CommonAreaID != nil {
-		query = query.Where("common_area_id = ?", *filters.CommonAreaID)
-	}
-	if filters.PropertyUnitID != nil {
-		query = query.Where("property_unit_id = ?", *filters.PropertyUnitID)
-	}
-	if filters.ResidentID != nil {
-		query = query.Where("resident_id = ?", *filters.ResidentID)
-	}
-	if filters.ReservationStatusID != nil {
-		query = query.Where("reservation_status_id = ?", *filters.ReservationStatusID)
-	}
-	if filters.StartDate != nil {
-		query = query.Where("reservation_date >= ?", *filters.StartDate)
-	}
-	if filters.EndDate != nil {
-		query = query.Where("reservation_date <= ?", *filters.EndDate)
-	}
+		Preload("ReservationStatus"))
 
 	offset := (filters.Page - 1) * filters.PageSize
 	if err := query.Order("reservation_date DESC, start_time ASC").
@@ -282,38 +268,30 @@ func (r *CommonAreaReservationRepository) ListReservations(ctx context.Context, 
 	}
 
 	reservations := make([]domain.ReservationListDTO, len(reservationsModels))
-	for i, r := range reservationsModels {
-		commonAreaName := ""
-		if r.CommonArea.ID != 0 {
-			commonAreaName = r.CommonArea.Name
-		}
-
-		propertyUnitNumber := ""
-		if r.PropertyUnit.ID != 0 {
-			propertyUnitNumber = r.PropertyUnit.Number
-		}
-
-		residentName := ""
-		if r.Resident != nil {
-			residentName = r.Resident.Name
-		}
-
-		statusName := ""
-		if r.ReservationStatus.ID != 0 {
-			statusName = r.ReservationStatus.Name
-		}
-
+	for i := range reservationsModels {
+		d := mappers.ReservationToDomain(&reservationsModels[i])
 		reservations[i] = domain.ReservationListDTO{
-			ID:                 r.ID,
-			CommonAreaName:     commonAreaName,
-			PropertyUnitNumber: propertyUnitNumber,
-			ResidentName:       residentName,
-			StatusName:         statusName,
-			ReservationDate:    r.ReservationDate,
-			StartTime:          r.StartTime,
-			EndTime:            r.EndTime,
-			NumberOfGuests:     r.NumberOfGuests,
-			CreatedAt:          r.CreatedAt,
+			ID:                 d.ID,
+			CommonAreaID:       d.CommonAreaID,
+			CommonAreaName:     d.CommonAreaName,
+			PropertyUnitID:     d.PropertyUnitID,
+			PropertyUnitNumber: d.PropertyUnitNumber,
+			PropertyUnitBlock:  d.PropertyUnitBlock,
+			ResidentName:       d.ResidentName,
+			StatusCode:         d.StatusCode,
+			StatusName:         d.StatusName,
+			ReservationDate:    d.ReservationDate,
+			StartTime:          d.StartTime,
+			EndTime:            d.EndTime,
+			NumberOfGuests:     d.NumberOfGuests,
+			Purpose:            d.Purpose,
+			RequiresApproval:   d.RequiresApproval,
+			TotalAmount:        d.TotalAmount,
+			DepositAmount:      d.DepositAmount,
+			DepositPaid:        d.DepositPaid,
+			FullPaymentPaid:    d.FullPaymentPaid,
+			CheckedInAt:        d.CheckedInAt,
+			CreatedAt:          d.CreatedAt,
 		}
 	}
 

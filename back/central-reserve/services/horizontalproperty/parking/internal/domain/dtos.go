@@ -24,6 +24,50 @@ type CreateParkingSlotDTO struct {
 }
 
 // AssignParkingDTO - DTO para asignar parqueadero permanente
+// CreateParkingSlotsBulkDTO crea varios cupos de una zona con numeración consecutiva:
+// Prefix + número desde From hasta To, rellenado con ceros hasta Pad dígitos ("P2-" + 121 → "P2-121").
+type CreateParkingSlotsBulkDTO struct {
+	BusinessID    uint
+	ParkingZoneID uint
+	ParkingTypeID uint
+	Prefix        string
+	From          int
+	To            int
+	Pad           int
+	IsCovered     bool
+	HasCharger    bool
+	Width         *float64
+	Length        *float64
+	Height        *float64
+}
+
+// UpdateParkingAssignmentDTO edita el vehículo y la vigencia de una asignación.
+type UpdateParkingAssignmentDTO struct {
+	BusinessID   uint
+	ID           uint
+	VehiclePlate string
+	VehicleBrand string
+	VehicleModel string
+	VehicleColor string
+	EndDate      *time.Time // nil = indefinida
+	Notes        string
+}
+
+// ParkingAssignmentSummaryDTO conteos para los chips de asignaciones.
+type ParkingAssignmentSummaryDTO struct {
+	Active           int64 // vigentes (activas y sin vencer)
+	Expiring30       int64 // activas que vencen en los próximos 30 días
+	Expired          int64 // activas con fecha de fin pasada (no liberadas)
+	UnitsWithoutSlot int64 // unidades activas sin ninguna asignación activa
+}
+
+// Estados de asignación para filtrar.
+const (
+	AssignmentStatusActive   = "active"
+	AssignmentStatusExpiring = "expiring"
+	AssignmentStatusExpired  = "expired"
+)
+
 type AssignParkingDTO struct {
 	BusinessID       uint
 	ParkingSlotID    uint
@@ -94,6 +138,9 @@ type ParkingAssignmentFiltersDTO struct {
 	PropertyUnitID *uint
 	ResidentID     *uint
 	IsActive       *bool
+	Status         string    // active | expiring | expired (ver AssignmentStatus*)
+	Search         string    // placa, número de unidad o nombre del residente
+	Today          time.Time // fecha de referencia para Status (zona horaria de la propiedad)
 	Page           int
 	PageSize       int
 }
@@ -150,6 +197,9 @@ type ParkingSlotListDTO struct {
 	SlotNumber      string
 	IsCovered       bool
 	HasCharger      bool
+	Width           *float64
+	Length          *float64
+	Height          *float64
 	IsActive        bool
 	IsAvailable     bool
 	IsAssigned      bool
@@ -170,13 +220,17 @@ type ParkingAssignmentListDTO struct {
 	ID                 uint
 	ParkingSlotID      uint
 	ParkingSlotNumber  string
+	ParkingZoneName    string
 	PropertyUnitID     *uint
 	PropertyUnitNumber string
+	PropertyUnitBlock  string
 	ResidentID         *uint
 	ResidentName       string
 	VehiclePlate       string
 	VehicleBrand       string
 	VehicleModel       string
+	VehicleColor       string
+	Notes              string
 	StartDate          time.Time
 	EndDate            *time.Time
 	IsActive           bool

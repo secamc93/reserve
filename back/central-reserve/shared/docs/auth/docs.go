@@ -1922,96 +1922,6 @@ const docTemplate = `{
         }
       }
     },
-    "/logs/stream": {
-      "get": {
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "description": "Obtiene un stream de logs del sistema en tiempo real usando Server-Sent Events (SSE)",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "text/event-stream"
-        ],
-        "tags": [
-          "Logs"
-        ],
-        "summary": "Stream de logs en tiempo real",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Nivel de log (error, warn, info, debug)",
-            "name": "level",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Filtrar por servicio",
-            "name": "service",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Filtrar por módulo",
-            "name": "module",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Filtrar por función",
-            "name": "function",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "description": "Filtrar por business_id",
-            "name": "business_id",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "description": "Filtrar por user_id",
-            "name": "user_id",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Buscar en mensaje",
-            "name": "search",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Stream de logs en formato SSE",
-            "schema": {
-              "type": "string"
-            }
-          },
-          "401": {
-            "description": "Token de acceso requerido",
-            "schema": {
-              "type": "object"
-            }
-          },
-          "403": {
-            "description": "Solo super administradores pueden ver logs",
-            "schema": {
-              "type": "object"
-            }
-          },
-          "500": {
-            "description": "Error interno del servidor",
-            "schema": {
-              "type": "object"
-            }
-          }
-        }
-      }
-    },
     "/permissions": {
       "get": {
         "security": [
@@ -5430,6 +5340,24 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.AssignRecordProxyRequest": {
+      "type": "object",
+      "required": [
+        "proxy_name"
+      ],
+      "properties": {
+        "proxy_dni": {
+          "type": "string",
+          "maxLength": 30,
+          "example": "52123456"
+        },
+        "proxy_name": {
+          "type": "string",
+          "maxLength": 255,
+          "example": "María Gómez"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_request.CreateAttendanceListRequest": {
       "type": "object",
       "required": [
@@ -5595,6 +5523,119 @@ const docTemplate = `{
         "start_date": {
           "type": "string",
           "example": "2025-01-15T00:00:00Z"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordResponse": {
+      "type": "object",
+      "properties": {
+        "attendance_list_id": {
+          "type": "integer",
+          "example": 1
+        },
+        "attended_as_owner": {
+          "type": "boolean",
+          "example": true
+        },
+        "attended_as_proxy": {
+          "type": "boolean",
+          "example": false
+        },
+        "created_at": {
+          "type": "string",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "is_valid": {
+          "type": "boolean",
+          "example": true
+        },
+        "notes": {
+          "type": "string",
+          "example": "Notas adicionales"
+        },
+        "property_unit_id": {
+          "type": "integer",
+          "example": 123
+        },
+        "proxy_id": {
+          "type": "integer",
+          "example": 789
+        },
+        "proxy_name": {
+          "type": "string",
+          "example": "María García"
+        },
+        "resident_id": {
+          "type": "integer",
+          "example": 456
+        },
+        "resident_name": {
+          "type": "string",
+          "example": "Juan Pérez"
+        },
+        "signature": {
+          "type": "string",
+          "example": "Firma digital"
+        },
+        "signature_date": {
+          "type": "string",
+          "example": "2025-01-15T14:30:00Z"
+        },
+        "signature_method": {
+          "type": "string",
+          "example": "digital"
+        },
+        "unit_number": {
+          "type": "string",
+          "example": "CASA 126"
+        },
+        "updated_at": {
+          "type": "string",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "verification_date": {
+          "type": "string",
+          "example": "2025-01-15T15:00:00Z"
+        },
+        "verification_notes": {
+          "type": "string",
+          "example": "Verificado por administrador"
+        },
+        "verified_by": {
+          "type": "integer",
+          "example": 5
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordSuccess": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.AttendanceRecordResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_attendance_internal_infra_primary_handlers_response.ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -7101,6 +7142,16 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.GenerateVotingCredentialsRequest": {
+      "type": "object",
+      "properties": {
+        "regenerate": {
+          "description": "Regenerate reemplaza todas las contraseñas del grupo (las credenciales impresas antes dejan\nde servir). Si es false solo se generan para las unidades que aún no tienen.",
+          "type": "boolean",
+          "example": false
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_request.MarkAttendanceRequest": {
       "type": "object",
       "required": [
@@ -7188,6 +7239,46 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.GenerateVotingCredentialsResponse": {
+      "type": "object",
+      "properties": {
+        "generated": {
+          "type": "integer",
+          "example": 194
+        },
+        "total": {
+          "type": "integer",
+          "example": 194
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PaginatedVotingCredentialsResponse": {
+      "type": "object",
+      "properties": {
+        "credentials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VotingCredentialResponse"
+          }
+        },
+        "page": {
+          "type": "integer",
+          "example": 1
+        },
+        "page_size": {
+          "type": "integer",
+          "example": 200
+        },
+        "total": {
+          "type": "integer",
+          "example": 194
+        },
+        "total_pages": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PreviousVotingVotedUnitsResponse": {
       "type": "object",
       "properties": {
@@ -7257,6 +7348,34 @@ const docTemplate = `{
         }
       }
     },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.SuccessResponse-central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response_GenerateVotingCredentialsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.GenerateVotingCredentialsResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.SuccessResponse-central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response_PaginatedVotingCredentialsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.PaginatedVotingCredentialsResponse"
+        },
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VoteResponse": {
       "type": "object",
       "properties": {
@@ -7303,6 +7422,31 @@ const docTemplate = `{
         "voting_option_id": {
           "type": "integer",
           "example": 1
+        }
+      }
+    },
+    "central_reserve_services_horizontalproperty_vote_internal_infra_primary_handlers_response.VotingCredentialResponse": {
+      "type": "object",
+      "properties": {
+        "owner_name": {
+          "type": "string",
+          "example": "CAMACHO MATEUS SEBASTIAN"
+        },
+        "password": {
+          "type": "string",
+          "example": "K7M2QX"
+        },
+        "property_unit_id": {
+          "type": "integer",
+          "example": 12
+        },
+        "unit_block": {
+          "type": "string",
+          "example": "Casa"
+        },
+        "unit_number": {
+          "type": "string",
+          "example": "126"
         }
       }
     },
@@ -7383,6 +7527,11 @@ const docTemplate = `{
           "description": "Dni es obligatorio solo si el grupo tiene require_document_validation = true; si no, se ignora.",
           "type": "string",
           "example": "123456789"
+        },
+        "password": {
+          "description": "Password es obligatoria solo si el grupo tiene contraseñas generadas (la de la credencial\nimpresa de la unidad).",
+          "type": "string",
+          "example": "K7M2QX"
         },
         "property_unit_id": {
           "type": "integer",

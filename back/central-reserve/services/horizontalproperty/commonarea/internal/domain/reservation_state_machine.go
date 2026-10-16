@@ -16,14 +16,14 @@ var AllowedReservationTransitions = map[string][]string{
 
 // ReservationStateTransition contiene los cambios a aplicar tras una transición de estado
 type ReservationStateTransition struct {
-	NewStatusID      uint
-	ApprovedAt       *time.Time
-	QRCode           string
-	AccessCode       string
-	CheckedInAt      *time.Time
-	CheckedOutAt     *time.Time
-	RejectedAt       *time.Time
-	CancelledAt      *time.Time
+	NewStatusID  uint
+	ApprovedAt   *time.Time
+	QRCode       string
+	AccessCode   string
+	CheckedInAt  *time.Time
+	CheckedOutAt *time.Time
+	RejectedAt   *time.Time
+	CancelledAt  *time.Time
 }
 
 // ReservationStateMachine maneja la lógica de transiciones de estado de reservas

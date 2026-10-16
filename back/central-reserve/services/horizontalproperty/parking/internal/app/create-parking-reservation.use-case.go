@@ -65,10 +65,19 @@ func (uc *parkingUseCase) CreateParkingReservation(ctx context.Context, dto doma
 	}
 	duration := endTime.Sub(startTime).Hours()
 
-	// TODO: Obtener el ID del estado desde el código (necesitaríamos un método en el repositorio)
-	// Por ahora asumimos que el estado existe con código "pending" o "confirmed"
-	// Estado inicial: pending si requiere aprobación, confirmed si no
-	reservationStatusID := uint(1) // Esto debería obtenerse de la base de datos según el código
+	// Estado inicial por código (los ids cambian entre bases): pending si requiere aprobación,
+	// confirmed si no.
+	statusCode := "confirmed"
+	if dto.RequiresApproval {
+		statusCode = "pending"
+	}
+	reservationStatusID, err := uc.parkingReservationRepo.GetReservationStatusIDByCode(ctx, statusCode)
+	if err != nil {
+		return nil, err
+	}
+	if reservationStatusID == 0 {
+		return nil, domain.ErrReservationStatusMissing
+	}
 
 	reservation := &domain.ParkingReservation{
 		BusinessID:          dto.BusinessID,

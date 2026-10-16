@@ -19,10 +19,12 @@ func (h *VisitHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// Tipos y estados
 		visits.GET("/types", middleware.JWT(), h.ListVisitTypes)
 		visits.GET("/statuses", middleware.JWT(), h.ListVisitStatuses)
+		visits.GET("/summary", middleware.JWT(), h.GetVisitsSummary)
 
 		// Visitantes
 		visits.GET("/search-visitor", middleware.JWT(), h.SearchVisitor)
 		visits.POST("/visitors", middleware.JWT(), h.CreateVisitor)
+		visits.POST("/vehicles", middleware.JWT(), h.CreateVisitorVehicle)
 
 		// QR
 		visits.GET("/qr/:qr_code", middleware.JWT(), h.GetVisitByQRCode)
@@ -33,6 +35,7 @@ func (h *VisitHandler) RegisterRoutes(router *gin.RouterGroup) {
 
 		// Activos
 		visits.POST("/:visit_id/assets", middleware.JWT(), h.RegisterAssets)
+		visits.GET("/:visit_id/assets", middleware.JWT(), h.ListAssets)
 
 		// Acompañantes
 		visits.GET("/:visit_id/companions", middleware.JWT(), h.GetCompanions)

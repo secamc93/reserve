@@ -1,457 +1,328 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useIsMobile, mobileColumn, MobileCard, MobileActionButton } from '@/services/mobile-ui';
-import { Table, Badge, Alert, TableColumn, Button, Spinner, Select, Input } from '@shared/ui';
-import { usePaginationParams } from '@shared/ui/pagination';
-import { getPackagesAction, getPackageStatusesAction, deletePackageAction } from '../infrastructure/actions';
-import { PackageListDTO, PackageStatus } from '../domain';
-import { TokenStorage } from '@shared/config';
-import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
+/**
+ * P1 · Paquetes / P4 · móvil ("PH - Visitas y Paquetes").
+ * Escritorio: pestañas Por entregar · Entregados hoy · Todos con conteos, "Recordar a residentes"
+ * y "+ Recibir paquete"; buscador a la derecha; tabla con unidad, residente, transportadora, guía,
+ * días en portería y "Entregar" + ⋮. Teléfono: título con el conteo, buscador grande por unidad,
+ * tarjetas con "Entregar" y "+ Recibir paquete" fijo abajo. Filtros y paginación en la URL.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { DsBody, DsPage, DsSearch, DsSectionHeader, DsTable, VtMenu, VtNotice, dsMono, vtBtn, type DsColumn } from '@/shared/ui/ds';
+import { Pagination, usePaginationParams } from '@shared/ui/pagination';
+import { getPackagesAction, getPackagesSummaryAction } from '../infrastructure/actions';
+import type { PackageListDTO, PackagesSummary } from '../domain';
+import { PackageDetailPanel } from './package-detail-panel';
 import { ReceivePackageModal } from './receive-package-modal';
-import { DeliverPackageModal } from './deliver-package-modal';
-import { PackageDetailModal } from './package-detail-modal';
-import { PlusIcon, CheckCircleIcon, EyeIcon, TrashIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useBusinessToken } from './use-business-token';
+import { packagesQueryFor, patchQuery, readPackagesFilters, type PackagesTab } from './packages-filters';
+import { daysColor, formatDays, packageActions, packageDays, packageGroupOf, unitLabel } from './package-state';
 
 interface PackagesTableProps {
   businessId: number;
 }
 
+type Notice = { tone: 'ok' | 'error'; text: string } | null;
+type Selection = { row: PackageListDTO; mode: 'detail' | 'deliver' | 'return' } | null;
+
 export function PackagesTable({ businessId }: PackagesTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const getToken = useBusinessToken(businessId);
+  // Clave de texto: los filtros solo cambian cuando cambia la URL, no en cada render
+  const qsKey = searchParams?.toString() ?? '';
+  const filters = useMemo(() => readPackagesFilters(new URLSearchParams(qsKey)), [qsKey]);
+  const query = useMemo(() => packagesQueryFor(filters), [filters]);
+  const { page, pageSize } = usePaginationParams();
+
   const [packages, setPackages] = useState<PackageListDTO[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
+  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
-  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
-  const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<PackageListDTO | null>(null);
-  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
-  const [processingPackageId, setProcessingPackageId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<PackagesSummary | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [selected, setSelected] = useState<Selection>(null);
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  const [searchDraft, setSearchDraft] = useState(filters.q);
 
-  // Filtros
-  const [showFilters, setShowFilters] = useState(false);
-  const [packageStatuses, setPackageStatuses] = useState<PackageStatus[]>([]);
-  const [filterStatusId, setFilterStatusId] = useState<number | undefined>(undefined);
-  const [filterStartDate, setFilterStartDate] = useState<string>('');
-  const [filterEndDate, setFilterEndDate] = useState<string>('');
+  const navigate = useCallback(
+    (patch: Record<string, string | undefined>) => {
+      const qs = patchQuery(searchParams, patch);
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
 
-  const getBusinessToken = useCallback(async (): Promise<string> => {
-    let businessToken = TokenStorage.getBusinessToken();
-    if (businessToken) return businessToken;
+  useEffect(() => setSearchDraft(filters.q), [filters.q]);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSearch = (value: string) => {
+    setSearchDraft(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => navigate({ q: value.trim() || undefined }), 350);
+  };
+  useEffect(() => () => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+  }, []);
 
-    const sessionToken = TokenStorage.getSessionToken();
-    if (!sessionToken) throw new Error('No session token available');
+  const showNotice = useCallback((n: Notice) => {
+    setNotice(n);
+    if (n?.tone === 'ok') setTimeout(() => setNotice((cur) => (cur === n ? null : cur)), 4000);
+  }, []);
 
-    const user = TokenStorage.getUser();
-    const isSuperAdmin = user?.is_super_admin;
-    const business_id = isSuperAdmin ? 0 : businessId;
-
-    const result = await generateBusinessTokenAction({
-      business_id,
-      session_token: sessionToken,
-    });
-
-    if (!result.success || !result.data) {
-      throw new Error(result.error || 'No se pudo generar business token');
-    }
-
-    TokenStorage.setBusinessToken(result.data.token);
-    TokenStorage.setActiveBusiness(business_id);
-    return result.data.token;
-  }, [businessId]);
-
-  const loadPackageStatuses = useCallback(async () => {
-    try {
-      const token = await getBusinessToken();
-      const statuses = await getPackageStatusesAction({ token });
-      setPackageStatuses(statuses.filter(s => s.isActive));
-    } catch (error) {
-      console.error('Error cargando estados:', error);
-    }
-  }, [getBusinessToken]);
-
-  useEffect(() => {
-    loadPackageStatuses();
-  }, [loadPackageStatuses]);
-
-  const loadPackages = useCallback(async () => {
+  const loadList = useCallback(async () => {
     setLoading(true);
-    setAlert(null);
     try {
-      const token = await getBusinessToken();
-
-      const data = await getPackagesAction({
-        businessId,
-        token,
-        page: currentPage,
-        pageSize: pageSize,
-        packageStatusId: filterStatusId,
-        startDate: filterStartDate || undefined,
-        endDate: filterEndDate || undefined,
-      });
-
+      const token = await getToken();
+      const data = await getPackagesAction({ businessId, token, page, pageSize, ...query });
       setPackages(data.packages);
-      setTotalPages(data.totalPages);
-      setTotalCount(data.total);
-
-      if (data.packages.length === 0 && data.total === 0) {
-        setAlert({ 
-          type: 'info', 
-          message: 'No hay paquetes registrados. Puedes recibir un nuevo paquete usando el botón "Recibir Paquete".' 
-        });
-      }
-    } catch (error: any) {
-      console.error('Error al cargar paquetes:', error);
-      const errorMessage = error?.message || 'Error al cargar los paquetes. Por favor, intenta nuevamente.';
-      setAlert({ type: 'error', message: errorMessage });
-      setTimeout(() => setAlert(null), 5000);
+      setTotal(data.total);
+      setTotalPages(Math.max(1, data.totalPages));
+    } catch (e) {
+      showNotice({ tone: 'error', text: e instanceof Error ? e.message : 'No se pudieron cargar los paquetes' });
     } finally {
       setLoading(false);
     }
-  }, [businessId, currentPage, pageSize, filterStatusId, filterStartDate, filterEndDate, getBusinessToken]);
+  }, [businessId, page, pageSize, query, getToken, showNotice]);
+
+  const loadSummary = useCallback(async () => {
+    try {
+      const token = await getToken();
+      setSummary(await getPackagesSummaryAction({ businessId, token }));
+    } catch {
+      setSummary(null);
+    }
+  }, [businessId, getToken]);
 
   useEffect(() => {
-    loadPackages();
-  }, [loadPackages]);
+    loadList();
+  }, [loadList]);
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
 
-  const handleClearFilters = () => {
-    setFilterStatusId(undefined);
-    setFilterStartDate('');
-    setFilterEndDate('');
-    setCurrentPage(1);
-  };
+  useEffect(() => {
+    setSelected((cur) => (cur ? { ...cur, row: packages.find((p) => p.id === cur.row.id) ?? cur.row } : cur));
+  }, [packages]);
 
-  const hasActiveFilters = filterStatusId !== undefined || filterStartDate !== '' || filterEndDate !== '';
+  const reload = useCallback(() => {
+    loadList();
+    loadSummary();
+  }, [loadList, loadSummary]);
 
-  const handleViewDetails = (pkg: PackageListDTO) => {
-    setSelectedPackageId(pkg.id);
-    setIsDetailModalOpen(true);
-  };
+  const tabs: { id: PackagesTab; label: string; count?: number }[] = [
+    { id: 'pending', label: 'Por entregar', count: summary?.pending },
+    { id: 'today', label: 'Entregados hoy', count: summary?.deliveredToday },
+    { id: 'all', label: 'Todos' },
+  ];
 
-  const handleDeletePackage = async (pkg: PackageListDTO) => {
-    if (!confirm(`¿Estás seguro de que deseas marcar el paquete ${pkg.trackingNumber} como retornado?`)) {
-      return;
-    }
-    setProcessingPackageId(pkg.id);
-    try {
-      const token = await getBusinessToken();
-      await deletePackageAction({
-        businessId,
-        packageId: pkg.id,
-        token,
-      });
-      setAlert({ type: 'success', message: 'Paquete marcado como retornado' });
-      setTimeout(() => setAlert(null), 5000);
-      loadPackages();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Error eliminando paquete';
-      setAlert({ type: 'error', message: errorMessage });
-      setTimeout(() => setAlert(null), 5000);
-    } finally {
-      setProcessingPackageId(null);
-    }
-  };
-
-  const getStatusBadgeColor = (status: string): 'success' | 'warning' | 'danger' | 'info' => {
-    const statusLower = status.toLowerCase();
-    if (statusLower.includes('entregado') || statusLower.includes('delivered')) return 'success';
-    if (statusLower.includes('recibido') || statusLower.includes('received')) return 'info';
-    if (statusLower.includes('almacén') || statusLower.includes('storage')) return 'warning';
-    if (statusLower.includes('retornado') || statusLower.includes('returned')) return 'danger';
-    return 'info';
-  };
-
-  const handlePackageReceived = useCallback(() => {
-    setIsReceiveModalOpen(false);
-    loadPackages();
-    setAlert({ type: 'success', message: 'Paquete recibido exitosamente' });
-    setTimeout(() => setAlert(null), 5000);
-  }, [loadPackages]);
-
-  const handleDeliverClick = (pkg: PackageListDTO) => {
-    setSelectedPackage(pkg);
-    setIsDeliverModalOpen(true);
-  };
-
-  const handlePackageDelivered = useCallback(() => {
-    setIsDeliverModalOpen(false);
-    setSelectedPackage(null);
-    loadPackages();
-    setAlert({ type: 'success', message: 'Paquete entregado exitosamente' });
-    setTimeout(() => setAlert(null), 5000);
-  }, [loadPackages]);
-
-  const isMobile = useIsMobile();
-
-  /** Acciones permitidas de un paquete (las comparten la fila de escritorio y la tarjeta de teléfono). */
-  const packageFlags = (pkg: PackageListDTO) => {
-    const isDelivered = pkg.statusCode === 'delivered' || !!pkg.deliveredAt;
-    const canDeliver = pkg.statusCode === 'received' || pkg.statusCode === 'in_storage' || pkg.statusCode === 'notified';
-    return {
-      isProcessing: processingPackageId === pkg.id,
-      canDeliver: canDeliver && !isDelivered,
-      canDelete: !isDelivered && pkg.statusCode !== 'returned' && pkg.statusCode !== 'lost',
-    };
-  };
-
-  const fmtDate = (v?: string | null) => (v ? new Date(v).toLocaleDateString('es-CO') : '-');
-
-  const mobileColumns = mobileColumn<PackageListDTO>('Paquetes', (pkg) => {
-    const f = packageFlags(pkg);
-    return (
-      <MobileCard
-        title={`Unidad ${pkg.propertyUnitNumber}`}
-        subtitle={[pkg.trackingNumber, pkg.carrier].filter(Boolean).join(' · ')}
-        badge={<Badge color={getStatusBadgeColor(pkg.statusName)}>{pkg.statusName}</Badge>}
-        fields={[
-          { label: 'Residente', value: pkg.residentName || '-', full: true },
-          { label: 'Recibido', value: fmtDate(pkg.receivedAt) },
-          { label: 'Entregado', value: fmtDate(pkg.deliveredAt) },
-        ]}
-        actions={<>
-          {f.canDeliver && (
-            <MobileActionButton variant="primary" className="flex-1" disabled={f.isProcessing} onClick={() => handleDeliverClick(pkg)}>
-              <CheckCircleIcon className="h-5 w-5" /> Entregar
-            </MobileActionButton>
-          )}
-          <MobileActionButton className="flex-1" onClick={() => handleViewDetails(pkg)}>
-            <EyeIcon className="h-5 w-5" /> Detalle
-          </MobileActionButton>
-          {f.canDelete && (
-            <MobileActionButton variant="danger" title="Marcar como retornado" disabled={f.isProcessing} onClick={() => handleDeletePackage(pkg)}>
-              <TrashIcon className="h-5 w-5" />
-            </MobileActionButton>
-          )}
-        </>}
-      />
-    );
-  });
-
-  const columns: TableColumn<PackageListDTO>[] = [
+  const columns: DsColumn<PackageListDTO>[] = [
+    { key: 'unit', label: 'Unidad', width: '110px', render: (p) => <span className={`${dsMono} font-semibold`}>{unitLabel(p.propertyUnitBlock, p.propertyUnitNumber)}</span> },
     {
-      key: 'trackingNumber',
-      label: 'Tracking',
-      render: (_, pkg) => (
-        <div>
-          <div className="font-medium">{pkg.trackingNumber}</div>
-          <div className="text-sm text-gray-500">{pkg.carrier}</div>
+      key: 'resident',
+      label: 'Residente',
+      width: 'minmax(160px,1.3fr)',
+      render: (p) => (
+        <div className="min-w-0">
+          <div className="truncate">{p.residentName || <span className="text-[#8a8580]">Cualquier residente</span>}</div>
+          {p.description && <div className="text-[11px] text-[#8a8580] truncate">{p.description}</div>}
         </div>
       ),
     },
+    { key: 'carrier', label: 'Transportadora', width: 'minmax(110px,.8fr)', render: (p) => <span className="truncate">{p.carrier}</span> },
+    { key: 'tracking', label: 'Guía', width: 'minmax(110px,.8fr)', render: (p) => <span className={`${dsMono} text-xs truncate`}>{p.trackingNumber || '—'}</span> },
+    { key: 'days', label: 'En portería', width: '96px', render: (p) => <Days p={p} /> },
     {
-      key: 'propertyUnitNumber',
-      label: 'Unidad',
-      render: (_, pkg) => <span className="font-medium">{pkg.propertyUnitNumber}</span>,
-    },
-    {
-      key: 'residentName',
-      label: 'Residente',
-      render: (_, pkg) => <span>{pkg.residentName || '-'}</span>,
-    },
-    {
-      key: 'statusName',
-      label: 'Estado',
-      render: (_, pkg) => (
-        <Badge color={getStatusBadgeColor(pkg.statusName)}>
-          {pkg.statusName}
-        </Badge>
-      ),
-    },
-    {
-      key: 'receivedAt',
-      label: 'Fecha Recepción',
-      render: (_, pkg) => {
-        if (!pkg.receivedAt) return <span className="text-gray-400">-</span>;
-        const date = new Date(pkg.receivedAt);
-        return <span>{date.toLocaleDateString('es-CO')}</span>;
-      },
-    },
-    {
-      key: 'deliveredAt',
-      label: 'Fecha Entrega',
-      render: (_, pkg) => {
-        if (!pkg.deliveredAt) return <span className="text-gray-400">-</span>;
-        const date = new Date(pkg.deliveredAt);
-        return <span>{date.toLocaleDateString('es-CO')}</span>;
-      },
-    },
-    {
-      key: 'actions',
-      label: 'Acciones',
-      render: (_, pkg) => {
-        const isProcessing = processingPackageId === pkg.id;
-        const isDelivered = pkg.statusCode === 'delivered' || pkg.deliveredAt;
-        const canDeliver = pkg.statusCode === 'received' || pkg.statusCode === 'in_storage' || pkg.statusCode === 'notified';
-        const canDelete = !isDelivered && pkg.statusCode !== 'returned' && pkg.statusCode !== 'lost';
-
+      key: 'action',
+      label: <span className="sr-only">Acción</span>,
+      width: '130px',
+      align: 'right',
+      render: (p) => {
+        const a = packageActions(p);
+        const unit = unitLabel(p.propertyUnitBlock, p.propertyUnitNumber);
         return (
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleViewDetails(pkg)}
-              title="Ver detalles"
-            >
-              <EyeIcon className="h-4 w-4" />
-            </Button>
-            {canDeliver && !isDelivered && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleDeliverClick(pkg)}
-                disabled={isProcessing}
-                title="Entregar paquete"
-              >
-                <CheckCircleIcon className="h-4 w-4 text-green-600" />
-              </Button>
+          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+            {a.canDeliver ? (
+              <button type="button" className={`${vtBtn.primary} h-[30px]! px-3! text-xs!`} onClick={() => setSelected({ row: p, mode: 'deliver' })} aria-label={`Entregar paquete de ${unit}`}>
+                Entregar
+              </button>
+            ) : (
+              <button type="button" className={vtBtn.small} onClick={() => setSelected({ row: p, mode: 'detail' })} aria-label={`Ver paquete de ${unit}`}>
+                Ver
+              </button>
             )}
-            {canDelete && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleDeletePackage(pkg)}
-                disabled={isProcessing}
-                title="Marcar como retornado"
-              >
-                <TrashIcon className="h-4 w-4 text-red-600" />
-              </Button>
-            )}
+            <VtMenu
+              label={`Más acciones del paquete de ${unit}`}
+              items={[
+                { label: 'Ver detalle', onSelect: () => setSelected({ row: p, mode: 'detail' }) },
+                ...(a.canReturn ? [{ label: 'Devolver', danger: true, onSelect: () => setSelected({ row: p, mode: 'return' }) }] : []),
+              ]}
+            />
           </div>
         );
       },
     },
   ];
 
-  if (loading && packages.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spinner />
-      </div>
-    );
-  }
+  const empty = filters.q
+    ? `Ningún paquete coincide con “${filters.q}”`
+    : filters.tab === 'pending'
+      ? 'No hay paquetes por entregar'
+      : filters.tab === 'today'
+        ? 'Hoy no se han entregado paquetes'
+        : 'No hay paquetes registrados';
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
-        <h2 className="text-xl font-semibold">Paquetes</h2>
-        <div className="grid grid-cols-2 gap-2 md:flex [&>button]:min-h-[44px] md:[&>button]:min-h-0 [&>button]:justify-center [&>button]:whitespace-nowrap">
-          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-            <FunnelIcon className="h-5 w-5 mr-2" />
-            Filtros
-            {hasActiveFilters && <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">!</span>}
-          </Button>
-          <Button onClick={() => setIsReceiveModalOpen(true)}>
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Recibir Paquete
-          </Button>
-        </div>
+    <DsPage>
+      <div className="hidden md:block">
+        <DsSectionHeader<PackagesTab>
+          ariaLabel="Vistas de paquetes"
+          tabs={tabs}
+          active={filters.tab}
+          onChange={(tab) => navigate({ tab: tab === 'pending' ? undefined : tab })}
+          actions={
+            <>
+              <span title="Pronto: avisar por WhatsApp y correo a los residentes con paquetes por entregar. Aún no hay servicio de notificaciones.">
+                <button type="button" className={vtBtn.secondary} disabled aria-describedby="remind-help">
+                  Recordar a residentes
+                </button>
+              </span>
+              <span id="remind-help" className="sr-only">
+                Aún no hay servicio de notificaciones para recordar a los residentes.
+              </span>
+              <button type="button" className={vtBtn.primary} onClick={() => setReceiveOpen(true)}>
+                + Recibir paquete
+              </button>
+            </>
+          }
+        />
       </div>
 
-      {/* Panel de Filtros */}
-      {showFilters && (
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-medium">Filtros</h3>
-            {hasActiveFilters && (
-              <Button variant="secondary" size="sm" onClick={handleClearFilters}>
-                <XMarkIcon className="h-4 w-4 mr-1" />
-                Limpiar
-              </Button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Select
-                label="Estado"
-                value={filterStatusId?.toString() || ''}
-                onChange={(e) => {
-                  setFilterStatusId(e.target.value ? Number(e.target.value) : undefined);
-                  setCurrentPage(1);
-                }}
-                options={[
-                  { value: '', label: 'Todos los estados' },
-                  ...packageStatuses.map((status) => ({
-                    value: status.id.toString(),
-                    label: status.name,
-                  })),
-                ]}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha desde</label>
-              <Input
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => {
-                  setFilterStartDate(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha hasta</label>
-              <Input
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => {
-                  setFilterEndDate(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-          </div>
+      {/* Teléfono (P4): título con el conteo y buscador grande por unidad */}
+      <div className="md:hidden px-4 pt-4 flex flex-col gap-3">
+        <div>
+          <h1 className="m-0 text-[22px] font-semibold tracking-[-.015em]">Paquetes</h1>
+          <div className={`${dsMono} text-xs text-[#8a8580]`}>{summary?.pending ?? 0} por entregar</div>
         </div>
-      )}
+        <input
+          type="search"
+          aria-label="Buscar paquete por unidad"
+          placeholder="126"
+          inputMode="search"
+          className={`${dsMono} h-12 w-full rounded-lg border-[1.5px] border-[#1a1a1a] bg-white px-3.5 text-lg outline-none`}
+          value={searchDraft}
+          onChange={(e) => onSearch(e.target.value)}
+        />
+        {filters.q && !loading && (
+          <div className="text-[13px] text-[#4b4a46]">
+            {total} {total === 1 ? 'coincidencia' : 'coincidencias'} con «{filters.q}»
+          </div>
+        )}
+      </div>
 
-      {alert && (
-        <Alert type={alert.type} onClose={() => setAlert(null)}>
-          {alert.message}
-        </Alert>
-      )}
+      <DsBody className="max-md:pb-32">
+        <div className="hidden md:flex justify-end">
+          <DsSearch value={searchDraft} onChange={onSearch} placeholder="Unidad, residente o guía" className="md:w-[260px]" ariaLabel="Buscar paquete" />
+        </div>
 
-      <Table
-        data={packages}
-        columns={isMobile ? mobileColumns : columns}
-        loading={loading}
-        pagination={{ total: totalCount, totalPages }}
-        emptyMessage="No hay paquetes registrados"
+        {notice && <VtNotice tone={notice.tone}>{notice.text}</VtNotice>}
+
+        <div className="hidden md:block">
+          <DsTable
+            ariaLabel="Paquetes"
+            columns={columns}
+            rows={packages}
+            rowKey={(p) => p.id}
+            loading={loading}
+            onRowClick={(p) => setSelected({ row: p, mode: 'detail' })}
+            selectedKey={selected?.row.id ?? null}
+            empty={empty}
+            minWidth={900}
+            footer={<Pagination total={total} totalPages={totalPages} className="border-t-0! bg-transparent! px-0! py-1!" />}
+          />
+        </div>
+
+        <div className="md:hidden flex flex-col gap-2" aria-label="Paquetes (lista)">
+          {loading ? (
+            <div className="py-10 text-center text-sm text-[#8a8580]">Cargando…</div>
+          ) : packages.length === 0 ? (
+            <div className="py-10 text-center text-sm text-[#8a8580]">{empty}</div>
+          ) : (
+            packages.map((p) => <PackageCard key={p.id} p={p} onOpen={() => setSelected({ row: p, mode: 'detail' })} onDeliver={() => setSelected({ row: p, mode: 'deliver' })} />)
+          )}
+          {totalPages > 1 && (
+            <div className="rounded-[10px] overflow-hidden border border-[#e4e2dd]">
+              <Pagination total={total} totalPages={totalPages} />
+            </div>
+          )}
+        </div>
+      </DsBody>
+
+      {/* Teléfono: recibir paquete, fijo abajo (sobre la barra de navegación) */}
+      <div className="md:hidden fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] px-4 z-30">
+        <button type="button" className={`${vtBtn.primary} w-full h-[52px]! text-[15px]!`} onClick={() => setReceiveOpen(true)}>
+          + Recibir paquete
+        </button>
+      </div>
+
+      <PackageDetailPanel
+        businessId={businessId}
+        row={selected?.row ?? null}
+        mode={selected?.mode}
+        onClose={() => setSelected(null)}
+        onChanged={(text) => {
+          showNotice({ tone: 'ok', text });
+          reload();
+        }}
       />
 
       <ReceivePackageModal
-        isOpen={isReceiveModalOpen}
-        onClose={() => setIsReceiveModalOpen(false)}
-        onSuccess={handlePackageReceived}
+        isOpen={receiveOpen}
+        onClose={() => setReceiveOpen(false)}
         businessId={businessId}
+        onSuccess={(text) => {
+          setReceiveOpen(false);
+          showNotice({ tone: 'ok', text });
+          reload();
+        }}
       />
+    </DsPage>
+  );
+}
 
-      {selectedPackage && (
-        <DeliverPackageModal
-          isOpen={isDeliverModalOpen}
-          onClose={() => {
-            setIsDeliverModalOpen(false);
-            setSelectedPackage(null);
-          }}
-          onSuccess={handlePackageDelivered}
-          businessId={businessId}
-          packageId={selectedPackage.id}
-          packageInfo={selectedPackage}
-        />
-      )}
+/** Días en portería ("hoy", "1 día", "6 días"); en entregados, cuánto estuvo. */
+function Days({ p }: { p: PackageListDTO }) {
+  const days = packageDays(p);
+  const pending = packageGroupOf(p) === 'pending';
+  return (
+    <span className={`${dsMono} text-xs font-semibold`} style={{ color: pending ? daysColor(days) : '#8a8580' }}>
+      {formatDays(days)}
+    </span>
+  );
+}
 
-      {selectedPackageId && (
-        <PackageDetailModal
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setIsDetailModalOpen(false);
-            setSelectedPackageId(null);
-          }}
-          packageId={selectedPackageId}
-          businessId={businessId}
-        />
+function PackageCard({ p, onOpen, onDeliver }: { p: PackageListDTO; onOpen: () => void; onDeliver: () => void }) {
+  const canDeliver = packageActions(p).canDeliver;
+  const unit = unitLabel(p.propertyUnitBlock, p.propertyUnitNumber);
+  const days = packageDays(p);
+  const pending = packageGroupOf(p) === 'pending';
+  return (
+    <article className="bg-white border border-[#e4e2dd] rounded-[10px] px-4 py-3 flex items-center gap-3">
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left" aria-label={`Ver paquete de ${unit}`}>
+        <div className={`${dsMono} text-base font-semibold`}>{unit}</div>
+        <div className="text-[13px] text-[#4b4a46] truncate">{p.residentName || 'Cualquier residente'}</div>
+        <div className="text-xs truncate">
+          <span className="text-[#8a8580]">{p.carrier} · </span>
+          <span style={{ color: pending ? daysColor(days) : '#8a8580' }}>{formatDays(days)}</span>
+        </div>
+      </button>
+      {canDeliver && (
+        <button type="button" className={`${vtBtn.primary} h-11! px-4!`} onClick={onDeliver} aria-label={`Entregar paquete de ${unit}`}>
+          Entregar
+        </button>
       )}
-    </div>
+    </article>
   );
 }

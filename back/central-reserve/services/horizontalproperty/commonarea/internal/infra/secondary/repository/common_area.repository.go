@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"sort"
+	"strings"
+	"time"
 
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/secondary/repository/mappers"
@@ -51,6 +54,21 @@ func (r *CommonAreaRepository) CreateCommonArea(ctx context.Context, area *domai
 		r.logger.Error().Err(err).Msg("Error creando zona común")
 		return nil, fmt.Errorf("error creando zona común: %w", err)
 	}
+	// requires_approval / is_active tienen default:true en el modelo: GORM omite el false en Create.
+	falseDefaults := map[string]interface{}{}
+	if !area.RequiresApproval {
+		falseDefaults["requires_approval"] = false
+	}
+	if !area.IsActive {
+		falseDefaults["is_active"] = false
+	}
+	if len(falseDefaults) > 0 {
+		if err := r.db.Conn(ctx).Model(model).Updates(falseDefaults).Error; err != nil {
+			return nil, fmt.Errorf("error creando zona común: %w", err)
+		}
+		model.RequiresApproval = area.RequiresApproval
+		model.IsActive = area.IsActive
+	}
 
 	return mappers.CommonAreaToDomain(model), nil
 }
@@ -70,7 +88,7 @@ func (r *CommonAreaRepository) GetCommonAreaByID(ctx context.Context, id uint) (
 	return mappers.CommonAreaToDomain(&area), nil
 }
 
-// UpdateCommonArea actualiza una zona común
+// UpdateCommonArea actualiza una zona común (los montos opcionales en nil se borran)
 func (r *CommonAreaRepository) UpdateCommonArea(ctx context.Context, area *domain.CommonArea) error {
 	updates := map[string]interface{}{
 		"common_area_type_id":   area.CommonAreaTypeID,
@@ -78,25 +96,16 @@ func (r *CommonAreaRepository) UpdateCommonArea(ctx context.Context, area *domai
 		"description":           area.Description,
 		"location":              area.Location,
 		"max_capacity":          area.MaxCapacity,
+		"area_sqm":              area.AreaSqm,
 		"has_equipment":         area.HasEquipment,
 		"equipment_description": area.EquipmentDescription,
+		"hourly_rate":           area.HourlyRate,
 		"requires_approval":     area.RequiresApproval,
 		"requires_deposit":      area.RequiresDeposit,
+		"deposit_amount":        area.DepositAmount,
 		"allows_recurring":      area.AllowsRecurring,
 		"is_active":             area.IsActive,
-	}
-
-	if area.AreaSqm != nil {
-		updates["area_sqm"] = area.AreaSqm
-	}
-	if area.HourlyRate != nil {
-		updates["hourly_rate"] = area.HourlyRate
-	}
-	if area.DepositAmount != nil {
-		updates["deposit_amount"] = area.DepositAmount
-	}
-	if area.ImageURLs != "" {
-		updates["image_urls"] = area.ImageURLs
+		"image_urls":            area.ImageURLs,
 	}
 
 	if err := r.db.Conn(ctx).Model(&models.CommonArea{}).Where("id = ?", area.ID).Updates(updates).Error; err != nil {
@@ -116,34 +125,36 @@ func (r *CommonAreaRepository) DeleteCommonArea(ctx context.Context, id uint) er
 
 // ListCommonAreas lista zonas comunes con filtros y paginación
 func (r *CommonAreaRepository) ListCommonAreas(ctx context.Context, filters domain.CommonAreaFiltersDTO) (*domain.PaginatedCommonAreasDTO, error) {
+	applyFilters := func(q *gorm.DB) *gorm.DB {
+		q = q.Where("business_id = ?", filters.BusinessID)
+		if filters.CommonAreaTypeID != nil {
+			q = q.Where("common_area_type_id = ?", *filters.CommonAreaTypeID)
+		}
+		if filters.IsActive != nil {
+			q = q.Where("is_active = ?", *filters.IsActive)
+		}
+		if search := strings.TrimSpace(filters.Search); search != "" {
+			like := "%" + search + "%"
+			q = q.Where("(name ILIKE ? OR location ILIKE ?)", like, like)
+		}
+		return q
+	}
+
 	// Conteo total
 	var total int64
-	countQuery := r.db.Conn(ctx).Model(&models.CommonArea{}).Where("business_id = ?", filters.BusinessID)
-
-	if filters.CommonAreaTypeID != nil {
-		countQuery = countQuery.Where("common_area_type_id = ?", *filters.CommonAreaTypeID)
-	}
-	if filters.IsActive != nil {
-		countQuery = countQuery.Where("is_active = ?", *filters.IsActive)
-	}
-
-	if err := countQuery.Count(&total).Error; err != nil {
+	if err := applyFilters(r.db.Conn(ctx).Model(&models.CommonArea{})).Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("error contando zonas comunes: %w", err)
 	}
 
 	// Consulta paginada usando modelos GORM
 	var commonAreasModels []models.CommonArea
-	query := r.db.Conn(ctx).
+	query := applyFilters(r.db.Conn(ctx).
 		Model(&models.CommonArea{}).
 		Preload("CommonAreaType").
-		Where("business_id = ?", filters.BusinessID)
-
-	if filters.CommonAreaTypeID != nil {
-		query = query.Where("common_area_type_id = ?", *filters.CommonAreaTypeID)
-	}
-	if filters.IsActive != nil {
-		query = query.Where("is_active = ?", *filters.IsActive)
-	}
+		Preload("Schedules", "is_active = ?", true).
+		Preload("Restrictions", func(db *gorm.DB) *gorm.DB {
+			return db.Where("is_active = ? AND end_date >= ?", true, time.Now().Format("2006-01-02")).Order("start_date ASC")
+		}))
 
 	offset := (filters.Page - 1) * filters.PageSize
 	if err := query.Order("name ASC").
@@ -155,19 +166,36 @@ func (r *CommonAreaRepository) ListCommonAreas(ctx context.Context, filters doma
 
 	commonAreas := make([]domain.CommonAreaListDTO, len(commonAreasModels))
 	for i, ca := range commonAreasModels {
-		typeName := ""
-		if ca.CommonAreaType.ID != 0 {
-			typeName = ca.CommonAreaType.Name
+		schedules := make([]domain.CommonAreaSchedule, 0, len(ca.Schedules))
+		for _, s := range ca.Schedules {
+			schedules = append(schedules, *mappers.ScheduleToDomain(&s))
+		}
+		sort.Slice(schedules, func(a, b int) bool { return schedules[a].DayOfWeek < schedules[b].DayOfWeek })
+		restrictions := make([]domain.CommonAreaRestriction, 0, len(ca.Restrictions))
+		for _, rs := range ca.Restrictions {
+			restrictions = append(restrictions, *mappers.RestrictionToDomain(&rs))
 		}
 
 		commonAreas[i] = domain.CommonAreaListDTO{
-			ID:               ca.ID,
-			Name:             ca.Name,
-			TypeName:         typeName,
-			Location:         ca.Location,
-			MaxCapacity:      ca.MaxCapacity,
-			IsActive:         ca.IsActive,
-			RequiresApproval: ca.RequiresApproval,
+			ID:                   ca.ID,
+			Name:                 ca.Name,
+			TypeName:             ca.CommonAreaType.Name,
+			TypeCode:             ca.CommonAreaType.Code,
+			Description:          ca.Description,
+			Location:             ca.Location,
+			MaxCapacity:          ca.MaxCapacity,
+			AreaSqm:              ca.AreaSqm,
+			HasEquipment:         ca.HasEquipment,
+			EquipmentDescription: ca.EquipmentDescription,
+			HourlyRate:           ca.HourlyRate,
+			RequiresDeposit:      ca.RequiresDeposit,
+			DepositAmount:        ca.DepositAmount,
+			AllowsRecurring:      ca.AllowsRecurring,
+			IsActive:             ca.IsActive,
+			RequiresApproval:     ca.RequiresApproval,
+			ImageURLs:            ca.ImageURLs,
+			Schedules:            schedules,
+			Restrictions:         restrictions,
 		}
 	}
 

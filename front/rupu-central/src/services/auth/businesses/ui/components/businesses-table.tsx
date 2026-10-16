@@ -222,7 +222,6 @@ export function BusinessesTable({ token }: BusinessesTableProps) {
               size="sm"
               onClick={() => {
                 // TODO: Implementar vista de detalle
-                console.log('Ver detalles de negocio:', business.id);
               }}
             >
               <EyeIcon className="w-4 h-4 mr-1" />

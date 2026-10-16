@@ -23,8 +23,15 @@ type PackageFiltersDTO struct {
 	PackageStatusID *uint
 	StartDate       *time.Time
 	EndDate         *time.Time
-	Page            int
-	PageSize        int
+	// StatusGroup agrupa estados: "pending" (por entregar), "delivered" o "closed" (devueltos/perdidos).
+	// Vacío = todos. Ver PackageStatusGroups.
+	StatusGroup string
+	// DeliveredSince: solo los entregados desde esa hora ("Entregados hoy").
+	DeliveredSince *time.Time
+	// Search busca por guía, transportadora, número de unidad o nombre del residente.
+	Search   string
+	Page     int
+	PageSize int
 }
 
 // PaginatedPackagesDTO - Resultado paginado de paquetes
@@ -42,12 +49,24 @@ type PackageListDTO struct {
 	TrackingNumber     string
 	Carrier            string
 	PropertyUnitNumber string
+	PropertyUnitBlock  string
 	ResidentName       string
 	StatusName         string
 	StatusCode         string
+	Description        string
 	ReceivedAt         *time.Time
 	DeliveredAt        *time.Time
 	CreatedAt          time.Time
+}
+
+// PackagesSummaryDTO - Conteos de la portería de paquetes (chips de la lista)
+type PackagesSummaryDTO struct {
+	Pending        int64 // por entregar (received, in_storage, notified)
+	PendingOverdue int64 // por entregar recibidos hace más de PackageOverdueAfter
+	DeliveredToday int64 // entregados hoy (hora de Colombia)
+	Delivered      int64 // entregados (todos)
+	Closed         int64 // devueltos o perdidos
+	Total          int64
 }
 
 // DeliverPackageDTO - DTO para entregar paquete

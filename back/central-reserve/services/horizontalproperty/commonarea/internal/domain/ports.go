@@ -14,6 +14,9 @@ type CommonAreaRepository interface {
 	ListCommonAreas(ctx context.Context, filters CommonAreaFiltersDTO) (*PaginatedCommonAreasDTO, error)
 	GetCommonAreasByBusinessID(ctx context.Context, businessID uint) ([]*CommonArea, error)
 	GetCommonAreaTypes(ctx context.Context) ([]*CommonAreaType, error)
+
+	// SearchUnits consulta unidades de la propiedad (tabla property_units, replicada localmente)
+	SearchUnits(ctx context.Context, businessID uint, search string, limit int) ([]UnitLookupDTO, error)
 }
 
 // CommonAreaScheduleRepository - Puerto para repositorio de horarios
@@ -23,6 +26,8 @@ type CommonAreaScheduleRepository interface {
 	UpdateSchedule(ctx context.Context, schedule *CommonAreaSchedule) error
 	DeleteSchedule(ctx context.Context, id uint) error
 	GetScheduleForDay(ctx context.Context, commonAreaID uint, dayOfWeek int) (*CommonAreaSchedule, error)
+	// GetAllSchedulesByCommonAreaID incluye los días inactivos (para editar el horario semanal)
+	GetAllSchedulesByCommonAreaID(ctx context.Context, commonAreaID uint) ([]*CommonAreaSchedule, error)
 }
 
 // CommonAreaRestrictionRepository - Puerto para repositorio de restricciones
@@ -30,6 +35,9 @@ type CommonAreaRestrictionRepository interface {
 	CreateRestriction(ctx context.Context, restriction *CommonAreaRestriction) (*CommonAreaRestriction, error)
 	GetActiveRestrictions(ctx context.Context, commonAreaID uint, date time.Time, startTime, endTime string) ([]*CommonAreaRestriction, error)
 	DeleteRestriction(ctx context.Context, id uint) error
+	GetRestrictionByID(ctx context.Context, id uint) (*CommonAreaRestriction, error)
+	// ListRestrictions lista las restricciones activas que terminan en o después de fromDate
+	ListRestrictions(ctx context.Context, commonAreaID uint, fromDate time.Time) ([]*CommonAreaRestriction, error)
 }
 
 // CommonAreaReservationRepository - Puerto para repositorio de reservas
@@ -60,4 +68,15 @@ type CommonAreaUseCase interface {
 	CancelReservation(ctx context.Context, reservationID uint, userID uint, reason string) (*CommonAreaReservation, error)
 	ListReservations(ctx context.Context, filters ReservationFiltersDTO) (*PaginatedReservationsDTO, error)
 	GetReservationByID(ctx context.Context, id uint) (*CommonAreaReservation, error)
+
+	UpdateCommonArea(ctx context.Context, dto UpdateCommonAreaDTO) (*CommonArea, error)
+	DeleteCommonArea(ctx context.Context, id uint) error
+	GetSchedules(ctx context.Context, commonAreaID uint) ([]*CommonAreaSchedule, error)
+	SetSchedules(ctx context.Context, commonAreaID uint, schedules []ScheduleInputDTO) ([]*CommonAreaSchedule, error)
+	ListRestrictions(ctx context.Context, commonAreaID uint, fromDate time.Time) ([]*CommonAreaRestriction, error)
+	CreateRestriction(ctx context.Context, dto CreateRestrictionDTO) (*CommonAreaRestriction, error)
+	DeleteRestriction(ctx context.Context, commonAreaID uint, restrictionID uint) error
+	ConfirmReservation(ctx context.Context, reservationID uint) (*CommonAreaReservation, error)
+	UpdateReservationPayments(ctx context.Context, reservationID uint, dto UpdatePaymentsDTO) (*CommonAreaReservation, error)
+	SearchUnits(ctx context.Context, businessID uint, search string, limit int) ([]UnitLookupDTO, error)
 }

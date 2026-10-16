@@ -73,13 +73,57 @@ export interface BackendVisitList {
   id: number;
   visitor_name: string;
   visitor_dni: string;
+  visitor_phone?: string;
+  visitor_id?: number;
+  property_unit_id?: number;
   property_unit_number: string;
+  property_unit_block?: string;
   visit_type_name: string;
   visit_status_name: string;
+  visit_status_code?: string;
   scheduled_date: string;
-  actual_entry_time?: string;
-  actual_exit_time?: string;
+  scheduled_start_time?: string;
+  scheduled_end_time?: string | null;
+  actual_entry_time?: string | null;
+  actual_exit_time?: string | null;
+  purpose?: string;
+  number_of_visitors?: number;
   created_at: string;
+  visitor_vehicle_plate?: string;
+  authorization_code?: string;
+  entry_gate?: string;
+  resident_name?: string;
+  authorized_by_name?: string;
+  stay_limit_minutes?: number | null;
+  exceeds_time?: boolean;
+}
+
+export interface BackendVisitAsset {
+  id: number;
+  asset_name: string;
+  asset_description?: string;
+  asset_serial?: string;
+  asset_brand?: string;
+  entry_registered: boolean;
+  exit_registered: boolean;
+}
+
+export interface BackendVisitsSummaryResponse {
+  success: boolean;
+  data: {
+    date: string;
+    inside: number;
+    expected: number;
+    left: number;
+    cancelled: number;
+    total: number;
+    inside_now: number;
+    exceeded?: number;
+    next_expected_at?: string | null;
+    next_unit_number?: string;
+    next_unit_block?: string;
+    avg_stay_minutes?: number | null;
+  };
 }
 
 export interface BackendVisitResponse {

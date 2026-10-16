@@ -30,6 +30,13 @@ func PackageToResponse(pkg *domain.Package) response.PackageData {
 
 	if pkg.PropertyUnit.ID != 0 {
 		data.PropertyUnitNumber = pkg.PropertyUnit.Number
+		data.PropertyUnitBlock = pkg.PropertyUnit.Block
+	}
+	if pkg.ReceivedByUser != nil {
+		data.ReceivedByName = pkg.ReceivedByUser.Name
+	}
+	if pkg.DeliveredByUser != nil {
+		data.DeliveredByName = pkg.DeliveredByUser.Name
 	}
 	if pkg.Resident != nil {
 		data.ResidentName = pkg.Resident.FullName

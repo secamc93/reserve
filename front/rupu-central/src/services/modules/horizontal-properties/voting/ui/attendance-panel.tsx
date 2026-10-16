@@ -7,23 +7,31 @@
 
 'use client';
 
-import { fetchAllPages } from '@shared/utils/pagination';
+import { fetchAllPages, pageSlice } from '@shared/utils/pagination';
+import { Pagination, usePaginationParams } from '@shared/ui/pagination';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Spinner } from '@shared/ui';
+import { DsBody, DsConfirmDialog, DsPage, DsSectionHeader, VtMenu } from '@shared/ui/ds';
 import { TokenStorage } from '@shared/config';
 import { getVotingGroupsAction, getVotingsAction, markUnitAttendanceAction } from '../infrastructure/actions';
 import {
   generateAttendanceListAction,
   getAttendanceListRecordsAction,
   listAttendanceListsAction,
+  exportAttendanceAction,
   markAttendanceSimpleAction,
+  removeAttendanceListAction,
   unmarkAttendanceSimpleAction,
+  type AttendanceExportKind,
+  type RecordProxyData,
 } from '../../attendance/infrastructure/actions';
+import { AttendanceProxyDialog } from './attendance-proxy-dialog';
 import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
 import { getResidentsAction } from '../../residents/infrastructure/actions';
 import type { Voting, VotingGroup } from '../domain/entities';
 import { liveVotingPath } from './votings-list';
+import { VotingCredentialsActions } from './credentials/voting-credentials-actions';
 import {
   DEFAULT_QUORUM_PERCENTAGE,
   VT,
@@ -37,7 +45,6 @@ import {
   getQuorumStatus,
   setRowPresence,
   summarizeAttendance,
-  votingFontRoot,
   vtBtn,
   vtMono,
   type AttendanceFilter,
@@ -48,12 +55,14 @@ import {
 interface AttendancePanelProps {
   businessId: number;
   groupId: number;
+  /** Si se pasa (panel flotante), la cabecera muestra un botón para cerrarlo. */
+  onClose?: () => void;
 }
 
 /** Tope de páginas al traer los registros (100 por página). */
 const MAX_PAGES = 20;
 
-export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
+export function AttendancePanel({ businessId, groupId, onClose }: AttendancePanelProps) {
   const [group, setGroup] = useState<VotingGroup | null>(null);
   const [liveVoting, setLiveVoting] = useState<Voting | null>(null);
   /** Votación del grupo usada para marcar unidades que aún no tienen registro. */
@@ -66,6 +75,13 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
   const [filter, setFilter] = useState<AttendanceFilter>('all');
   const [term, setTerm] = useState('');
   const [pending, setPending] = useState<Set<number>>(new Set());
+  const [token, setToken] = useState<string | null>(null);
+  const [proxyRow, setProxyRow] = useState<AttendanceRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [credentialsMessage, setCredentialsMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const { page, pageSize, setPage } = usePaginationParams();
 
   /** Trae los registros de la lista y las unidades de la propiedad (con su residente principal). */
   const loadRecords = useCallback(
@@ -136,6 +152,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
   }, [businessId, groupId, loadRecords]);
 
   useEffect(() => {
+    setToken(TokenStorage.getBusinessToken());
     load();
   }, [load]);
 
@@ -197,8 +214,63 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
     }
   };
 
+  /** Refleja en la fila el apoderado guardado o quitado. */
+  const applyProxy = (row: AttendanceRow, r: RecordProxyData) => {
+    setRows((prev) =>
+      prev.map((x) =>
+        x.unitId === row.unitId
+          ? { ...x, proxyName: r.proxyName, present: r.attendedAsOwner || r.attendedAsProxy, byProxy: r.attendedAsProxy }
+          : x,
+      ),
+    );
+    setProxyRow(null);
+    setCredentialsMessage({ kind: 'ok', text: r.proxyName ? `Unidad ${row.unitNumber}: apoderado ${r.proxyName}.` : `Unidad ${row.unitNumber}: se quitó el apoderado.` });
+  };
+
+  const download = async (kind: AttendanceExportKind) => {
+    if (!token || !listId) return;
+    setError(null);
+    const res = await exportAttendanceAction({ token, listId, kind });
+    if (!res.success || res.content === undefined) {
+      setError(res.error || 'No se pudo descargar el archivo');
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([res.content], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = res.filename ?? 'asistencia.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const deleteList = async () => {
+    if (!token || !listId) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const res = await removeAttendanceListAction({ token, id: listId, businessId });
+    setDeleting(false);
+    if (!res.success) {
+      setDeleteError(res.error || 'No se pudo eliminar la lista');
+      return;
+    }
+    setConfirmDelete(false);
+    await load();
+  };
+
   const summary = useMemo(() => summarizeAttendance(rows), [rows]);
   const visible = useMemo(() => filterAttendanceRows(rows, filter, term), [rows, filter, term]);
+  const pageRows = useMemo(() => pageSlice(visible, page, pageSize), [visible, page, pageSize]);
+  /** Cambiar el filtro o la búsqueda vuelve a la primera página. */
+  const changeFilter = (next: AttendanceFilter) => {
+    setFilter(next);
+    if (page !== 1) setPage(1, { replace: true });
+  };
+  const changeTerm = (next: string) => {
+    setTerm(next);
+    if (page !== 1) setPage(1, { replace: true });
+  };
   const quorum = group?.requiresQuorum && group.quorumPercentage > 0 ? group.quorumPercentage : DEFAULT_QUORUM_PERCENTAGE;
   const status = getQuorumStatus(summary.presentCoefPct, quorum);
 
@@ -210,30 +282,31 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
   ];
 
   return (
-    <div className={`min-h-[calc(100vh-57px)] ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
-      <div className="px-3 sm:px-8 py-4 md:py-7 flex flex-col gap-4 md:gap-[18px] w-full">
-        <div className="flex flex-wrap justify-between items-end gap-3">
-          <div>
-            <Link
-              href={`/properties/${businessId}/voting-groups`}
-              className="inline-flex items-center gap-1.5 text-xs mb-2 hover:text-[#c8603f] max-md:min-h-11 max-md:mb-0 max-md:text-[13px] max-w-full"
-              style={{ color: VT.muted }}
-            >
-              <VtIcon name="back" size={12} />
-              {group?.name ?? 'Grupos de votación'}
-            </Link>
-            <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em]">Asistencia</h1>
-          </div>
-          <div className="flex gap-2 flex-wrap max-md:w-full max-md:flex-col-reverse max-md:[&>*]:w-full">
-            {listId && (
+    <DsPage>
+      <DsSectionHeader
+        title={
+          onClose ? (
+            <span>
+              Asistencia
+              {group?.name && <span className="font-normal text-[#6b6a66]">{` · ${group.name}`}</span>}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2">
               <Link
-                href={`/properties/${businessId}/voting-groups/${groupId}/attendance/${listId}`}
-                className={vtBtn.secondary}
-                title="Poderes, exportar a Excel y eliminar la lista"
+                href={`/properties/${businessId}/voting-groups`}
+                aria-label="Volver a los grupos de votación"
+                title={group?.name ?? 'Grupos de votación'}
+                className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
               >
-                Poderes y exportar
+                <VtIcon name="back" size={14} />
               </Link>
-            )}
+              Asistencia
+            </span>
+          )
+        }
+        actions={
+          <>
+            {token && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} />}
             {liveVoting ? (
               <Link href={liveVotingPath(businessId, groupId, liveVoting.id)} className={vtBtn.primary}>
                 Ir al panel en vivo
@@ -243,9 +316,38 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                 Ir al panel en vivo
               </button>
             )}
+            {listId && (
+              <VtMenu
+                label="Más opciones de asistencia"
+                size={36}
+                items={[
+                  { label: 'Descargar lista para firmar (Excel)', onSelect: () => download('list') },
+                  { label: 'Descargar resumen (Excel)', onSelect: () => download('detailed') },
+                  { label: 'Eliminar lista', danger: true, onSelect: () => setConfirmDelete(true) },
+                ]}
+              />
+            )}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Cerrar asistencia"
+                title="Cerrar (Esc)"
+                className="inline-flex items-center justify-center w-9 h-9 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
+              >
+                ✕
+              </button>
+            )}
+          </>
+        }
+      />
+      <DsBody>
+        {credentialsMessage && (
+          <div className="flex items-start justify-between gap-3">
+            <VtNotice tone={credentialsMessage.kind === 'ok' ? 'ok' : undefined}>{credentialsMessage.text}</VtNotice>
+            <button type="button" onClick={() => setCredentialsMessage(null)} className="text-xs text-[#8a8580] hover:text-[#1a1a1a] mt-2" aria-label="Cerrar aviso">✕</button>
           </div>
-        </div>
-
+        )}
         {error && <VtNotice>{error}</VtNotice>}
 
         {loading ? (
@@ -307,7 +409,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                       type="button"
                       role="tab"
                       aria-selected={filter === t.key}
-                      onClick={() => setFilter(t.key)}
+                      onClick={() => changeFilter(t.key)}
                       className="px-2.5 py-1 max-md:h-9 max-md:px-3 rounded-[5px] text-xs font-medium"
                       style={filter === t.key ? { background: VT.ink, color: '#fff' } : { color: VT.inkSoft }}
                     >
@@ -323,7 +425,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                   <input
                     type="search"
                     value={term}
-                    onChange={(e) => setTerm(e.target.value)}
+                    onChange={(e) => changeTerm(e.target.value)}
                     placeholder="Unidad, residente o apoderado"
                     aria-label="Buscar unidad, residente o apoderado"
                     className="flex-1 min-w-0 bg-transparent outline-none"
@@ -334,7 +436,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
 
               {/* Teléfono: una fila táctil por unidad (tocar la fila marca o quita la presencia) */}
               <ul className="md:hidden m-0 p-0 list-none" aria-label="Unidades">
-                {visible.map((row) => {
+                {pageRows.map((row) => {
                   const busy = pending.has(row.unitId);
                   return (
                     <li
@@ -342,7 +444,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                       className="flex items-center gap-3 px-3 py-2.5 min-h-[56px] cursor-pointer active:bg-[#faf9f7]"
                       style={{ borderTop: `1px solid #efedea` }}
                       onClick={(e) => {
-                        if ((e.target as HTMLElement).closest('[role="switch"]') || busy) return;
+                        if ((e.target as HTMLElement).closest('[role="switch"], button') || busy) return;
                         togglePresence(row, !row.present);
                       }}
                     >
@@ -352,9 +454,9 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                           <span className={`${vtMono} text-[11px] shrink-0`} style={{ color: VT.muted }}>{formatCoef(row.coefPct)}%</span>
                         </div>
                         <div className="text-[13px] truncate" title={row.residentName}>{row.residentName}</div>
-                        {row.proxyName && (
-                          <div className="text-xs truncate" style={{ color: VT.inkSoft }} title={row.proxyName}>Poder: {row.proxyName}</div>
-                        )}
+                        <div className="mt-0.5">
+                          <ProxyButton row={row} onEdit={setProxyRow} />
+                        </div>
                       </div>
                       <VtSwitch
                         checked={row.present}
@@ -380,12 +482,12 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {visible.map((row) => (
+                    {pageRows.map((row) => (
                       <tr key={row.unitId} style={{ borderTop: `1px solid #efedea` }}>
                         <td className={`${vtMono} px-4 sm:px-[18px] py-2 font-medium`}>{row.unitNumber}</td>
                         <td className="px-2 py-2">{row.residentName}</td>
-                        <td className="px-2 py-2 text-xs" style={{ color: row.proxyName ? VT.inkSoft : VT.pendingBorder }}>
-                          {row.proxyName || '—'}
+                        <td className="px-2 py-2 text-xs">
+                          <ProxyButton row={row} onEdit={setProxyRow} />
                         </td>
                         <td className={`${vtMono} px-2 py-2 text-xs`} style={{ color: VT.muted }}>
                           {formatCoef(row.coefPct)}%
@@ -411,10 +513,46 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                     {rows.length === 0 ? 'La lista no tiene unidades.' : 'No hay unidades con ese criterio.'}
                   </p>
                 )}
+              {visible.length > 0 && (
+                <div className="px-4 sm:px-[18px] py-2.5" style={{ borderTop: `1px solid ${VT.border}` }}>
+                  <Pagination total={visible.length} disabled={loading} />
+                </div>
+              )}
             </div>
           </>
         )}
-      </div>
-    </div>
+      </DsBody>
+
+      <AttendanceProxyDialog row={proxyRow} token={token} onClose={() => setProxyRow(null)} onSaved={applyProxy} />
+      <DsConfirmDialog
+        open={confirmDelete}
+        title="Eliminar lista de asistencia"
+        message="Se borran los registros de asistencia y los apoderados de esta asamblea. Las votaciones no se borran. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar lista"
+        busy={deleting}
+        error={deleteError}
+        onConfirm={deleteList}
+        onClose={() => setConfirmDelete(false)}
+      />
+    </DsPage>
+  );
+}
+
+/** Celda de poder: el nombre del apoderado (para editarlo) o "+ Apoderado". */
+function ProxyButton({ row, onEdit }: { row: AttendanceRow; onEdit: (row: AttendanceRow) => void }) {
+  const disabled = row.recordId == null;
+  return (
+    <button
+      type="button"
+      onClick={() => onEdit(row)}
+      disabled={disabled}
+      title={disabled ? 'Genera la lista de asistencia para asignar apoderados' : row.proxyName ? 'Editar o quitar el apoderado' : 'Agregar apoderado'}
+      aria-label={row.proxyName ? `Apoderado de ${row.unitNumber}: ${row.proxyName}. Editar` : `Agregar apoderado a ${row.unitNumber}`}
+      className={`max-w-full truncate text-left rounded px-1.5 py-1 -mx-1.5 max-md:min-h-9 text-xs disabled:opacity-40 disabled:cursor-not-allowed ${
+        row.proxyName ? 'text-[#4b4a46] hover:bg-[#f5f5f4] hover:underline' : 'text-[#c8603f] font-medium hover:bg-[#fbe9e4]'
+      }`}
+    >
+      {row.proxyName || '+ Apoderado'}
+    </button>
   );
 }

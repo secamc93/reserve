@@ -13,6 +13,8 @@ func (h *PropertyUnitHandler) RegisterRoutes(router *gin.RouterGroup) {
 	// Rutas de creación e importación (sin business_id en path)
 	router.POST("/horizontal-properties/property-units", middleware.JWT(), h.CreatePropertyUnit)
 	router.POST("/horizontal-properties/property-units/import-excel", middleware.JWT(), h.ImportPropertyUnitsExcel)
+	// Resumen (totales, suma de coeficientes y agrupación por bloque)
+	router.GET("/horizontal-properties/property-units/summary", middleware.JWT(), h.GetPropertyUnitsSummary)
 
 	// Rutas específicas por unit_id (solo para operaciones individuales)
 	units := router.Group("/horizontal-properties/property-units")

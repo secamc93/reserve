@@ -78,6 +78,9 @@ export interface BackendParkingSlotList {
   slot_number: string;
   is_covered: boolean;
   has_charger: boolean;
+  width?: number | null;
+  length?: number | null;
+  height?: number | null;
   is_active: boolean;
   is_available: boolean;
   is_assigned: boolean;
@@ -121,13 +124,17 @@ export interface BackendParkingAssignmentList {
   id: number;
   parking_slot_id: number;
   parking_slot_number: string;
+  parking_zone_name?: string;
   property_unit_id?: number;
   property_unit_number: string;
+  property_unit_block?: string;
   resident_id?: number;
   resident_name: string;
   vehicle_plate: string;
   vehicle_brand?: string;
   vehicle_model?: string;
+  vehicle_color?: string;
+  notes?: string;
   start_date: string;
   end_date?: string;
   is_active: boolean;

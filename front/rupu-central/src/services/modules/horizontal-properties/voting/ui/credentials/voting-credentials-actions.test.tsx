@@ -13,6 +13,11 @@ vi.mock('../../infrastructure/actions/voting-credentials.action', () => actions)
 vi.mock('../../infrastructure/actions/public-voting/generate-group-public-url.action', () => urlAction);
 vi.mock('qrcode', () => ({ default: { toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,AAA') } }));
 vi.mock('./credentials-pdf', () => ({ buildCredentialsPdf: pdf.build }));
+// next/font solo funciona compilado por Next.
+vi.mock('next/font/google', () => ({
+  Public_Sans: () => ({ variable: 'font-a', className: 'font-a' }),
+  JetBrains_Mono: () => ({ variable: 'font-b', className: 'font-b' }),
+}));
 
 import { VotingCredentialsActions } from './voting-credentials-actions';
 
@@ -56,7 +61,7 @@ describe('Contraseñas de voto en la lista de asistencia', () => {
       data: { public_url: 'https://rupü.com/public/vote?token=x', group_name: 'Asamblea 2026' },
     });
     renderIt();
-    await userEvent.click(screen.getByRole('button', { name: /Credenciales PDF/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Descargar PDF con QR/ }));
     await waitFor(() => expect(pdf.save).toHaveBeenCalledWith('credenciales-asamblea-2026.pdf'));
     expect(pdf.build).toHaveBeenCalledWith(expect.objectContaining({
       groupName: 'Asamblea 2026',
@@ -73,7 +78,7 @@ describe('Contraseñas de voto en la lista de asistencia', () => {
       data: { credentials: [], total: 0, page: 1, pageSize: 200, totalPages: 0 },
     });
     renderIt();
-    await userEvent.click(screen.getByRole('button', { name: /Credenciales PDF/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Descargar PDF con QR/ }));
     expect(await screen.findByText('Primero genere las contraseñas del grupo.')).toBeInTheDocument();
     expect(pdf.build).not.toHaveBeenCalled();
   });

@@ -1,14 +1,28 @@
 /**
- * Modal: Importar Unidades desde Excel
+ * U3 · Importar unidades con vista previa (modal de 760 px).
+ *  Paso 1: formato y archivo. Paso 2 "Revisa antes de importar": archivo, filas listas, con
+ *  errores y coeficiente total resultante; tabla por fila con su estado (vista previa del
+ *  back con dry_run, no guarda nada) y la opción de actualizar las existentes. Al final, el
+ *  resultado de la carga.
  */
 
 'use client';
 
 import { useState } from 'react';
-import { Modal, Spinner, Alert } from '@shared/ui';
-import { TokenStorage } from '@shared/config';
-import { importUnitsFromExcelAction } from '../infrastructure/actions';
-import { generateBusinessTokenAction } from '@/services/auth/login/infrastructure/actions';
+import { DS, DsEyebrow, VtDialog, VtNotice, dsMono, vtBtn } from '@shared/ui/ds';
+import { importUnitsFromExcelAction, previewUnitsImportAction } from '../infrastructure/actions';
+import {
+  formatCoefficient,
+  formatCoefficientPct,
+  getCoefficientStatus,
+  importCount,
+  importRowStatusLabel,
+  isImportRowError,
+  unitTypeLabel,
+  type UnitImportPreview,
+} from '../domain';
+import { getUnitsBusinessToken } from './business-token';
+import { DsFileDrop, validateExcelFile } from '@shared/ui/ds';
 
 interface ImportUnitsModalProps {
   isOpen: boolean;
@@ -17,254 +31,214 @@ interface ImportUnitsModalProps {
   businessId: number;
 }
 
+interface ImportResult {
+  total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: string[];
+}
+
+type Step = 'file' | 'review' | 'done';
+
 export function ImportUnitsModal({ isOpen, onClose, onSuccess, businessId }: ImportUnitsModalProps) {
+  const [step, setStep] = useState<Step>('file');
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<UnitImportPreview | null>(null);
+  const [updateExisting, setUpdateExisting] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [importResult, setImportResult] = useState<{
-    total: number;
-    created: number;
-    skipped: number;
-    errors: string[];
-  } | null>(null);
+  const [result, setResult] = useState<ImportResult | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validar extensión
-      const validExtensions = ['.xlsx', '.xls'];
-      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-      
-      if (!validExtensions.includes(fileExtension)) {
-        setError('El archivo debe ser .xlsx o .xls');
-        return;
-      }
-
-      // Validar tamaño (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('El archivo debe ser menor a 10MB');
-        return;
-      }
-
-      setSelectedFile(file);
-      setError(null);
-      setSuccess(null);
-      setImportResult(null);
-    }
+  const reset = () => {
+    setStep('file');
+    setFile(null);
+    setPreview(null);
+    setUpdateExisting(true);
+    setError(null);
+    setResult(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedFile) {
-      setError('Por favor selecciona un archivo Excel');
-      return;
-    }
+  const handleClose = () => {
+    if (loading) return;
+    reset();
+    onClose();
+  };
 
+  const pickFile = (f: File | null) => {
+    if (!f) return setFile(null);
+    const invalid = validateExcelFile(f);
+    setError(invalid);
+    setFile(invalid ? null : f);
+  };
+
+  const review = async () => {
+    if (!file) return setError('Selecciona un archivo Excel');
     setLoading(true);
     setError(null);
-    setSuccess(null);
-    setImportResult(null);
-
     try {
-      let token = TokenStorage.getBusinessToken();
-      if (!token) {
-        const sessionToken = TokenStorage.getSessionToken();
-        if (!sessionToken) {
-          setError('No se encontró el token de sesión');
-          setLoading(false);
-          return;
-        }
-        const result = await generateBusinessTokenAction({
-          business_id: businessId,
-          session_token: sessionToken,
-        });
-        if (!result.success || !result.data) {
-          setError(result.error || 'No se pudo generar business token');
-          setLoading(false);
-          return;
-        }
-        token = result.data.token;
-        TokenStorage.setBusinessToken(token);
-        TokenStorage.setActiveBusiness(businessId);
-      }
-
-      const result = await importUnitsFromExcelAction({
-        token,
-        businessId,
-        file: selectedFile,
-      });
-
-      if (result.success) {
-        setSuccess(result.message || 'Unidades importadas correctamente');
-        setImportResult(result.data || null);
-        if (result.data?.created && result.data.created > 0) {
-          // Recargar la lista si se crearon unidades
-          setTimeout(() => {
-            onSuccess();
-          }, 2000);
-        }
-      } else {
-        setError(result.message || 'Error al importar las unidades');
-      }
+      const token = await getUnitsBusinessToken(businessId);
+      const res = await previewUnitsImportAction({ token, businessId, file });
+      if (!res.success || !res.data) return setError(res.error ? `${res.message}: ${res.error}` : res.message || 'No se pudo revisar el archivo');
+      setPreview(res.data);
+      setStep('review');
     } catch (err) {
-      console.error('Error importando unidades:', err);
-      setError('Error inesperado al importar las unidades');
+      setError(err instanceof Error ? err.message : 'Error inesperado al revisar el archivo');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    if (!loading) {
-      setSelectedFile(null);
-      setError(null);
-      setSuccess(null);
-      setImportResult(null);
-      onClose();
+  const runImport = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const token = await getUnitsBusinessToken(businessId);
+      const res = await importUnitsFromExcelAction({ token, businessId, file, updateExisting });
+      if (!res.success) return setError(res.message || 'No se pudieron importar las unidades');
+      const data = res.data ?? { total: 0, created: 0, skipped: 0, errors: [] };
+      setResult({ total: data.total, created: data.created, updated: data.updated ?? 0, skipped: data.skipped, errors: data.errors ?? [] });
+      setStep('done');
+      if (data.created > 0 || (data.updated ?? 0) > 0) onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error inesperado al importar las unidades');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const toImport = preview ? importCount(preview.ready, preview.existing, updateExisting) : 0;
+  const coefStatus = preview ? getCoefficientStatus(preview.coefficientTotal) : null;
+
+  const footer =
+    step === 'file' ? (
+      <>
+        <button type="button" className={vtBtn.secondary} onClick={handleClose} disabled={loading}>Cancelar</button>
+        <button type="button" className={vtBtn.primary} onClick={review} disabled={loading || !file}>
+          {loading ? 'Revisando…' : 'Revisar archivo'}
+        </button>
+      </>
+    ) : step === 'review' ? (
+      <>
+        <label className="mr-auto flex items-center gap-2 text-[13px] max-md:basis-full max-md:order-first">
+          <input type="checkbox" className="w-4 h-4 accent-[#1a1a1a]" checked={updateExisting} onChange={(e) => setUpdateExisting(e.target.checked)} />
+          Actualizar unidades existentes con el mismo número
+        </label>
+        <button type="button" className={vtBtn.secondary} onClick={() => { setStep('file'); setPreview(null); }} disabled={loading}>← Cambiar archivo</button>
+        <button type="button" className={vtBtn.primary} onClick={runImport} disabled={loading || toImport === 0}>
+          {loading ? 'Importando…' : `Importar ${toImport} unidad${toImport === 1 ? '' : 'es'}`}
+        </button>
+      </>
+    ) : (
+      <>
+        <button type="button" className={vtBtn.secondary} onClick={reset}>Importar otro archivo</button>
+        <button type="button" className={vtBtn.primary} onClick={handleClose}>Listo</button>
+      </>
+    );
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Importar Unidades desde Excel" size="lg">
-      <div className="space-y-6">
-        {/* Instrucciones */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">
-            📋 Formato del Archivo Excel
-          </h3>
-          <div className="space-y-2 text-sm text-blue-800">
-            <div className="flex items-center gap-2">
-              <span className="text-green-600">✓</span>
-              <span>Primera fila: Encabezados (se ignoran)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600">✓</span>
-              <span>Columna 1: Número de unidad (texto, requerido, único)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600">✓</span>
-              <span>Columna 2: Coeficiente (número decimal, requerido, &gt; 0)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600">✓</span>
-              <span>El archivo debe ser .xlsx o .xls</span>
-            </div>
+    <VtDialog
+      open={isOpen}
+      onClose={handleClose}
+      busy={loading}
+      width={760}
+      eyebrow={step === 'file' ? 'Importar unidades · paso 1 de 2' : step === 'review' ? 'Importar unidades · paso 2 de 2' : 'Importar unidades'}
+      title={step === 'file' ? 'Elige el archivo' : step === 'review' ? 'Revisa antes de importar' : 'Importación terminada'}
+      subtitle={step === 'file' ? 'Primero revisamos el archivo; nada se guarda hasta que confirmes.' : undefined}
+      footer={footer}
+    >
+      {error && <VtNotice>{error}</VtNotice>}
+
+      {step === 'file' && (
+        <>
+          <div className="flex flex-col gap-2">
+            <DsEyebrow>Formato del archivo</DsEyebrow>
+            <p className="text-[13px] text-[#4b4a46] m-0">
+              Excel (.xlsx) con una fila de encabezados: <span className={dsMono}>Número, Torre, Piso, Tipo, Coeficiente</span>. Número y
+              coeficiente son obligatorios; sin encabezados reconocibles se toma la columna 1 como número y la 2 como coeficiente.
+            </p>
           </div>
-          
-          {/* Ejemplo */}
-          <div className="mt-4">
-            <h4 className="font-medium text-blue-900 mb-2">Ejemplo:</h4>
-            <div className="bg-white border rounded p-2 text-xs font-mono">
-              <div className="grid grid-cols-2 gap-4 border-b pb-1 mb-1">
-                <span className="font-semibold">Número</span>
-                <span className="font-semibold">Coeficiente</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <span>201</span>
-                <span>0.015678</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <span>202</span>
-                <span>0.014321</span>
-              </div>
+          <DsFileDrop file={file} onFile={pickFile} disabled={loading} />
+        </>
+      )}
+
+      {step === 'review' && preview && (
+        <div className="flex flex-col gap-3.5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+            <ReviewCard label="Archivo" value={<span className="text-[13px] font-semibold break-all">{file?.name}</span>} hint={`${preview.totalRows} filas · ${preview.columns} columnas`} />
+            <ReviewCard label="Listas para importar" value={toImport} color={DS.yes} hint={preview.existing > 0 ? `${preview.existing} ya existen` : 'nuevas'} />
+            <ReviewCard label="Con errores" value={preview.errors} color={preview.errors > 0 ? DS.accent : undefined} hint="se omiten" />
+            <ReviewCard
+              label="Coef. total"
+              value={formatCoefficientPct(preview.coefficientTotal)}
+              color={coefStatus?.ok ? DS.yes : DS.accent}
+              hint={coefStatus?.ok ? 'cuadra' : coefStatus?.label}
+            />
+          </div>
+          <div className="rounded-[10px] border border-[#e4e2dd] overflow-hidden">
+            <div className="max-h-[320px] overflow-auto">
+              <table className="w-full min-w-[620px] text-[13px]" aria-label="Filas del archivo">
+                <thead className="sticky top-0 bg-white">
+                  <tr className={`${dsMono} text-[10px] uppercase tracking-[.06em] text-[#8a8580] text-left`}>
+                    {['#', 'Número', 'Torre', 'Piso', 'Tipo', 'Coef.', 'Estado'].map((h) => (
+                      <th key={h} className={`px-3 py-2 font-medium border-b border-[#efedea] ${h === 'Coef.' ? 'text-right' : ''}`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.rows.map((r) => {
+                    const bad = isImportRowError(r);
+                    return (
+                      <tr key={r.row} className="border-b border-[#efedea] last:border-b-0" style={bad ? { background: '#fdf4f1' } : undefined}>
+                        <td className={`${dsMono} px-3 py-1.5 text-[#8a8580]`}>{r.row}</td>
+                        <td className={`${dsMono} px-3 py-1.5 font-semibold`}>{r.number || '—'}</td>
+                        <td className="px-3 py-1.5">{r.block || '—'}</td>
+                        <td className={`${dsMono} px-3 py-1.5`}>{r.floor ?? '—'}</td>
+                        <td className="px-3 py-1.5">{r.unitType ? unitTypeLabel(r.unitType) : '—'}</td>
+                        <td className={`${dsMono} px-3 py-1.5 text-right`}>{formatCoefficient(r.coefficient)}</td>
+                        <td className="px-3 py-1.5 text-xs font-semibold" style={{ color: bad ? DS.accent : r.status === 'exists' ? DS.inkSoft : DS.yes }}>
+                          {importRowStatusLabel(r, updateExisting)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Selección de archivo */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Seleccionar archivo Excel
-            </label>
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileChange}
-              disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-            {selectedFile && (
-              <p className="text-sm text-gray-600 mt-1">
-                ✓ {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-            )}
+      {step === 'done' && result && (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
+            <ReviewCard label="Creadas" value={result.created} color={DS.yes} />
+            <ReviewCard label="Actualizadas" value={result.updated} />
+            <ReviewCard label="Omitidas" value={result.skipped} color={result.skipped > 0 ? DS.accent : undefined} />
           </div>
-
-          {/* Resultado de importación */}
-          {importResult && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-green-900 mb-3">
-                📊 Resultado de la Importación
-              </h3>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{importResult.total}</div>
-                  <div className="text-green-800">Total procesadas</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{importResult.created}</div>
-                  <div className="text-green-800">Creadas</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{importResult.skipped}</div>
-                  <div className="text-green-800">Omitidas</div>
-                </div>
-              </div>
-              
-              {importResult.errors.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="font-medium text-red-900 mb-2">Errores encontrados:</h4>
-                  <div className="bg-red-50 border border-red-200 rounded p-2 max-h-32 overflow-y-auto">
-                    {importResult.errors.map((error, index) => (
-                      <div key={index} className="text-sm text-red-700 py-1">
-                        • {error}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {result.errors.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <DsEyebrow>Filas omitidas · {result.errors.length}</DsEyebrow>
+              <ul className="max-h-40 overflow-y-auto rounded-lg border border-[#f1cfc4] bg-[#fbe9e4] px-3.5 py-2 text-xs text-[#9c3a22] flex flex-col gap-1">
+                {result.errors.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
             </div>
           )}
+        </div>
+      )}
+    </VtDialog>
+  );
+}
 
-          {/* Error */}
-          {error && (
-            <Alert type="error" onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          )}
-
-          {/* Success */}
-          {success && (
-            <Alert type="success" onClose={() => setSuccess(null)}>
-              {success}
-            </Alert>
-          )}
-
-          {/* Botones */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={loading}
-              className="btn btn-outline"
-            >
-              {importResult ? 'Cerrar' : 'Cancelar'}
-            </button>
-            {!importResult && (
-              <button
-                type="submit"
-                disabled={loading || !selectedFile}
-                className="btn btn-primary min-w-[120px]"
-              >
-                {loading ? <Spinner size="sm" /> : 'Importar Unidades'}
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-    </Modal>
+function ReviewCard({ label, value, hint, color }: { label: string; value: React.ReactNode; hint?: React.ReactNode; color?: string }) {
+  return (
+    <div className="rounded-lg border border-[#e4e2dd] px-3 py-2.5 min-w-0">
+      <DsEyebrow>{label}</DsEyebrow>
+      <div className={`${dsMono} text-xl font-semibold mt-0.5`} style={color ? { color } : undefined}>{value}</div>
+      {hint && <div className="text-[11px] text-[#8a8580] mt-0.5">{hint}</div>}
+    </div>
   );
 }

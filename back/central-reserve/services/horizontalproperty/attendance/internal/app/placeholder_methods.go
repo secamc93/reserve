@@ -10,9 +10,29 @@ import (
 
 // Placeholder methods - Implementar según necesidades
 
-func (uc *AttendanceUseCase) GetAttendanceListByID(ctx context.Context, id uint) (*domain.AttendanceListDTO, error) {
-	// TODO: Implementar
-	return nil, nil
+func (uc *AttendanceUseCase) GetAttendanceListByID(ctx context.Context, scopeBusinessID, id uint) (*domain.AttendanceListDTO, error) {
+	businessID, err := uc.attendanceRepo.GetAttendanceListBusinessID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if businessID == 0 || (scopeBusinessID != 0 && scopeBusinessID != businessID) {
+		return nil, domain.ErrAttendanceListNotFound
+	}
+	l, err := uc.attendanceRepo.GetAttendanceListByID(ctx, id)
+	if err != nil || l == nil {
+		return nil, domain.ErrAttendanceListNotFound
+	}
+	return &domain.AttendanceListDTO{
+		ID:              l.ID,
+		VotingGroupID:   l.VotingGroupID,
+		Title:           l.Title,
+		Description:     l.Description,
+		IsActive:        l.IsActive,
+		CreatedByUserID: l.CreatedByUserID,
+		Notes:           l.Notes,
+		CreatedAt:       l.CreatedAt,
+		UpdatedAt:       l.UpdatedAt,
+	}, nil
 }
 
 func (uc *AttendanceUseCase) GetAttendanceListByVotingGroup(ctx context.Context, votingGroupID uint) (*domain.AttendanceListDTO, error) {

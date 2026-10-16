@@ -4,7 +4,6 @@ import (
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/mappers"
 	"net/http"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/primary/handlers/response"
@@ -28,12 +27,15 @@ func (h *CommonAreaHandler) CreateReservation(c *gin.Context) {
 		return
 	}
 
-	businessID, exists := middleware.GetBusinessID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "business_id no disponible",
-		})
+	businessID, ok := h.resolveBusinessID(c)
+	if !ok {
+		return
+	}
+
+	if area, ok := h.loadAreaInScope(c, req.CommonAreaID); !ok {
+		return
+	} else if area.BusinessID != businessID {
+		c.JSON(http.StatusNotFound, response.ErrorResponse{Success: false, Message: "Zona común no encontrada"})
 		return
 	}
 
@@ -53,19 +55,7 @@ func (h *CommonAreaHandler) CreateReservation(c *gin.Context) {
 
 	reservation, err := h.useCase.CreateReservation(ctx, dto)
 	if err != nil {
-		if err == domain.ErrReservationNotAvailable || err == domain.ErrExceedsCapacity || err == domain.ErrScheduleNotConfigured || err == domain.ErrRestrictionActive {
-			c.JSON(http.StatusBadRequest, response.ErrorResponse{
-				Success: false,
-				Message: err.Error(),
-			})
-			return
-		}
-		h.logger.Error(ctx).Err(err).Msg("Error creando reserva")
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
-			Success: false,
-			Message: "Error creando reserva",
-			Error:   err.Error(),
-		})
+		h.writeUseCaseError(c, err, "Error creando reserva")
 		return
 	}
 

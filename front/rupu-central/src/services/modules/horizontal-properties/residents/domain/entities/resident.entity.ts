@@ -8,6 +8,10 @@ export interface Resident {
   businessId: number;
   propertyUnitId: number;
   propertyUnitNumber: string;
+  /** Bloque de la unidad ("Casa"); viene en el listado. */
+  propertyUnitBlock?: string;
+  /** Desde cuándo vive (ingreso a la unidad o registro); viene en el listado. */
+  since?: string;
   residentTypeId: number;
   residentTypeName: string;
   residentTypeCode: string;
@@ -25,6 +29,40 @@ export interface Resident {
   monthlyRent?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Residentes de un tipo (Propietario, Arrendatario…) con el id real del catálogo. */
+export interface ResidentTypeCount {
+  id: number;
+  name: string;
+  code: string;
+  total: number;
+}
+
+/** Totales de residentes de la propiedad y conteo por tipo. */
+export interface ResidentsSummary {
+  total: number;
+  active: number;
+  inactive: number;
+  main: number;
+  /** Residentes sin correo registrado. */
+  withoutEmail: number;
+  types: ResidentTypeCount[];
+}
+
+export type ResidentActivityKind = 'package' | 'visit' | 'reservation' | 'vote' | 'parking';
+
+/** Resumen del residente para el panel de detalle (de sus unidades). */
+export interface ResidentOverview {
+  stats: {
+    visits30d: number;
+    packagesPending: number;
+    reservations: number;
+    votesCast: number;
+    votesTotal: number;
+  };
+  housemates: Array<{ id: number; name: string; typeName: string; isMain: boolean }>;
+  activity: Array<{ kind: ResidentActivityKind; title: string; subtitle: string; at: string }>;
 }
 
 export interface ResidentsPaginated {

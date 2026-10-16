@@ -23,12 +23,11 @@ const items = buildNavItems({
   sidebarItems: BUSINESS_TYPE_CONFIG.horizontal_property.sidebarItems,
   activeBusinessId: 7,
   canAccessIAM: true,
-  canAccessLogs: false,
 });
 
 function setup(props: Partial<MobileNavProps> = {}) {
   const onLogout = vi.fn();
-  const onChangeModule = vi.fn();
+  const onChangeProperty = vi.fn();
   const onOpenProfile = vi.fn();
   const utils = render(
     <MobileNav
@@ -36,12 +35,12 @@ function setup(props: Partial<MobileNavProps> = {}) {
       property={{ id: 7, name: 'Tayazal de Suba' }}
       user={{ name: 'Ana Admin', email: 'ana@x.co', role: 'Administrador' }}
       onLogout={onLogout}
-      onChangeModule={onChangeModule}
+      onChangeProperty={onChangeProperty}
       onOpenProfile={onOpenProfile}
       {...props}
     />,
   );
-  return { ...utils, onLogout, onChangeModule, onOpenProfile, user: userEvent.setup() };
+  return { ...utils, onLogout, onChangeProperty, onOpenProfile, user: userEvent.setup() };
 }
 
 const logo = () => screen.getByRole('button', { name: 'Abrir menú de módulos' });
@@ -96,7 +95,7 @@ describe('MobileNav — menú de módulos', () => {
     expect(within(dialog).getByText('Ana Admin · Administrador')).toBeInTheDocument();
     const modules = within(within(dialog).getByRole('navigation', { name: 'Módulos' })).getAllByRole('link');
     expect(modules.map((m) => m.textContent)).toEqual(items.map((i) => i.label));
-    for (const name of ['Mi perfil', 'Cambiar módulo', 'Cerrar sesión', 'Cerrar']) {
+    for (const name of ['Mi perfil', 'Cambiar propiedad', 'Cerrar sesión', 'Cerrar']) {
       expect(within(dialog).getByRole('button', { name })).toBeInTheDocument();
     }
     expect(document.body.style.overflow).toBe('hidden');
@@ -158,7 +157,7 @@ describe('MobileNav — menú de módulos', () => {
     pathname = '/properties/7/visits';
     act(() => {
       rerender(
-        <MobileNav items={items} property={null} user={{ name: 'Ana', email: 'a@x.co' }} onLogout={vi.fn()} onChangeModule={vi.fn()} />,
+        <MobileNav items={items} property={null} user={{ name: 'Ana', email: 'a@x.co' }} onLogout={vi.fn()} onChangeProperty={vi.fn()} />,
       );
     });
     expect(sheet()).toBeNull();
@@ -178,11 +177,11 @@ describe('MobileNav — menú de módulos', () => {
     expect(logout).toHaveFocus();
   });
 
-  it('Cerrar sesión y Cambiar módulo cierran el menú y llaman a su acción', async () => {
-    const { user, onLogout, onChangeModule } = setup();
+  it('Cerrar sesión y Cambiar propiedad cierran el menú y llaman a su acción', async () => {
+    const { user, onLogout, onChangeProperty } = setup();
     await user.click(logo());
-    await user.click(within(sheet()!).getByRole('button', { name: 'Cambiar módulo' }));
-    expect(onChangeModule).toHaveBeenCalledTimes(1);
+    await user.click(within(sheet()!).getByRole('button', { name: 'Cambiar propiedad' }));
+    expect(onChangeProperty).toHaveBeenCalledTimes(1);
     expect(sheet()).toBeNull();
     await user.click(logo());
     await user.click(within(sheet()!).getByRole('button', { name: 'Cerrar sesión' }));
@@ -203,5 +202,12 @@ describe('PropertyLogo', () => {
     const img = screen.getByTestId('property-logo').querySelector('img')!;
     fireEvent.error(img);
     expect(screen.getByText('TS')).toBeInTheDocument();
+  });
+
+  it('con una sola propiedad no muestra "Cambiar propiedad"', async () => {
+    const { user } = setup({ onChangeProperty: undefined });
+    await user.click(logo());
+    expect(within(sheet()!).queryByRole('button', { name: 'Cambiar propiedad' })).not.toBeInTheDocument();
+    expect(within(sheet()!).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
   });
 });

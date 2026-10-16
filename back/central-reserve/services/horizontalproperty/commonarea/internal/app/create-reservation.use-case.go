@@ -28,6 +28,10 @@ func (uc *commonAreaUseCase) CreateReservation(ctx context.Context, dto domain.C
 	if err != nil {
 		return nil, err
 	}
+	// Aislamiento multi-tenant: la zona debe ser de la misma propiedad de la reserva
+	if dto.BusinessID != 0 && area.BusinessID != dto.BusinessID {
+		return nil, domain.ErrCommonAreaNotFound
+	}
 
 	// Validar capacidad
 	if dto.NumberOfGuests > area.MaxCapacity {

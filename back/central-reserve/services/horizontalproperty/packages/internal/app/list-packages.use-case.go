@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"strings"
 
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
 	"central_reserve/shared/log"
@@ -14,6 +15,8 @@ func (uc *packageUseCase) ListPackages(ctx context.Context, filters domain.Packa
 
 	// Validar paginación
 	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
+	filters.StatusGroup = domain.NormalizePackageStatusGroup(filters.StatusGroup)
+	filters.Search = strings.TrimSpace(filters.Search)
 
 	// Llamar al repositorio
 	result, err := uc.packageRepo.ListPackages(ctx, filters)

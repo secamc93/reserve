@@ -6,7 +6,7 @@
 'use client';
 
 import { DashboardStats, BusinessSummary } from '../domain/entities';
-import { useRouter } from 'next/navigation';
+import { loadAccessibleProperties, selectProperty } from '@shared/ui';
 import { Table } from '@shared/ui/table';
 import { useIsMobile, MobileCard, mobileColumn } from '@/services/mobile-ui';
 import { 
@@ -34,7 +34,13 @@ export function ConsolidatedDashboard({
   loading,
 }: ConsolidatedDashboardProps) {
   const isMobile = useIsMobile();
-  const router = useRouter();
+  // "Ver detalle" activa la propiedad (token, colores) antes de abrirla, igual que el selector.
+  const openProperty = async (business: BusinessSummary) => {
+    const list = await loadAccessibleProperties().catch(() => []);
+    const property = list.find((p) => p.id === business.business_id)
+      ?? { id: business.business_id, name: business.business_name, logoUrl: business.logo_url };
+    await selectProperty(property);
+  };
   const { summary, voting_stats, attendance_stats, business_summaries = [], pagination } = data;
 
   if (loading) {
@@ -152,7 +158,7 @@ export function ConsolidatedDashboard({
                 ]}
                 actions={
                   <button
-                    onClick={() => router.push(`/properties/${business.business_id}`)}
+                    onClick={() => openProperty(business)}
                     className="w-full rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium"
                   >
                     Ver detalle
@@ -253,7 +259,7 @@ export function ConsolidatedDashboard({
                 label: 'Acciones',
                 render: (_, business: BusinessSummary) => (
                   <button
-                    onClick={() => router.push(`/properties/${business.business_id}`)}
+                    onClick={() => openProperty(business)}
                     className="text-blue-600 hover:text-blue-900 font-medium hover:underline"
                   >
                     Ver Detalle

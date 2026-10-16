@@ -22,7 +22,10 @@ export interface BackendPackage {
   created_at: string;
   updated_at: string;
   property_unit_number?: string;
+  property_unit_block?: string;
   resident_name?: string;
+  received_by_name?: string;
+  delivered_by_name?: string;
   status_name?: string;
   status_code?: string;
 }
@@ -32,12 +35,26 @@ export interface BackendPackageList {
   tracking_number: string;
   carrier: string;
   property_unit_number: string;
+  property_unit_block?: string;
   resident_name: string;
   status_name: string;
   status_code: string;
-  received_at?: string;
-  delivered_at?: string;
+  description?: string;
+  received_at?: string | null;
+  delivered_at?: string | null;
   created_at: string;
+}
+
+export interface BackendPackagesSummaryResponse {
+  success: boolean;
+  data: {
+    pending: number;
+    pending_overdue: number;
+    delivered_today: number;
+    delivered: number;
+    closed: number;
+    total: number;
+  };
 }
 
 export interface BackendPackageResponse {

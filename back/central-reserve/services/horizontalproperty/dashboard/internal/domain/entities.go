@@ -54,3 +54,56 @@ type BusinessSummary struct {
 }
 
 
+
+// TodaySummary - "Qué está pasando hoy" en una propiedad (Resumen de la propiedad).
+type TodaySummary struct {
+	VisitsInside        []InsideVisit
+	VisitsInsideCount   int64
+	VisitsExceededCount int64 // visitas dentro que ya pasaron su hora de salida
+	PackagesPending     int64 // paquetes en portería sin entregar
+	PackagesOld         int64 // de esos, recibidos hace más de 5 días
+	ReservationsToday   []TodayReservation
+	ReservationsPending int64 // reservas de hoy pendientes de aprobar
+	ActiveVoting        *ActiveVotingSummary
+	Occupancy           OccupancySummary
+}
+
+type InsideVisit struct {
+	VisitorName string
+	VisitType   string
+	UnitNumber  string
+	UnitBlock   string
+	EntryTime   time.Time
+	Exceeded    bool
+}
+
+type TodayReservation struct {
+	StartTime  string
+	EndTime    string
+	AreaName   string
+	UnitNumber string
+	UnitBlock  string
+	Approved   bool
+}
+
+type ActiveVotingSummary struct {
+	GroupID    uint
+	GroupName  string
+	VotingID   uint
+	Title      string
+	VotedUnits int64
+	TotalUnits int64
+	// QuorumPercentage del grupo (nil si no requiere).
+	QuorumPercentage *float64
+	// AttendanceByCoef: % de coeficiente presente en la lista de asistencia del grupo (nil si no hay lista).
+	AttendanceByCoef *float64
+}
+
+type OccupancySummary struct {
+	Units              int64
+	UnitsWithResident  int64
+	ParkingSlots       int64
+	ParkingAssigned    int64
+	Residents          int64
+	ResidentsWithEmail int64
+}

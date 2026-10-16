@@ -23,7 +23,6 @@ export * from './roles/ui';
 export * from './business-types/ui';
 export * from './login/ui';
 export * from './dashboard/ui';
-export * from './logs/ui';
 
 // Exportar submódulos
 export * from './resources';

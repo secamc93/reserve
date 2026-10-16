@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { CommonAreasTable } from '@/services/modules/horizontal-properties/common-areas/ui/common-areas-table';
+import { CommonAreasScreen } from '@/services/modules/horizontal-properties/common-areas/ui/common-areas-screen';
 
 export default function CommonAreasPage() {
   const params = useParams();
@@ -15,13 +15,5 @@ export default function CommonAreasPage() {
     );
   }
 
-  return (
-    <div>
-      {/* Navegación */}
-
-      <div className="p-3 md:p-6">
-        <CommonAreasTable businessId={businessId} />
-      </div>
-    </div>
-  );
+  return <CommonAreasScreen businessId={businessId} />;
 }

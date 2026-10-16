@@ -86,4 +86,53 @@ type ErrorResponse struct {
 	Error   string `json:"error"`
 }
 
+// TodayResponse - Resumen de hoy de una propiedad
+type TodayResponse struct {
+	VisitsInside        []InsideVisitResponse      `json:"visits_inside"`
+	VisitsInsideCount   int64                      `json:"visits_inside_count"`
+	VisitsExceededCount int64                      `json:"visits_exceeded_count"`
+	PackagesPending     int64                      `json:"packages_pending"`
+	PackagesOld         int64                      `json:"packages_old"`
+	ReservationsToday   []TodayReservationResponse `json:"reservations_today"`
+	ReservationsPending int64                      `json:"reservations_pending"`
+	ActiveVoting        *ActiveVotingResponse      `json:"active_voting"`
+	Occupancy           OccupancyResponse          `json:"occupancy"`
+}
 
+type InsideVisitResponse struct {
+	VisitorName string    `json:"visitor_name"`
+	VisitType   string    `json:"visit_type"`
+	UnitNumber  string    `json:"unit_number"`
+	UnitBlock   string    `json:"unit_block"`
+	EntryTime   time.Time `json:"entry_time"`
+	Exceeded    bool      `json:"exceeded"`
+}
+
+type TodayReservationResponse struct {
+	StartTime  string `json:"start_time"`
+	EndTime    string `json:"end_time"`
+	AreaName   string `json:"area_name"`
+	UnitNumber string `json:"unit_number"`
+	UnitBlock  string `json:"unit_block"`
+	Approved   bool   `json:"approved"`
+}
+
+type ActiveVotingResponse struct {
+	GroupID          uint     `json:"group_id"`
+	GroupName        string   `json:"group_name"`
+	VotingID         uint     `json:"voting_id"`
+	Title            string   `json:"title"`
+	VotedUnits       int64    `json:"voted_units"`
+	TotalUnits       int64    `json:"total_units"`
+	QuorumPercentage *float64 `json:"quorum_percentage"`
+	AttendanceByCoef *float64 `json:"attendance_by_coef"`
+}
+
+type OccupancyResponse struct {
+	Units              int64 `json:"units"`
+	UnitsWithResident  int64 `json:"units_with_resident"`
+	ParkingSlots       int64 `json:"parking_slots"`
+	ParkingAssigned    int64 `json:"parking_assigned"`
+	Residents          int64 `json:"residents"`
+	ResidentsWithEmail int64 `json:"residents_with_email"`
+}

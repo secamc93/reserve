@@ -30,7 +30,10 @@ type PackageData struct {
 	UpdatedAt          time.Time  `json:"updated_at"`
 	// Relaciones
 	PropertyUnitNumber string `json:"property_unit_number,omitempty"`
+	PropertyUnitBlock  string `json:"property_unit_block,omitempty"`
 	ResidentName       string `json:"resident_name,omitempty"`
+	ReceivedByName     string `json:"received_by_name,omitempty"`
+	DeliveredByName    string `json:"delivered_by_name,omitempty"`
 	StatusName         string `json:"status_name,omitempty"`
 	StatusCode         string `json:"status_code,omitempty"`
 }
@@ -48,9 +51,11 @@ type PackageListData struct {
 	TrackingNumber     string     `json:"tracking_number"`
 	Carrier            string     `json:"carrier"`
 	PropertyUnitNumber string     `json:"property_unit_number"`
+	PropertyUnitBlock  string     `json:"property_unit_block"`
 	ResidentName       string     `json:"resident_name"`
 	StatusName         string     `json:"status_name"`
 	StatusCode         string     `json:"status_code"`
+	Description        string     `json:"description"`
 	ReceivedAt         *time.Time `json:"received_at"`
 	DeliveredAt        *time.Time `json:"delivered_at"`
 	CreatedAt          time.Time  `json:"created_at"`
@@ -86,4 +91,20 @@ type PackageStatusesResponse struct {
 type SuccessResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+}
+
+// PackagesSummaryData - Conteos de paquetes por grupo
+type PackagesSummaryData struct {
+	Pending        int64 `json:"pending"`
+	PendingOverdue int64 `json:"pending_overdue"`
+	DeliveredToday int64 `json:"delivered_today"`
+	Delivered      int64 `json:"delivered"`
+	Closed         int64 `json:"closed"`
+	Total          int64 `json:"total"`
+}
+
+// PackagesSummaryResponse - Respuesta del resumen de paquetes
+type PackagesSummaryResponse struct {
+	Success bool                `json:"success"`
+	Data    PackagesSummaryData `json:"data"`
 }

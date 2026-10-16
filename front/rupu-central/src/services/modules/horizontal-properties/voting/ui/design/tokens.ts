@@ -6,25 +6,9 @@
  * Lo legal es el % por coeficiente; el conteo de unidades es secundario.
  */
 
-export const VT = {
-  paper: '#f5f5f4',
-  surface: '#ffffff',
-  ink: '#1a1a1a',
-  inkSoft: '#4b4a46',
-  muted: '#8a8580',
-  border: '#e4e2dd',
-  borderStrong: '#d6d3cd',
-  pendingBorder: '#c9c6c0',
-  accent: '#c8603f',
-  live: '#c8382d',
-  yes: '#1f8a4c',
-  no: '#c8382d',
-  abstain: '#8a8580',
-  reachedBg: '#e3f1e8',
-  reachedFg: '#1f8a4c',
-  missingBg: '#fbe9e4',
-  missingFg: '#c8603f',
-} as const;
+import { DS as VT } from '@/shared/ui/ds/tokens';
+
+export { VT };
 
 /**
  * Quórum por defecto cuando la votación no trae `requiredPercentage`

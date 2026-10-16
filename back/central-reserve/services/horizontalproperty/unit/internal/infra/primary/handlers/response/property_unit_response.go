@@ -42,6 +42,24 @@ type PropertyUnitListItemResponse struct {
 	Bathrooms                *int     `json:"bathrooms" example:"2"`
 	ParticipationCoefficient *float64 `json:"participation_coefficient" example:"0.008333"`
 	IsActive                 bool     `json:"is_active" example:"true"`
+	ResidentsCount           int      `json:"residents_count" example:"2"`
+	MainResidentName         string   `json:"main_resident_name" example:"Juan Pérez"`
+}
+
+type PropertyUnitBlockSummaryResponse struct {
+	Block          string  `json:"block" example:"Casa"`
+	Total          int64   `json:"total" example:"156"`
+	Active         int64   `json:"active" example:"156"`
+	CoefficientSum float64 `json:"coefficient_sum" example:"78.568"`
+}
+
+type PropertyUnitsSummaryResponse struct {
+	Total          int64                              `json:"total" example:"194"`
+	Active         int64                              `json:"active" example:"194"`
+	WithResidents  int64                              `json:"with_residents" example:"180"`
+	CoefficientSum float64                            `json:"coefficient_sum" example:"100"`
+	Commercial     int64                              `json:"commercial" example:"0"`
+	Blocks         []PropertyUnitBlockSummaryResponse `json:"blocks"`
 }
 
 type PaginatedPropertyUnitsResponse struct {
@@ -55,3 +73,26 @@ type PaginatedPropertyUnitsResponse struct {
 // Aliases para respuestas
 type PropertyUnitSuccess = SuccessResponse[PropertyUnitResponse]
 type PropertyUnitsSuccess = SuccessResponse[PaginatedPropertyUnitsResponse]
+type PropertyUnitsSummarySuccess = SuccessResponse[PropertyUnitsSummaryResponse]
+
+type ImportRowResponse struct {
+	Row         int      `json:"row" example:"2"`
+	Number      string   `json:"number" example:"126"`
+	Block       string   `json:"block" example:"Casa"`
+	Floor       *int     `json:"floor"`
+	UnitType    string   `json:"unit_type" example:"house"`
+	Coefficient *float64 `json:"coefficient" example:"0.503"`
+	Status      string   `json:"status" example:"ready"`
+	Message     string   `json:"message" example:""`
+	DuplicateOf int      `json:"duplicate_of,omitempty" example:"0"`
+}
+
+type ImportPreviewResponse struct {
+	Columns          int                 `json:"columns" example:"5"`
+	TotalRows        int                 `json:"total_rows" example:"120"`
+	Ready            int                 `json:"ready" example:"117"`
+	Existing         int                 `json:"existing" example:"0"`
+	Errors           int                 `json:"errors" example:"3"`
+	CoefficientTotal float64             `json:"coefficient_total" example:"99.91"`
+	Rows             []ImportRowResponse `json:"rows"`
+}

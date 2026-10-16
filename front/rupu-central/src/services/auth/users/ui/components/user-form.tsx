@@ -356,7 +356,6 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
                 value={selectedBusinessId}
                 onChange={(e) => {
                   const value = e.target.value;
-                  console.log('🔍 Select onChange - value:', value);
                   setSelectedBusinessId(value);
                 }}
                 options={[{ value: '', label: 'Selecciona un negocio' }, ...businessOptions]}
@@ -366,40 +365,31 @@ export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormPro
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  console.log('🔍 Agregar negocio - selectedBusinessId:', selectedBusinessId);
-                  console.log('🔍 businessOptions:', businessOptions);
 
                   if (!selectedBusinessId || selectedBusinessId === '') {
-                    console.log('❌ No hay negocio seleccionado');
                     return;
                   }
 
                   const businessIdNum = Number(selectedBusinessId);
-                  console.log('🔍 businessIdNum:', businessIdNum);
 
                   if (!Number.isFinite(businessIdNum) || businessIdNum <= 0) {
-                    console.log('❌ ID inválido:', businessIdNum);
                     return;
                   }
 
                   const exists = selectedBusinesses.some(b => b.id === businessIdNum);
                   if (exists) {
-                    console.log('❌ El negocio ya está agregado');
                     return;
                   }
 
                   const businessOption = businessOptions.find(b => b.value === selectedBusinessId);
-                  console.log('🔍 businessOption encontrado:', businessOption);
 
                   const name = businessOption?.label ? String(businessOption.label) : `Negocio ${businessIdNum}`;
-                  console.log('✅ Agregando negocio:', { id: businessIdNum, name });
 
                   setSelectedBusinesses(prev => {
                     const newList = [...prev, {
                       id: businessIdNum,
                       name: String(name)
                     }];
-                    console.log('✅ Nueva lista de negocios:', newList);
                     return newList;
                   });
                   setSelectedBusinessId('');

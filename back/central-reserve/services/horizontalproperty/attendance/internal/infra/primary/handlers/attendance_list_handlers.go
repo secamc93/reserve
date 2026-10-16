@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -112,12 +113,36 @@ func (h *AttendanceHandler) ListAttendanceLists(c *gin.Context) {
 	})
 }
 
+// GetAttendanceListByID godoc
+//
+//	@Summary		Obtener lista de asistencia
+//	@Description	Obtiene una lista de asistencia por ID (solo de la propiedad del token; el super admin puede enviar ?business_id)
+//	@Tags			Asistencia
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id			path		uint	true	"ID de la lista"
+//	@Param			business_id	query		uint	false	"Opcional para super admin"
+//	@Success		200			{object}	response.AttendanceListSuccess
+//	@Failure		400			{object}	response.ErrorResponse
+//	@Failure		404			{object}	response.ErrorResponse
+//	@Failure		500			{object}	response.ErrorResponse
+//	@Router			/attendance/lists/{id} [get]
 func (h *AttendanceHandler) GetAttendanceListByID(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, response.ErrorResponse{
-		Success: false,
-		Message: "Funcionalidad en desarrollo",
-		Error:   "GetAttendanceListByID no implementado aún",
-	})
+	id, scope, ok := h.recordProxyParams(c)
+	if !ok {
+		return
+	}
+	list, err := h.attendanceUseCase.GetAttendanceListByID(c.Request.Context(), scope, id)
+	if err != nil {
+		if errors.Is(err, domain.ErrAttendanceListNotFound) {
+			c.JSON(http.StatusNotFound, response.ErrorResponse{Success: false, Message: "Lista de asistencia no encontrada", Error: err.Error()})
+			return
+		}
+		h.logger.Error().Err(err).Uint("attendance_list_id", id).Msg("Error obteniendo lista de asistencia")
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "Error obteniendo lista de asistencia", Error: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, response.AttendanceListSuccess{Success: true, Message: "Lista obtenida", Data: mappers.MapAttendanceListDTOToResponse(*list)})
 }
 
 func (h *AttendanceHandler) UpdateAttendanceList(c *gin.Context) {

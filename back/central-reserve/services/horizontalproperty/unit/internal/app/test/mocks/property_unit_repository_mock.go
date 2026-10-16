@@ -14,6 +14,8 @@ type MockPropertyUnitRepository struct {
 	UpdatePropertyUnitFunc         func(ctx context.Context, id uint, unit *domain.PropertyUnit) (*domain.PropertyUnit, error)
 	DeletePropertyUnitFunc         func(ctx context.Context, id uint) error
 	ExistsPropertyUnitByNumberFunc func(ctx context.Context, businessID uint, number string, excludeID uint) (bool, error)
+	GetPropertyUnitsSummaryFunc    func(ctx context.Context, businessID uint) (*domain.PropertyUnitsSummaryDTO, error)
+	ListExistingUnitsFunc          func(ctx context.Context, businessID uint) ([]domain.ExistingUnitDTO, error)
 }
 
 func (m *MockPropertyUnitRepository) CreatePropertyUnit(ctx context.Context, unit *domain.PropertyUnit) (*domain.PropertyUnit, error) {
@@ -62,4 +64,18 @@ func (m *MockPropertyUnitRepository) ExistsPropertyUnitByNumber(ctx context.Cont
 		return m.ExistsPropertyUnitByNumberFunc(ctx, businessID, number, excludeID)
 	}
 	return false, nil
+}
+
+func (m *MockPropertyUnitRepository) GetPropertyUnitsSummary(ctx context.Context, businessID uint) (*domain.PropertyUnitsSummaryDTO, error) {
+	if m.GetPropertyUnitsSummaryFunc != nil {
+		return m.GetPropertyUnitsSummaryFunc(ctx, businessID)
+	}
+	return &domain.PropertyUnitsSummaryDTO{Blocks: []domain.PropertyUnitBlockSummaryDTO{}}, nil
+}
+
+func (m *MockPropertyUnitRepository) ListExistingUnits(ctx context.Context, businessID uint) ([]domain.ExistingUnitDTO, error) {
+	if m.ListExistingUnitsFunc != nil {
+		return m.ListExistingUnitsFunc(ctx, businessID)
+	}
+	return nil, nil
 }

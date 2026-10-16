@@ -69,7 +69,6 @@ export function useUsers(options: UseUsersOptions = {}) {
   // Cargar usuarios
   const loadUsers = useCallback(async (authToken?: string, options?: Partial<GetUsersInput>) => {
     const token = authToken || TokenStorage.getBusinessToken();
-    console.log('🔍 useUsers - Token obtenido:', token ? `${token.substring(0, 20)}...` : 'null');
     if (!token) {
       setError('Token de autenticación requerido');
       return;

@@ -10,8 +10,10 @@ import {
   CreatePropertyUnitParams,
   UpdatePropertyUnitParams,
   DeletePropertyUnitParams,
+  GetPropertyUnitsSummaryParams,
   PropertyUnit,
   PropertyUnitsPaginated,
+  PropertyUnitsSummary,
 } from '../../domain';
 import {
   BackendGetPropertyUnitsResponse,
@@ -20,7 +22,25 @@ import {
   BackendUpdatePropertyUnitResponse,
   BackendDeletePropertyUnitResponse,
   BackendPropertyUnit,
+  BackendPropertyUnitsSummaryResponse,
 } from './response/property-units.response';
+
+/** Convierte la respuesta del resumen del back al dominio. */
+export function mapBackendPropertyUnitsSummary(data: BackendPropertyUnitsSummaryResponse['data']): PropertyUnitsSummary {
+  return {
+    total: data.total ?? 0,
+    active: data.active ?? 0,
+    withResidents: data.with_residents ?? 0,
+    coefficientSum: data.coefficient_sum ?? 0,
+    commercial: data.commercial ?? 0,
+    blocks: (data.blocks ?? []).map((b) => ({
+      block: b.block ?? '',
+      total: b.total ?? 0,
+      active: b.active ?? 0,
+      coefficientSum: b.coefficient_sum ?? 0,
+    })),
+  };
+}
 
 export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   private baseUrl = env.API_BASE_URL;
@@ -41,11 +61,13 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
       isActive: unit.is_active,
       createdAt: unit.created_at,
       updatedAt: unit.updated_at,
+      residentsCount: unit.residents_count,
+      mainResidentName: unit.main_resident_name || undefined,
     };
   }
 
   async getPropertyUnits(params: GetPropertyUnitsParams): Promise<PropertyUnitsPaginated> {
-    const { businessId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive } = params;
+    const { businessId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive, query, withoutResidents, groupByBlock } = params;
 
     if (businessId == null) {
       throw new Error('businessId es requerido para listar las unidades');
@@ -65,6 +87,9 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     if (floor !== undefined) queryParams.append('floor', floor.toString());
     if (block) queryParams.append('block', block);
     if (isActive !== undefined) queryParams.append('is_active', isActive.toString());
+    if (query) queryParams.append('q', query);
+    if (withoutResidents !== undefined) queryParams.append('without_residents', withoutResidents.toString());
+    if (groupByBlock) queryParams.append('group_by_block', 'true');
 
     // URL correcta para listar unidades (con business_id como query param)
     const url = `${this.baseUrl}/horizontal-properties/property-units?${queryParams.toString()}`;
@@ -185,6 +210,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     if (unitData.area !== undefined) body.area = unitData.area;
     if (unitData.bedrooms !== undefined) body.bedrooms = unitData.bedrooms;
     if (unitData.bathrooms !== undefined) body.bathrooms = unitData.bathrooms;
+    if (unitData.coefficient !== undefined) body.participation_coefficient = unitData.coefficient;
     if (unitData.description !== undefined) body.description = unitData.description;
 
     logHttpRequest({ method, url, body });
@@ -243,6 +269,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     if (unitData.area !== undefined) body.area = unitData.area;
     if (unitData.bedrooms !== undefined) body.bedrooms = unitData.bedrooms;
     if (unitData.bathrooms !== undefined) body.bathrooms = unitData.bathrooms;
+    if (unitData.coefficient !== undefined) body.participation_coefficient = unitData.coefficient;
     if (unitData.description !== undefined) body.description = unitData.description;
     if (unitData.isActive !== undefined) body.is_active = unitData.isActive;
 
@@ -327,5 +354,29 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
       });
       throw error;
     }
+  }
+
+  async getPropertyUnitsSummary(params: GetPropertyUnitsSummaryParams): Promise<PropertyUnitsSummary> {
+    const { businessId, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/property-units/summary?business_id=${businessId}`;
+    const method = 'GET';
+    const startTime = Date.now();
+
+    logHttpRequest({ method, url });
+
+    const response = await fetch(url, {
+      method,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    const duration = Date.now() - startTime;
+    const data: BackendPropertyUnitsSummaryResponse = await response.json();
+
+    if (!response.ok) {
+      logHttpError({ status: response.status, statusText: response.statusText, duration, data });
+      throw new Error(data.message || 'Error al obtener el resumen de unidades');
+    }
+    logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
+    return mapBackendPropertyUnitsSummary(data.data);
   }
 }

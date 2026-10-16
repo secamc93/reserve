@@ -52,13 +52,85 @@ export interface VisitListDTO {
   id: number;
   visitorName: string;
   visitorDni: string;
+  visitorPhone?: string;
+  visitorId?: number;
+  propertyUnitId?: number;
   propertyUnitNumber: string;
+  /** Tipo de unidad en Tayazal ("Casa", "Dúplex", "Local", "Jardín"); se muestra "Casa 126". */
+  propertyUnitBlock?: string;
   visitTypeName: string;
   visitStatusName: string;
+  /** pending, authorized, in_progress, completed, cancelled, expired, rejected */
+  visitStatusCode?: string;
   scheduledDate: string;
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
   actualEntryTime?: string;
   actualExitTime?: string;
+  purpose?: string;
+  numberOfVisitors?: number;
   createdAt: string;
+  visitorVehiclePlate?: string;
+  authorizationCode?: string;
+  entryGate?: string;
+  /** Residente que recibe la visita. */
+  residentName?: string;
+  /** Residente que autorizó la visita. */
+  authorizedByName?: string;
+  /** Minutos de permanencia permitidos por el tipo de visita. */
+  stayLimitMinutes?: number;
+  /** Dentro y pasada de su tiempo. */
+  exceedsTime?: boolean;
+}
+
+/** Activo (equipo) declarado en una visita. */
+export interface VisitAssetItem {
+  id: number;
+  assetName: string;
+  assetDescription?: string;
+  assetSerial?: string;
+  assetBrand?: string;
+  entryRegistered: boolean;
+  exitRegistered: boolean;
+}
+
+/** Vehículo con que llega un visitante. */
+export interface VisitorVehicle {
+  id: number;
+  visitorId?: number;
+  plate: string;
+  brand?: string;
+  color?: string;
+}
+
+export interface CreateVisitorVehicleDTO {
+  visitorId?: number;
+  plate: string;
+  brand?: string;
+  color?: string;
+}
+
+/** Estado de una visita tal como lo ve la portería. */
+export type VisitState = 'inside' | 'expected' | 'left' | 'cancelled';
+
+/** Conteos de las visitas de un día por estado de portería. */
+export interface VisitsSummary {
+  date: string;
+  inside: number;
+  expected: number;
+  left: number;
+  cancelled: number;
+  total: number;
+  /** Visitantes dentro ahora, sin importar el día programado. */
+  insideNow: number;
+  /** Dentro ahora y pasados de su tiempo. */
+  exceeded: number;
+  /** Hora programada (pared, UTC) de la próxima esperada del día. */
+  nextExpectedAt?: string;
+  nextUnitNumber?: string;
+  nextUnitBlock?: string;
+  /** Estadía promedio (min) de las que salieron ese día. */
+  avgStayMinutes?: number;
 }
 
 export interface VisitsPaginated {

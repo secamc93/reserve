@@ -13,7 +13,7 @@ import { Input } from '@shared/ui/input';
 import { RupuLoader } from '@shared/ui/rupu-loader';
 import { TokenStorage } from '@shared/config';
 import { loginAction, generateBusinessTokenAction } from '../../infrastructure/actions';
-import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
+import { HORIZONTAL_PROPERTY_TYPE, loginDestination, toPropertyOptions } from '@/shared/utils/properties';
 
 interface LoginFormProps {
   onLogin?: (result: any) => void;
@@ -66,63 +66,42 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           onLogin(result);
         }
 
-        const businesses = result.data.businesses || [];
-
-        if (isSuperAdmin) {
-          // Super admin: generar token con business_id=0 y enviar al selector de tipo
+        // Solo propiedad horizontal: con una propiedad se entra directo; con varias (o super admin,
+        // que ve todas) se elige en /properties. No hay selector de módulo.
+        const properties = toPropertyOptions(result.data.businesses);
+        const destination = loginDestination({ isSuperAdmin, propertyIds: properties.map((p) => p.id) });
+        TokenStorage.setActiveBusinessType(HORIZONTAL_PROPERTY_TYPE);
+        TokenStorage.setActiveBusinessTypeName('Propiedad Horizontal');
+        // Super admin y selector: token con business_id=0 (el super admin manda ?business_id).
+        const tokenBusinessId = destination.kind === 'property' ? destination.id : 0;
+        if (destination.kind !== 'none' && (isSuperAdmin || destination.kind === 'property')) {
           try {
             const businessTokenResult = await generateBusinessTokenAction({
-              business_id: 0,
+              business_id: tokenBusinessId,
               session_token: sessionToken,
             });
             if (businessTokenResult.success && businessTokenResult.data) {
               TokenStorage.setBusinessToken(businessTokenResult.data.token);
-              TokenStorage.setActiveBusiness(0);
-            }
-          } catch (err) {
-            console.error('Error obteniendo business token para super admin:', err);
-          }
-          router.push('/select-type');
-        } else if (businesses.length === 1) {
-          // Un solo negocio: auto-seleccionar tipo y negocio, ir directo
-          const business = businesses[0];
-          try {
-            const businessTokenResult = await generateBusinessTokenAction({
-              business_id: business.id,
-              session_token: sessionToken,
-            });
-            if (businessTokenResult.success && businessTokenResult.data) {
-              TokenStorage.setBusinessToken(businessTokenResult.data.token);
-              TokenStorage.setActiveBusiness(business.id);
+              TokenStorage.setActiveBusiness(tokenBusinessId);
             }
           } catch (err) {
             console.error('Error obteniendo business token:', err);
           }
-          const typeCode = business.business_type_code || 'horizontal_property';
-          const typeName = business.business_type_name || 'Negocio';
-          TokenStorage.setActiveBusinessType(typeCode);
-          TokenStorage.setActiveBusinessTypeName(typeName);
-          const config = BUSINESS_TYPE_CONFIG[typeCode];
-          router.push(config?.homeRoute || '/home');
-        } else if (businesses.length > 1) {
-          // Multiples negocios: verificar si todos son del mismo tipo
-          const uniqueTypes = new Set(businesses.map(b => b.business_type_code).filter(Boolean));
-          if (uniqueTypes.size === 1) {
-            // Todos del mismo tipo: auto-seleccionar tipo, ir al home
-            const typeCode = businesses[0].business_type_code || 'horizontal_property';
-            const typeName = businesses[0].business_type_name || 'Negocio';
-            TokenStorage.setActiveBusinessType(typeCode);
-            TokenStorage.setActiveBusinessTypeName(typeName);
-            const config = BUSINESS_TYPE_CONFIG[typeCode];
-            router.push(config?.homeRoute || '/home');
-          } else {
-            // Diferentes tipos: ir al selector de tipo
-            router.push('/select-type');
-          }
-        } else {
-          // Sin negocios
-          router.push('/home');
         }
+        if (destination.kind === 'picker' && !isSuperAdmin) {
+          // Varias propiedades: ninguna activa hasta que elija una en el selector.
+          TokenStorage.setActiveBusiness(0);
+        }
+        if (destination.kind === 'property') {
+          const property = properties[0];
+          TokenStorage.setBusinessColors({
+            primary: property.primaryColor || '#0f172a',
+            secondary: property.secondaryColor || '#be185d',
+            tertiary: property.tertiaryColor || '#06b6d4',
+            quaternary: property.quaternaryColor || '#f59e0b',
+          });
+        }
+        router.push(destination.href);
       } else {
         setError(result.error || 'Error al iniciar sesión');
       }

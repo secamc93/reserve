@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { TokenStorage } from '@shared/config';
@@ -19,6 +19,9 @@ import type { SidebarItemConfig } from '@/shared/config/business-type-config';
 import { buildNavItems, resolveBusinessHref } from '@/shared/utils/navigation';
 import { MobileNav } from './mobile-nav';
 import { useActiveProperty } from './use-active-property';
+import { PropertyLogo } from './property-logo';
+import { useAccessibleProperties } from './use-accessible-properties';
+import { canSwitchProperty, hasActiveProperty } from '../utils/properties';
 
 interface SidebarProps {
   user: {
@@ -31,17 +34,18 @@ interface SidebarProps {
   } | null;
   /** Muestra la barra inferior en teléfono (< md) y oculta ahí la barra lateral. */
   mobileNav?: boolean;
-  /** Contenido extra del menú de módulos del teléfono (p. ej. el selector de propiedad). */
-  mobileSheetExtra?: ReactNode;
 }
 
-export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarProps) {
+export function Sidebar({ user, mobileNav = false }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const { hasResource } = usePermissions();
-  const activeProperty = useActiveProperty(mobileNav);
+  const activeProperty = useActiveProperty();
+  const { properties } = useAccessibleProperties();
+  const showChangeProperty = canSwitchProperty(properties);
+  const goToPropertyPicker = () => router.push('/properties');
 
   const handleLogout = () => {
     TokenStorage.clearSession();
@@ -58,22 +62,22 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
   const activeBizId = TokenStorage.getActiveBusiness();
   const typeConfig = activeType ? BUSINESS_TYPE_CONFIG[activeType] : null;
 
-  // Resolver {businessId} en los hrefs
-  const dynamicItems: SidebarItemConfig[] = (typeConfig?.sidebarItems || []).map(item => ({
+  // Los módulos de la propiedad solo aparecen con una propiedad elegida (si no, el layout lleva al
+  // selector). Resolver {businessId} en los hrefs.
+  const propertyItems = hasActiveProperty(activeBizId) ? typeConfig?.sidebarItems || [] : [];
+  const dynamicItems: SidebarItemConfig[] = propertyItems.map(item => ({
     ...item,
     href: resolveBusinessHref(item.href, activeBizId),
   }));
 
   // Permisos IAM
   const canAccessIAM = hasResource('Usuarios') || hasResource('Roles') || hasResource('Permisos') || hasResource('Recursos') || hasResource('Tipos de Negocio') || hasResource('Negocios');
-  const canAccessLogs = user?.is_super_admin || false;
 
   // Mismos módulos para la barra inferior y el menú de módulos del teléfono.
   const navItems = buildNavItems({
-    sidebarItems: typeConfig?.sidebarItems || [],
+    sidebarItems: propertyItems,
     activeBusinessId: activeBizId,
     canAccessIAM,
-    canAccessLogs,
   });
 
   const renderNavItem = (href: string, iconPath: string, label: string) => {
@@ -119,23 +123,14 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
         onMouseLeave={() => setSidebarExpanded(false)}
       >
         <div className="flex flex-col h-full">
-          {/* Usuario */}
-          <div
-            className="p-4 border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
-            onClick={() => setShowUserModal(true)}
-          >
+          {/* Propiedad activa (logo) */}
+          <div className="p-4 border-b border-white/10">
             <div className="flex items-center gap-3">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-white/20" />
-              ) : (
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0" style={{ backgroundColor: 'var(--color-secondary)' }}>
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <PropertyLogo name={activeProperty?.name || 'Rupü'} logoUrl={activeProperty?.logoUrl} size={48} />
               {sidebarExpanded && (
                 <div className="text-white overflow-hidden">
-                  <p className="font-semibold text-sm truncate">{user.name}</p>
-                  <p className="text-xs text-white/70 truncate">{user.email}</p>
+                  <p className="font-semibold text-sm truncate">{activeProperty?.name || 'Rupü'}</p>
+                  <p className="text-xs text-white/70 truncate">{activeProperty ? 'Propiedad horizontal' : 'Elige una propiedad'}</p>
                 </div>
               )}
             </div>
@@ -155,7 +150,7 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
               {dynamicItems.map((item) => renderNavItem(item.href, item.iconPath, item.label))}
 
               {/* Separador si hay items dinamicos y IAM */}
-              {dynamicItems.length > 0 && (canAccessIAM || canAccessLogs) && (
+              {dynamicItems.length > 0 && canAccessIAM && (
                 <li className="py-2">
                   <div className="border-t border-white/10" />
                 </li>
@@ -168,26 +163,46 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
                 'IAM'
               )}
 
-              {/* Logs */}
-              {canAccessLogs && renderNavItem(
-                '/iam/logs',
-                'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-                'Logs'
-              )}
             </ul>
           </nav>
 
-          {/* Footer: Cambiar modulo + Logout */}
+          {/* Footer: Cambiar propiedad (solo con dos o más) + Logout */}
           <div className="p-3 border-t border-white/10 space-y-1">
-            {/* Cambiar modulo */}
+            {showChangeProperty && (
             <button
-              onClick={() => router.push('/select-type')}
+              onClick={goToPropertyPicker}
+              title="Cambiar propiedad"
+              aria-label="Cambiar propiedad"
               className="w-full flex items-center gap-3 text-white/60 hover:bg-white/10 hover:text-white p-3 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
-              {sidebarExpanded && <span className="text-sm">Cambiar Modulo</span>}
+              {sidebarExpanded && <span className="text-sm">Cambiar propiedad</span>}
+            </button>
+            )}
+
+            {/* Usuario */}
+            <button
+              type="button"
+              onClick={() => setShowUserModal(true)}
+              title={user.name}
+              aria-label={`Perfil de ${user.name}`}
+              className="w-full flex items-center gap-3 text-white hover:bg-white/10 p-2 rounded-lg transition-colors text-left"
+            >
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-white/20" />
+              ) : (
+                <span className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ backgroundColor: 'var(--color-secondary)' }}>
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+              {sidebarExpanded && (
+                <span className="overflow-hidden">
+                  <span className="block font-semibold text-sm truncate">{user.name}</span>
+                  <span className="block text-xs text-white/70 truncate">{user.email}</span>
+                </span>
+              )}
             </button>
 
             {/* Logout */}
@@ -211,9 +226,8 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
         fallbackName={activeTypeName || undefined}
         user={user}
         onLogout={handleLogout}
-        onChangeModule={() => router.push('/select-type')}
+        onChangeProperty={showChangeProperty ? goToPropertyPicker : undefined}
         onOpenProfile={() => setShowUserModal(true)}
-        sheetExtra={mobileSheetExtra}
       />
       )}
 

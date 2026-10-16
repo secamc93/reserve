@@ -55,12 +55,14 @@ type AssignParkingRequest struct {
 
 // ListParkingAssignmentsRequest - Request para listar asignaciones
 type ListParkingAssignmentsRequest struct {
-	ParkingSlotID  *uint `form:"parking_slot_id"`
-	PropertyUnitID *uint `form:"property_unit_id"`
-	ResidentID     *uint `form:"resident_id"`
-	IsActive       *bool `form:"is_active"`
-	Page           int   `form:"page,default=1"`
-	PageSize       int   `form:"page_size,default=10"`
+	ParkingSlotID  *uint  `form:"parking_slot_id"`
+	PropertyUnitID *uint  `form:"property_unit_id"`
+	ResidentID     *uint  `form:"resident_id"`
+	IsActive       *bool  `form:"is_active"`
+	Status         string `form:"status" binding:"omitempty,oneof=active expiring expired"`
+	Search         string `form:"q" binding:"max=100"`
+	Page           int    `form:"page,default=1"`
+	PageSize       int    `form:"page_size,default=10"`
 }
 
 // CreateParkingReservationRequest - Request para crear reserva temporal
@@ -89,8 +91,8 @@ type ListParkingReservationsRequest struct {
 	ResidentID          *uint      `form:"resident_id"`
 	VisitorID           *uint      `form:"visitor_id"`
 	ReservationStatusID *uint      `form:"reservation_status_id"`
-	StartDate           *time.Time `form:"start_date"`
-	EndDate             *time.Time `form:"end_date"`
+	StartDate           *time.Time `form:"start_date" time_format:"2006-01-02"` // YYYY-MM-DD
+	EndDate             *time.Time `form:"end_date" time_format:"2006-01-02"`   // YYYY-MM-DD (inclusive)
 	Page                int        `form:"page,default=1"`
 	PageSize            int        `form:"page_size,default=10"`
 }
@@ -106,4 +108,29 @@ type CheckParkingAvailabilityRequest struct {
 // CancelParkingReservationRequest - Request para cancelar reserva
 type CancelParkingReservationRequest struct {
 	Reason string `json:"reason"`
+}
+
+// CreateParkingSlotsBulkRequest - Crea varios cupos con numeración consecutiva (prefijo + desde..hasta)
+type CreateParkingSlotsBulkRequest struct {
+	ParkingZoneID uint     `json:"parking_zone_id" binding:"required"`
+	ParkingTypeID uint     `json:"parking_type_id" binding:"required"`
+	Prefix        string   `json:"prefix" binding:"max=10"`
+	From          int      `json:"from" binding:"min=0"`
+	To            int      `json:"to" binding:"min=0"`
+	Pad           int      `json:"pad" binding:"min=0,max=6"`
+	IsCovered     bool     `json:"is_covered"`
+	HasCharger    bool     `json:"has_charger"`
+	Width         *float64 `json:"width"`
+	Length        *float64 `json:"length"`
+	Height        *float64 `json:"height"`
+}
+
+// UpdateParkingAssignmentRequest - Edita vehículo, fecha de fin (null = indefinida) y notas
+type UpdateParkingAssignmentRequest struct {
+	VehiclePlate string     `json:"vehicle_plate" binding:"required,max=20"`
+	VehicleBrand string     `json:"vehicle_brand" binding:"max=50"`
+	VehicleModel string     `json:"vehicle_model" binding:"max=50"`
+	VehicleColor string     `json:"vehicle_color" binding:"max=30"`
+	EndDate      *time.Time `json:"end_date"`
+	Notes        string     `json:"notes" binding:"max=1000"`
 }

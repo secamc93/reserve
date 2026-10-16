@@ -18,6 +18,11 @@ import {
   VisitStatus,
   VisitCompanion,
   CreateVisitCompanionDTO,
+  VisitState,
+  VisitsSummary,
+  VisitAssetItem,
+  VisitorVehicle,
+  CreateVisitorVehicleDTO,
 } from '../entities';
 
 export interface SearchVisitorParams {
@@ -38,6 +43,29 @@ export interface GetVisitsParams {
   visitStatusId?: number;
   startDate?: string;
   endDate?: string;
+  /** Estado de portería: inside, expected, left, cancelled. */
+  state?: VisitState;
+  /** Busca por visitante (nombre o documento) o unidad ("Casa 126"). */
+  search?: string;
+}
+
+export interface GetVisitAssetsParams {
+  businessId: number;
+  visitId: number;
+  token: string;
+}
+
+export interface CreateVisitorVehicleParams {
+  businessId: number;
+  data: CreateVisitorVehicleDTO;
+  token: string;
+}
+
+export interface GetVisitsSummaryParams {
+  businessId: number;
+  token: string;
+  /** Día YYYY-MM-DD (por defecto hoy en Colombia). */
+  date?: string;
 }
 
 export interface GetVisitByIdParams {
@@ -132,6 +160,7 @@ export interface IVisitsRepository {
 
   // CRUD Visitas
   getVisits(params: GetVisitsParams): Promise<VisitsPaginated>;
+  getVisitsSummary(params: GetVisitsSummaryParams): Promise<VisitsSummary>;
   getVisitById(params: GetVisitByIdParams): Promise<Visit>;
   getVisitByQRCode(params: GetVisitByQRCodeParams): Promise<Visit>;
   createVisit(params: CreateVisitParams): Promise<Visit>;
@@ -144,6 +173,8 @@ export interface IVisitsRepository {
 
   // Activos
   registerAssets(params: RegisterAssetsParams): Promise<void>;
+  getVisitAssets(params: GetVisitAssetsParams): Promise<VisitAssetItem[]>;
+  createVisitorVehicle(params: CreateVisitorVehicleParams): Promise<VisitorVehicle>;
 
   // Tipos y estados
   getVisitTypes(params: GetVisitTypesParams): Promise<VisitType[]>;

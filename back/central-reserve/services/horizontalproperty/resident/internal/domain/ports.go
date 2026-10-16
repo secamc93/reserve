@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // ResidentRepository - Puerto para repositorio de residentes
 type ResidentRepository interface {
@@ -20,6 +23,8 @@ type ResidentRepository interface {
 	// Métodos para relación muchos-a-muchos resident-unidad
 	GetResidentIDsByDni(ctx context.Context, businessID uint, dnis []string) (map[string]uint, error)
 	CreateResidentUnitsInBatch(ctx context.Context, pivots []ResidentUnit) error
+	GetResidentsSummary(ctx context.Context, businessID uint) (*ResidentsSummaryDTO, error)
+	GetResidentOverview(ctx context.Context, businessID, residentID uint, now time.Time) (*ResidentOverviewDTO, error)
 }
 
 // ResidentUseCase - Puerto para casos de uso de residentes
@@ -32,4 +37,6 @@ type ResidentUseCase interface {
 	ImportResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*ImportResidentsResult, error)
 	BulkUpdateResidents(ctx context.Context, businessID uint, request BulkUpdateResidentsRequest) (*BulkUpdateResidentsResult, error)
 	BulkUpdateResidentsFromExcel(ctx context.Context, businessID uint, filePath string) (*BulkUpdateResidentsResult, error)
+	GetResidentsSummary(ctx context.Context, businessID uint) (*ResidentsSummaryDTO, error)
+	GetResidentOverview(ctx context.Context, businessID, residentID uint) (*ResidentOverviewDTO, error)
 }

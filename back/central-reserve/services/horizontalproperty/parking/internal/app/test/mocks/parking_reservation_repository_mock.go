@@ -8,15 +8,16 @@ import (
 
 // ParkingReservationRepositoryMock - Mock del repositorio de reservas de parqueo
 type ParkingReservationRepositoryMock struct {
-	CreateParkingReservationFn      func(ctx context.Context, reservation *domain.ParkingReservation) (*domain.ParkingReservation, error)
-	GetParkingReservationByIDFn     func(ctx context.Context, id uint) (*domain.ParkingReservation, error)
-	UpdateParkingReservationFn      func(ctx context.Context, reservation *domain.ParkingReservation) error
-	DeleteParkingReservationFn      func(ctx context.Context, id uint) error
-	ListParkingReservationsFn       func(ctx context.Context, filters domain.ParkingReservationFiltersDTO) (*domain.PaginatedParkingReservationsDTO, error)
-	CheckAvailabilityFn             func(ctx context.Context, dto domain.CheckParkingAvailabilityDTO) (bool, error)
-	GetOverlappingReservationsFn    func(ctx context.Context, slotID uint, date string, startTime, endTime string, excludeID *uint) ([]*domain.ParkingReservation, error)
-	GetReservationsByDateRangeFn    func(ctx context.Context, slotID uint, startDate, endDate string) ([]*domain.ParkingReservation, error)
-	GetPendingReservationsFn        func(ctx context.Context, businessID uint) ([]*domain.ParkingReservation, error)
+	CreateParkingReservationFn     func(ctx context.Context, reservation *domain.ParkingReservation) (*domain.ParkingReservation, error)
+	GetParkingReservationByIDFn    func(ctx context.Context, id uint) (*domain.ParkingReservation, error)
+	UpdateParkingReservationFn     func(ctx context.Context, reservation *domain.ParkingReservation) error
+	DeleteParkingReservationFn     func(ctx context.Context, id uint) error
+	ListParkingReservationsFn      func(ctx context.Context, filters domain.ParkingReservationFiltersDTO) (*domain.PaginatedParkingReservationsDTO, error)
+	CheckAvailabilityFn            func(ctx context.Context, dto domain.CheckParkingAvailabilityDTO) (bool, error)
+	GetOverlappingReservationsFn   func(ctx context.Context, slotID uint, date string, startTime, endTime string, excludeID *uint) ([]*domain.ParkingReservation, error)
+	GetReservationsByDateRangeFn   func(ctx context.Context, slotID uint, startDate, endDate string) ([]*domain.ParkingReservation, error)
+	GetPendingReservationsFn       func(ctx context.Context, businessID uint) ([]*domain.ParkingReservation, error)
+	GetReservationStatusIDByCodeFn func(ctx context.Context, code string) (uint, error)
 }
 
 func (m *ParkingReservationRepositoryMock) CreateParkingReservation(ctx context.Context, reservation *domain.ParkingReservation) (*domain.ParkingReservation, error) {
@@ -80,4 +81,11 @@ func (m *ParkingReservationRepositoryMock) GetPendingReservations(ctx context.Co
 		return m.GetPendingReservationsFn(ctx, businessID)
 	}
 	return []*domain.ParkingReservation{}, nil
+}
+
+func (m *ParkingReservationRepositoryMock) GetReservationStatusIDByCode(ctx context.Context, code string) (uint, error) {
+	if m.GetReservationStatusIDByCodeFn != nil {
+		return m.GetReservationStatusIDByCodeFn(ctx, code)
+	}
+	return 1, nil
 }

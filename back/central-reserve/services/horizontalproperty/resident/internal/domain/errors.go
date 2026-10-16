@@ -11,4 +11,5 @@ var (
 	ErrResidentDniRequired   = errors.New("el DNI del residente es requerido")
 	ErrPropertyUnitRequired  = errors.New("la unidad de propiedad es requerida")
 	ErrResidentTypeRequired  = errors.New("el tipo de residente es requerido")
+	ErrBusinessIDRequired    = errors.New("el business_id es requerido")
 )

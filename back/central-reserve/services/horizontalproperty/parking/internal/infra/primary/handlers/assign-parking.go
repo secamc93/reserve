@@ -27,12 +27,8 @@ func (h *ParkingHandler) AssignParking(c *gin.Context) {
 		return
 	}
 
-	businessID, exists := middleware.GetBusinessID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "business_id no disponible",
-		})
+	businessID, ok := businessScope(c)
+	if !ok {
 		return
 	}
 

@@ -17,6 +17,21 @@ export interface BackendPropertyUnit {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  residents_count?: number;
+  main_resident_name?: string;
+}
+
+export interface BackendPropertyUnitsSummaryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    active: number;
+    with_residents: number;
+    coefficient_sum: number;
+    commercial?: number;
+    blocks: Array<{ block: string; total: number; active: number; coefficient_sum: number }>;
+  };
 }
 
 export interface BackendGetPropertyUnitsResponse {
