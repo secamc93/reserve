@@ -25,8 +25,8 @@ describe('hourRange', () => {
     const range = hourRange([{ dayOfWeek: 1, startTime: '08:00', endTime: '20:00', isActive: true }], [{ startTime: '19:00', endTime: '21:30' }]);
     expect(range).toEqual({ start: 8, end: 22 });
   });
-  it('sin datos: 07–22', () => {
-    expect(hourRange([], [])).toEqual({ start: 7, end: 22 });
+  it('sin datos: 08–22', () => {
+    expect(hourRange([], [])).toEqual({ start: 8, end: 22 });
   });
 });
 

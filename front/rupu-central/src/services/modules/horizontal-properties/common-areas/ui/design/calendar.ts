@@ -69,7 +69,7 @@ export interface HourRange {
 
 /**
  * Rango de horas a dibujar: cubre el horario de la zona y todas las reservas de la semana;
- * sin datos, 07:00–22:00.
+ * sin datos, 08:00–22:00.
  */
 export function hourRange(schedules: CommonAreaSchedule[], reservations: { startTime: string; endTime: string }[]): HourRange {
   const starts: number[] = [];
@@ -83,7 +83,7 @@ export function hourRange(schedules: CommonAreaSchedule[], reservations: { start
     starts.push(toMinutes(r.startTime));
     ends.push(toMinutes(r.endTime));
   }
-  if (starts.length === 0) return { start: 7, end: 22 };
+  if (starts.length === 0) return { start: 8, end: 22 };
   const start = Math.floor(Math.min(...starts) / 60);
   const end = Math.ceil(Math.max(...ends) / 60);
   return { start: Math.max(0, start), end: Math.min(24, Math.max(end, start + 1)) };

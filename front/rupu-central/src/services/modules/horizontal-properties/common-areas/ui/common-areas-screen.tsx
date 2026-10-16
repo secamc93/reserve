@@ -1,22 +1,24 @@
 /**
- * Z1 · Zonas comunes (/common-areas): cabecera con pestañas Zonas / Reservas, chips de
- * estado, buscador y zonas en tarjetas con capacidad, reglas y horario.
- * Página, tamaño, estado y búsqueda viven en la URL (?page, ?page_size, ?estado, ?q).
+ * Z1 · Zonas comunes (/common-areas): cabecera con pestañas (Zonas, Calendario de reservas,
+ * Pendientes, Historial) y zonas en tarjetas (3 columnas) con reglas y "Esta semana".
+ * Con más de 6 zonas aparecen chips de estado y buscador. Página y filtros viven en la URL.
  */
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Pagination, usePaginationParams } from '@shared/ui/pagination';
-import { DsBody, DsCard, DsChips, DsPage, DsSearch, DsSectionHeader, DsToolbar, VtNotice, vtBtn } from '@/shared/ui/ds';
-import type { CommonAreaListDTO } from '../domain';
-import { getCommonAreaByIdAction, getCommonAreasAction, updateCommonAreaAction } from '../infrastructure/actions';
+import { DsBody, DsCard, DsChips, DsPage, DsSearch, DsToolbar, VtNotice, vtBtn } from '@/shared/ui/ds';
+import type { CommonAreaListDTO, ReservationListDTO } from '../domain';
+import { getCommonAreaByIdAction, getCommonAreasAction, getReservationsAction, updateCommonAreaAction } from '../infrastructure/actions';
 import { AreaCard } from './area-card';
 import { AreaFormModal } from './area-form-modal';
 import { AreaScheduleModal } from './area-schedule-modal';
 import { DeleteAreaModal } from './delete-area-modal';
-import { areaFormFrom, areaFormToDTO } from './design';
+import { ReservationFormModal } from './reservation-form-modal';
+import { ZonesHeader, zonesTabHref } from './zones-header';
+import { addDays, areaFormFrom, areaFormToDTO, startOfWeek, toISODate, weekCells, weekDays, weekSummary } from './design';
 import { useBusinessToken } from './hooks/use-business-token';
 
 type EstadoFilter = 'all' | 'active' | 'inactive';
@@ -26,6 +28,9 @@ const ESTADO_CHIPS: { id: EstadoFilter; label: string }[] = [
   { id: 'active', label: 'Activas' },
   { id: 'inactive', label: 'Inactivas' },
 ];
+
+/** Con más zonas que esto se muestran chips y buscador. */
+const FILTERS_FROM = 6;
 
 export function CommonAreasScreen({ businessId }: { businessId: number }) {
   const router = useRouter();
@@ -37,19 +42,29 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
   const estadoParam = searchParams.get('estado');
   const estado: EstadoFilter = estadoParam === 'active' || estadoParam === 'inactive' ? estadoParam : 'all';
   const q = searchParams.get('q') ?? '';
+  const filtering = estado !== 'all' || q !== '';
+
+  const today = toISODate(new Date());
+  const monday = startOfWeek(today);
+  const days = useMemo(() => weekDays(monday), [monday]);
 
   const [search, setSearch] = useState(q);
   const [areas, setAreas] = useState<CommonAreaListDTO[]>([]);
   const [total, setTotal] = useState(0);
+  const [allTotal, setAllTotal] = useState<number | null>(null);
   const [totalPages, setTotalPages] = useState(1);
+  const [week, setWeek] = useState<ReservationListDTO[]>([]);
+  const [pendingTotal, setPendingTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [refresh, setRefresh] = useState(0);
 
   const [formArea, setFormArea] = useState<number | null | 'new'>(null);
   const [scheduleArea, setScheduleArea] = useState<{ id: number; name: string } | null>(null);
   const [deleting, setDeleting] = useState<{ id: number; name: string } | null>(null);
+  const [reserving, setReserving] = useState(false);
 
   const setParams = useCallback(
     (patch: Record<string, string | null>) => {
@@ -65,47 +80,50 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
     [router, pathname, searchParams],
   );
 
-  // Búsqueda con espera corta antes de tocar la URL.
   useEffect(() => {
     if (search === q) return;
     const t = setTimeout(() => setParams({ q: search.trim() || null }), 300);
     return () => clearTimeout(t);
   }, [search, q, setParams]);
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
-    try {
-      const token = await getToken();
-      const result = await getCommonAreasAction({
-        token,
-        businessId,
-        page,
-        pageSize,
-        isActive: estado === 'all' ? undefined : estado === 'active',
-        search: q || undefined,
-      });
-      if (!result.success) throw new Error(result.error);
-      setAreas(result.data.data);
-      setTotal(result.data.total);
-      setTotalPages(result.data.totalPages || 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error cargando zonas comunes');
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, businessId, page, pageSize, estado, q]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+    (async () => {
+      try {
+        const token = await getToken();
+        const [list, weekRes, pendingRes] = await Promise.all([
+          getCommonAreasAction({ token, businessId, page, pageSize, isActive: estado === 'all' ? undefined : estado === 'active', search: q || undefined }),
+          getReservationsAction({ token, businessId, startDate: monday, endDate: addDays(monday, 6), page: 1, pageSize: 200 }),
+          getReservationsAction({ token, businessId, status: ['pending'], page: 1, pageSize: 1 }),
+        ]);
+        if (cancelled) return;
+        if (!list.success) throw new Error(list.error);
+        setAreas(list.data.data);
+        setTotal(list.data.total);
+        setTotalPages(list.data.totalPages || 1);
+        if (!filtering) setAllTotal(list.data.total);
+        setWeek(weekRes.success ? weekRes.data.data : []);
+        setPendingTotal(pendingRes.success ? pendingRes.data.total : null);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Error cargando zonas comunes');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getToken, businessId, page, pageSize, estado, q, filtering, monday, refresh]);
 
   const done = (message: string) => {
     setFormArea(null);
     setScheduleArea(null);
     setDeleting(null);
+    setReserving(false);
     setNotice(message);
-    load();
+    setRefresh((n) => n + 1);
   };
 
   const toggleActive = async (area: CommonAreaListDTO) => {
@@ -126,29 +144,34 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
     }
   };
 
-  const base = `/properties/${businessId}/common-areas`;
+  const showFilters = filtering || (allTotal ?? 0) > FILTERS_FROM;
+  const activeZones = areas.filter((a) => a.isActive);
 
   return (
     <DsPage>
-      <DsSectionHeader
-        ariaLabel="Zonas comunes"
-        tabs={[
-          { id: 'zones', label: 'Zonas', count: loading ? null : total },
-          { id: 'reservations', label: 'Reservas' },
-        ]}
+      <ZonesHeader
+        businessId={businessId}
         active="zones"
-        onChange={(id) => id === 'reservations' && router.push(`${base}/reservations`)}
+        zonesCount={allTotal}
+        pendingCount={pendingTotal}
         actions={
-          <button type="button" className={vtBtn.primary} onClick={() => setFormArea('new')}>
-            + Nueva zona
-          </button>
+          <>
+            <button type="button" className={vtBtn.secondary} onClick={() => setFormArea('new')}>
+              + Nueva zona
+            </button>
+            <button type="button" className={vtBtn.primary} onClick={() => setReserving(true)} disabled={activeZones.length === 0}>
+              + Nueva reserva
+            </button>
+          </>
         }
       />
       <DsBody>
-        <DsToolbar
-          left={<DsChips ariaLabel="Estado de la zona" chips={ESTADO_CHIPS} active={estado} onChange={(id) => setParams({ estado: id === 'all' ? null : id })} />}
-          right={<DsSearch value={search} onChange={setSearch} placeholder="Buscar zona o ubicación" />}
-        />
+        {showFilters && (
+          <DsToolbar
+            left={<DsChips ariaLabel="Estado de la zona" chips={ESTADO_CHIPS} active={estado} onChange={(id) => setParams({ estado: id === 'all' ? null : id })} />}
+            right={<DsSearch value={search} onChange={setSearch} placeholder="Buscar zona o ubicación" />}
+          />
+        )}
 
         {error && <VtNotice>{error}</VtNotice>}
         {notice && !error && <VtNotice tone="ok">{notice}</VtNotice>}
@@ -157,9 +180,9 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
           <div className="py-16 text-center text-sm text-[#8a8580]">Cargando zonas…</div>
         ) : areas.length === 0 ? (
           <DsCard className="px-6 py-12 text-center">
-            <div className="text-[15px] font-semibold">{q || estado !== 'all' ? 'No hay zonas con estos filtros' : 'Aún no hay zonas comunes'}</div>
+            <div className="text-[15px] font-semibold">{filtering ? 'No hay zonas con estos filtros' : 'Aún no hay zonas comunes'}</div>
             <p className="text-[13px] text-[#8a8580] mt-1 mb-4">Crea el salón, la piscina, el BBQ… con su capacidad, horario y reglas.</p>
-            {!q && estado === 'all' && (
+            {!filtering && (
               <button type="button" className={vtBtn.primary} onClick={() => setFormArea('new')}>
                 + Nueva zona
               </button>
@@ -171,8 +194,12 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
               <AreaCard
                 key={area.id}
                 area={area}
-                reservationsHref={`${base}/reservations?zona=${area.id}`}
+                today={today}
+                days={days}
+                cells={weekCells(area, days, week)}
+                summary={weekSummary(area, week, today)}
                 busy={busyId === area.id}
+                onOpen={() => router.push(`${zonesTabHref(businessId, 'calendar')}?zona=${area.id}`)}
                 onEdit={() => setFormArea(area.id)}
                 onSchedule={() => setScheduleArea({ id: area.id, name: area.name })}
                 onToggleActive={() => toggleActive(area)}
@@ -182,7 +209,7 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
           </div>
         )}
 
-        {total > 0 && (
+        {(total > pageSize || page > 1) && (
           <div className="bg-white border border-[#e4e2dd] rounded-[10px] px-[18px] py-2">
             <Pagination total={total} totalPages={totalPages} disabled={loading} />
           </div>
@@ -199,6 +226,15 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
       />
       <AreaScheduleModal open={scheduleArea !== null} businessId={businessId} area={scheduleArea} getToken={getToken} onClose={() => setScheduleArea(null)} onSaved={done} />
       <DeleteAreaModal businessId={businessId} area={deleting} getToken={getToken} onClose={() => setDeleting(null)} onDeleted={done} />
+      <ReservationFormModal
+        open={reserving}
+        businessId={businessId}
+        zones={activeZones}
+        defaultDate={today}
+        getToken={getToken}
+        onClose={() => setReserving(false)}
+        onCreated={done}
+      />
     </DsPage>
   );
 }

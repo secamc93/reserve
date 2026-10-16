@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapCommonAreaList, mapReservation, mapReservationList, mapRestriction, toBackendArea } from './mappers';
+import { firstImageUrl, mapCommonAreaList, mapReservation, mapReservationList, mapRestriction, toBackendArea } from './mappers';
 
 describe('mappers de zonas comunes', () => {
   it('zona del listado: null → undefined y horario en HH:MM', () => {
@@ -12,6 +12,19 @@ describe('mappers de zonas comunes', () => {
     expect(area.depositAmount).toBe(50000);
     expect(area.schedules[0]).toEqual({ id: 4, dayOfWeek: 2, startTime: '06:00', endTime: '20:00', isActive: true });
     expect(mapCommonAreaList({ id: 2, name: 'X', type_name: 'X', location: '', max_capacity: 1, is_active: true, requires_approval: true }).schedules).toEqual([]);
+  });
+
+  it('foto y bloqueos vigentes del listado', () => {
+    const area = mapCommonAreaList({
+      id: 1, name: 'Piscina', type_name: 'Piscina', location: '', max_capacity: 30, is_active: true, requires_approval: false,
+      image_urls: '["https://cdn/p.jpg","https://cdn/q.jpg"]',
+      restrictions: [{ id: 3, common_area_id: 1, restriction_type: 'maintenance', start_date: '2026-10-14', end_date: '2026-10-20', start_time: null, end_time: null }],
+    });
+    expect(area.imageUrl).toBe('https://cdn/p.jpg');
+    expect(area.restrictions[0]).toMatchObject({ restrictionType: 'maintenance', endDate: '2026-10-20', startTime: undefined });
+    expect(firstImageUrl('https://cdn/a.png')).toBe('https://cdn/a.png');
+    expect(firstImageUrl('no-json[')).toBeUndefined();
+    expect(firstImageUrl('')).toBeUndefined();
   });
 
   it('reserva: unidad con bloque, estado y horas', () => {

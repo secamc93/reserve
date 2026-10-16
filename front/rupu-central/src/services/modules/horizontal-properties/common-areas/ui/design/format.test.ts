@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatClock, formatMoney, scheduleSummary, unitLabel } from './format';
+import { dayMonth, formatClock, formatMoney, formatThousands, relativeDay, relativeMoment, scheduleSummary, timeAgo, unitLabel } from './format';
 
 describe('unitLabel', () => {
   it('muestra "Casa 126" con el bloque y el código de la unidad', () => {
@@ -39,5 +39,25 @@ describe('scheduleSummary', () => {
   });
   it('sin días abiertos', () => {
     expect(scheduleSummary([])).toBe('Sin horario');
+  });
+});
+
+describe('tiempos relativos', () => {
+  const now = new Date(2026, 9, 15, 10, 0); // jue 15 oct 2026 10:00 local
+  it('hoy / ayer / mañana / fecha', () => {
+    expect(relativeDay('2026-10-15', now)).toBe('hoy');
+    expect(relativeDay('2026-10-14T00:00:00Z', now)).toBe('ayer');
+    expect(relativeDay('2026-10-16', now)).toBe('mañana');
+    expect(relativeDay('2026-10-20', now)).toBe('20 oct');
+    expect(dayMonth('2026-01-03')).toBe('3 ene');
+  });
+  it('momento con hora y hace cuánto', () => {
+    expect(relativeMoment(new Date(2026, 9, 14, 21, 10).toISOString(), now)).toBe('ayer 21:10');
+    expect(timeAgo(new Date(2026, 9, 14, 21, 0).toISOString(), now)).toBe('hace 13 h');
+    expect(timeAgo(new Date(2026, 9, 15, 9, 55).toISOString(), now)).toBe('hace 5 min');
+    expect(timeAgo(new Date(2026, 9, 12, 10, 0).toISOString(), now)).toBe('hace 3 d');
+  });
+  it('miles sin signo', () => {
+    expect(formatThousands(150000)).toBe('150.000');
   });
 });

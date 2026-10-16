@@ -109,7 +109,9 @@ type CommonAreaListDTO struct {
 	AllowsRecurring      bool
 	IsActive             bool
 	RequiresApproval     bool
-	Schedules            []CommonAreaSchedule // Horario semanal activo
+	ImageURLs            string
+	Schedules            []CommonAreaSchedule    // Horario semanal activo
+	Restrictions         []CommonAreaRestriction // Bloqueos activos que terminan hoy o después
 }
 
 // PaginatedReservationsDTO - Resultado paginado de reservas

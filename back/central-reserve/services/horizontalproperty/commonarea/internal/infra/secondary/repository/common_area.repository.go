@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"time"
 
 	"central_reserve/services/horizontalproperty/commonarea/internal/domain"
 	"central_reserve/services/horizontalproperty/commonarea/internal/infra/secondary/repository/mappers"
@@ -150,7 +151,10 @@ func (r *CommonAreaRepository) ListCommonAreas(ctx context.Context, filters doma
 	query := applyFilters(r.db.Conn(ctx).
 		Model(&models.CommonArea{}).
 		Preload("CommonAreaType").
-		Preload("Schedules", "is_active = ?", true))
+		Preload("Schedules", "is_active = ?", true).
+		Preload("Restrictions", func(db *gorm.DB) *gorm.DB {
+			return db.Where("is_active = ? AND end_date >= ?", true, time.Now().Format("2006-01-02")).Order("start_date ASC")
+		}))
 
 	offset := (filters.Page - 1) * filters.PageSize
 	if err := query.Order("name ASC").
@@ -167,6 +171,10 @@ func (r *CommonAreaRepository) ListCommonAreas(ctx context.Context, filters doma
 			schedules = append(schedules, *mappers.ScheduleToDomain(&s))
 		}
 		sort.Slice(schedules, func(a, b int) bool { return schedules[a].DayOfWeek < schedules[b].DayOfWeek })
+		restrictions := make([]domain.CommonAreaRestriction, 0, len(ca.Restrictions))
+		for _, rs := range ca.Restrictions {
+			restrictions = append(restrictions, *mappers.RestrictionToDomain(&rs))
+		}
 
 		commonAreas[i] = domain.CommonAreaListDTO{
 			ID:                   ca.ID,
@@ -185,7 +193,9 @@ func (r *CommonAreaRepository) ListCommonAreas(ctx context.Context, filters doma
 			AllowsRecurring:      ca.AllowsRecurring,
 			IsActive:             ca.IsActive,
 			RequiresApproval:     ca.RequiresApproval,
+			ImageURLs:            ca.ImageURLs,
 			Schedules:            schedules,
+			Restrictions:         restrictions,
 		}
 	}
 

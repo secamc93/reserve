@@ -54,7 +54,9 @@ export interface BackendCommonAreaList {
   allows_recurring?: boolean;
   is_active: boolean;
   requires_approval: boolean;
+  image_urls?: string;
   schedules?: N<BackendSchedule[]>;
+  restrictions?: N<BackendRestriction[]>;
 }
 
 export interface BackendCommonAreasPaginatedResponse {

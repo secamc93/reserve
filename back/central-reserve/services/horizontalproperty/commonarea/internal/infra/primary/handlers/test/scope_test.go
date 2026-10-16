@@ -36,7 +36,10 @@ func (f *fakeUseCase) UpdateCommonArea(ctx context.Context, dto domain.UpdateCom
 	f.hit("update")
 	return &domain.CommonArea{ID: dto.ID, BusinessID: f.areaBusiness}, nil
 }
-func (f *fakeUseCase) DeleteCommonArea(ctx context.Context, id uint) error { f.hit("delete"); return nil }
+func (f *fakeUseCase) DeleteCommonArea(ctx context.Context, id uint) error {
+	f.hit("delete")
+	return nil
+}
 func (f *fakeUseCase) SetSchedules(ctx context.Context, id uint, s []domain.ScheduleInputDTO) ([]*domain.CommonAreaSchedule, error) {
 	f.hit("schedules")
 	return nil, nil

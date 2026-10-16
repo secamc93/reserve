@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyAreaType,
+  basicSchedule,
+  basicScheduleToRows,
+  toggleDay,
   areaFormFrom,
   areaFormToDTO,
   emptyAreaForm,
@@ -16,36 +19,47 @@ import {
 const type = { id: 3, name: 'BBQ', code: 'bbq', defaultMaxCapacity: 15, requiresApproval: true, allowsRecurring: false, isActive: true };
 
 describe('formulario de zona', () => {
-  it('valida obligatorios y depósito', () => {
-    const form = { ...emptyAreaForm(), maxCapacity: '0', requiresDeposit: true };
-    const errors = validateAreaForm(form);
-    expect(Object.keys(errors).sort()).toEqual(['commonAreaTypeId', 'depositAmount', 'maxCapacity', 'name']);
+  it('valida obligatorios y el horario', () => {
+    const form = { ...emptyAreaForm(), maxCapacity: '0', scheduleStart: '22:00', scheduleEnd: '08:00' };
+    expect(Object.keys(validateAreaForm(form)).sort()).toEqual(['commonAreaTypeId', 'maxCapacity', 'name', 'scheduleEnd']);
   });
 
-  it('el tipo propone capacidad y reglas', () => {
+  it('el tipo propone capacidad y reglas; por defecto abre los 7 días 08:00–22:00', () => {
     const form = applyAreaType(emptyAreaForm(), type);
-    expect(form).toMatchObject({ commonAreaTypeId: 3, maxCapacity: '15', requiresApproval: true });
+    expect(form).toMatchObject({ commonAreaTypeId: 3, maxCapacity: '15', requiresApproval: true, scheduleStart: '08:00', scheduleEnd: '22:00' });
+    expect(form.openDays).toHaveLength(7);
   });
 
-  it('convierte a DTO: pesos con punto de miles, área decimal y depósito solo si aplica', () => {
-    const dto = areaFormToDTO({
-      ...applyAreaType(emptyAreaForm(), type),
-      name: '  BBQ Norte ',
-      hourlyRate: '30.000',
-      areaSqm: '120,5',
-      requiresDeposit: false,
-      depositAmount: '50000',
-    });
-    expect(dto).toMatchObject({ name: 'BBQ Norte', hourlyRate: 30000, areaSqm: 120.5, depositAmount: undefined, isActive: true });
+  it('DTO: depósito > 0 implica requiresDeposit, equipamiento opcional, pesos con punto de miles', () => {
+    const dto = areaFormToDTO({ ...applyAreaType(emptyAreaForm(), type), name: '  BBQ Norte ', hourlyRate: '30.000', areaSqm: '120,5', depositAmount: '100.000', equipmentDescription: '' });
+    expect(dto).toMatchObject({ name: 'BBQ Norte', hourlyRate: 30000, areaSqm: 120.5, requiresDeposit: true, depositAmount: 100000, hasEquipment: false, equipmentDescription: undefined });
+    expect(areaFormToDTO({ ...applyAreaType(emptyAreaForm(), type), name: 'X', depositAmount: '' })).toMatchObject({ requiresDeposit: false, depositAmount: undefined });
     expect(validateAreaForm({ ...applyAreaType(emptyAreaForm(), type), name: 'X', hourlyRate: 'abc' }).hourlyRate).toBeTruthy();
   });
 
-  it('carga una zona existente para editar', () => {
-    const form = areaFormFrom({
+  it('días L–D y horario básico a 7 filas', () => {
+    let form = { ...emptyAreaForm(), scheduleStart: '09:00', scheduleEnd: '18:00' };
+    form = toggleDay(toggleDay(form, 0), 6); // cierra domingo y sábado
+    const rows = basicScheduleToRows(form);
+    expect(rows).toHaveLength(7);
+    expect(rows.filter((r) => r.isActive).map((r) => r.dayOfWeek)).toEqual([1, 2, 3, 4, 5]);
+    expect(rows[0]).toEqual({ dayOfWeek: 1, startTime: '09:00', endTime: '18:00', isActive: true });
+  });
+
+  it('al editar toma el horario más repetido y no lo reescribe si no se toca', () => {
+    const area = {
       id: 1, businessId: 1, commonAreaTypeId: 3, name: 'Salón', maxCapacity: 40, hasEquipment: true, equipmentDescription: 'Sonido',
       requiresApproval: false, requiresDeposit: true, depositAmount: 200000, allowsRecurring: false, isActive: false, createdAt: '', updatedAt: '',
-    });
-    expect(form).toMatchObject({ maxCapacity: '40', depositAmount: '200000', isActive: false, equipmentDescription: 'Sonido' });
+    };
+    const form = areaFormFrom(area, [
+      { dayOfWeek: 1, startTime: '08:00', endTime: '22:00', isActive: true },
+      { dayOfWeek: 2, startTime: '08:00', endTime: '22:00', isActive: true },
+      { dayOfWeek: 6, startTime: '10:00', endTime: '14:00', isActive: true },
+      { dayOfWeek: 0, startTime: '10:00', endTime: '14:00', isActive: false },
+    ]);
+    expect(form).toMatchObject({ maxCapacity: '40', depositAmount: '200000', isActive: false, equipmentDescription: 'Sonido', scheduleStart: '08:00', scheduleEnd: '22:00', scheduleDirty: false, customSchedule: true });
+    expect(form.openDays.sort()).toEqual([1, 2, 6]);
+    expect(basicSchedule([]).openDays).toEqual([]);
   });
 });
 

@@ -29,6 +29,22 @@ const optText = (v: string | null | undefined): string | undefined => (v ? v : u
 /** "08:00:00" → "08:00" */
 export const clock = (v: string | null | undefined): string => (v && v.length >= 5 ? v.slice(0, 5) : v ?? '');
 
+/** image_urls es un arreglo JSON de URLs (o una URL suelta): devuelve la primera. */
+export function firstImageUrl(raw: string | null | undefined): string | undefined {
+  const value = (raw ?? '').trim();
+  if (!value) return undefined;
+  if (value.startsWith('[')) {
+    try {
+      const list = JSON.parse(value) as unknown;
+      const first = Array.isArray(list) ? list.find((x) => typeof x === 'string' && x.trim()) : undefined;
+      return typeof first === 'string' ? first.trim() : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return /^https?:\/\//.test(value) ? value : undefined;
+}
+
 export function mapSchedule(s: BackendSchedule): CommonAreaSchedule {
   return { id: s.id, dayOfWeek: s.day_of_week, startTime: clock(s.start_time), endTime: clock(s.end_time), isActive: s.is_active };
 }
@@ -77,7 +93,9 @@ export function mapCommonAreaList(a: BackendCommonAreaList): CommonAreaListDTO {
     allowsRecurring: a.allows_recurring ?? false,
     isActive: a.is_active,
     requiresApproval: a.requires_approval,
+    imageUrl: firstImageUrl(a.image_urls),
     schedules: (a.schedules ?? []).map(mapSchedule),
+    restrictions: (a.restrictions ?? []).map(mapRestriction),
   };
 }
 

@@ -29,23 +29,25 @@ type CommonAreaResponse struct {
 
 // CommonAreaListResponse - Response de lista de zonas comunes
 type CommonAreaListResponse struct {
-	ID                   uint               `json:"id"`
-	Name                 string             `json:"name"`
-	TypeName             string             `json:"type_name"`
-	TypeCode             string             `json:"type_code"`
-	Description          string             `json:"description"`
-	Location             string             `json:"location"`
-	MaxCapacity          int                `json:"max_capacity"`
-	AreaSqm              *float64           `json:"area_sqm"`
-	HasEquipment         bool               `json:"has_equipment"`
-	EquipmentDescription string             `json:"equipment_description"`
-	HourlyRate           *float64           `json:"hourly_rate"`
-	RequiresDeposit      bool               `json:"requires_deposit"`
-	DepositAmount        *float64           `json:"deposit_amount"`
-	AllowsRecurring      bool               `json:"allows_recurring"`
-	IsActive             bool               `json:"is_active"`
-	RequiresApproval     bool               `json:"requires_approval"`
-	Schedules            []ScheduleResponse `json:"schedules"`
+	ID                   uint                  `json:"id"`
+	Name                 string                `json:"name"`
+	TypeName             string                `json:"type_name"`
+	TypeCode             string                `json:"type_code"`
+	Description          string                `json:"description"`
+	Location             string                `json:"location"`
+	MaxCapacity          int                   `json:"max_capacity"`
+	AreaSqm              *float64              `json:"area_sqm"`
+	HasEquipment         bool                  `json:"has_equipment"`
+	EquipmentDescription string                `json:"equipment_description"`
+	HourlyRate           *float64              `json:"hourly_rate"`
+	RequiresDeposit      bool                  `json:"requires_deposit"`
+	DepositAmount        *float64              `json:"deposit_amount"`
+	AllowsRecurring      bool                  `json:"allows_recurring"`
+	IsActive             bool                  `json:"is_active"`
+	RequiresApproval     bool                  `json:"requires_approval"`
+	ImageURLs            string                `json:"image_urls"`
+	Schedules            []ScheduleResponse    `json:"schedules"`
+	Restrictions         []RestrictionResponse `json:"restrictions"`
 }
 
 // ScheduleResponse - Horario de un día

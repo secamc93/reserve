@@ -66,3 +66,57 @@ export function formatDateTime(iso?: string | null): string {
   if (Number.isNaN(d.getTime())) return '';
   return dateTime.format(d).replace(/\./g, '');
 }
+
+const thousands = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+
+/** "25.000" (sin signo, para etiquetas cortas). */
+export function formatThousands(value: number): string {
+  return thousands.format(value);
+}
+
+const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/** "20 oct" a partir de "YYYY-MM-DD". */
+export function dayMonth(isoDate: string): string {
+  const [, m, d] = isoDate.slice(0, 10).split('-').map(Number);
+  return `${d} ${MONTHS_SHORT[(m || 1) - 1]}`;
+}
+
+function localDayKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** "hoy" / "ayer" / "mañana" / "20 oct" para un día "YYYY-MM-DD" respecto de `now`. */
+export function relativeDay(isoDate: string, now: Date = new Date()): string {
+  const day = isoDate.slice(0, 10);
+  const today = localDayKey(now);
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  const t = new Date(now);
+  t.setDate(t.getDate() + 1);
+  if (day === today) return 'hoy';
+  if (day === localDayKey(y)) return 'ayer';
+  if (day === localDayKey(t)) return 'mañana';
+  return dayMonth(day);
+}
+
+/** Momento con hora: "ayer 21:10", "hoy 09:05", "12 oct 18:00". */
+export function relativeMoment(iso: string | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const hh = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${relativeDay(localDayKey(d), now)} ${hh}`;
+}
+
+/** "hace 5 min", "hace 13 h", "hace 2 d". */
+export function timeAgo(iso: string | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const minutes = Math.max(0, Math.round((now.getTime() - d.getTime()) / 60000));
+  if (minutes < 60) return `hace ${Math.max(1, minutes)} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `hace ${hours} h`;
+  return `hace ${Math.round(hours / 24)} d`;
+}

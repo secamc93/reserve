@@ -111,6 +111,10 @@ func CommonAreaListToResponse(a domain.CommonAreaListDTO) response.CommonAreaLis
 	for i := range a.Schedules {
 		schedules[i] = ScheduleToResponse(&a.Schedules[i])
 	}
+	restrictions := make([]response.RestrictionResponse, len(a.Restrictions))
+	for i := range a.Restrictions {
+		restrictions[i] = RestrictionToResponse(&a.Restrictions[i])
+	}
 	return response.CommonAreaListResponse{
 		ID:                   a.ID,
 		Name:                 a.Name,
@@ -128,7 +132,9 @@ func CommonAreaListToResponse(a domain.CommonAreaListDTO) response.CommonAreaLis
 		AllowsRecurring:      a.AllowsRecurring,
 		IsActive:             a.IsActive,
 		RequiresApproval:     a.RequiresApproval,
+		ImageURLs:            a.ImageURLs,
 		Schedules:            schedules,
+		Restrictions:         restrictions,
 	}
 }
 

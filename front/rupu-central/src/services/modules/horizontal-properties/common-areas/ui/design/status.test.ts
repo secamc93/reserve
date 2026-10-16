@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { availableActions, isInactiveStatus, reservationTimeline, statusCodesFor, statusMeta } from './status';
+import { availableActions, calendarTone, isInactiveStatus, reservationTimeline, statusCodesFor, statusMeta } from './status';
 
 describe('estados de reserva', () => {
   it('las acciones siguen la máquina de estados del back', () => {
@@ -49,5 +49,17 @@ describe('reservationTimeline', () => {
     });
     const confirmed = reservationTimeline({ createdAt: '2026-10-10T10:00:00Z', approvedAt: '2026-10-10T11:00:00Z', statusCode: 'confirmed' });
     expect(confirmed[confirmed.length - 1].label).toMatch(/^Confirmada/);
+  });
+});
+
+describe('calendarTone', () => {
+  const now = new Date(2026, 9, 15, 15, 0);
+  it('aprobada negro, pendiente terracota, pasada gris', () => {
+    expect(calendarTone({ statusCode: 'approved', reservationDate: '2026-10-16T00:00:00Z', endTime: '12:00' }, now)).toBe('approved');
+    expect(calendarTone({ statusCode: 'confirmed', reservationDate: '2026-10-15T00:00:00Z', endTime: '18:00' }, now)).toBe('approved');
+    expect(calendarTone({ statusCode: 'pending', reservationDate: '2026-10-15T00:00:00Z', endTime: '18:00' }, now)).toBe('pending');
+    expect(calendarTone({ statusCode: 'approved', reservationDate: '2026-10-15T00:00:00Z', endTime: '14:00' }, now)).toBe('past');
+    expect(calendarTone({ statusCode: 'pending', reservationDate: '2026-10-13T00:00:00Z', endTime: '18:00' }, now)).toBe('past');
+    expect(calendarTone({ statusCode: 'checked_out', reservationDate: '2026-10-20T00:00:00Z', endTime: '18:00' }, now)).toBe('past');
   });
 });

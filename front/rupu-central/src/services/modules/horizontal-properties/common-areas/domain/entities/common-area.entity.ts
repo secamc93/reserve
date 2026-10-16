@@ -54,7 +54,11 @@ export interface CommonAreaListDTO {
   allowsRecurring: boolean;
   isActive: boolean;
   requiresApproval: boolean;
+  /** Primera foto de la zona (image_urls), si hay. */
+  imageUrl?: string;
   schedules: CommonAreaSchedule[];
+  /** Bloqueos activos que terminan hoy o después. */
+  restrictions: CommonAreaRestriction[];
 }
 
 export interface CreateCommonAreaDTO {

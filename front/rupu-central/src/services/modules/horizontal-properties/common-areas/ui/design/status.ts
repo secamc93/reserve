@@ -110,3 +110,18 @@ export function reservationTimeline(r: {
   if (r.statusCode === 'confirmed') events.push({ label: 'Confirmada · lista para ingresar', tone: 'ok' });
   return events;
 }
+
+export type CalendarTone = 'approved' | 'pending' | 'past';
+
+/**
+ * Tono del bloque en el calendario: pasada (terminada o ya ocurrida) en gris, pendiente en
+ * terracota y el resto (aprobada, confirmada, en uso) en negro.
+ */
+export function calendarTone(r: { statusCode?: string; reservationDate: string; endTime: string }, now: Date = new Date()): CalendarTone {
+  if (r.statusCode === 'checked_out' || r.statusCode === 'completed') return 'past';
+  const day = r.reservationDate.slice(0, 10);
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const nowClock = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  if (day < today || (day === today && r.endTime.slice(0, 5) <= nowClock)) return 'past';
+  return r.statusCode === 'pending' ? 'pending' : 'approved';
+}
