@@ -46,6 +46,18 @@ export const RESOURCE_ROUTE_MAP: Record<string, string[]> = {
     '/properties/[id]/voting-groups/[groupId]/attendance',
     '/properties/[id]/voting-groups/[groupId]/attendance/[attendanceListId]',
   ],
+  'Visitas': [
+    '/properties/[id]/visits',
+  ],
+  'Paquetería': [
+    '/properties/[id]/packages',
+  ],
+  'Parqueaderos': [
+    '/properties/[id]/parking',
+  ],
+  'Zonas Comunes': [
+    '/properties/[id]/common-areas',
+  ],
   'Usuarios': [
     '/iam/users',
     '/users',

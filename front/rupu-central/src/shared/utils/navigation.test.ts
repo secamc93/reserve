@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { BUSINESS_TYPE_CONFIG } from '../config/business-type-config';
+import { RESOURCE_ROUTE_MAP } from '@/services/auth/permissions/domain/entities';
 import {
   buildNavItems,
+  filterSidebarItemsByResource,
+  resolveAllowedPath,
   getInitials,
   isNavItemActive,
   pickBottomBarItems,
@@ -113,5 +116,37 @@ describe('resolveActiveProperty', () => {
   });
   it('lista nula → null', () => {
     expect(resolveActiveProperty(null, 7)).toBeNull();
+  });
+});
+
+describe('permisos por módulo', () => {
+  const items = SIDEBAR.map((i) => ({ ...i, href: resolveBusinessHref(i.href, 7) }));
+  const soloVotaciones = (r: string) => r === 'Votaciones';
+
+  it('cada módulo de la barra tiene un recurso conocido', () => {
+    for (const item of SIDEBAR) expect(Object.keys(RESOURCE_ROUTE_MAP)).toContain(item.resource);
+  });
+
+  it('un consejero (solo Votaciones) ve solo Votaciones', () => {
+    expect(filterSidebarItemsByResource(SIDEBAR, soloVotaciones).map((i) => i.id)).toEqual(['voting-groups']);
+  });
+
+  it('el super admin (hasResource siempre true) ve todos los módulos', () => {
+    expect(filterSidebarItemsByResource(SIDEBAR, () => true)).toHaveLength(SIDEBAR.length);
+  });
+
+  it.each([
+    ['/properties/7', '/properties/7/voting-groups'],
+    ['/properties/7/residents', '/properties/7/voting-groups'],
+    ['/properties/7/packages/3', '/properties/7/voting-groups'],
+    ['/properties/7/voting-groups', '/properties/7/voting-groups'],
+    ['/properties/7/voting-groups/2/attendance', '/properties/7/voting-groups/2/attendance'],
+    ['/properties', '/properties'],
+  ])('consejero en %s → %s', (path, expected) => {
+    expect(resolveAllowedPath(path, items, soloVotaciones)).toBe(expected);
+  });
+
+  it('sin ningún recurso no hay a dónde llevarlo', () => {
+    expect(resolveAllowedPath('/properties/7/units', items, () => false)).toBeNull();
   });
 });

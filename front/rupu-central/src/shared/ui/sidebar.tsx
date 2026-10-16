@@ -16,7 +16,7 @@ import { UserInfoModal } from '@/services/auth';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks';
 import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
 import type { SidebarItemConfig } from '@/shared/config/business-type-config';
-import { buildNavItems, resolveBusinessHref } from '@/shared/utils/navigation';
+import { buildNavItems, filterSidebarItemsByResource, resolveBusinessHref } from '@/shared/utils/navigation';
 import { MobileNav } from './mobile-nav';
 import { useActiveProperty } from './use-active-property';
 import { PropertyLogo } from './property-logo';
@@ -64,7 +64,9 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
 
   // Los módulos de la propiedad solo aparecen con una propiedad elegida (si no, el layout lleva al
   // selector). Resolver {businessId} en los hrefs.
-  const propertyItems = hasActiveProperty(activeBizId) ? typeConfig?.sidebarItems || [] : [];
+  const propertyItems = hasActiveProperty(activeBizId)
+    ? filterSidebarItemsByResource(typeConfig?.sidebarItems || [], hasResource)
+    : [];
   const dynamicItems: SidebarItemConfig[] = propertyItems.map(item => ({
     ...item,
     href: resolveBusinessHref(item.href, activeBizId),
