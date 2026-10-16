@@ -6,3 +6,4 @@ export type {
   AttendanceStatistics,
   BusinessSummary,
 } from './dashboard-stats.entity';
+export * from './today.entity';

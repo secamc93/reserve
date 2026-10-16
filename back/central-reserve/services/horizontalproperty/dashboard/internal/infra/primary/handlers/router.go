@@ -11,6 +11,7 @@ func (h *DashboardHandler) RegisterRoutes(router *gin.RouterGroup) {
 	dashboard := router.Group("/dashboard")
 	{
 		dashboard.GET("", middleware.JWT(), h.GetDashboard)
+		dashboard.GET("/today", middleware.JWT(), h.GetToday)
 	}
 }
 
