@@ -1,22 +1,35 @@
 /**
- * Interfaces para las respuestas del backend de zonas comunes y reservas
+ * Respuestas del backend de zonas comunes y reservas (snake_case; los opcionales llegan
+ * como null).
  */
+
+type N<T> = T | null | undefined;
+
+export interface BackendSchedule {
+  id?: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_active: boolean;
+}
 
 export interface BackendCommonArea {
   id: number;
   business_id: number;
   common_area_type_id: number;
+  type_name?: string;
+  type_code?: string;
   name: string;
   description?: string;
   location?: string;
   max_capacity: number;
-  area_sqm?: number;
+  area_sqm?: N<number>;
   has_equipment: boolean;
   equipment_description?: string;
-  hourly_rate?: number;
+  hourly_rate?: N<number>;
   requires_approval: boolean;
   requires_deposit: boolean;
-  deposit_amount?: number;
+  deposit_amount?: N<number>;
   allows_recurring: boolean;
   is_active: boolean;
   image_urls?: string;
@@ -28,10 +41,20 @@ export interface BackendCommonAreaList {
   id: number;
   name: string;
   type_name: string;
+  type_code?: string;
+  description?: string;
   location: string;
   max_capacity: number;
+  area_sqm?: N<number>;
+  has_equipment?: boolean;
+  equipment_description?: string;
+  hourly_rate?: N<number>;
+  requires_deposit?: boolean;
+  deposit_amount?: N<number>;
+  allows_recurring?: boolean;
   is_active: boolean;
   requires_approval: boolean;
+  schedules?: N<BackendSchedule[]>;
 }
 
 export interface BackendCommonAreasPaginatedResponse {
@@ -43,10 +66,21 @@ export interface BackendCommonAreasPaginatedResponse {
   total_pages: number;
 }
 
-export interface BackendCommonAreaResponse {
-  success: boolean;
-  message: string;
-  data: BackendCommonArea;
+export interface BackendRestriction {
+  id: number;
+  common_area_id: number;
+  restriction_type: string;
+  start_date: string;
+  end_date: string;
+  start_time?: N<string>;
+  end_time?: N<string>;
+  reason?: string;
+}
+
+export interface BackendUnitLookup {
+  id: number;
+  number: string;
+  block: string;
 }
 
 export interface BackendReservation {
@@ -56,62 +90,63 @@ export interface BackendReservation {
   common_area_name?: string;
   property_unit_id: number;
   property_unit_number?: string;
-  resident_id?: number;
+  property_unit_block?: string;
+  resident_id?: N<number>;
   resident_name?: string;
   reservation_status_id: number;
+  status_code?: string;
   status_name?: string;
   reservation_date: string;
   start_time: string;
   end_time: string;
   duration_hours: number;
   requires_approval: boolean;
-  approved_by_user_id?: number;
-  approved_at?: string;
-  rejected_by_user_id?: number;
-  rejected_at?: string;
+  approved_at?: N<string>;
+  rejected_at?: N<string>;
   rejection_reason?: string;
   number_of_guests: number;
   purpose?: string;
   special_requests?: string;
   is_recurring: boolean;
-  recurring_pattern_id?: number;
-  parent_reservation_id?: number;
-  total_amount?: number;
-  deposit_amount?: number;
+  total_amount?: N<number>;
+  deposit_amount?: N<number>;
   deposit_paid: boolean;
-  deposit_paid_at?: string;
+  deposit_paid_at?: N<string>;
   full_payment_paid: boolean;
-  full_payment_paid_at?: string;
+  full_payment_paid_at?: N<string>;
   qr_code?: string;
   access_code?: string;
-  checked_in_at?: string;
-  checked_out_at?: string;
-  checked_in_by_user_id?: number;
-  checked_out_by_user_id?: number;
-  notify_resident: boolean;
-  notify_admin: boolean;
-  notification_sent_at?: string;
-  reminder_sent_at?: string;
-  cancelled_at?: string;
-  cancelled_by_user_id?: number;
+  checked_in_at?: N<string>;
+  checked_out_at?: N<string>;
+  cancelled_at?: N<string>;
   cancellation_reason?: string;
-  refund_amount?: number;
   notes?: string;
   resident_notes?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface BackendReservationList {
   id: number;
+  common_area_id?: number;
   common_area_name: string;
+  property_unit_id?: number;
   property_unit_number: string;
+  property_unit_block?: string;
   resident_name: string;
+  status_code?: string;
   status_name: string;
   reservation_date: string;
   start_time: string;
   end_time: string;
   number_of_guests: number;
+  purpose?: string;
+  requires_approval?: boolean;
+  total_amount?: N<number>;
+  deposit_amount?: N<number>;
+  deposit_paid?: boolean;
+  full_payment_paid?: boolean;
+  checked_in_at?: N<string>;
   created_at: string;
 }
 
@@ -122,12 +157,6 @@ export interface BackendReservationsPaginatedResponse {
   page: number;
   page_size: number;
   total_pages: number;
-}
-
-export interface BackendReservationResponse {
-  success: boolean;
-  message: string;
-  data: BackendReservation;
 }
 
 export interface BackendCheckAvailabilityResponse {
@@ -142,13 +171,8 @@ export interface BackendCommonAreaType {
   code: string;
   description?: string;
   icon?: string;
-  default_max_capacity?: number;
+  default_max_capacity?: N<number>;
   requires_approval: boolean;
   allows_recurring: boolean;
   is_active: boolean;
-}
-
-export interface BackendCommonAreaTypesResponse {
-  success: boolean;
-  data: BackendCommonAreaType[];
 }

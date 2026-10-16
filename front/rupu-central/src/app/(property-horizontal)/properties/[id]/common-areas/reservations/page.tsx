@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { ReservationsTable } from '@/services/modules/horizontal-properties/common-areas/ui/reservations-table';
+import { ReservationsScreen } from '@/services/modules/horizontal-properties/common-areas/ui/reservations-screen';
 
 export default function ReservationsPage() {
   const params = useParams();
@@ -15,13 +15,5 @@ export default function ReservationsPage() {
     );
   }
 
-  return (
-    <div>
-      {/* Navegación */}
-
-      <div className="p-3 md:p-6">
-        <ReservationsTable businessId={businessId} />
-      </div>
-    </div>
-  );
+  return <ReservationsScreen businessId={businessId} />;
 }

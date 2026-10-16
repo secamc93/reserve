@@ -11,3 +11,4 @@ export * from './check-out-reservation.use-case';
 export * from './cancel-reservation.use-case';
 export * from './check-availability.use-case';
 export * from './get-common-area-types.use-case';
+export * from './manage.use-cases';

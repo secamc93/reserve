@@ -1,7 +1,20 @@
 /**
  * Entidad: CommonAreaReservation
- * Representa una reserva de zona común en el sistema
+ * Reserva de una zona común. El estado sigue la máquina del back:
+ * pending → approved → confirmed → checked_in → checked_out → completed
+ * (y rejected / cancelled / expired como finales).
  */
+
+export type ReservationStatusCode =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'confirmed'
+  | 'checked_in'
+  | 'checked_out'
+  | 'cancelled'
+  | 'completed'
+  | 'expired';
 
 export interface CommonAreaReservation {
   id: number;
@@ -10,26 +23,24 @@ export interface CommonAreaReservation {
   commonAreaName?: string;
   propertyUnitId: number;
   propertyUnitNumber?: string;
+  propertyUnitBlock?: string;
   residentId?: number;
   residentName?: string;
   reservationStatusId: number;
+  statusCode?: string;
   statusName?: string;
   reservationDate: string;
   startTime: string;
   endTime: string;
   durationHours: number;
   requiresApproval: boolean;
-  approvedByUserId?: number;
   approvedAt?: string;
-  rejectedByUserId?: number;
   rejectedAt?: string;
   rejectionReason?: string;
   numberOfGuests: number;
   purpose?: string;
   specialRequests?: string;
   isRecurring: boolean;
-  recurringPatternId?: number;
-  parentReservationId?: number;
   totalAmount?: number;
   depositAmount?: number;
   depositPaid: boolean;
@@ -40,32 +51,35 @@ export interface CommonAreaReservation {
   accessCode?: string;
   checkedInAt?: string;
   checkedOutAt?: string;
-  checkedInByUserId?: number;
-  checkedOutByUserId?: number;
-  notifyResident: boolean;
-  notifyAdmin: boolean;
-  notificationSentAt?: string;
-  reminderSentAt?: string;
   cancelledAt?: string;
-  cancelledByUserId?: number;
   cancellationReason?: string;
-  refundAmount?: number;
   notes?: string;
   residentNotes?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface ReservationListDTO {
   id: number;
+  commonAreaId: number;
   commonAreaName: string;
+  propertyUnitId: number;
   propertyUnitNumber: string;
+  propertyUnitBlock: string;
   residentName: string;
+  statusCode: string;
   statusName: string;
   reservationDate: string;
   startTime: string;
   endTime: string;
   numberOfGuests: number;
+  purpose?: string;
+  requiresApproval: boolean;
+  totalAmount?: number;
+  depositAmount?: number;
+  depositPaid: boolean;
+  fullPaymentPaid: boolean;
+  checkedInAt?: string;
   createdAt: string;
 }
 
@@ -73,6 +87,7 @@ export interface CreateReservationDTO {
   commonAreaId: number;
   propertyUnitId: number;
   residentId?: number;
+  /** RFC3339 a medianoche UTC ("2026-10-20T00:00:00Z"). */
   reservationDate: string;
   startTime: string;
   endTime: string;
@@ -87,6 +102,11 @@ export interface CheckAvailabilityDTO {
   reservationDate: string;
   startTime: string;
   endTime: string;
+}
+
+export interface UpdatePaymentsDTO {
+  depositPaid?: boolean;
+  fullPaymentPaid?: boolean;
 }
 
 export interface ReservationsPaginated {

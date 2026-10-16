@@ -1,5 +1,3 @@
-export * from './get-common-areas.action';
-export * from './create-common-area.action';
-export * from './get-reservations.action';
-export * from './create-reservation.action';
-export * from './get-common-area-types.action';
+export * from './common-areas.action';
+export * from './reservations.action';
+export type { ActionResult } from './result';
