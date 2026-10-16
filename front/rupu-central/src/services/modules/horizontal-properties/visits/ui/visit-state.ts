@@ -18,12 +18,16 @@ export const PROPERTY_TZ = 'America/Bogota';
 
 export const VISIT_STATE_ORDER: VisitState[] = ['inside', 'expected', 'left', 'cancelled'];
 
-export const VISIT_STATE_META: Record<VisitState, { label: string; chip: string; color: string }> = {
-  inside: { label: 'Dentro', chip: 'Dentro', color: '#1f8a4c' },
-  expected: { label: 'Esperada', chip: 'Esperadas', color: '#c8603f' },
-  left: { label: 'Salió', chip: 'Salieron', color: '#8a8580' },
-  cancelled: { label: 'Cancelada', chip: 'Canceladas', color: '#c8382d' },
+/** Color del texto y del punto de cada estado (diseño V1). */
+export const VISIT_STATE_META: Record<VisitState, { label: string; chip: string; color: string; dot: string }> = {
+  inside: { label: 'Dentro', chip: 'Dentro', color: '#1f8a4c', dot: '#1f8a4c' },
+  expected: { label: 'Esperada', chip: 'Esperadas', color: '#4b4a46', dot: '#c9c6c0' },
+  left: { label: 'Salió', chip: 'Salieron', color: '#8a8580', dot: '#8a8580' },
+  cancelled: { label: 'Cancelada', chip: 'Canceladas', color: '#c8382d', dot: '#c8382d' },
 };
+
+/** Terracota de "excede tiempo". */
+export const EXCEEDS_COLOR = '#c8603f';
 
 const CODE_TO_STATE: Record<string, VisitState> = {
   in_progress: 'inside',
@@ -46,6 +50,14 @@ export function visitStateOf(v: StateInput): VisitState {
   if (v.actualExitTime || /complet/.test(name)) return 'left';
   if (v.actualEntryTime || /curso|progress/.test(name)) return 'inside';
   return 'expected';
+}
+
+/** Estado a mostrar: "Excede tiempo" (terracota) gana sobre "Dentro". */
+export function visitStatusDisplay(v: StateInput & Partial<Pick<VisitListDTO, 'exceedsTime'>>): { label: string; color: string; dot: string; exceeds: boolean } {
+  const state = visitStateOf(v);
+  if (state === 'inside' && v.exceedsTime) return { label: 'Excede tiempo', color: EXCEEDS_COLOR, dot: EXCEEDS_COLOR, exceeds: true };
+  const m = VISIT_STATE_META[state];
+  return { label: m.label, color: m.color, dot: m.dot, exceeds: false };
 }
 
 export interface VisitActions {
@@ -121,13 +133,41 @@ export function minutesBetween(fromIso?: string | null, to: Date | string = new 
   return Math.max(0, Math.floor((b.getTime() - a.getTime()) / 60000));
 }
 
-/** "45 min", "2 h", "2 h 05 min". */
+/** "45 min", "2 h", "1 h 12" (diseño: "promedio 1 h 12"). */
 export function formatDuration(minutes: number): string {
   const m = Math.max(0, Math.floor(minutes));
   if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
   const rest = m % 60;
-  return rest === 0 ? `${h} h` : `${h} h ${String(rest).padStart(2, '0')} min`;
+  return rest === 0 ? `${h} h` : `${h} h ${String(rest).padStart(2, '0')}`;
+}
+
+/** Documento con separador de miles: "79456123" → "CC 79.456.123"; otro formato, tal cual. */
+export function formatDoc(dni?: string | null): string {
+  const d = (dni ?? '').trim();
+  if (!d) return '';
+  if (/^\d+$/.test(d)) return `CC ${d.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+  return d;
+}
+
+/** Iniciales para el avatar ("Laura Gómez Ruiz" → "LG"). */
+export function initials(name?: string | null): string {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+}
+
+/** Hora límite de salida: entrada + minutos permitidos por el tipo. */
+export function stayLimitAt(v: Partial<Pick<VisitListDTO, 'actualEntryTime' | 'stayLimitMinutes'>>): string | undefined {
+  const entry = valid(v.actualEntryTime);
+  if (!entry || !v.stayLimitMinutes) return undefined;
+  return new Date(entry.getTime() + v.stayLimitMinutes * 60000).toISOString();
+}
+
+/** Columna ENTRADA / SALIDA: "entró 09:54 · 48 min", "09:02 → 09:10" o "". */
+export function entryExitText(v: Pick<VisitListDTO, 'actualEntryTime' | 'actualExitTime'>, now: Date = new Date()): string {
+  if (!v.actualEntryTime) return '';
+  if (v.actualExitTime) return `${formatClock(v.actualEntryTime)} → ${formatClock(v.actualExitTime)}`;
+  return `entró ${formatClock(v.actualEntryTime)} · ${formatDuration(minutesBetween(v.actualEntryTime, now))}`;
 }
 
 /** Fecha de hoy en Colombia (YYYY-MM-DD). */
@@ -164,21 +204,26 @@ export interface TimelineStep {
 type TimelineInput = Pick<
   VisitListDTO,
   'createdAt' | 'scheduledDate' | 'scheduledStartTime' | 'actualEntryTime' | 'actualExitTime' | 'visitStatusCode' | 'visitStatusName'
-> & { entryGate?: string; exitGate?: string };
+> &
+  Partial<Pick<VisitListDTO, 'stayLimitMinutes' | 'authorizedByName'>> & { entryGate?: string; exitGate?: string };
 
-/** Pasos de la visita: registrada → programada → entrada → salida (o cancelada). */
+/**
+ * Pasos de la visita (V3): registrada → programada → entrada → salida (o cancelada).
+ * La salida pendiente muestra el límite según el tipo de visita.
+ */
 export function visitTimeline(v: TimelineInput, now: Date = new Date()): TimelineStep[] {
   const state = visitStateOf(v);
   const scheduled = v.scheduledStartTime || v.scheduledDate;
   const steps: TimelineStep[] = [
-    { key: 'created', label: 'Registrada', at: formatDateTime(v.createdAt), done: true, tone: 'muted' },
     {
-      key: 'scheduled',
-      label: 'Programada',
-      at: [formatWallDay(v.scheduledDate), formatWallTime(scheduled)].filter(Boolean).join(', '),
+      key: 'created',
+      label: 'Registrada',
+      at: formatClock(v.createdAt),
+      detail: v.authorizedByName ? `autorizó ${v.authorizedByName}` : formatDateTime(v.createdAt),
       done: true,
       tone: 'muted',
     },
+    { key: 'scheduled', label: 'Programada', at: formatWallTime(scheduled), detail: formatWallDay(v.scheduledDate), done: true, tone: 'muted' },
   ];
   if (state === 'cancelled') {
     steps.push({ key: 'cancelled', label: v.visitStatusName || 'Cancelada', at: '', done: true, tone: 'danger' });
@@ -187,17 +232,18 @@ export function visitTimeline(v: TimelineInput, now: Date = new Date()): Timelin
   steps.push({
     key: 'entry',
     label: 'Entrada',
-    at: v.actualEntryTime ? formatDateTime(v.actualEntryTime) : '',
-    detail: v.actualEntryTime && v.entryGate ? `Portería ${v.entryGate}` : undefined,
+    at: v.actualEntryTime ? formatClock(v.actualEntryTime) : '',
+    detail: v.actualEntryTime ? (v.entryGate ? `puerta ${v.entryGate}` : 'registrada en portería') : 'pendiente',
     done: !!v.actualEntryTime,
     tone: 'ok',
   });
   const stay = v.actualEntryTime ? formatDuration(minutesBetween(v.actualEntryTime, v.actualExitTime || now)) : '';
+  const limit = stayLimitAt(v);
   steps.push({
     key: 'exit',
     label: 'Salida',
-    at: v.actualExitTime ? formatDateTime(v.actualExitTime) : '',
-    detail: v.actualExitTime ? `Estadía ${stay}` : v.actualEntryTime ? `Dentro hace ${stay}` : undefined,
+    at: v.actualExitTime ? formatClock(v.actualExitTime) : '',
+    detail: v.actualExitTime ? `estadía ${stay}` : limit ? `pendiente · límite ${formatClock(limit)}` : 'pendiente',
     done: !!v.actualExitTime,
     tone: 'muted',
   });

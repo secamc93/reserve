@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Visit } from '../domain';
-import { emptyVisitForm, formToCreateDTO, formToUpdateDTO, nextQuarterHour, validateVisitForm, visitToForm } from './visit-form';
+import { emptyVisitForm, formToCreateDTO, formToUpdateDTO, nextQuarterHour, normalizePlate, validateVehicleStep, validateVisitForm, visitToForm, visitTypeRule, visitorHistory } from './visit-form';
 
 const ok = { ...emptyVisitForm('2026-10-15', new Date(2026, 9, 15, 9, 5)), propertyUnitId: 12, visitTypeId: 3 };
 
@@ -65,5 +65,35 @@ describe('formulario de visita', () => {
       scheduledEndTime: '2026-10-20T18:00:00Z',
       numberOfVisitors: 4,
     });
+  });
+});
+
+describe('nueva visita en 3 pasos', () => {
+  it('regla de cada tipo para su tarjeta', () => {
+    const base = { requiresAuthorization: false, requiresAssetsTracking: false, requiresVehicleRegistration: false };
+    expect(visitTypeRule({ ...base, maxDurationHours: 8 })).toBe('hasta 8 h');
+    expect(visitTypeRule({ ...base, defaultDurationMinutes: 20 })).toBe('20 min');
+    expect(visitTypeRule({ ...base, requiresAuthorization: true, maxDurationHours: 2 })).toBe('requiere autorización');
+    expect(visitTypeRule({ ...base, requiresAssetsTracking: true, requiresVehicleRegistration: true, requiresAuthorization: true })).toBe('activos + vehículo');
+    expect(visitTypeRule(base)).toBe('');
+  });
+
+  it('historial del visitante: veces, última unidad y sugeridas sin repetir', () => {
+    const h = visitorHistory(
+      [
+        { propertyUnitId: 40, propertyUnitBlock: 'Casa', propertyUnitNumber: '126', scheduledDate: '2026-10-01T00:00:00Z' },
+        { propertyUnitId: 41, propertyUnitBlock: 'Dúplex', propertyUnitNumber: '8', scheduledDate: '2026-10-10T00:00:00Z' },
+        { propertyUnitId: 40, propertyUnitBlock: 'Casa', propertyUnitNumber: '126', scheduledDate: '2026-09-01T00:00:00Z' },
+      ],
+      7,
+    );
+    expect(h).toEqual({ visits: 7, lastUnit: 'Dúplex 8', suggested: [{ id: 41, label: 'Dúplex 8' }, { id: 40, label: 'Casa 126' }] });
+  });
+
+  it('vehículo: placa obligatoria si trae vehículo, normalizada', () => {
+    expect(validateVehicleStep({ ...ok, hasVehicle: true, plate: '  ' })).toMatch(/placa/);
+    expect(validateVehicleStep({ ...ok, hasVehicle: false, plate: '' })).toBeNull();
+    expect(normalizePlate(' kjm 842 ')).toBe('KJM842');
+    expect(formToCreateDTO(ok, 9, 3).visitorVehicleId).toBe(3);
   });
 });

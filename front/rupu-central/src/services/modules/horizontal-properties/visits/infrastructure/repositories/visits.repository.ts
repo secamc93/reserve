@@ -9,6 +9,10 @@ import {
   GetVisitsParams,
   GetVisitsSummaryParams,
   VisitsSummary,
+  GetVisitAssetsParams,
+  CreateVisitorVehicleParams,
+  VisitAssetItem,
+  VisitorVehicle,
   GetVisitByIdParams,
   GetVisitByQRCodeParams,
   CreateVisitParams,
@@ -39,8 +43,9 @@ import {
   BackendVisit,
   BackendVisitList,
   BackendVisitsSummaryResponse,
+  BackendVisitAsset,
 } from './response/visits.response';
-import { mapBackendVisitList, mapBackendVisitsSummary } from './mappers/visit-list.mapper';
+import { mapBackendVisitAsset, mapBackendVisitList, mapBackendVisitsSummary } from './mappers/visit-list.mapper';
 
 export class VisitsRepository implements IVisitsRepository {
   private baseUrl = env.API_BASE_URL;
@@ -728,6 +733,46 @@ export class VisitsRepository implements IVisitsRepository {
       });
       throw error;
     }
+  }
+
+  async getVisitAssets(params: GetVisitAssetsParams): Promise<VisitAssetItem[]> {
+    const { visitId, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/visits/${visitId}/assets`;
+    const startTime = Date.now();
+    logHttpRequest({ method: 'GET', url });
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+    const duration = Date.now() - startTime;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logHttpError({ status: response.status, statusText: response.statusText, duration, data: errorData });
+      throw new Error(errorData.message || `Error obteniendo activos: ${response.statusText}`);
+    }
+    const data: { data: BackendVisitAsset[] } = await response.json();
+    logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
+    return (data.data || []).map(mapBackendVisitAsset);
+  }
+
+  async createVisitorVehicle(params: CreateVisitorVehicleParams): Promise<VisitorVehicle> {
+    const { businessId, data, token } = params;
+    const qs = businessId ? `?business_id=${businessId}` : '';
+    const url = `${this.baseUrl}/horizontal-properties/visits/vehicles${qs}`;
+    const body = { visitor_id: data.visitorId, plate: data.plate, brand: data.brand || undefined, color: data.color || undefined };
+    const startTime = Date.now();
+    logHttpRequest({ method: 'POST', url, body });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const duration = Date.now() - startTime;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logHttpError({ status: response.status, statusText: response.statusText, duration, data: errorData });
+      throw new Error(errorData.message || `Error registrando el vehículo: ${response.statusText}`);
+    }
+    const res: { data: { id: number; visitor_id?: number; plate: string; brand?: string; color?: string } } = await response.json();
+    logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data: res });
+    return { id: res.data.id, visitorId: res.data.visitor_id, plate: res.data.plate, brand: res.data.brand, color: res.data.color };
   }
 
   async createVisitor(params: CreateVisitorParams): Promise<Visitor> {

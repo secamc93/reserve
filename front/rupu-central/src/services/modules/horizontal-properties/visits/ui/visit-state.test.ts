@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  entryExitText,
+  formatDoc,
+  initials,
+  stayLimitAt,
+  visitStatusDisplay,
   formatDuration,
   formatWallTime,
   minutesBetween,
@@ -63,9 +68,34 @@ describe('horas', () => {
   it('duración legible', () => {
     expect(formatDuration(45)).toBe('45 min');
     expect(formatDuration(120)).toBe('2 h');
-    expect(formatDuration(125)).toBe('2 h 05 min');
+    expect(formatDuration(125)).toBe('2 h 05');
+    expect(formatDuration(72)).toBe('1 h 12');
     expect(minutesBetween('2026-10-15T14:00:00Z', new Date('2026-10-15T14:47:30Z'))).toBe(47);
     expect(minutesBetween(undefined)).toBe(0);
+  });
+});
+
+describe('presentación de la fila (V1)', () => {
+  it('"Excede tiempo" en terracota gana sobre "Dentro"; esperada en gris oscuro con punto claro', () => {
+    expect(visitStatusDisplay({ visitStatusCode: 'in_progress', visitStatusName: '', exceedsTime: true })).toMatchObject({ label: 'Excede tiempo', color: '#c8603f', exceeds: true });
+    expect(visitStatusDisplay({ visitStatusCode: 'in_progress', visitStatusName: '' })).toMatchObject({ label: 'Dentro', color: '#1f8a4c' });
+    expect(visitStatusDisplay({ visitStatusCode: 'authorized', visitStatusName: '' })).toMatchObject({ label: 'Esperada', color: '#4b4a46', dot: '#c9c6c0' });
+    expect(visitStatusDisplay({ visitStatusCode: 'completed', visitStatusName: '' })).toMatchObject({ label: 'Salió' });
+  });
+
+  it('documento con puntos, iniciales y texto de entrada/salida', () => {
+    expect(formatDoc('79456123')).toBe('CC 79.456.123');
+    expect(formatDoc('PA-123')).toBe('PA-123');
+    expect(initials('Laura Gómez Ruiz')).toBe('LG');
+    expect(initials('')).toBe('?');
+    expect(entryExitText({ actualEntryTime: '2026-10-15T14:54:00Z' }, new Date('2026-10-15T15:42:00Z'))).toBe('entró 09:54 · 48 min');
+    expect(entryExitText({ actualEntryTime: '2026-10-15T14:02:00Z', actualExitTime: '2026-10-15T14:10:00Z' })).toBe('09:02 → 09:10');
+    expect(entryExitText({})).toBe('');
+  });
+
+  it('límite de salida = entrada + minutos del tipo', () => {
+    expect(stayLimitAt({ actualEntryTime: '2026-10-15T14:54:00Z', stayLimitMinutes: 480 })).toBe('2026-10-15T22:54:00.000Z');
+    expect(stayLimitAt({ actualEntryTime: '2026-10-15T14:54:00Z' })).toBeUndefined();
   });
 });
 
@@ -77,27 +107,26 @@ describe('línea de tiempo', () => {
     visitStatusName: '',
   };
 
-  it('esperada: entrada y salida pendientes', () => {
-    const steps = visitTimeline({ ...base, visitStatusCode: 'authorized' });
+  it('esperada: entrada y salida pendientes; registrada muestra quién autorizó', () => {
+    const steps = visitTimeline({ ...base, visitStatusCode: 'authorized', authorizedByName: 'María López' });
     expect(steps.map((s) => s.key)).toEqual(['created', 'scheduled', 'entry', 'exit']);
-    expect(steps.find((s) => s.key === 'entry')!.done).toBe(false);
-    expect(steps.find((s) => s.key === 'scheduled')!.at).toContain('09:00');
+    expect(steps[0].detail).toBe('autorizó María López');
+    expect(steps.find((s) => s.key === 'scheduled')!.at).toBe('09:00');
+    expect(steps.find((s) => s.key === 'entry')).toMatchObject({ done: false, detail: 'pendiente' });
   });
 
-  it('dentro: entrada hecha con la portería y "dentro hace"', () => {
+  it('dentro: entrada con la puerta y salida "pendiente · límite HH:MM"', () => {
     const steps = visitTimeline(
-      { ...base, visitStatusCode: 'in_progress', actualEntryTime: '2026-10-15T14:00:00Z', entryGate: 'Principal' },
-      new Date('2026-10-15T14:45:00Z'),
+      { ...base, visitStatusCode: 'in_progress', actualEntryTime: '2026-10-15T14:54:00Z', entryGate: 'Principal', stayLimitMinutes: 480 },
+      new Date('2026-10-15T15:42:00Z'),
     );
-    const entry = steps.find((s) => s.key === 'entry')!;
-    expect(entry.done).toBe(true);
-    expect(entry.detail).toBe('Portería Principal');
-    expect(steps.find((s) => s.key === 'exit')!.detail).toBe('Dentro hace 45 min');
+    expect(steps.find((s) => s.key === 'entry')).toMatchObject({ done: true, at: '09:54', detail: 'puerta Principal' });
+    expect(steps.find((s) => s.key === 'exit')).toMatchObject({ done: false, detail: 'pendiente · límite 17:54' });
   });
 
   it('salió: estadía calculada', () => {
     const steps = visitTimeline({ ...base, visitStatusCode: 'completed', actualEntryTime: '2026-10-15T14:00:00Z', actualExitTime: '2026-10-15T16:10:00Z' });
-    expect(steps.find((s) => s.key === 'exit')!.detail).toBe('Estadía 2 h 10 min');
+    expect(steps.find((s) => s.key === 'exit')!.detail).toBe('estadía 2 h 10');
   });
 
   it('cancelada: termina en la cancelación, sin entrada ni salida', () => {

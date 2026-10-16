@@ -20,6 +20,9 @@ import {
   CreateVisitCompanionDTO,
   VisitState,
   VisitsSummary,
+  VisitAssetItem,
+  VisitorVehicle,
+  CreateVisitorVehicleDTO,
 } from '../entities';
 
 export interface SearchVisitorParams {
@@ -44,6 +47,18 @@ export interface GetVisitsParams {
   state?: VisitState;
   /** Busca por visitante (nombre o documento) o unidad ("Casa 126"). */
   search?: string;
+}
+
+export interface GetVisitAssetsParams {
+  businessId: number;
+  visitId: number;
+  token: string;
+}
+
+export interface CreateVisitorVehicleParams {
+  businessId: number;
+  data: CreateVisitorVehicleDTO;
+  token: string;
 }
 
 export interface GetVisitsSummaryParams {
@@ -158,6 +173,8 @@ export interface IVisitsRepository {
 
   // Activos
   registerAssets(params: RegisterAssetsParams): Promise<void>;
+  getVisitAssets(params: GetVisitAssetsParams): Promise<VisitAssetItem[]>;
+  createVisitorVehicle(params: CreateVisitorVehicleParams): Promise<VisitorVehicle>;
 
   // Tipos y estados
   getVisitTypes(params: GetVisitTypesParams): Promise<VisitType[]>;

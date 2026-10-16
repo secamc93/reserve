@@ -21,7 +21,18 @@ describe('mapper de la lista de visitas', () => {
       purpose: '',
       number_of_visitors: 2,
       created_at: '2026-10-14T20:00:00Z',
+      visitor_id: 55,
+      property_unit_id: 40,
+      visitor_vehicle_plate: 'KJM842',
+      authorization_code: '7K2M',
+      entry_gate: 'Principal',
+      resident_name: 'María López',
+      authorized_by_name: '',
+      stay_limit_minutes: 480,
+      exceeds_time: true,
     });
+    expect(v).toMatchObject({ visitorId: 55, propertyUnitId: 40, visitorVehiclePlate: 'KJM842', authorizationCode: '7K2M', residentName: 'María López', stayLimitMinutes: 480, exceedsTime: true });
+    expect(v.authorizedByName).toBeUndefined();
     expect(v).toMatchObject({
       propertyUnitBlock: 'Casa',
       propertyUnitNumber: '126',
@@ -36,7 +47,7 @@ describe('mapper de la lista de visitas', () => {
   });
 
   it('resumen del día', () => {
-    expect(mapBackendVisitsSummary({ date: '2026-10-15', inside: 3, expected: 5, left: 9, cancelled: 1, total: 18, inside_now: 4 })).toEqual({
+    expect(mapBackendVisitsSummary({ date: '2026-10-15', inside: 3, expected: 5, left: 9, cancelled: 1, total: 18, inside_now: 4, exceeded: 1, next_expected_at: '2026-10-15T11:00:00Z', next_unit_number: '126', next_unit_block: 'Casa', avg_stay_minutes: null })).toEqual({
       date: '2026-10-15',
       inside: 3,
       expected: 5,
@@ -44,6 +55,11 @@ describe('mapper de la lista de visitas', () => {
       cancelled: 1,
       total: 18,
       insideNow: 4,
+      exceeded: 1,
+      nextExpectedAt: '2026-10-15T11:00:00Z',
+      nextUnitNumber: '126',
+      nextUnitBlock: 'Casa',
+      avgStayMinutes: undefined,
     });
   });
 });

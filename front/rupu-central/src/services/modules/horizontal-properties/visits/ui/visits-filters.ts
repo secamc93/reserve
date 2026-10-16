@@ -1,57 +1,65 @@
 /**
- * Filtros de la lista de visitas en la URL (sin React ni red):
- *   ?tab=today|history  &state=inside|expected|left|cancelled  &q=  &date=YYYY-MM-DD
- *   &from=&to=&type=<id>  (+ page / page_size de la paginación)
+ * Filtros de la lista de visitas en la URL (sin React ni red). Las pestañas del diseño V1
+ * son los filtros: ?tab=today|inside|expected|left|week|all  &q=  &type=<id>
+ * (+ page / page_size de la paginación).
  */
 
-import type { GetVisitsParams, VisitState } from '../domain';
-import { VISIT_STATE_ORDER } from './visit-state';
+import type { GetVisitsParams } from '../domain';
 
-export type VisitsTab = 'today' | 'history';
+export type VisitsTab = 'today' | 'inside' | 'expected' | 'left' | 'week' | 'all';
+
+export const VISITS_TABS: VisitsTab[] = ['today', 'inside', 'expected', 'left', 'week', 'all'];
 
 export interface VisitsUrlFilters {
   tab: VisitsTab;
-  state?: VisitState;
   q: string;
-  /** Día de la pestaña "Hoy" (por defecto hoy). */
-  date: string;
-  from: string;
-  to: string;
   typeId?: number;
 }
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 type Readable = { get(name: string): string | null } | null | undefined;
 
-export function readVisitsFilters(sp: Readable, today: string): VisitsUrlFilters {
-  const get = (k: string) => sp?.get(k) ?? '';
-  const state = get('state') as VisitState;
-  const type = Number.parseInt(get('type'), 10);
-  const date = get('date');
+export function readVisitsFilters(sp: Readable): VisitsUrlFilters {
+  const tab = (sp?.get('tab') ?? '') as VisitsTab;
+  const type = Number.parseInt(sp?.get('type') ?? '', 10);
   return {
-    tab: get('tab') === 'history' ? 'history' : 'today',
-    state: VISIT_STATE_ORDER.includes(state) ? state : undefined,
-    q: get('q'),
-    date: DATE_RE.test(date) ? date : today,
-    from: DATE_RE.test(get('from')) ? get('from') : '',
-    to: DATE_RE.test(get('to')) ? get('to') : '',
+    tab: VISITS_TABS.includes(tab) ? tab : 'today',
+    q: sp?.get('q') ?? '',
     typeId: Number.isFinite(type) && type > 0 ? type : undefined,
   };
 }
 
+/** Lunes y domingo (YYYY-MM-DD) de la semana de `day`. */
+export function weekRange(day: string): { start: string; end: string } {
+  const d = new Date(`${day}T00:00:00Z`);
+  const offset = (d.getUTCDay() + 6) % 7; // lunes = 0
+  const start = new Date(d.getTime() - offset * 86_400_000);
+  const end = new Date(start.getTime() + 6 * 86_400_000);
+  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+}
+
 /** Parámetros de la consulta al back (sin token ni paginación). */
-export function visitsQueryFor(f: VisitsUrlFilters): Pick<GetVisitsParams, 'state' | 'search' | 'startDate' | 'endDate' | 'visitTypeId'> {
-  if (f.tab === 'today') {
-    return { state: f.state, search: f.q || undefined, startDate: f.date, endDate: f.date };
+export function visitsQueryFor(
+  f: VisitsUrlFilters,
+  today: string,
+): Pick<GetVisitsParams, 'state' | 'search' | 'startDate' | 'endDate' | 'visitTypeId'> {
+  const common = { search: f.q.trim() || undefined, visitTypeId: f.typeId };
+  switch (f.tab) {
+    case 'inside':
+      // Dentro ahora, sin importar el día programado
+      return { ...common, state: 'inside' };
+    case 'expected':
+      return { ...common, state: 'expected', startDate: today, endDate: today };
+    case 'left':
+      return { ...common, state: 'left', startDate: today, endDate: today };
+    case 'week': {
+      const { start, end } = weekRange(today);
+      return { ...common, startDate: start, endDate: end };
+    }
+    case 'all':
+      return common;
+    default:
+      return { ...common, startDate: today, endDate: today };
   }
-  return {
-    state: f.state,
-    search: f.q || undefined,
-    startDate: f.from || undefined,
-    endDate: f.to || undefined,
-    visitTypeId: f.typeId,
-  };
 }
 
 /**

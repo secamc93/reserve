@@ -2,8 +2,8 @@
  * Mappers puros de la lista y el resumen de visitas (respuesta del back → dominio).
  */
 
-import { VisitListDTO, VisitsSummary } from '../../../domain';
-import { BackendVisitList, BackendVisitsSummaryResponse } from '../response/visits.response';
+import { VisitAssetItem, VisitListDTO, VisitsSummary } from '../../../domain';
+import { BackendVisitAsset, BackendVisitList, BackendVisitsSummaryResponse } from '../response/visits.response';
 
 /** El back envía null en las horas que no existen; el dominio usa undefined. */
 const opt = <T,>(v: T | null | undefined): T | undefined => (v === null || v === undefined ? undefined : v);
@@ -14,6 +14,8 @@ export function mapBackendVisitList(visit: BackendVisitList): VisitListDTO {
     visitorName: visit.visitor_name,
     visitorDni: visit.visitor_dni,
     visitorPhone: opt(visit.visitor_phone) || undefined,
+    visitorId: opt(visit.visitor_id),
+    propertyUnitId: opt(visit.property_unit_id),
     propertyUnitNumber: visit.property_unit_number,
     propertyUnitBlock: opt(visit.property_unit_block) || undefined,
     visitTypeName: visit.visit_type_name,
@@ -27,6 +29,25 @@ export function mapBackendVisitList(visit: BackendVisitList): VisitListDTO {
     purpose: opt(visit.purpose) || undefined,
     numberOfVisitors: opt(visit.number_of_visitors),
     createdAt: visit.created_at,
+    visitorVehiclePlate: opt(visit.visitor_vehicle_plate) || undefined,
+    authorizationCode: opt(visit.authorization_code) || undefined,
+    entryGate: opt(visit.entry_gate) || undefined,
+    residentName: opt(visit.resident_name) || undefined,
+    authorizedByName: opt(visit.authorized_by_name) || undefined,
+    stayLimitMinutes: opt(visit.stay_limit_minutes),
+    exceedsTime: !!visit.exceeds_time,
+  };
+}
+
+export function mapBackendVisitAsset(a: BackendVisitAsset): VisitAssetItem {
+  return {
+    id: a.id,
+    assetName: a.asset_name,
+    assetDescription: a.asset_description || undefined,
+    assetSerial: a.asset_serial || undefined,
+    assetBrand: a.asset_brand || undefined,
+    entryRegistered: a.entry_registered,
+    exitRegistered: a.exit_registered,
   };
 }
 
@@ -39,5 +60,10 @@ export function mapBackendVisitsSummary(data: BackendVisitsSummaryResponse['data
     cancelled: data.cancelled ?? 0,
     total: data.total ?? 0,
     insideNow: data.inside_now ?? 0,
+    exceeded: data.exceeded ?? 0,
+    nextExpectedAt: opt(data.next_expected_at),
+    nextUnitNumber: data.next_unit_number || undefined,
+    nextUnitBlock: data.next_unit_block || undefined,
+    avgStayMinutes: opt(data.avg_stay_minutes),
   };
 }

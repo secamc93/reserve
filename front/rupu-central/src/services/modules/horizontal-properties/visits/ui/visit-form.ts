@@ -1,10 +1,11 @@
 /**
- * Formulario de visita (V2 · Nueva visita / editar): valores, validación y conversión al DTO
- * del back. Sin React ni red.
+ * Formulario de visita (V2 · Nueva visita en 3 pasos / editar): valores, validación por paso,
+ * regla de cada tipo de visita, sugerencias por historial y conversión al DTO del back.
+ * Sin React ni red.
  */
 
-import type { CreateVisitDTO, UpdateVisitDTO, Visit } from '../domain';
-import { toWallClockISO, wallClockParts } from './visit-state';
+import type { CreateVisitDTO, UpdateVisitDTO, Visit, VisitListDTO, VisitType } from '../domain';
+import { formatDuration, toWallClockISO, unitLabel, wallClockParts } from './visit-state';
 
 export interface VisitFormValues {
   propertyUnitId?: number;
@@ -19,6 +20,11 @@ export interface VisitFormValues {
   notifyResident: boolean;
   notifySecurity: boolean;
   notes: string;
+  /** Paso 3: vehículo con que llega. */
+  hasVehicle: boolean;
+  plate: string;
+  brand: string;
+  color: string;
 }
 
 export interface NewVisitorValues {
@@ -52,6 +58,10 @@ export function emptyVisitForm(today: string, now: Date = new Date()): VisitForm
     notifyResident: true,
     notifySecurity: false,
     notes: '',
+    hasVehicle: false,
+    plate: '',
+    brand: '',
+    color: '',
   };
 }
 
@@ -73,21 +83,26 @@ export function visitToForm(v: Visit): VisitFormValues {
     notifyResident: v.notifyResident,
     notifySecurity: v.notifySecurity,
     notes: v.notes ?? '',
+    hasVehicle: !!v.visitorVehicleId,
+    plate: '',
+    brand: '',
+    color: '',
   };
 }
 
-/** Primer error del formulario, o null si se puede enviar. */
-export function validateVisitForm(
-  f: VisitFormValues,
-  opts: { needsNewVisitor: boolean; visitor?: NewVisitorValues; hasVisitor: boolean },
-): string | null {
-  if (!opts.hasVisitor) {
-    if (!opts.needsNewVisitor) return 'Busca al visitante por su documento';
-    const v = opts.visitor;
-    if (!v?.dni.trim()) return 'Escribe el documento del visitante';
-    if (!v.fullName.trim()) return 'Escribe el nombre del visitante';
-    if (!v.phone.trim()) return 'Escribe el teléfono del visitante';
-  }
+/** Paso 1: hay visitante elegido, o los datos para crearlo. */
+export function validateVisitorStep(opts: { needsNewVisitor: boolean; visitor?: NewVisitorValues; hasVisitor: boolean }): string | null {
+  if (opts.hasVisitor) return null;
+  if (!opts.needsNewVisitor) return 'Busca al visitante por su documento';
+  const v = opts.visitor;
+  if (!v?.dni.trim()) return 'Escribe el documento del visitante';
+  if (!v.fullName.trim()) return 'Escribe el nombre del visitante';
+  if (!v.phone.trim()) return 'Escribe el teléfono del visitante';
+  return null;
+}
+
+/** Paso 2: unidad, tipo, día, hora y personas. */
+export function validateVisitStep(f: VisitFormValues): string | null {
   if (!f.propertyUnitId) return 'Elige la unidad que visita';
   if (!f.visitTypeId) return 'Elige el tipo de visita';
   if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date)) return 'Elige el día de la visita';
@@ -97,9 +112,63 @@ export function validateVisitForm(
   return null;
 }
 
-export function formToCreateDTO(f: VisitFormValues, visitorId: number): CreateVisitDTO {
+/** Paso 3: si trae vehículo, la placa. */
+export function validateVehicleStep(f: VisitFormValues): string | null {
+  if (f.hasVehicle && !normalizePlate(f.plate)) return 'Escribe la placa del vehículo';
+  return null;
+}
+
+/** "kjm 842" → "KJM842". */
+export function normalizePlate(plate: string): string {
+  return plate.replace(/\s+/g, '').toUpperCase();
+}
+
+/** Primer error de todo el formulario (pasos 1 a 3), o null si se puede enviar. */
+export function validateVisitForm(
+  f: VisitFormValues,
+  opts: { needsNewVisitor: boolean; visitor?: NewVisitorValues; hasVisitor: boolean },
+): string | null {
+  return validateVisitorStep(opts) ?? validateVisitStep(f) ?? validateVehicleStep(f);
+}
+
+/** Regla corta de un tipo de visita para su tarjeta: "hasta 8 h", "20 min", "requiere autorización"… */
+export function visitTypeRule(t: Pick<VisitType, 'requiresAuthorization' | 'requiresAssetsTracking' | 'requiresVehicleRegistration' | 'maxDurationHours' | 'defaultDurationMinutes'>): string {
+  if (t.requiresAssetsTracking && t.requiresVehicleRegistration) return 'activos + vehículo';
+  if (t.requiresAuthorization) return 'requiere autorización';
+  if (t.maxDurationHours) return `hasta ${t.maxDurationHours} h`;
+  if (t.defaultDurationMinutes) return formatDuration(t.defaultDurationMinutes);
+  return '';
+}
+
+export interface VisitorHistory {
+  visits: number;
+  lastUnit?: string;
+  /** Unidades visitadas antes, la más reciente primero (máximo 4). */
+  suggested: { id: number; label: string }[];
+}
+
+/** Historial del visitante a partir de sus visitas: última unidad y unidades sugeridas. */
+export function visitorHistory(rows: Pick<VisitListDTO, 'propertyUnitId' | 'propertyUnitBlock' | 'propertyUnitNumber' | 'scheduledDate'>[], total?: number): VisitorHistory {
+  const sorted = [...rows].sort((a, b) => b.scheduledDate.localeCompare(a.scheduledDate));
+  const seen = new Set<number>();
+  const suggested: { id: number; label: string }[] = [];
+  for (const r of sorted) {
+    if (!r.propertyUnitId || seen.has(r.propertyUnitId)) continue;
+    seen.add(r.propertyUnitId);
+    suggested.push({ id: r.propertyUnitId, label: unitLabel(r.propertyUnitBlock, r.propertyUnitNumber) });
+    if (suggested.length === 4) break;
+  }
+  return {
+    visits: total ?? rows.length,
+    lastUnit: sorted[0] ? unitLabel(sorted[0].propertyUnitBlock, sorted[0].propertyUnitNumber) : undefined,
+    suggested,
+  };
+}
+
+export function formToCreateDTO(f: VisitFormValues, visitorId: number, visitorVehicleId?: number): CreateVisitDTO {
   return {
     visitorId,
+    visitorVehicleId,
     propertyUnitId: f.propertyUnitId!,
     visitTypeId: f.visitTypeId!,
     scheduledDate: toWallClockISO(f.date),

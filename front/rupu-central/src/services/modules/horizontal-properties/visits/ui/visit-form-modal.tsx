@@ -1,32 +1,45 @@
 'use client';
 
 /**
- * V2 · Nueva visita / Editar visita (Patrón B: modal de 560 px).
- * Crear: documento del visitante → si existe se usa; si no, nombre y teléfono para crearlo en
- * el mismo envío. Después unidad, tipo, día y horas, propósito y opciones.
+ * V2 · Nueva visita (modal de 620 px en 3 pasos) y editar visita (solo el paso 2).
+ *  1. Visitante: documento → visitante existente (tarjeta con historial) o datos para crearlo.
+ *  2. ¿A qué unidad y para qué?: unidad (con sus residentes) y sugeridas por historial, tipo en
+ *     tarjetas con su regla, fecha / desde / personas y opciones.
+ *  3. Vehículo: placa, marca y color.
+ * "Guardar y registrar entrada" crea la visita y registra la entrada de una vez.
  */
 
 import { useEffect, useId, useState } from 'react';
-import { VtDialog, VtNotice, VtSwitch, VtBadge, vtBtn, vtInput, vtLabel, vtTextarea, DS, dsMono } from '@/shared/ui/ds';
+import { VtDialog, VtNotice, VtBadge, vtBtn, vtInput, vtLabel, DS, dsMono } from '@/shared/ui/ds';
 import {
   createVisitAction,
   createVisitorAction,
+  createVisitorVehicleAction,
   getVisitTypesAction,
+  getVisitsAction,
+  registerEntryAction,
   searchVisitorAction,
   updateVisitAction,
 } from '../infrastructure/actions';
 import type { Visit, VisitType, Visitor } from '../domain';
+import { getResidentsAction } from '@/services/modules/horizontal-properties/residents/infrastructure/actions';
 import { UnitAutocomplete } from './unit-autocomplete';
 import { useBusinessToken } from './use-business-token';
-import { todayInProperty } from './visit-state';
+import { formatDoc, initials, todayInProperty } from './visit-state';
 import {
   emptyVisitForm,
   formToCreateDTO,
   formToUpdateDTO,
-  validateVisitForm,
+  normalizePlate,
+  validateVehicleStep,
+  validateVisitStep,
+  validateVisitorStep,
   visitToForm,
+  visitTypeRule,
+  visitorHistory,
   type NewVisitorValues,
   type VisitFormValues,
+  type VisitorHistory,
 } from './visit-form';
 
 export interface VisitFormModalProps {
@@ -37,43 +50,58 @@ export interface VisitFormModalProps {
   businessId: number;
   /** Editar: la visita y el visitante que se muestra (no se cambia). */
   edit?: { visit: Visit; visitorName: string; visitorDni: string };
+  /** Visita no programada (llega ahora): día de hoy y hora actual. */
+  unscheduled?: boolean;
 }
 
+type Step = 1 | 2 | 3;
 type Lookup = 'idle' | 'searching' | 'found' | 'not_found';
 
+const TITLES: Record<Step, string> = { 1: '¿Quién viene?', 2: '¿A qué unidad y para qué?', 3: '¿Viene en vehículo?' };
 const emptyVisitor: NewVisitorValues = { dni: '', fullName: '', phone: '', email: '' };
 
-export function VisitFormModal({ open, onClose, onSaved, businessId, edit }: VisitFormModalProps) {
-  const getToken = useBusinessToken(businessId);
-  const ids = { dni: useId(), name: useId(), phone: useId(), email: useId(), type: useId(), date: useId(), start: useId(), end: useId(), purpose: useId(), people: useId(), notes: useId() };
+const nowHHMM = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
 
+export function VisitFormModal({ open, onClose, onSaved, businessId, edit, unscheduled = false }: VisitFormModalProps) {
+  const getToken = useBusinessToken(businessId);
+  const ids = { dni: useId(), name: useId(), phone: useId(), email: useId(), date: useId(), start: useId(), purpose: useId(), plate: useId(), brand: useId(), color: useId() };
+
+  const [step, setStep] = useState<Step>(edit ? 2 : 1);
   const [form, setForm] = useState<VisitFormValues>(() => emptyVisitForm(todayInProperty()));
   const [visitor, setVisitor] = useState<Visitor | null>(null);
+  const [history, setHistory] = useState<VisitorHistory | null>(null);
   const [newVisitor, setNewVisitor] = useState<NewVisitorValues>(emptyVisitor);
   const [lookup, setLookup] = useState<Lookup>('idle');
   const [types, setTypes] = useState<VisitType[]>([]);
+  const [residentsCount, setResidentsCount] = useState<number | null>(null);
   const [token, setToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Reinicia el formulario al abrir y carga tipos de visita + token (lo necesita el buscador de unidades)
+  // Reinicia al abrir y carga tipos de visita + token (lo necesita el buscador de unidades)
   useEffect(() => {
     if (!open) return;
+    setStep(edit ? 2 : 1);
     setError(null);
     setSaving(false);
     setVisitor(null);
+    setHistory(null);
     setNewVisitor(emptyVisitor);
     setLookup('idle');
-    setForm(edit ? visitToForm(edit.visit) : emptyVisitForm(todayInProperty()));
+    setResidentsCount(null);
+    const base = edit ? visitToForm(edit.visit) : emptyVisitForm(todayInProperty());
+    setForm(unscheduled && !edit ? { ...base, startTime: nowHHMM() } : base);
     let cancelled = false;
     (async () => {
       try {
         const t = await getToken();
         if (cancelled) return;
         setToken(t);
-        const all = await getVisitTypesAction({ token: t });
+        const active = (await getVisitTypesAction({ token: t })).filter((x) => x.isActive);
         if (cancelled) return;
-        const active = all.filter((x) => x.isActive);
         setTypes(active);
         if (!edit && active.length > 0) setForm((f) => (f.visitTypeId ? f : { ...f, visitTypeId: active[0].id }));
       } catch (e) {
@@ -83,7 +111,29 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit }: Vis
     return () => {
       cancelled = true;
     };
-  }, [open, edit, getToken]);
+  }, [open, edit, unscheduled, getToken]);
+
+  // Residentes de la unidad elegida ("N residentes")
+  const unitId = form.propertyUnitId;
+  useEffect(() => {
+    if (!open || !unitId) {
+      setResidentsCount(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const t = await getToken();
+        const res = await getResidentsAction({ businessId, token: t, propertyUnitId: unitId, page: 1, pageSize: 1 });
+        if (!cancelled) setResidentsCount(res.total ?? res.residents.length);
+      } catch {
+        if (!cancelled) setResidentsCount(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, unitId, businessId, getToken]);
 
   const set = <K extends keyof VisitFormValues>(k: K, v: VisitFormValues[K]) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -100,18 +150,30 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit }: Vis
       const found = await searchVisitorAction({ businessId, dni, token: t });
       setVisitor(found);
       setLookup('found');
+      // Historial: última unidad visitada y sugeridas
+      getVisitsAction({ businessId, token: t, visitorId: found.id, page: 1, pageSize: 20 })
+        .then((res) => setHistory(visitorHistory(res.visits, res.total)))
+        .catch(() => setHistory(null));
     } catch {
       setVisitor(null);
       setLookup('not_found');
     }
   };
 
-  const submit = async () => {
-    const problem = validateVisitForm(form, {
-      hasVisitor: !!edit || !!visitor,
-      needsNewVisitor: lookup === 'not_found',
-      visitor: newVisitor,
-    });
+  const visitorOpts = { hasVisitor: !!edit || !!visitor, needsNewVisitor: lookup === 'not_found', visitor: newVisitor };
+
+  const goNext = () => {
+    const problem = step === 1 ? validateVisitorStep(visitorOpts) : validateVisitStep(form);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    setStep((s) => (s === 1 ? 2 : 3));
+  };
+
+  const save = async (andEnter: boolean) => {
+    const problem = validateVisitorStep(visitorOpts) ?? validateVisitStep(form) ?? validateVehicleStep(form);
     if (problem) {
       setError(problem);
       return;
@@ -139,8 +201,22 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit }: Vis
         });
       }
       if (!v?.id) throw new Error('El visitante no tiene un id válido; vuelve a buscarlo');
-      await createVisitAction({ businessId, data: formToCreateDTO(form, v.id), token: t });
-      onSaved(`Visita de ${v.fullName} registrada`);
+      let vehicleId: number | undefined;
+      if (form.hasVehicle && normalizePlate(form.plate)) {
+        const vehicle = await createVisitorVehicleAction({
+          businessId,
+          data: { visitorId: v.id, plate: normalizePlate(form.plate), brand: form.brand.trim(), color: form.color.trim() },
+          token: t,
+        });
+        vehicleId = vehicle.id;
+      }
+      const created = await createVisitAction({ businessId, data: formToCreateDTO(form, v.id, vehicleId), token: t });
+      if (andEnter) {
+        await registerEntryAction({ businessId, visitId: created.id, data: { gate: vehicleId ? 'Vehicular' : 'Principal', method: 'manual' }, token: t });
+        onSaved(`Visita de ${v.fullName} registrada con entrada`);
+      } else {
+        onSaved(`Visita de ${v.fullName} registrada`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar la visita');
     } finally {
@@ -148,62 +224,100 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit }: Vis
     }
   };
 
+  const eyebrow = edit ? 'Editar visita' : `Nueva visita · Paso ${step} de 3`;
+  const title = edit ? edit.visitorName : TITLES[step];
+  const canEnterNow = !edit && form.date === todayInProperty();
+
+  const footer = (
+    <div className="flex w-full flex-wrap items-center gap-2 max-md:[&>*]:flex-1">
+      {!edit && step > 1 ? (
+        <button type="button" className={vtBtn.ghost} onClick={() => setStep((s) => (s === 3 ? 2 : 1))} disabled={saving}>
+          ← {step === 2 ? 'Visitante' : 'Unidad'}
+        </button>
+      ) : (
+        <button type="button" className={vtBtn.ghost} onClick={onClose} disabled={saving}>
+          Cancelar
+        </button>
+      )}
+      <div className="md:ml-auto flex flex-wrap gap-2 max-md:w-full max-md:[&>*]:flex-1">
+        {edit ? (
+          <button type="button" className={vtBtn.primary} onClick={() => save(false)} disabled={saving}>
+            {saving ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+        ) : step === 1 ? (
+          <button type="button" className={vtBtn.primary} onClick={goNext} disabled={saving}>
+            Siguiente: unidad →
+          </button>
+        ) : (
+          <>
+            {canEnterNow && (
+              <button type="button" className={vtBtn.secondary} onClick={() => save(true)} disabled={saving}>
+                Guardar y registrar entrada
+              </button>
+            )}
+            {step === 2 && form.hasVehicle ? (
+              <button type="button" className={vtBtn.primary} onClick={goNext} disabled={saving}>
+                Siguiente: vehículo →
+              </button>
+            ) : (
+              <button type="button" className={vtBtn.primary} onClick={() => save(false)} disabled={saving}>
+                {saving ? 'Guardando…' : 'Guardar visita'}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <VtDialog
       open={open}
       onClose={onClose}
       busy={saving}
-      eyebrow={edit ? 'Editar visita' : 'Visitas'}
-      title={edit ? edit.visitorName : 'Nueva visita'}
-      subtitle={edit ? `Documento ${edit.visitorDni}` : 'Registra quién viene, a qué unidad y cuándo'}
-      footer={
-        <>
-          <button type="button" className={vtBtn.secondary} onClick={onClose} disabled={saving}>
-            Cancelar
-          </button>
-          <button type="button" className={vtBtn.primary} onClick={submit} disabled={saving}>
-            {saving ? 'Guardando…' : edit ? 'Guardar cambios' : 'Registrar visita'}
-          </button>
-        </>
-      }
+      width={620}
+      eyebrow={eyebrow}
+      title={title}
+      subtitle={edit ? <span className={dsMono}>{formatDoc(edit.visitorDni)}</span> : undefined}
+      footer={footer}
     >
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit();
-        }}
-      >
+      <div className="flex flex-col gap-4">
+        {!edit && (
+          <div className="grid grid-cols-3 gap-1.5" aria-hidden="true">
+            {[1, 2, 3].map((n) => (
+              <span key={n} className="h-[3px] rounded-full" style={{ background: n <= step ? DS.ink : DS.border }} />
+            ))}
+          </div>
+        )}
         {error && <VtNotice tone="error">{error}</VtNotice>}
 
-        {!edit && (
-          <fieldset className="flex flex-col gap-3 m-0 p-0 border-0">
-            <legend className={`${dsMono} text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580] mb-2`}>Visitante</legend>
+        {/* Tarjeta del visitante elegido (pasos 2 y 3) */}
+        {!edit && step > 1 && (visitor || lookup === 'not_found') && (
+          <VisitorCard
+            name={visitor?.fullName ?? newVisitor.fullName}
+            meta={[
+              formatDoc(visitor?.dni ?? newVisitor.dni),
+              visitor ? `visitó ${history?.visits ?? visitor.totalVisits ?? 0} veces` : 'nuevo',
+              history?.lastUnit ? `última: ${history.lastUnit}` : '',
+            ]}
+            blacklisted={visitor?.hasBlacklist}
+            onChange={() => setStep(1)}
+          />
+        )}
+
+        {!edit && step === 1 && (
+          <div className="flex flex-col gap-3">
             {lookup === 'found' && visitor ? (
-              <div className="flex items-center gap-3 rounded-lg border border-[#e4e2dd] px-3.5 py-3">
-                <div className="w-9 h-9 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center text-sm font-semibold shrink-0" aria-hidden="true">
-                  {visitor.fullName.charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold truncate">{visitor.fullName}</div>
-                  <div className={`${dsMono} text-[11px] text-[#8a8580]`}>
-                    {visitor.dni}
-                    {visitor.phone ? ` · ${visitor.phone}` : ''}
-                    {visitor.totalVisits ? ` · ${visitor.totalVisits} visitas` : ''}
-                  </div>
-                </div>
-                {visitor.hasBlacklist && <VtBadge label="Lista negra" bg={DS.missingBg} fg={DS.no} />}
-                <button
-                  type="button"
-                  className={vtBtn.small}
-                  onClick={() => {
-                    setVisitor(null);
-                    setLookup('idle');
-                  }}
-                >
-                  Cambiar
-                </button>
-              </div>
+              <VisitorCard
+                name={visitor.fullName}
+                meta={[formatDoc(visitor.dni), `visitó ${history?.visits ?? visitor.totalVisits ?? 0} veces`, history?.lastUnit ? `última: ${history.lastUnit}` : '']}
+                blacklisted={visitor.hasBlacklist}
+                onChange={() => {
+                  setVisitor(null);
+                  setHistory(null);
+                  setLookup('idle');
+                }}
+              />
             ) : (
               <>
                 <div>
@@ -216,7 +330,7 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit }: Vis
                       className={`${vtInput} ${dsMono}`}
                       inputMode="numeric"
                       autoComplete="off"
-                      placeholder="1234567890"
+                      placeholder="79456123"
                       value={newVisitor.dni}
                       onChange={(e) => {
                         setNewVisitor({ ...newVisitor, dni: e.target.value });
@@ -261,96 +375,161 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit }: Vis
                 )}
               </>
             )}
-          </fieldset>
+          </div>
         )}
 
-        <fieldset className="flex flex-col gap-3 m-0 p-0 border-0">
-          <legend className={`${dsMono} text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580] mb-2`}>Visita</legend>
-          {token ? (
-            <UnitAutocomplete value={form.propertyUnitId} onChange={(id) => set('propertyUnitId', id)} businessId={businessId} token={token} required label="Unidad" />
-          ) : (
-            <div className="h-10" aria-hidden="true" />
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2 md:col-span-1">
-              <label htmlFor={ids.type} className={vtLabel}>
-                Tipo <span aria-hidden="true">*</span>
-              </label>
-              <select id={ids.type} className={vtInput} value={form.visitTypeId ?? ''} onChange={(e) => set('visitTypeId', e.target.value ? Number(e.target.value) : undefined)}>
-                <option value="">{types.length ? 'Elige un tipo' : 'Cargando…'}</option>
-                {types.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
+        {step === 2 && (
+          <div className="flex flex-col gap-3.5">
+            <div className="relative">
+              {residentsCount !== null && (
+                <span className={`${dsMono} absolute right-0 top-0 text-[11px] text-[#8a8580]`}>
+                  {residentsCount} {residentsCount === 1 ? 'residente' : 'residentes'}
+                </span>
+              )}
+              {token ? (
+                <UnitAutocomplete value={form.propertyUnitId} onChange={(id) => set('propertyUnitId', id)} businessId={businessId} token={token} required label="Unidad" />
+              ) : (
+                <div className="h-[62px]" aria-hidden="true" />
+              )}
+            </div>
+            {history && history.suggested.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Sugerida por historial">
+                <span className="text-[11px] text-[#8a8580] mr-1">Sugerida por historial</span>
+                {history.suggested.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    aria-pressed={form.propertyUnitId === u.id}
+                    onClick={() => set('propertyUnitId', u.id)}
+                    className={`${dsMono} px-2.5 py-1 max-md:py-2 rounded-[5px] text-xs ${form.propertyUnitId === u.id ? 'bg-[#1a1a1a] text-white' : 'border border-[#d6d3cd] hover:bg-[#f5f5f4]'}`}
+                  >
+                    {u.label}
+                  </button>
                 ))}
-              </select>
+              </div>
+            )}
+
+            <div>
+              <div className={vtLabel} id="visit-type-label">
+                Tipo de visita <span aria-hidden="true">*</span>
+              </div>
+              <div role="radiogroup" aria-labelledby="visit-type-label" className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {types.length === 0 && <div className="col-span-full text-[13px] text-[#8a8580]">Cargando tipos…</div>}
+                {types.map((t) => {
+                  const on = form.visitTypeId === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => set('visitTypeId', t.id)}
+                      className={`h-[60px] rounded-lg px-3 text-left flex flex-col justify-center border transition-colors ${on ? 'border-[#1a1a1a] border-[1.5px] bg-white' : 'border-[#e4e2dd] hover:border-[#c9c6c0]'}`}
+                    >
+                      <span className="text-[13px] font-semibold truncate">{t.name}</span>
+                      <span className="text-[11px] text-[#8a8580] truncate">{visitTypeRule(t)}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="col-span-2 md:col-span-1">
-              <label htmlFor={ids.people} className={vtLabel}>
-                Personas
-              </label>
-              <input
-                id={ids.people}
-                type="number"
-                min={1}
-                max={50}
-                className={`${vtInput} ${dsMono}`}
-                value={form.numberOfVisitors}
-                onChange={(e) => set('numberOfVisitors', Number.parseInt(e.target.value, 10) || 1)}
-              />
-            </div>
-            <div className="col-span-2 md:col-span-1">
-              <label htmlFor={ids.date} className={vtLabel}>
-                Día <span aria-hidden="true">*</span>
-              </label>
-              <input id={ids.date} type="date" className={`${vtInput} ${dsMono}`} value={form.date} onChange={(e) => set('date', e.target.value)} />
-            </div>
-            <div className="col-span-1 md:col-span-1 grid grid-cols-2 gap-2 max-md:col-span-2">
+
+            <div className="grid grid-cols-2 md:grid-cols-[1.3fr_1fr_1fr] gap-3">
+              <div>
+                <label htmlFor={ids.date} className={vtLabel}>
+                  Fecha
+                </label>
+                <input id={ids.date} type="date" className={`${vtInput} ${dsMono}`} value={form.date} onChange={(e) => set('date', e.target.value)} />
+              </div>
               <div>
                 <label htmlFor={ids.start} className={vtLabel}>
-                  Llega <span aria-hidden="true">*</span>
+                  Desde
                 </label>
                 <input id={ids.start} type="time" className={`${vtInput} ${dsMono} px-2`} value={form.startTime} onChange={(e) => set('startTime', e.target.value)} />
               </div>
-              <div>
-                <label htmlFor={ids.end} className={vtLabel}>
-                  Sale
-                </label>
-                <input id={ids.end} type="time" className={`${vtInput} ${dsMono} px-2`} value={form.endTime} onChange={(e) => set('endTime', e.target.value)} />
+              <div className="col-span-2 md:col-span-1">
+                <div className={vtLabel} id="visit-people-label">
+                  Personas
+                </div>
+                <div className="flex items-center h-10 max-md:h-11 rounded-[7px] border border-[#d6d3cd]" role="group" aria-labelledby="visit-people-label">
+                  <button type="button" aria-label="Menos personas" className="w-10 h-full text-lg" onClick={() => set('numberOfVisitors', Math.max(1, form.numberOfVisitors - 1))}>
+                    −
+                  </button>
+                  <span className={`${dsMono} flex-1 text-center text-sm`} aria-live="polite">
+                    {form.numberOfVisitors}
+                  </span>
+                  <button type="button" aria-label="Más personas" className="w-10 h-full text-lg" onClick={() => set('numberOfVisitors', Math.min(50, form.numberOfVisitors + 1))}>
+                    +
+                  </button>
+                </div>
               </div>
             </div>
+
+            <div>
+              <label htmlFor={ids.purpose} className={vtLabel}>
+                Motivo
+              </label>
+              <input id={ids.purpose} className={vtInput} placeholder="Almuerzo familiar, domicilio, mantenimiento…" value={form.purpose} onChange={(e) => set('purpose', e.target.value)} />
+            </div>
+
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <Check label="Avisar al residente" checked={form.notifyResident} onChange={(v) => set('notifyResident', v)} />
+              {!edit && <Check label="Trae vehículo" checked={form.hasVehicle} onChange={(v) => set('hasVehicle', v)} />}
+              {!edit && <Check label="Acompañantes" checked={form.hasCompanions} onChange={(v) => set('hasCompanions', v)} />}
+            </div>
           </div>
-          <div>
-            <label htmlFor={ids.purpose} className={vtLabel}>
-              Motivo
-            </label>
-            <input id={ids.purpose} className={vtInput} placeholder="Visita familiar, domicilio, mantenimiento…" value={form.purpose} onChange={(e) => set('purpose', e.target.value)} />
+        )}
+
+        {step === 3 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label htmlFor={ids.plate} className={vtLabel}>
+                Placa <span aria-hidden="true">*</span>
+              </label>
+              <input id={ids.plate} className={`${vtInput} ${dsMono} uppercase`} placeholder="KJM842" value={form.plate} onChange={(e) => set('plate', e.target.value)} />
+            </div>
+            <div>
+              <label htmlFor={ids.brand} className={vtLabel}>
+                Marca
+              </label>
+              <input id={ids.brand} className={vtInput} placeholder="Mazda" value={form.brand} onChange={(e) => set('brand', e.target.value)} />
+            </div>
+            <div>
+              <label htmlFor={ids.color} className={vtLabel}>
+                Color
+              </label>
+              <input id={ids.color} className={vtInput} placeholder="Gris" value={form.color} onChange={(e) => set('color', e.target.value)} />
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg bg-[#f5f5f4] px-3.5 py-3">
-            {!edit && <SwitchRow label="Trae acompañantes" checked={form.hasCompanions} onChange={(v) => set('hasCompanions', v)} />}
-            {!edit && <SwitchRow label="Ingresa equipos" checked={form.hasAssets} onChange={(v) => set('hasAssets', v)} />}
-            <SwitchRow label="Avisar al residente" checked={form.notifyResident} onChange={(v) => set('notifyResident', v)} />
-            <SwitchRow label="Avisar a seguridad" checked={form.notifySecurity} onChange={(v) => set('notifySecurity', v)} />
-          </div>
-          <div>
-            <label htmlFor={ids.notes} className={vtLabel}>
-              Notas
-            </label>
-            <textarea id={ids.notes} rows={2} className={vtTextarea} value={form.notes} onChange={(e) => set('notes', e.target.value)} />
-          </div>
-        </fieldset>
-        {/* Enter en un campo envía el formulario */}
-        <button type="submit" className="hidden" tabIndex={-1} aria-hidden="true" />
-      </form>
+        )}
+      </div>
     </VtDialog>
   );
 }
 
-function SwitchRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function VisitorCard({ name, meta, blacklisted, onChange }: { name: string; meta: string[]; blacklisted?: boolean; onChange: () => void }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-[13px]">{label}</span>
-      <VtSwitch label={label} checked={checked} onChange={onChange} />
+    <div className="flex items-center gap-3 rounded-lg bg-[#f5f5f4] px-3.5 py-3">
+      <div className={`${dsMono} w-9 h-9 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center text-xs font-semibold shrink-0`} aria-hidden="true">
+        {initials(name)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold truncate">{name}</div>
+        <div className={`${dsMono} text-[11px] text-[#8a8580] truncate`}>{meta.filter(Boolean).join(' · ')}</div>
+      </div>
+      {blacklisted && <VtBadge label="Lista negra" bg={DS.missingBg} fg={DS.no} />}
+      <button type="button" className="text-xs font-semibold text-[#c8603f] hover:underline" onClick={onChange}>
+        cambiar
+      </button>
     </div>
+  );
+}
+
+function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center gap-2 text-[13px] min-h-11 md:min-h-0">
+      <input type="checkbox" className="h-4 w-4 accent-[#1a1a1a]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
   );
 }
