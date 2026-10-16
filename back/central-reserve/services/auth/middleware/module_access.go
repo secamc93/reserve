@@ -11,29 +11,34 @@ import (
 // Nombres de los recursos (tabla resource) que dan acceso a cada módulo. Deben coincidir con
 // RESOURCE_ROUTE_MAP del front (front/rupu-central/src/services/auth/permissions/domain/entities).
 const (
-	ResourcePropiedades  = "Propiedades"
-	ResourceUnidades     = "Unidades"
-	ResourceResidentes   = "Residentes"
-	ResourceVotaciones   = "Votaciones"
-	ResourceAsistencia   = "Asistencia"
-	ResourceVisitas      = "Visitas"
-	ResourcePaqueteria   = "Paquetería"
-	ResourceParqueaderos = "Parqueaderos"
-	ResourceZonasComunes = "Zonas Comunes"
-	ResourceUsuarios     = "Usuarios"
-	ResourceRoles        = "Roles"
-	ResourcePermisos     = "Permisos"
-	ResourceRecursos     = "Recursos"
-	ResourceTiposNegocio = "Tipos de Negocio"
-	ResourceNegocios     = "Negocios"
+	ResourcePropiedades = "Propiedades"
+	ResourceUnidades    = "Unidades"
+	ResourceResidentes  = "Residentes"
+	ResourceVotaciones  = "Votaciones"
+	// Generar (o regenerar) las contraseñas de voto de un grupo: aparte de Votaciones para que un
+	// rol pueda operar la asamblea sin poder cambiar las contraseñas ya entregadas.
+	ResourceContrasenasVotacion = "Contraseñas de votación"
+	ResourceAsistencia          = "Asistencia"
+	ResourceVisitas             = "Visitas"
+	ResourcePaqueteria          = "Paquetería"
+	ResourceParqueaderos        = "Parqueaderos"
+	ResourceZonasComunes        = "Zonas Comunes"
+	ResourceUsuarios            = "Usuarios"
+	ResourceRoles               = "Roles"
+	ResourcePermisos            = "Permisos"
+	ResourceRecursos            = "Recursos"
+	ResourceTiposNegocio        = "Tipos de Negocio"
+	ResourceNegocios            = "Negocios"
 )
 
 // moduleRule dice qué recursos abren un prefijo de ruta (relativo a /api/v1).
 //   - resources: dan acceso completo.
 //   - readResources: dan acceso solo de lectura (GET), p. ej. Votaciones lee unidades y residentes.
 //   - readAny: cualquier usuario con business token puede leer (GET).
+//   - suffix: si no está vacío, la regla solo aplica a rutas bajo prefix que terminan así.
 type moduleRule struct {
 	prefix        string
+	suffix        string
 	resources     []string
 	readResources []string
 	readAny       bool
@@ -42,6 +47,7 @@ type moduleRule struct {
 // moduleRules: el primer prefijo que coincide manda, así que los más específicos van primero.
 // Las rutas que no coinciden con ninguna regla (/auth, /public…) no se restringen aquí.
 var moduleRules = []moduleRule{
+	{prefix: "/horizontal-properties/voting-groups", suffix: "/credentials/generate", resources: []string{ResourceContrasenasVotacion}},
 	{prefix: "/horizontal-properties/voting-groups", resources: []string{ResourceVotaciones}},
 	{prefix: "/horizontal-properties/property-units", resources: []string{ResourceUnidades}, readResources: []string{ResourceVotaciones, ResourceAsistencia}},
 	{prefix: "/horizontal-properties/residents", resources: []string{ResourceResidentes}, readResources: []string{ResourceVotaciones, ResourceAsistencia}},
@@ -69,6 +75,9 @@ type IRoleResourceLookup interface {
 // matchModuleRule busca la regla del path (ya sin /api/v1). Coincide por segmento completo.
 func matchModuleRule(path string) (moduleRule, bool) {
 	for _, rule := range moduleRules {
+		if rule.suffix != "" && !strings.HasSuffix(path, rule.suffix) {
+			continue
+		}
 		if path == rule.prefix || strings.HasPrefix(path, rule.prefix+"/") {
 			return rule, true
 		}

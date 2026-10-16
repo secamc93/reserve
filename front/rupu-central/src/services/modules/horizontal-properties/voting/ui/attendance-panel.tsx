@@ -32,6 +32,7 @@ import { getResidentsAction } from '../../residents/infrastructure/actions';
 import type { Voting, VotingGroup } from '../domain/entities';
 import { liveVotingPath } from './votings-list';
 import { VotingCredentialsActions } from './credentials/voting-credentials-actions';
+import { VOTING_PASSWORDS_RESOURCE, permissionsInclude } from '@/services/auth/permissions/domain/entities';
 import {
   DEFAULT_QUORUM_PERCENTAGE,
   VT,
@@ -306,7 +307,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         }
         actions={
           <>
-            {token && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} />}
+            {token && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} canGenerate={permissionsInclude(TokenStorage.getUserPermissions(), VOTING_PASSWORDS_RESOURCE)} />}
             {liveVoting ? (
               <Link href={liveVotingPath(businessId, groupId, liveVoting.id)} className={vtBtn.primary}>
                 Ir al panel en vivo
