@@ -36,6 +36,12 @@ func (uc *MigrationUseCase) MigrateDB() error {
 	// ningún horario ni reserva. Se convierten solo si siguen en timestamptz.
 	uc.fixTimeColumns()
 
+	// El nombre de una zona común es único por propiedad solo entre las no borradas (el índice viejo
+	// contaba las borradas y no dejaba reutilizar el nombre).
+	if err := uc.db.Exec(`DROP INDEX IF EXISTS horizontal_property.idx_business_area_name`).Error; err != nil {
+		uc.logger.Warn().Err(err).Msg("No se pudo borrar el índice viejo de nombres de zonas comunes")
+	}
+
 	// El índice único viejo (parking_slot_id, is_active) solo permitía UNA asignación liberada por
 	// cupo en toda su historia; lo reemplaza idx_slot_one_active_assignment (parcial, solo activas).
 	if err := uc.db.Exec(`DROP INDEX IF EXISTS horizontal_property.idx_slot_active_assignment`).Error; err != nil {
@@ -206,6 +212,86 @@ func (uc *MigrationUseCase) seedInitialData() error {
 		}
 	}
 
+	// Catálogos de visitas (antes solo estaban en migrations/002_visits_tables.sql, que no se aplica:
+	// sin ellos no se puede crear ninguna visita).
+	visitTypes := []models.VisitType{
+		{Code: "family", Name: "Familiar", Description: "Visita de familiares", RequiresCompanions: true, DefaultDurationMinutes: intPtr(240), IsActive: true},
+		{Code: "friend", Name: "Amigo", Description: "Visita de amigos", RequiresCompanions: true, DefaultDurationMinutes: intPtr(180), IsActive: true},
+		{Code: "delivery", Name: "Domicilio", Description: "Entregas a domicilio", DefaultDurationMinutes: intPtr(20), IsActive: true},
+		{Code: "technician", Name: "Servicio técnico", Description: "Personal de servicio técnico", RequiresAuthorization: true, RequiresAssetsTracking: true, DefaultDurationMinutes: intPtr(120), IsActive: true},
+		{Code: "supplier", Name: "Proveedor", Description: "Proveedores y contratistas", RequiresAuthorization: true, RequiresVehicleRegistration: true, RequiresCompanions: true, RequiresAssetsTracking: true, DefaultDurationMinutes: intPtr(240), IsActive: true},
+		{Code: "moving", Name: "Mudanza", Description: "Mudanza: activos y vehículo", RequiresAuthorization: true, RequiresVehicleRegistration: true, RequiresAssetsTracking: true, DefaultDurationMinutes: intPtr(480), IsActive: true},
+		{Code: "other", Name: "Otro", Description: "Otros tipos de visita", DefaultDurationMinutes: intPtr(60), IsActive: true},
+	}
+	for _, vt := range visitTypes {
+		var existing models.VisitType
+		if uc.db.Where("code = ?", vt.Code).First(&existing).Error != nil {
+			if err := uc.db.Create(&vt).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", vt.Code).Msg("Error creando tipo de visita")
+			}
+		}
+	}
+	visitStatuses := []models.VisitStatus{
+		{Code: "pending", Name: "Pendiente", Description: "Visita programada pendiente de autorización", IsActive: true},
+		{Code: "authorized", Name: "Autorizada", Description: "Visita autorizada por el residente", IsActive: true},
+		{Code: "in_progress", Name: "En curso", Description: "Visitante dentro del conjunto", IsActive: true},
+		{Code: "completed", Name: "Completada", Description: "Visita finalizada", IsFinal: true, IsActive: true},
+		{Code: "cancelled", Name: "Cancelada", Description: "Visita cancelada antes de realizarse", IsFinal: true, IsActive: true},
+		{Code: "expired", Name: "Expirada", Description: "Visita expirada sin realizarse", IsFinal: true, IsActive: true},
+		{Code: "rejected", Name: "Rechazada", Description: "Visita rechazada por el residente", IsFinal: true, IsActive: true},
+	}
+	for _, vs := range visitStatuses {
+		var existing models.VisitStatus
+		if uc.db.Where("code = ?", vs.Code).First(&existing).Error != nil {
+			if err := uc.db.Create(&vs).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", vs.Code).Msg("Error creando estado de visita")
+			}
+		}
+	}
+
+	// Catálogos de zonas comunes (sin ellos no se puede crear ninguna zona ni reserva).
+	areaTypes := []models.CommonAreaType{
+		{Code: "social_room", Name: "Salón social", Description: "Salón para eventos", DefaultMaxCapacity: intPtr(40), RequiresApproval: true, IsActive: true},
+		{Code: "bbq", Name: "BBQ", Description: "Zona de asados", DefaultMaxCapacity: intPtr(15), RequiresApproval: true, IsActive: true},
+		{Code: "sports_court", Name: "Cancha deportiva", Description: "Cancha múltiple", DefaultMaxCapacity: intPtr(20), AllowsRecurring: true, IsActive: true},
+		{Code: "gym", Name: "Gimnasio", Description: "Gimnasio", DefaultMaxCapacity: intPtr(10), AllowsRecurring: true, IsActive: true},
+		{Code: "pool", Name: "Piscina", Description: "Piscina", DefaultMaxCapacity: intPtr(30), IsActive: true},
+		{Code: "meeting_room", Name: "Sala de juntas", Description: "Sala de reuniones", DefaultMaxCapacity: intPtr(12), IsActive: true},
+		{Code: "terrace", Name: "Terraza", Description: "Terraza", DefaultMaxCapacity: intPtr(20), RequiresApproval: true, IsActive: true},
+		{Code: "other", Name: "Otra", Description: "Otra zona común", IsActive: true},
+	}
+	for _, at := range areaTypes {
+		var existing models.CommonAreaType
+		if uc.db.Where("code = ?", at.Code).First(&existing).Error != nil {
+			requiresApproval := at.RequiresApproval
+			if err := uc.db.Create(&at).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", at.Code).Msg("Error creando tipo de zona común")
+			} else if !requiresApproval {
+				// default:true hace que GORM descarte el false al crear.
+				uc.db.Model(&models.CommonAreaType{}).Where("id = ?", at.ID).Update("requires_approval", false)
+			}
+		}
+	}
+	areaStatuses := []models.CommonAreaReservationStatus{
+		{Code: "pending", Name: "Pendiente", Description: "Pendiente de aprobación", IsActive: true},
+		{Code: "approved", Name: "Aprobada", Description: "Aprobada por el administrador", IsActive: true},
+		{Code: "rejected", Name: "Rechazada", Description: "Rechazada por el administrador", IsFinal: true, IsActive: true},
+		{Code: "confirmed", Name: "Confirmada", Description: "Confirmada, con código de acceso", IsActive: true},
+		{Code: "checked_in", Name: "En uso", Description: "El residente ingresó", IsActive: true},
+		{Code: "checked_out", Name: "Finalizada", Description: "El residente salió", IsFinal: true, IsActive: true},
+		{Code: "cancelled", Name: "Cancelada", Description: "Reserva cancelada", IsFinal: true, IsActive: true},
+		{Code: "completed", Name: "Completada", Description: "Reserva completada", IsFinal: true, IsActive: true},
+		{Code: "expired", Name: "Vencida", Description: "No se usó en su horario", IsFinal: true, IsActive: true},
+	}
+	for _, st := range areaStatuses {
+		var existing models.CommonAreaReservationStatus
+		if uc.db.Where("code = ?", st.Code).First(&existing).Error != nil {
+			if err := uc.db.Create(&st).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", st.Code).Msg("Error creando estado de reserva de zona común")
+			}
+		}
+	}
+
 	uc.logger.Info().Msg("✅ Datos iniciales sembrados correctamente")
 	return nil
 }
@@ -259,3 +345,5 @@ func (uc *MigrationUseCase) createHorizontalPropertySchema() error {
 	uc.logger.Info().Msg("✅ Esquema horizontal_property creado correctamente")
 	return nil
 }
+
+func intPtr(n int) *int { return &n }

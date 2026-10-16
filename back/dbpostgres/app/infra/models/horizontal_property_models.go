@@ -942,9 +942,9 @@ func (CommonAreaType) TableName() string {
 // ───────────────────────────────────────────
 type CommonArea struct {
 	gorm.Model
-	BusinessID           uint     `gorm:"not null;index;uniqueIndex:idx_business_area_name,priority:1"`
+	BusinessID           uint     `gorm:"not null;index;uniqueIndex:idx_business_area_name_active,priority:1,where:deleted_at IS NULL"`
 	CommonAreaTypeID     uint     `gorm:"not null;index"`
-	Name                 string   `gorm:"size:150;not null;uniqueIndex:idx_business_area_name,priority:2"` // Nombre específico (ej: "Piscina Principal", "Gimnasio Piso 2")
+	Name                 string   `gorm:"size:150;not null;uniqueIndex:idx_business_area_name_active,priority:2"` // Nombre específico (ej: "Piscina Principal", "Gimnasio Piso 2")
 	Description          string   `gorm:"size:1000"`
 	Location             string   `gorm:"size:255"` // Ubicación física (ej: "Piso 1, Bloque A")
 	MaxCapacity          int      `gorm:"not null"` // Capacidad máxima de personas
