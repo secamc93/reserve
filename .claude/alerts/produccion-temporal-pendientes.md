@@ -15,8 +15,10 @@ Elastic IP, auto-apagado diario 23:59 Bogotá). Al encender: `infra/scripts/rupu
       de negocio). Hasta entonces la imagen del frontend en ECR es de febrero y en producción el
       super admin no puede elegir negocio (selector vacío).
 - [ ] **Importante**: la propiedad "Tayazal de Suba" se creó con dirección provisional
-      "Suba, Bogotá D.C." y sin unidades (local y producción): completar dirección y cargar
-      unidades con coeficientes antes de la asamblea.
+      "Suba, Bogotá D.C.": completar la dirección. (2026-10-15: unidades, propietarios y
+      coeficientes reales cargados en local y producción, ver bitácora 2026-10-15.)
+- [ ] Importante: producción no corre el migrador en el deploy; después de cada cambio de esquema
+      hay que correr `back/dbpostgres` contra la BD de prod (ver bitácora 2026-10-15).
 - [ ] Importante: decidir el destino de la EC2 al terminar el uso (terminar = se pierde la BD,
       que no tiene backup).
 - [ ] Deseable: si va a durar, backup de la BD (pg_dump a S3) antes de cualquier apagado definitivo.

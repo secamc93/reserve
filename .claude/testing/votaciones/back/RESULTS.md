@@ -20,3 +20,18 @@ Hallazgos que **no** eran bugs (quedan documentados): la regla de asistencia (co
 solo votan unidades con asistencia) y que `voting-group/votings` y `units-with-residents` piden
 el token del residente (después de `validate-resident`), no el del QR.
 
+
+## 2026-10-15 — Apoderados por registro y contraseñas de voto (local, BD con Tayazal real)
+
+Grupo 254, lista 506, casa 126 (rama `feat/asistencia-apoderados-contrasenas`), por API:
+
+| Paso | Resultado |
+|------|-----------|
+| `PUT /attendance/records/:id/proxy` (Laura Mateus, doc 52123456) | OK: `attended_as_proxy=true`, resumen 1 asistente / 1 como apoderado |
+| Mismo registro con `?business_id=2` | OK: 404 |
+| `POST .../credentials/generate` dos veces | OK: 194 generadas; la segunda 0 (no duplica) |
+| `GET .../credentials` página de 3 | OK: total 194, ordenadas por número, con "Dúplex" y propietario |
+| `GET .../credentials?business_id=2` | OK: 404 |
+| `voting-context` | OK: `require_password=true` |
+| `validate-resident` sin contraseña / incorrecta / correcta en minúsculas | OK: 400 / 403 / 200 (casa 126, CAMACHO MATEUS SEBASTIAN) |
+| `POST /public/vote` con la casa presente por apoderado | OK: 201 |
