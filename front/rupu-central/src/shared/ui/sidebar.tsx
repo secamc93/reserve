@@ -20,7 +20,7 @@ import { buildNavItems, resolveBusinessHref } from '@/shared/utils/navigation';
 import { MobileNav } from './mobile-nav';
 import { useActiveProperty } from './use-active-property';
 import { useAccessibleProperties } from './use-accessible-properties';
-import { canSwitchProperty } from '../utils/properties';
+import { canSwitchProperty, hasActiveProperty } from '../utils/properties';
 
 interface SidebarProps {
   user: {
@@ -61,8 +61,10 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
   const activeBizId = TokenStorage.getActiveBusiness();
   const typeConfig = activeType ? BUSINESS_TYPE_CONFIG[activeType] : null;
 
-  // Resolver {businessId} en los hrefs
-  const dynamicItems: SidebarItemConfig[] = (typeConfig?.sidebarItems || []).map(item => ({
+  // Los módulos de la propiedad solo aparecen con una propiedad elegida (si no, el layout lleva al
+  // selector). Resolver {businessId} en los hrefs.
+  const propertyItems = hasActiveProperty(activeBizId) ? typeConfig?.sidebarItems || [] : [];
+  const dynamicItems: SidebarItemConfig[] = propertyItems.map(item => ({
     ...item,
     href: resolveBusinessHref(item.href, activeBizId),
   }));
@@ -72,7 +74,7 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
 
   // Mismos módulos para la barra inferior y el menú de módulos del teléfono.
   const navItems = buildNavItems({
-    sidebarItems: typeConfig?.sidebarItems || [],
+    sidebarItems: propertyItems,
     activeBusinessId: activeBizId,
     canAccessIAM,
   });

@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ConsolidatedDashboard, useDashboardStats } from '@/services/modules/horizontal-properties/dashboard/ui';
 import { TokenStorage } from '@shared/config';
-import { Spinner, Button, PropertyPicker, useAccessibleProperties } from '@shared/ui';
+import { Spinner, Button, PropertyPicker, useAccessibleProperties, selectProperty } from '@shared/ui';
 import { usePaginationParams } from '@shared/ui/pagination';
 
 export default function PropertiesPage() {
@@ -29,12 +29,12 @@ export default function PropertiesPage() {
     setActiveId(TokenStorage.getActiveBusiness());
   }, [router]);
 
-  // Un usuario con una sola propiedad no tiene nada que elegir.
+  // Con una sola propiedad (también el super admin) no hay nada que elegir: se entra directo.
   useEffect(() => {
-    if (isSuperAdmin === false && !loadingProperties && properties.length === 1) {
-      router.replace(`/properties/${properties[0].id}`);
+    if (isSuperAdmin !== null && !loadingProperties && properties.length === 1) {
+      selectProperty(properties[0]);
     }
-  }, [isSuperAdmin, loadingProperties, properties, router]);
+  }, [isSuperAdmin, loadingProperties, properties]);
 
   const shouldShowDashboard = isSuperAdmin === true;
   const { page: currentPage, pageSize } = usePaginationParams();

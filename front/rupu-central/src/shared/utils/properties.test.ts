@@ -40,3 +40,18 @@ describe('loginDestination', () => {
     expect(loginDestination({ isSuperAdmin: false, propertyIds: [] })).toEqual({ kind: 'none', href: '/home' });
   });
 });
+
+describe('propiedad activa obligatoria', () => {
+  it('hasActiveProperty: 0 o null es "sin elegir"', async () => {
+    const { hasActiveProperty } = await import('./properties');
+    expect(hasActiveProperty(0)).toBe(false);
+    expect(hasActiveProperty(null)).toBe(false);
+    expect(hasActiveProperty(7)).toBe(true);
+  });
+  it('mustPickProperty: sin propiedad solo se permite el selector', async () => {
+    const { mustPickProperty } = await import('./properties');
+    expect(mustPickProperty('/properties/voting-groups', 0)).toBe(true);
+    expect(mustPickProperty('/properties', 0)).toBe(false);
+    expect(mustPickProperty('/properties/1/voting-groups', 1)).toBe(false);
+  });
+});

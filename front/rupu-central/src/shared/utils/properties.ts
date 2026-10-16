@@ -63,3 +63,18 @@ export function loginDestination(input: { isSuperAdmin: boolean; propertyIds: re
   }
   return { kind: 'none', href: '/home' };
 }
+
+/** Hay una propiedad elegida (el super admin sin elegir queda con 0). */
+export const hasActiveProperty = (activeId: number | null | undefined): activeId is number =>
+  typeof activeId === 'number' && activeId > 0;
+
+/** Ruta del selector de propiedad. */
+export const PROPERTY_PICKER_PATH = '/properties';
+
+/**
+ * Sin propiedad elegida solo se puede estar en el selector: el resto de páginas de la propiedad
+ * (y su menú) no tienen sentido sin ella.
+ */
+export function mustPickProperty(pathname: string, activeId: number | null | undefined): boolean {
+  return !hasActiveProperty(activeId) && pathname !== PROPERTY_PICKER_PATH;
+}

@@ -4,14 +4,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner, Alert, MobileTopBar, useActiveProperty } from '@shared/ui';
-import { HORIZONTAL_PROPERTY_TYPE } from '@/shared/utils/properties';
+import { HORIZONTAL_PROPERTY_TYPE, PROPERTY_PICKER_PATH, mustPickProperty } from '@/shared/utils/properties';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 
 export default function PropertyHorizontalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname() ?? '';
   const [user, setUser] = useState<{ userId: string; name: string; email: string; role: string; avatarUrl?: string; is_super_admin?: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
   const { error: permissionsError } = usePermissions();
@@ -26,12 +27,15 @@ export default function PropertyHorizontalLayout({ children }: { children: React
     // El producto es solo de propiedad horizontal: no hay selector de módulo.
     if (TokenStorage.getActiveBusinessType() !== HORIZONTAL_PROPERTY_TYPE) TokenStorage.setActiveBusinessType(HORIZONTAL_PROPERTY_TYPE);
 
+    // Sin propiedad elegida, primero hay que elegirla (super admin o usuario con varias).
+    if (mustPickProperty(pathname, TokenStorage.getActiveBusiness())) { router.replace(PROPERTY_PICKER_PATH); return; }
+
     setUser({
       userId: String(userData.id), name: userData.name, email: userData.email,
       role: userData.role || '', avatarUrl: userData.avatarUrl, is_super_admin: userData.is_super_admin,
     });
     setLoading(false);
-  }, [router]);
+  }, [router, pathname]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="xl" color="primary" text="Cargando..." /></div>;
 
