@@ -11,6 +11,8 @@ export interface ValidateResidentInput {
   propertyUnitId: number;
   /** Solo si el grupo exige documento (`require_document_validation`). */
   dni?: string;
+  /** Solo si el grupo tiene contraseñas generadas (`require_password`). */
+  password?: string;
 }
 
 export interface ValidateResidentResult {
@@ -29,10 +31,11 @@ export interface ValidateResidentResult {
     group_id?: number;
     is_group_token?: boolean;
     require_document_validation?: boolean;
+    require_password?: boolean;
   };
   error?: string;
   message?: string;
-  /** Código HTTP (400 documento requerido, 404 no coincide, 403 inactivo, 401 enlace vencido). */
+  /** Código HTTP (400 documento/contraseña requerida, 404 no coincide, 403 inactivo o contraseña incorrecta, 401 enlace vencido). */
   status?: number;
 }
 
@@ -42,10 +45,12 @@ export async function validateResidentAction(
   try {
     const url = `${env.API_BASE_URL}/public/validate-resident`;
     const dni = input.dni?.trim();
+    const password = input.password?.trim();
     console.log('🔐 [ACTION] validateResident - Request:', {
       url,
       propertyUnitId: input.propertyUnitId,
-      withDocument: !!dni
+      withDocument: !!dni,
+      withPassword: !!password
     });
 
     const response = await fetch(url, {
@@ -54,7 +59,11 @@ export async function validateResidentAction(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${input.publicToken}`
       },
-      body: JSON.stringify(dni ? { property_unit_id: input.propertyUnitId, dni } : { property_unit_id: input.propertyUnitId })
+      body: JSON.stringify({
+        property_unit_id: input.propertyUnitId,
+        ...(dni ? { dni } : {}),
+        ...(password ? { password } : {}),
+      })
     });
 
     const result = await response.json();

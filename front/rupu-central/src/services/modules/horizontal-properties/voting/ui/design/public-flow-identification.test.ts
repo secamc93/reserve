@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { identificationError, requiresDocument, validateResidentFailure, validateResidentPayload } from './public-flow';
+import { identificationError, normalizePassword, requiresDocument, requiresPassword, validateResidentFailure, validateResidentPayload } from './public-flow';
 
 describe('requiresDocument (configuración del grupo)', () => {
   it('true si el contexto o el grupo lo exigen', () => {
@@ -60,5 +60,38 @@ describe('validateResidentFailure', () => {
   });
   it('otros: usa el mensaje del back', () => {
     expect(validateResidentFailure(500, 'Falla X', true).message).toMatch(/^Falla X\./);
+  });
+});
+
+describe('contraseña de la credencial impresa', () => {
+  it('requiresPassword solo con require_password = true', () => {
+    expect(requiresPassword({ require_password: true })).toBe(true);
+    expect(requiresPassword({ require_password: false })).toBe(false);
+    expect(requiresPassword({})).toBe(false);
+    expect(requiresPassword(null)).toBe(false);
+  });
+  it('normalizePassword quita espacios y pasa a mayúsculas', () => {
+    expect(normalizePassword(' k7m 2qx ')).toBe('K7M2QX');
+  });
+  it('identificationError exige la contraseña si el grupo la pide', () => {
+    expect(identificationError({ hasUnit: true, dni: '', requireDocument: false, password: ' ', requirePassword: true })).toBe(
+      'Escribe la contraseña de tu credencial',
+    );
+    expect(identificationError({ hasUnit: true, dni: '', requireDocument: false, password: 'K7M2QX', requirePassword: true })).toBeNull();
+  });
+  it('validateResidentPayload envía la contraseña solo si el grupo la exige', () => {
+    expect(validateResidentPayload({ propertyUnitId: 5, dni: '', requireDocument: false, password: 'k7m2qx', requirePassword: true })).toEqual({
+      propertyUnitId: 5,
+      password: 'K7M2QX',
+    });
+    expect(validateResidentPayload({ propertyUnitId: 5, dni: '', requireDocument: false, password: 'k7m2qx', requirePassword: false })).toEqual({
+      propertyUnitId: 5,
+    });
+  });
+  it('validateResidentFailure distingue contraseña requerida e incorrecta', () => {
+    expect(validateResidentFailure(400, 'Contraseña requerida', false)).toMatchObject({ requirePassword: true });
+    const wrong = validateResidentFailure(403, 'Contraseña incorrecta', false);
+    expect(wrong.requirePassword).toBe(true);
+    expect(wrong.message).toMatch(/no coincide con la de tu unidad/);
   });
 });

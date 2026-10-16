@@ -104,4 +104,57 @@ describe('R1 · identificación según la configuración del grupo', () => {
     expect(await screen.findByText(/Revisa que la unidad y el documento coincidan/)).toBeInTheDocument();
     expect(onSuccess).not.toHaveBeenCalled();
   });
+
+  it('grupo CON contraseñas: pide la contraseña de la credencial y la envía en mayúsculas', async () => {
+    const user = userEvent.setup();
+    const onSuccess = vi.fn();
+    actions.validateResidentAction.mockResolvedValue(okResult);
+    render(
+      <PublicVotingValidation
+        publicToken="PT"
+        votingContext={{ ...context(false), require_password: true }}
+        onSuccess={onSuccess}
+        onError={vi.fn()}
+      />,
+    );
+
+    await chooseUnit(user);
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    expect(await screen.findByText('Escribe la contraseña de tu credencial')).toBeInTheDocument();
+    expect(actions.validateResidentAction).not.toHaveBeenCalled();
+
+    await user.type(screen.getByLabelText('Contraseña de votación'), 'k7m 2qx');
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(actions.validateResidentAction).toHaveBeenCalledWith({ publicToken: 'PT', propertyUnitId: 41, password: 'K7M2QX' });
+  });
+
+  it('contraseña incorrecta (403): mensaje claro y no avanza', async () => {
+    const user = userEvent.setup();
+    const onSuccess = vi.fn();
+    actions.validateResidentAction.mockResolvedValue({ success: false, status: 403, message: 'Contraseña incorrecta' });
+    render(
+      <PublicVotingValidation
+        publicToken="PT"
+        votingContext={{ ...context(false), require_password: true }}
+        onSuccess={onSuccess}
+        onError={vi.fn()}
+      />,
+    );
+    await chooseUnit(user);
+    await user.type(screen.getByLabelText('Contraseña de votación'), 'AAAAAA');
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    expect(await screen.findByText(/no coincide con la de tu unidad/)).toBeInTheDocument();
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('si el back responde 400 "Contraseña requerida", aparece el campo de contraseña', async () => {
+    const user = userEvent.setup();
+    actions.validateResidentAction.mockResolvedValueOnce({ success: false, status: 400, message: 'Contraseña requerida' });
+    render(<PublicVotingValidation publicToken="PT" votingContext={context(false)} onSuccess={vi.fn()} onError={vi.fn()} />);
+    expect(screen.queryByLabelText('Contraseña de votación')).not.toBeInTheDocument();
+    await chooseUnit(user);
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    expect(await screen.findByLabelText('Contraseña de votación')).toBeInTheDocument();
+  });
 });

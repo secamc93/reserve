@@ -18,3 +18,4 @@ export * from './get-proxies-by-unit.action';
 export * from './mark-attendance-simple.action';
 export * from './unmark-attendance-simple.action';
 export * from './list-attendance-lists.action';
+export * from './record-proxy.action';

@@ -136,20 +136,52 @@ export function requiresDocument(context: DocumentRequirementSource | null | und
   return context?.require_document_validation === true || context?.voting_group?.require_document_validation === true;
 }
 
+/**
+ * ¿El grupo exige la contraseña de la credencial impresa? El back la exige desde que se generan
+ * contraseñas para el grupo (`require_password` en voting-context).
+ */
+export function requiresPassword(context: { require_password?: boolean | null } | null | undefined): boolean {
+  return context?.require_password === true;
+}
+
+/** Contraseña como se guarda: sin espacios y en mayúsculas. */
+export const normalizePassword = (password: string) => password.replace(/\s+/g, '').toUpperCase();
+
 /** Validación local de R1 antes de llamar al back; null si se puede continuar. */
-export function identificationError(input: { hasUnit: boolean; dni: string; requireDocument: boolean }): string | null {
+export function identificationError(input: {
+  hasUnit: boolean;
+  dni: string;
+  requireDocument: boolean;
+  password?: string;
+  requirePassword?: boolean;
+}): string | null {
   if (!input.hasUnit) return 'Elige tu unidad de la lista';
   if (input.requireDocument && !input.dni.trim()) return 'Escribe tu documento de identidad';
+  if (input.requirePassword && !normalizePassword(input.password ?? '')) return 'Escribe la contraseña de tu credencial';
   return null;
 }
 
-/** Cuerpo de `POST /public/validate-resident`: el documento solo viaja si el grupo lo exige. */
-export function validateResidentPayload(input: { propertyUnitId: number; dni: string; requireDocument: boolean }): {
+/**
+ * Cuerpo de `POST /public/validate-resident`: el documento y la contraseña solo viajan si el
+ * grupo los exige.
+ */
+export function validateResidentPayload(input: {
+  propertyUnitId: number;
+  dni: string;
+  requireDocument: boolean;
+  password?: string;
+  requirePassword?: boolean;
+}): {
   propertyUnitId: number;
   dni?: string;
+  password?: string;
 } {
+  const payload: { propertyUnitId: number; dni?: string; password?: string } = { propertyUnitId: input.propertyUnitId };
   const dni = input.dni.trim();
-  return input.requireDocument && dni ? { propertyUnitId: input.propertyUnitId, dni } : { propertyUnitId: input.propertyUnitId };
+  if (input.requireDocument && dni) payload.dni = dni;
+  const password = normalizePassword(input.password ?? '');
+  if (input.requirePassword && password) payload.password = password;
+  return payload;
 }
 
 /**
@@ -164,8 +196,18 @@ export function validateResidentFailure(
   status: number | undefined,
   backendMessage: string | null | undefined,
   sentDocument: boolean
-): { message: string; requireDocument: boolean } {
+): { message: string; requireDocument: boolean; requirePassword?: boolean } {
   const message = (backendMessage || '').toLowerCase();
+  if (message.includes('contraseña')) {
+    if (status === 400) {
+      return { message: 'Escribe la contraseña de tu credencial impresa.', requireDocument: sentDocument, requirePassword: true };
+    }
+    return {
+      message: 'La contraseña no coincide con la de tu unidad. Revisa tu credencial impresa.',
+      requireDocument: sentDocument,
+      requirePassword: true,
+    };
+  }
   if (status === 400 && !sentDocument && message.includes('documento')) {
     return { message: 'Este grupo exige tu documento de identidad. Escríbelo para continuar.', requireDocument: true };
   }

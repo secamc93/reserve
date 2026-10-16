@@ -29,3 +29,4 @@ export * from './get-unvoted-units.action';
 export * from './reset-voting.action';
 export * from './get-previous-voted-units.action';
 
+export * from './voting-credentials.action';
