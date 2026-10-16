@@ -9,4 +9,5 @@ var (
 	ErrPropertyUnitHasResidents   = errors.New("no se puede eliminar una unidad que tiene residentes registrados")
 	ErrPropertyUnitRequired       = errors.New("la unidad de propiedad es requerida")
 	ErrBusinessIDRequired         = errors.New("el business_id es requerido")
+	ErrInvalidImportFile          = errors.New("archivo de importación no válido")
 )

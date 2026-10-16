@@ -145,6 +145,7 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 	if filters.Dni != "" {
 		countQuery = countQuery.Where("residents.dni ILIKE ?", "%"+filters.Dni+"%")
 	}
+	countQuery = applyListExtraFilters(countQuery, filters)
 	if err := countQuery.Distinct("residents.id").Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("error contando: %w", err)
 	}
@@ -160,6 +161,7 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 		PropertyUnitNumber string
 		PropertyUnitBlock  string
 		Dni                string
+		Since              *time.Time
 		IsMainResident     bool
 	}
 	rows := []row{}
@@ -168,7 +170,8 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 			"COALESCE(MAX(CASE WHEN resident_units.is_main_resident THEN property_units.number END), MIN(property_units.number)) as property_unit_number, "+
 			"COALESCE(BOOL_OR(resident_units.is_main_resident), FALSE) as is_main_resident, "+
 			"COALESCE(residents.dni, '') as dni, "+
-			"COALESCE((ARRAY_AGG(property_units.block ORDER BY resident_units.is_main_resident DESC, property_units.number ASC))[1], '') as property_unit_block").
+			"COALESCE((ARRAY_AGG(property_units.block ORDER BY resident_units.is_main_resident DESC, property_units.number ASC))[1], '') as property_unit_block, "+
+			"COALESCE(MIN(resident_units.move_in_date), residents.move_in_date, residents.created_at) as since").
 		Joins("JOIN horizontal_property.resident_units ON resident_units.resident_id = residents.id").
 		Joins("JOIN horizontal_property.property_units ON property_units.id = resident_units.property_unit_id").
 		Joins("JOIN horizontal_property.resident_types ON resident_types.id = residents.resident_type_id").
@@ -194,6 +197,7 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 	if filters.Dni != "" {
 		query = query.Where("residents.dni ILIKE ?", "%"+filters.Dni+"%")
 	}
+	query = applyListExtraFilters(query, filters)
 	offset := (filters.Page - 1) * filters.PageSize
 	if err := query.Group("residents.id, resident_types.name").Order("residents.name ASC").Limit(filters.PageSize).Offset(offset).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("error listando: %w", err)
@@ -201,7 +205,7 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 	residents := make([]domain.ResidentListDTO, len(rows))
 	for i, rw := range rows {
 		residents[i] = domain.ResidentListDTO{ID: rw.ID, PropertyUnitNumber: rw.PropertyUnitNumber,
-			PropertyUnitBlock: rw.PropertyUnitBlock, Dni: rw.Dni,
+			PropertyUnitBlock: rw.PropertyUnitBlock, Dni: rw.Dni, Since: rw.Since,
 			ResidentTypeName: rw.ResidentTypeName, Name: rw.Name, Email: rw.Email, Phone: rw.Phone,
 			IsMainResident: rw.IsMainResident, IsActive: rw.IsActive}
 	}
@@ -551,4 +555,24 @@ func (r *ResidentRepository) CreateResidentUnitsInBatch(ctx context.Context, piv
 		}
 		return nil
 	})
+}
+
+// applyListExtraFilters aplica la búsqueda general (nombre, documento o número de unidad), el
+// bloque de la unidad y el filtro de correo. La consulta ya une resident_units y property_units.
+func applyListExtraFilters(q *gorm.DB, filters domain.ResidentFiltersDTO) *gorm.DB {
+	if term := strings.TrimSpace(filters.Query); term != "" {
+		like := "%" + term + "%"
+		q = q.Where("(residents.name ILIKE ? OR residents.dni ILIKE ? OR property_units.number ILIKE ?)", like, like, like)
+	}
+	if filters.Block != "" {
+		q = q.Where("property_units.block = ?", filters.Block)
+	}
+	if filters.WithoutEmail != nil {
+		if *filters.WithoutEmail {
+			q = q.Where("COALESCE(residents.email, '') = ''")
+		} else {
+			q = q.Where("COALESCE(residents.email, '') <> ''")
+		}
+	}
+	return q
 }

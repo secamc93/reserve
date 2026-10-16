@@ -31,6 +31,10 @@ type PropertyUnitFiltersRequest struct {
 	Floor    *int   `form:"floor" example:"1"`
 	Block    string `form:"block" example:"A"`
 	IsActive *bool  `form:"is_active" example:"true"`
-	Page     int    `form:"page" example:"1"`
-	PageSize int    `form:"page_size" example:"10"`
+	// Q busca por número de unidad o nombre de un residente
+	Q                string `form:"q" example:"126"`
+	WithoutResidents *bool  `form:"without_residents" example:"true"`
+	GroupByBlock     bool   `form:"group_by_block" example:"true"`
+	Page             int    `form:"page" example:"1"`
+	PageSize         int    `form:"page_size" example:"10"`
 }

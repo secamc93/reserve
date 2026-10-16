@@ -54,6 +54,9 @@ func MapFiltersRequestToDTO(req request.ResidentFiltersRequest, businessID uint)
 		ResidentTypeID:     req.ResidentTypeID,
 		IsActive:           req.IsActive,
 		IsMainResident:     req.IsMainResident,
+		Query:              req.Q,
+		Block:              req.PropertyUnitBlock,
+		WithoutEmail:       req.WithoutEmail,
 		Page:               req.Page,
 		PageSize:           req.PageSize,
 	}
@@ -93,6 +96,7 @@ func MapPaginatedDTOToResponse(dto *domain.PaginatedResidentsDTO) response.Pagin
 			PropertyUnitNumber: res.PropertyUnitNumber,
 			PropertyUnitBlock:  res.PropertyUnitBlock,
 			Dni:                res.Dni,
+			Since:              res.Since,
 			ResidentTypeName:   res.ResidentTypeName,
 			Name:               res.Name,
 			Email:              res.Email,
@@ -116,6 +120,25 @@ func MapSummaryDTOToResponse(dto *domain.ResidentsSummaryDTO) response.Residents
 		types[i] = response.ResidentTypeCountResponse{ResidentTypeID: t.ResidentTypeID, Name: t.Name, Code: t.Code, Total: t.Total}
 	}
 	return response.ResidentsSummaryResponse{
-		Total: dto.Total, Active: dto.Active, Inactive: dto.Inactive, Main: dto.Main, Types: types,
+		Total: dto.Total, Active: dto.Active, Inactive: dto.Inactive, Main: dto.Main, WithoutEmail: dto.WithoutEmail, Types: types,
+	}
+}
+
+func MapOverviewDTOToResponse(dto *domain.ResidentOverviewDTO) response.ResidentOverviewResponse {
+	housemates := make([]response.HousemateResponse, len(dto.Housemates))
+	for i, h := range dto.Housemates {
+		housemates[i] = response.HousemateResponse{ID: h.ID, Name: h.Name, TypeName: h.TypeName, IsMain: h.IsMain}
+	}
+	activity := make([]response.ActivityResponse, len(dto.Activity))
+	for i, a := range dto.Activity {
+		activity[i] = response.ActivityResponse{Kind: a.Kind, Title: a.Title, Subtitle: a.Subtitle, At: a.At}
+	}
+	return response.ResidentOverviewResponse{
+		Stats: response.ResidentOverviewStatsResponse{
+			Visits30d: dto.Stats.Visits30d, PackagesPending: dto.Stats.PackagesPending, Reservations: dto.Stats.Reservations,
+			VotesCast: dto.Stats.VotesCast, VotesTotal: dto.Stats.VotesTotal,
+		},
+		Housemates: housemates,
+		Activity:   activity,
 	}
 }

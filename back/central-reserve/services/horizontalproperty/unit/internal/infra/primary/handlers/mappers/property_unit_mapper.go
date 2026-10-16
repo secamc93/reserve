@@ -38,14 +38,17 @@ func MapUpdateRequestToDTO(req request.UpdatePropertyUnitRequest) domain.UpdateP
 
 func MapFiltersRequestToDTO(req request.PropertyUnitFiltersRequest, businessID uint) domain.PropertyUnitFiltersDTO {
 	return domain.PropertyUnitFiltersDTO{
-		BusinessID: businessID,
-		Number:     req.Number,
-		UnitType:   req.UnitType,
-		Floor:      req.Floor,
-		Block:      req.Block,
-		IsActive:   req.IsActive,
-		Page:       req.Page,
-		PageSize:   req.PageSize,
+		BusinessID:       businessID,
+		Number:           req.Number,
+		UnitType:         req.UnitType,
+		Floor:            req.Floor,
+		Block:            req.Block,
+		IsActive:         req.IsActive,
+		Query:            req.Q,
+		WithoutResidents: req.WithoutResidents,
+		GroupByBlock:     req.GroupByBlock,
+		Page:             req.Page,
+		PageSize:         req.PageSize,
 	}
 }
 
@@ -96,6 +99,20 @@ func MapPaginatedDTOToResponse(dto *domain.PaginatedPropertyUnitsDTO) response.P
 	}
 }
 
+func MapImportPreviewToResponse(dto *domain.ImportPreviewDTO) response.ImportPreviewResponse {
+	rows := make([]response.ImportRowResponse, len(dto.Rows))
+	for i, r := range dto.Rows {
+		rows[i] = response.ImportRowResponse{
+			Row: r.Row, Number: r.Number, Block: r.Block, Floor: r.Floor, UnitType: r.UnitType,
+			Coefficient: r.Coefficient, Status: r.Status, Message: r.Message, DuplicateOf: r.DuplicateOf,
+		}
+	}
+	return response.ImportPreviewResponse{
+		Columns: dto.Columns, TotalRows: len(dto.Rows), Ready: dto.Ready, Existing: dto.Existing,
+		Errors: dto.Errors, CoefficientTotal: dto.CoefficientTotal, Rows: rows,
+	}
+}
+
 func MapSummaryDTOToResponse(dto *domain.PropertyUnitsSummaryDTO) response.PropertyUnitsSummaryResponse {
 	blocks := make([]response.PropertyUnitBlockSummaryResponse, len(dto.Blocks))
 	for i, b := range dto.Blocks {
@@ -108,6 +125,7 @@ func MapSummaryDTOToResponse(dto *domain.PropertyUnitsSummaryDTO) response.Prope
 		Active:         dto.Active,
 		WithResidents:  dto.WithResidents,
 		CoefficientSum: dto.CoefficientSum,
+		Commercial:     dto.Commercial,
 		Blocks:         blocks,
 	}
 }

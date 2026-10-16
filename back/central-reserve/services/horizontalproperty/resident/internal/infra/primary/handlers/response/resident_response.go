@@ -39,16 +39,17 @@ type ResidentResponse struct {
 }
 
 type ResidentListItemResponse struct {
-	ID                 uint   `json:"id" example:"1"`
-	PropertyUnitNumber string `json:"property_unit_number" example:"101"`
-	PropertyUnitBlock  string `json:"property_unit_block" example:"Casa"`
-	Dni                string `json:"dni" example:"12345678"`
-	ResidentTypeName   string `json:"resident_type_name" example:"Propietario"`
-	Name               string `json:"name" example:"Juan Pérez"`
-	Email              string `json:"email" example:"juan@email.com"`
-	Phone              string `json:"phone" example:"+573001234567"`
-	IsMainResident     bool   `json:"is_main_resident" example:"true"`
-	IsActive           bool   `json:"is_active" example:"true"`
+	ID                 uint       `json:"id" example:"1"`
+	PropertyUnitNumber string     `json:"property_unit_number" example:"101"`
+	PropertyUnitBlock  string     `json:"property_unit_block" example:"Casa"`
+	Dni                string     `json:"dni" example:"12345678"`
+	Since              *time.Time `json:"since,omitempty" example:"2021-03-01T00:00:00Z"`
+	ResidentTypeName   string     `json:"resident_type_name" example:"Propietario"`
+	Name               string     `json:"name" example:"Juan Pérez"`
+	Email              string     `json:"email" example:"juan@email.com"`
+	Phone              string     `json:"phone" example:"+573001234567"`
+	IsMainResident     bool       `json:"is_main_resident" example:"true"`
+	IsActive           bool       `json:"is_active" example:"true"`
 }
 
 type PaginatedResidentsResponse struct {
@@ -86,15 +87,50 @@ type ResidentTypeCountResponse struct {
 }
 
 type ResidentsSummaryResponse struct {
-	Total    int64                       `json:"total" example:"194"`
-	Active   int64                       `json:"active" example:"190"`
-	Inactive int64                       `json:"inactive" example:"4"`
-	Main     int64                       `json:"main" example:"180"`
-	Types    []ResidentTypeCountResponse `json:"types"`
+	Total        int64                       `json:"total" example:"194"`
+	Active       int64                       `json:"active" example:"190"`
+	Inactive     int64                       `json:"inactive" example:"4"`
+	Main         int64                       `json:"main" example:"180"`
+	WithoutEmail int64                       `json:"without_email" example:"20"`
+	Types        []ResidentTypeCountResponse `json:"types"`
 }
 
 type ResidentsSummarySuccess struct {
 	Success bool                     `json:"success"`
 	Message string                   `json:"message"`
 	Data    ResidentsSummaryResponse `json:"data"`
+}
+
+type ResidentOverviewStatsResponse struct {
+	Visits30d       int64 `json:"visits_30d" example:"3"`
+	PackagesPending int64 `json:"packages_pending" example:"1"`
+	Reservations    int64 `json:"reservations" example:"0"`
+	VotesCast       int64 `json:"votes_cast" example:"4"`
+	VotesTotal      int64 `json:"votes_total" example:"4"`
+}
+
+type HousemateResponse struct {
+	ID       uint   `json:"id" example:"2"`
+	Name     string `json:"name" example:"Luis Pérez"`
+	TypeName string `json:"type_name" example:"Familiar"`
+	IsMain   bool   `json:"is_main" example:"false"`
+}
+
+type ActivityResponse struct {
+	Kind     string    `json:"kind" example:"package"`
+	Title    string    `json:"title" example:"Paquete recibido"`
+	Subtitle string    `json:"subtitle" example:"Servientrega"`
+	At       time.Time `json:"at" example:"2026-10-10T15:00:00Z"`
+}
+
+type ResidentOverviewResponse struct {
+	Stats      ResidentOverviewStatsResponse `json:"stats"`
+	Housemates []HousemateResponse           `json:"housemates"`
+	Activity   []ActivityResponse            `json:"activity"`
+}
+
+type ResidentOverviewSuccess struct {
+	Success bool                     `json:"success"`
+	Message string                   `json:"message"`
+	Data    ResidentOverviewResponse `json:"data"`
 }

@@ -58,6 +58,7 @@ type PropertyUnitsSummaryResponse struct {
 	Active         int64                              `json:"active" example:"194"`
 	WithResidents  int64                              `json:"with_residents" example:"180"`
 	CoefficientSum float64                            `json:"coefficient_sum" example:"100"`
+	Commercial     int64                              `json:"commercial" example:"0"`
 	Blocks         []PropertyUnitBlockSummaryResponse `json:"blocks"`
 }
 
@@ -73,3 +74,25 @@ type PaginatedPropertyUnitsResponse struct {
 type PropertyUnitSuccess = SuccessResponse[PropertyUnitResponse]
 type PropertyUnitsSuccess = SuccessResponse[PaginatedPropertyUnitsResponse]
 type PropertyUnitsSummarySuccess = SuccessResponse[PropertyUnitsSummaryResponse]
+
+type ImportRowResponse struct {
+	Row         int      `json:"row" example:"2"`
+	Number      string   `json:"number" example:"126"`
+	Block       string   `json:"block" example:"Casa"`
+	Floor       *int     `json:"floor"`
+	UnitType    string   `json:"unit_type" example:"house"`
+	Coefficient *float64 `json:"coefficient" example:"0.503"`
+	Status      string   `json:"status" example:"ready"`
+	Message     string   `json:"message" example:""`
+	DuplicateOf int      `json:"duplicate_of,omitempty" example:"0"`
+}
+
+type ImportPreviewResponse struct {
+	Columns          int                 `json:"columns" example:"5"`
+	TotalRows        int                 `json:"total_rows" example:"120"`
+	Ready            int                 `json:"ready" example:"117"`
+	Existing         int                 `json:"existing" example:"0"`
+	Errors           int                 `json:"errors" example:"3"`
+	CoefficientTotal float64             `json:"coefficient_total" example:"99.91"`
+	Rows             []ImportRowResponse `json:"rows"`
+}

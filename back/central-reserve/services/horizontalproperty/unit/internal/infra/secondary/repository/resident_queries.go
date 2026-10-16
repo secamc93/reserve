@@ -57,3 +57,9 @@ func (r *PropertyUnitRepository) countUnitsWithResidents(ctx context.Context, bu
 	}
 	return count, nil
 }
+
+// unitHasResidentSQL abre un EXISTS (sin cerrar) sobre los residentes vigentes de la unidad
+// de la fila (property_units). Quien lo usa agrega condiciones sobre `r` y cierra el paréntesis.
+const unitHasResidentSQL = "EXISTS (SELECT 1 FROM horizontal_property.resident_units ru " +
+	"JOIN horizontal_property.residents r ON r.id = ru.resident_id AND r.deleted_at IS NULL " +
+	"WHERE ru.property_unit_id = property_units.id AND ru.deleted_at IS NULL"

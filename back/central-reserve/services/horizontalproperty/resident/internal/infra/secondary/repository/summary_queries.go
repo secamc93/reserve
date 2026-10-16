@@ -12,14 +12,16 @@ import (
 // el listado) y los agrupa por tipo. Los tipos activos sin residentes vienen con total 0.
 func (r *ResidentRepository) GetResidentsSummary(ctx context.Context, businessID uint) (*domain.ResidentsSummaryDTO, error) {
 	var totals struct {
-		Total  int64
-		Active int64
-		Main   int64
+		Total        int64
+		Active       int64
+		Main         int64
+		WithoutEmail int64
 	}
 	if err := r.db.Conn(ctx).Model(&models.Resident{}).
 		Select("COUNT(DISTINCT residents.id) AS total, "+
 			"COUNT(DISTINCT residents.id) FILTER (WHERE residents.is_active) AS active, "+
-			"COUNT(DISTINCT residents.id) FILTER (WHERE resident_units.is_main_resident) AS main").
+			"COUNT(DISTINCT residents.id) FILTER (WHERE resident_units.is_main_resident) AS main, "+
+			"COUNT(DISTINCT residents.id) FILTER (WHERE COALESCE(residents.email, '') = '') AS without_email").
 		Joins("JOIN horizontal_property.resident_units ON resident_units.resident_id = residents.id").
 		Where("residents.business_id = ?", businessID).
 		Scan(&totals).Error; err != nil {
@@ -47,11 +49,12 @@ func (r *ResidentRepository) GetResidentsSummary(ctx context.Context, businessID
 	}
 
 	summary := &domain.ResidentsSummaryDTO{
-		Total:    totals.Total,
-		Active:   totals.Active,
-		Inactive: totals.Total - totals.Active,
-		Main:     totals.Main,
-		Types:    make([]domain.ResidentTypeCountDTO, len(rows)),
+		Total:        totals.Total,
+		Active:       totals.Active,
+		Inactive:     totals.Total - totals.Active,
+		Main:         totals.Main,
+		WithoutEmail: totals.WithoutEmail,
+		Types:        make([]domain.ResidentTypeCountDTO, len(rows)),
 	}
 	for i, rw := range rows {
 		summary.Types[i] = domain.ResidentTypeCountDTO{ResidentTypeID: rw.ResidentTypeID, Name: rw.Name, Code: rw.Code, Total: rw.Total}

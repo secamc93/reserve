@@ -84,4 +84,33 @@ func TestPropertyUnitsSummaryOccupancyAndDeactivate_Integration(t *testing.T) {
 			t.Fatalf("el resto de campos no debía cambiar: %+v", got)
 		}
 	})
+
+	t.Run("búsqueda por número o residente, sin residente y agrupado por bloque", func(t *testing.T) {
+		list := func(f domain.PropertyUnitFiltersDTO) []string {
+			t.Helper()
+			f.BusinessID, f.Page, f.PageSize = hp.BusinessID, 1, 10
+			res, err := uc.ListPropertyUnits(ctx, f)
+			if err != nil {
+				t.Fatalf("ListPropertyUnits: %v", err)
+			}
+			out := []string{}
+			for _, u := range res.Units {
+				out = append(out, u.Block+" "+u.Number)
+			}
+			return out
+		}
+		if got := list(domain.PropertyUnitFiltersDTO{Query: "luis"}); len(got) != 1 || got[0] != "Local 3" {
+			t.Fatalf("buscar por residente 'luis': %v", got)
+		}
+		if got := list(domain.PropertyUnitFiltersDTO{Query: "2"}); len(got) != 1 || got[0] != "Casa 2" {
+			t.Fatalf("buscar por número '2': %v", got)
+		}
+		yes := true
+		if got := list(domain.PropertyUnitFiltersDTO{WithoutResidents: &yes}); len(got) != 1 || got[0] != "Casa 2" {
+			t.Fatalf("sin residente: %v", got)
+		}
+		if got := list(domain.PropertyUnitFiltersDTO{GroupByBlock: true}); len(got) != 3 || got[0] != "Casa 1" || got[2] != "Local 3" {
+			t.Fatalf("agrupado por bloque: %v", got)
+		}
+	})
 }

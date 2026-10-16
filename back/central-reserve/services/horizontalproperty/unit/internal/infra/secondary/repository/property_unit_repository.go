@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 
 	"central_reserve/services/horizontalproperty/unit/internal/domain"
 	"central_reserve/shared/db"
@@ -80,10 +81,24 @@ func (r *PropertyUnitRepository) ListPropertyUnits(ctx context.Context, filters 
 	if filters.IsActive != nil {
 		query = query.Where("is_active = ?", *filters.IsActive)
 	}
+	if q := strings.TrimSpace(filters.Query); q != "" {
+		like := "%" + q + "%"
+		query = query.Where("(property_units.number ILIKE ? OR "+unitHasResidentSQL+" AND r.name ILIKE ?))", like, like)
+	}
+	if filters.WithoutResidents != nil {
+		if *filters.WithoutResidents {
+			query = query.Where("NOT " + unitHasResidentSQL + ")")
+		} else {
+			query = query.Where(unitHasResidentSQL + ")")
+		}
+	}
 	if err := query.Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("error contando: %w", err)
 	}
 	offset := (filters.Page - 1) * filters.PageSize
+	if filters.GroupByBlock {
+		query = query.Order("COALESCE(block, '') ASC")
+	}
 	if err := query.
 		Order("REGEXP_REPLACE(number, '[^0-9]', '', 'g') != '' DESC").
 		Order("REGEXP_REPLACE(number, '[0-9]+', '', 'g') ASC").

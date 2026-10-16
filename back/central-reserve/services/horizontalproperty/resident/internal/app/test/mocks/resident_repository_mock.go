@@ -3,6 +3,7 @@ package mocks
 import (
 	"central_reserve/services/horizontalproperty/resident/internal/domain"
 	"context"
+	"time"
 )
 
 // MockResidentRepository - Mock del repositorio de residentes
@@ -22,6 +23,7 @@ type MockResidentRepository struct {
 	GetResidentIDsByDniFunc        func(ctx context.Context, businessID uint, dnis []string) (map[string]uint, error)
 	CreateResidentUnitsInBatchFunc func(ctx context.Context, pivots []domain.ResidentUnit) error
 	GetResidentsSummaryFunc        func(ctx context.Context, businessID uint) (*domain.ResidentsSummaryDTO, error)
+	GetResidentOverviewFunc        func(ctx context.Context, businessID, residentID uint, now time.Time) (*domain.ResidentOverviewDTO, error)
 }
 
 // CreateResident mock implementation
@@ -142,4 +144,12 @@ func (m *MockResidentRepository) GetResidentsSummary(ctx context.Context, busine
 		return m.GetResidentsSummaryFunc(ctx, businessID)
 	}
 	return &domain.ResidentsSummaryDTO{Types: []domain.ResidentTypeCountDTO{}}, nil
+}
+
+// GetResidentOverview mock implementation
+func (m *MockResidentRepository) GetResidentOverview(ctx context.Context, businessID, residentID uint, now time.Time) (*domain.ResidentOverviewDTO, error) {
+	if m.GetResidentOverviewFunc != nil {
+		return m.GetResidentOverviewFunc(ctx, businessID, residentID, now)
+	}
+	return &domain.ResidentOverviewDTO{}, nil
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/unit/internal/domain"
+	"central_reserve/services/horizontalproperty/unit/internal/infra/primary/handlers/mappers"
 	"central_reserve/shared/log"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +26,8 @@ import (
 //	@Security		BearerAuth
 //	@Param			business_id	formData	int		false	"ID del business (opcional para super admin)"
 //	@Param			file	formData	file	true	"Archivo Excel (.xlsx)"
+//	@Param			dry_run	formData	bool	false	"true: solo valida y devuelve el estado por fila (no guarda)"
+//	@Param			update_existing	formData	bool	false	"true: actualiza las unidades que ya existen con el mismo número"
 //	@Success		200		{object}	object
 //	@Failure		400		{object}	object
 //	@Failure		500		{object}	object
@@ -46,6 +50,9 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 	if isSuperAdmin {
 		// Super admin: puede usar el business_id del form o del token
 		businessIDParam := c.PostForm("business_id")
+		if businessIDParam == "" {
+			businessIDParam = c.Query("business_id")
+		}
 		if businessIDParam != "" {
 			businessIDFromForm, err := strconv.ParseUint(businessIDParam, 10, 32)
 			if err != nil {
@@ -173,11 +180,35 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 		}
 	}()
 
+	// Vista previa (dry_run=true): valida el archivo sin guardar y devuelve el estado por fila.
+	if formOrQueryBool(c, "dry_run") {
+		preview, err := h.useCase.PreviewPropertyUnitsImport(ctx, businessID, tempFile)
+		if err != nil {
+			status, message := http.StatusInternalServerError, "Error procesando el archivo Excel"
+			if errors.Is(err, domain.ErrInvalidImportFile) {
+				status, message = http.StatusBadRequest, "Archivo no válido"
+			}
+			h.logger.Error(ctx).Err(err).Uint("business_id", businessID).Msg("Error en la vista previa de importación")
+			c.JSON(status, gin.H{"success": false, "message": message, "error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": fmt.Sprintf("Vista previa: %d listas, %d existentes, %d con error", preview.Ready, preview.Existing, preview.Errors),
+			"data":    mappers.MapImportPreviewToResponse(preview),
+		})
+		return
+	}
+
 	// Llamar al use case para procesar el Excel
-	result, err := h.useCase.ImportPropertyUnitsFromExcel(ctx, businessID, tempFile)
+	opts := domain.ImportOptions{UpdateExisting: formOrQueryBool(c, "update_existing")}
+	result, err := h.useCase.ImportPropertyUnitsFromExcel(ctx, businessID, tempFile, opts)
 	if err != nil {
 		status := http.StatusInternalServerError
 		message := "Error procesando el archivo Excel"
+		if errors.Is(err, domain.ErrInvalidImportFile) {
+			status, message = http.StatusBadRequest, "Archivo no válido"
+		}
 
 		// Mapear errores específicos del caso de uso
 		switch err {
@@ -237,8 +268,18 @@ func (h *PropertyUnitHandler) ImportPropertyUnitsExcel(c *gin.Context) {
 		"data": gin.H{
 			"total":   result.Total,
 			"created": result.Created,
+			"updated": result.Updated,
 			"skipped": result.Skipped,
 			"errors":  result.Errors,
 		},
 	})
+}
+
+// formOrQueryBool lee un flag booleano del formulario multipart o de la query ("true" / "1").
+func formOrQueryBool(c *gin.Context, key string) bool {
+	v := c.PostForm(key)
+	if v == "" {
+		v = c.Query(key)
+	}
+	return v == "true" || v == "1"
 }
