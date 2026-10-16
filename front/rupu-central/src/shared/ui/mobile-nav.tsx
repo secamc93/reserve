@@ -4,8 +4,8 @@
  * - Barra inferior fija con el color primario de la propiedad: 2 accesos rápidos a cada lado
  *   (ver `pickBottomBarItems`) y en el centro el logo redondo de la propiedad activa.
  * - El logo abre el "Menú de módulos" (hoja inferior): nombre de la propiedad, usuario y rol,
- *   grilla con todos los módulos, `sheetExtra` (p. ej. el selector de propiedad), "Mi perfil",
- *   "Cambiar módulo" y "Cerrar sesión". Se cierra al navegar.
+ *   grilla con todos los módulos, `sheetExtra`, "Mi perfil",
+ *   "Cambiar propiedad" (solo si el usuario tiene dos o más) y "Cerrar sesión". Se cierra al navegar.
  */
 
 'use client';
@@ -31,7 +31,8 @@ export interface MobileNavProps {
   fallbackName?: string;
   user: MobileNavUser;
   onLogout: () => void;
-  onChangeModule: () => void;
+  /** Si viene, muestra "Cambiar propiedad" (el usuario tiene dos o más propiedades). */
+  onChangeProperty?: () => void;
   onOpenProfile?: () => void;
   /** Contenido adicional dentro del menú (p. ej. el selector de propiedad). */
   sheetExtra?: ReactNode;
@@ -51,7 +52,7 @@ export function MobileNav({
   fallbackName = 'Rupü',
   user,
   onLogout,
-  onChangeModule,
+  onChangeProperty,
   onOpenProfile,
   sheetExtra,
 }: MobileNavProps) {
@@ -147,7 +148,7 @@ export function MobileNav({
           </div>
         }
         footer={
-          <div className={`grid gap-1 p-2 ${onOpenProfile ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className={`grid gap-1 p-2 ${['grid-cols-1', 'grid-cols-2', 'grid-cols-3'][(onOpenProfile ? 1 : 0) + (onChangeProperty ? 1 : 0)]}`}>
             {onOpenProfile && (
               <button
                 type="button"
@@ -161,17 +162,19 @@ export function MobileNav({
                 Mi perfil
               </button>
             )}
+            {onChangeProperty && (
             <button
               type="button"
               onClick={() => {
                 setOpen(false);
-                onChangeModule();
+                onChangeProperty();
               }}
               className="flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
             >
               <NavIcon className="h-5 w-5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              Cambiar módulo
+              Cambiar propiedad
             </button>
+            )}
             <button
               type="button"
               onClick={() => {

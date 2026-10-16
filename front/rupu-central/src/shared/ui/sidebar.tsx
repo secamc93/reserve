@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { TokenStorage } from '@shared/config';
@@ -19,6 +19,8 @@ import type { SidebarItemConfig } from '@/shared/config/business-type-config';
 import { buildNavItems, resolveBusinessHref } from '@/shared/utils/navigation';
 import { MobileNav } from './mobile-nav';
 import { useActiveProperty } from './use-active-property';
+import { useAccessibleProperties } from './use-accessible-properties';
+import { canSwitchProperty } from '../utils/properties';
 
 interface SidebarProps {
   user: {
@@ -31,17 +33,18 @@ interface SidebarProps {
   } | null;
   /** Muestra la barra inferior en teléfono (< md) y oculta ahí la barra lateral. */
   mobileNav?: boolean;
-  /** Contenido extra del menú de módulos del teléfono (p. ej. el selector de propiedad). */
-  mobileSheetExtra?: ReactNode;
 }
 
-export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarProps) {
+export function Sidebar({ user, mobileNav = false }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const { hasResource } = usePermissions();
   const activeProperty = useActiveProperty(mobileNav);
+  const { properties } = useAccessibleProperties();
+  const showChangeProperty = canSwitchProperty(properties);
+  const goToPropertyPicker = () => router.push('/properties');
 
   const handleLogout = () => {
     TokenStorage.clearSession();
@@ -169,18 +172,21 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
             </ul>
           </nav>
 
-          {/* Footer: Cambiar modulo + Logout */}
+          {/* Footer: Cambiar propiedad (solo con dos o más) + Logout */}
           <div className="p-3 border-t border-white/10 space-y-1">
-            {/* Cambiar modulo */}
+            {showChangeProperty && (
             <button
-              onClick={() => router.push('/select-type')}
+              onClick={goToPropertyPicker}
+              title="Cambiar propiedad"
+              aria-label="Cambiar propiedad"
               className="w-full flex items-center gap-3 text-white/60 hover:bg-white/10 hover:text-white p-3 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
-              {sidebarExpanded && <span className="text-sm">Cambiar Modulo</span>}
+              {sidebarExpanded && <span className="text-sm">Cambiar propiedad</span>}
             </button>
+            )}
 
             {/* Logout */}
             <button
@@ -203,9 +209,8 @@ export function Sidebar({ user, mobileNav = false, mobileSheetExtra }: SidebarPr
         fallbackName={activeTypeName || undefined}
         user={user}
         onLogout={handleLogout}
-        onChangeModule={() => router.push('/select-type')}
+        onChangeProperty={showChangeProperty ? goToPropertyPicker : undefined}
         onOpenProfile={() => setShowUserModal(true)}
-        sheetExtra={mobileSheetExtra}
       />
       )}
 

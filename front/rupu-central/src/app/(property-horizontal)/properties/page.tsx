@@ -1,7 +1,8 @@
 /**
- * Pagina: Propiedades Horizontales
- * Si hay negocio seleccionado -> redirige al detalle de esa propiedad
- * Si no hay negocio seleccionado (super admin) -> muestra vista consolidada
+ * Página: elegir propiedad horizontal.
+ * Es a donde lleva "Cambiar propiedad" y el login cuando el usuario tiene varias propiedades.
+ * - Super admin: ve todas las propiedades y, debajo, el resumen consolidado.
+ * - Demás usuarios: sus propiedades; con una sola, entra directo a ella.
  */
 'use client';
 
@@ -9,38 +10,33 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ConsolidatedDashboard, useDashboardStats } from '@/services/modules/horizontal-properties/dashboard/ui';
 import { TokenStorage } from '@shared/config';
-import { Spinner, Button } from '@shared/ui';
+import { Spinner, Button, PropertyPicker, useAccessibleProperties } from '@shared/ui';
 import { usePaginationParams } from '@shared/ui/pagination';
 
 export default function PropertiesPage() {
   const router = useRouter();
-  const [shouldShowDashboard, setShouldShowDashboard] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const { properties, loading: loadingProperties, error: propertiesError } = useAccessibleProperties();
 
   useEffect(() => {
     const user = TokenStorage.getUser();
-    const activeBusiness = TokenStorage.getActiveBusiness();
-
     if (!user) {
       router.replace('/login');
       return;
     }
-
-    // Si hay un negocio seleccionado (no 0), ir directo al detalle
-    if (activeBusiness !== null && activeBusiness !== 0) {
-      router.replace(`/properties/${activeBusiness}`);
-      return;
-    }
-
-    // Si no es super admin y no tiene negocio, redirigir a login
-    if (!user.is_super_admin && (activeBusiness === null || activeBusiness === 0)) {
-      router.replace('/login');
-      return;
-    }
-
-    // Super admin sin negocio seleccionado: mostrar dashboard consolidado
-    setShouldShowDashboard(true);
+    setIsSuperAdmin(Boolean(user.is_super_admin));
+    setActiveId(TokenStorage.getActiveBusiness());
   }, [router]);
 
+  // Un usuario con una sola propiedad no tiene nada que elegir.
+  useEffect(() => {
+    if (isSuperAdmin === false && !loadingProperties && properties.length === 1) {
+      router.replace(`/properties/${properties[0].id}`);
+    }
+  }, [isSuperAdmin, loadingProperties, properties, router]);
+
+  const shouldShowDashboard = isSuperAdmin === true;
   const { page: currentPage, pageSize } = usePaginationParams();
   const { stats, loading, error, refresh } = useDashboardStats({
     businessId: undefined,
@@ -49,10 +45,10 @@ export default function PropertiesPage() {
     autoLoad: shouldShowDashboard,
   });
 
-  if (!shouldShowDashboard) {
+  if (isSuperAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="xl" text="Redirigiendo..." />
+        <Spinner size="xl" text="Cargando..." />
       </div>
     );
   }
@@ -61,12 +57,17 @@ export default function PropertiesPage() {
     <div className="p-3 md:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 md:mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Propiedad Horizontal</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Elige una propiedad</h1>
           <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">
-            Selecciona un negocio en el dropdown superior para ver su detalle
+            {isSuperAdmin ? 'Como super admin tienes acceso a todas las propiedades.' : 'Propiedades a las que tienes acceso.'}
           </p>
         </div>
 
+        <div className="mb-8">
+          <PropertyPicker properties={properties} loading={loadingProperties} error={propertiesError} activeId={activeId} />
+        </div>
+
+        {shouldShowDashboard && (
         <div className="mb-8">
           {loading && !stats ? (
             <div className="flex items-center justify-center py-12">
@@ -85,6 +86,7 @@ export default function PropertiesPage() {
             />
           ) : null}
         </div>
+        )}
       </div>
     </div>
   );

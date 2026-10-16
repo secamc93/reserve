@@ -6,8 +6,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
-import { Sidebar, Spinner, Alert, MobileTopBar, useActiveProperty, useMediaQuery, DESKTOP_MEDIA_QUERY } from '@shared/ui';
-import { BusinessDropdown } from '@/shared/ui/business-dropdown';
+import { Sidebar, Spinner, Alert, MobileTopBar, useActiveProperty } from '@shared/ui';
+import { HORIZONTAL_PROPERTY_TYPE } from '@/shared/utils/properties';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 
 export default function PropertyHorizontalLayout({ children }: { children: React.ReactNode }) {
@@ -16,9 +16,6 @@ export default function PropertyHorizontalLayout({ children }: { children: React
   const [loading, setLoading] = useState(true);
   const { error: permissionsError } = usePermissions();
   const activeProperty = useActiveProperty();
-  // El selector de propiedad se monta una sola vez: en la barra superior (escritorio) o en el
-  // menú de módulos (teléfono). Así no carga la lista dos veces.
-  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
 
   useEffect(() => {
     const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
@@ -26,9 +23,8 @@ export default function PropertyHorizontalLayout({ children }: { children: React
 
     if (!token || !userData) { router.push('/login'); return; }
 
-    // Guard: verificar tipo activo
-    const activeType = TokenStorage.getActiveBusinessType();
-    if (activeType && activeType !== 'horizontal_property') { router.push('/select-type'); return; }
+    // El producto es solo de propiedad horizontal: no hay selector de módulo.
+    if (TokenStorage.getActiveBusinessType() !== HORIZONTAL_PROPERTY_TYPE) TokenStorage.setActiveBusinessType(HORIZONTAL_PROPERTY_TYPE);
 
     setUser({
       userId: String(userData.id), name: userData.name, email: userData.email,
@@ -41,14 +37,19 @@ export default function PropertyHorizontalLayout({ children }: { children: React
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Teléfono (< md): sin barra lateral; barra inferior + menú de módulos (con el selector de propiedad). */}
-      <Sidebar user={user} mobileNav mobileSheetExtra={isDesktop ? undefined : <BusinessDropdown />} />
+      {/* Teléfono (< md): sin barra lateral; barra inferior + menú de módulos. La propiedad se cambia
+          con "Cambiar propiedad" (solo si el usuario tiene dos o más). */}
+      <Sidebar user={user} mobileNav />
       <main
         className="flex-1 min-w-0 min-h-screen bg-gray-50 transition-all duration-300 md:ml-20 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
         <MobileTopBar property={activeProperty} />
         <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-3 hidden md:flex items-center justify-end">
-          {isDesktop && <BusinessDropdown />}
+          {user?.is_super_admin && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-600 text-white">
+              SUPER ADMIN
+            </span>
+          )}
         </div>
         {permissionsError && <div className="p-4"><Alert type="error" onClose={() => {}}>{permissionsError}</Alert></div>}
         {children}
