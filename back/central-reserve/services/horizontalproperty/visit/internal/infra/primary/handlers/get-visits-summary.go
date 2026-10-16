@@ -57,13 +57,18 @@ func (h *VisitHandler) GetVisitsSummary(c *gin.Context) {
 	c.JSON(http.StatusOK, response.VisitsSummaryResponse{
 		Success: true,
 		Data: response.VisitsSummaryData{
-			Date:      day.Format("2006-01-02"),
-			Inside:    summary.Inside,
-			Expected:  summary.Expected,
-			Left:      summary.Left,
-			Cancelled: summary.Cancelled,
-			Total:     summary.Total,
-			InsideNow: summary.InsideNow,
+			Date:           day.Format("2006-01-02"),
+			Inside:         summary.Inside,
+			Expected:       summary.Expected,
+			Left:           summary.Left,
+			Cancelled:      summary.Cancelled,
+			Total:          summary.Total,
+			InsideNow:      summary.InsideNow,
+			Exceeded:       summary.Exceeded,
+			NextExpectedAt: summary.NextExpectedAt,
+			NextUnitNumber: summary.NextUnitNumber,
+			NextUnitBlock:  summary.NextUnitBlock,
+			AvgStayMinutes: summary.AvgStayMinutes,
 		},
 	})
 }

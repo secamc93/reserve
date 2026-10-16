@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,6 +22,13 @@ type useCaseSpy struct {
 	filters      domain.VisitFiltersDTO
 	summaryBizID uint
 	summaryDay   time.Time
+	vehicle      *domain.VisitorVehicle
+}
+
+func (s *useCaseSpy) CreateOrGetVisitorVehicle(ctx context.Context, v domain.VisitorVehicle) (*domain.VisitorVehicle, error) {
+	s.vehicle = &v
+	v.ID = 1
+	return &v, nil
 }
 
 func (s *useCaseSpy) ListVisits(ctx context.Context, f domain.VisitFiltersDTO) (*domain.PaginatedVisitsDTO, error) {
@@ -95,5 +103,24 @@ func TestVisitsSummary_UsuarioNormalNoPuedeConsultarOtroNegocio(t *testing.T) {
 	}
 	if spy.summaryDay.Format("2006-01-02") != "2026-10-15" {
 		t.Fatalf("día = %v", spy.summaryDay)
+	}
+}
+
+func TestCreateVisitorVehicle_UsuarioNormalRegistraEnSuNegocio(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	spy := &useCaseSpy{}
+	h := handlers.New(spy, mocks.NewMockLogger())
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/horizontal-properties/visits/vehicles?business_id=99", strings.NewReader(`{"visitor_id":5,"plate":"KJM842"}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Set("auth_info", &middleware.AuthInfo{BusinessID: 7})
+	c.Set("business_id", uint(7))
+	h.CreateVisitorVehicle(c)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", w.Code, w.Body.String())
+	}
+	if spy.vehicle.BusinessID != 7 {
+		t.Fatalf("registró en el negocio %d; debía ser el del token (7)", spy.vehicle.BusinessID)
 	}
 }

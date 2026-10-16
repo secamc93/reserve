@@ -13,6 +13,7 @@ type MockVisitorRepository struct {
 	CreateVisitorFunc      func(ctx context.Context, visitor *domain.Visitor) (*domain.Visitor, error)
 	GetVisitorByIDFunc     func(ctx context.Context, id uint) (*domain.Visitor, error)
 	UpdateVisitorFunc      func(ctx context.Context, visitor *domain.Visitor) (*domain.Visitor, error)
+	UpsertVehicleFunc      func(ctx context.Context, vehicle *domain.VisitorVehicle) (*domain.VisitorVehicle, error)
 }
 
 func (m *MockVisitorRepository) FindByDNI(ctx context.Context, businessID *uint, dni string) (*domain.Visitor, error) {
@@ -48,4 +49,11 @@ func (m *MockVisitorRepository) UpdateVisitor(ctx context.Context, visitor *doma
 		return m.UpdateVisitorFunc(ctx, visitor)
 	}
 	return nil, nil
+}
+
+func (m *MockVisitorRepository) UpsertVehicle(ctx context.Context, vehicle *domain.VisitorVehicle) (*domain.VisitorVehicle, error) {
+	if m.UpsertVehicleFunc != nil {
+		return m.UpsertVehicleFunc(ctx, vehicle)
+	}
+	return vehicle, nil
 }

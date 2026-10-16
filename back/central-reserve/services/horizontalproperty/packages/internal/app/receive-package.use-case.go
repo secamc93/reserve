@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
@@ -21,9 +22,8 @@ func (uc *packageUseCase) ReceivePackage(ctx context.Context, dto domain.CreateP
 	if dto.Carrier == "" {
 		return nil, fmt.Errorf("carrier es requerido")
 	}
-	if dto.TrackingNumber == "" {
-		return nil, fmt.Errorf("tracking_number es requerido")
-	}
+	// La guía es opcional (sobres, domicilios sin guía); el QR se arma con la unidad si falta.
+	dto.TrackingNumber = strings.TrimSpace(dto.TrackingNumber)
 
 	// Si business_id es 0 (super admin), obtener el business_id desde la property_unit
 	businessID := dto.BusinessID
@@ -46,7 +46,11 @@ func (uc *packageUseCase) ReceivePackage(ctx context.Context, dto domain.CreateP
 	}
 
 	// Generar código QR único
-	qrCode := generateQRCode(dto.TrackingNumber)
+	qrRef := dto.TrackingNumber
+	if qrRef == "" {
+		qrRef = fmt.Sprintf("U%d", dto.PropertyUnitID)
+	}
+	qrCode := generateQRCode(qrRef)
 
 	now := time.Now()
 

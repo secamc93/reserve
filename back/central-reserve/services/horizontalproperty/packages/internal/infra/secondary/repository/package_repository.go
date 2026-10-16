@@ -229,6 +229,9 @@ func applyPackageFilters(q *gorm.DB, filters domain.PackageFiltersDTO) *gorm.DB 
 	if codes, ok := domain.PackageStatusGroups[filters.StatusGroup]; ok {
 		q = q.Where("package_statuses.code IN ?", codes)
 	}
+	if filters.DeliveredSince != nil {
+		q = q.Where("packages.delivered_at >= ?", *filters.DeliveredSince)
+	}
 	if filters.StartDate != nil {
 		q = q.Where("packages.created_at >= ?", *filters.StartDate)
 	}

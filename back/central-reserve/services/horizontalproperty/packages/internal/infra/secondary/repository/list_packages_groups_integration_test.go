@@ -93,6 +93,17 @@ func TestListPackages_PorEntregarPrimeroGruposBusquedaYConteos(t *testing.T) {
 		t.Fatalf("búsqueda por guía: %+v err=%v", guia, err)
 	}
 
+	since := now.Add(-3 * time.Hour)
+	hoy, err := repo.ListPackages(ctx, domain.PackageFiltersDTO{BusinessID: hp.BusinessID, StatusGroup: domain.PackageGroupDelivered, DeliveredSince: &since, Page: 1, PageSize: 50})
+	if err != nil || hoy.Total != 1 {
+		t.Fatalf("entregados desde hace 3 h: %v err=%v", hoy.Total, err)
+	}
+	future := now.Add(time.Hour)
+	ninguno, err := repo.ListPackages(ctx, domain.PackageFiltersDTO{BusinessID: hp.BusinessID, DeliveredSince: &future, Page: 1, PageSize: 50})
+	if err != nil || ninguno.Total != 0 {
+		t.Fatalf("entregados desde el futuro: %v err=%v", ninguno.Total, err)
+	}
+
 	codes := domain.PackageStatusGroups[domain.PackageGroupPending]
 	n, err := repo.CountPackagesByStatusCodes(ctx, hp.BusinessID, codes, nil, nil)
 	if err != nil || n != 2 {
@@ -103,7 +114,6 @@ func TestListPackages_PorEntregarPrimeroGruposBusquedaYConteos(t *testing.T) {
 	if err != nil || n != 1 {
 		t.Fatalf("atrasados: %d err=%v, se esperaba 1", n, err)
 	}
-	since := now.Add(-3 * time.Hour)
 	n, err = repo.CountPackagesByStatusCodes(ctx, hp.BusinessID, domain.PackageStatusGroups[domain.PackageGroupDelivered], nil, &since)
 	if err != nil || n != 1 {
 		t.Fatalf("entregados desde hace 3 h: %d err=%v, se esperaba 1", n, err)

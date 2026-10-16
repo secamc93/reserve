@@ -26,6 +26,8 @@ type PackageFiltersDTO struct {
 	// StatusGroup agrupa estados: "pending" (por entregar), "delivered" o "closed" (devueltos/perdidos).
 	// Vacío = todos. Ver PackageStatusGroups.
 	StatusGroup string
+	// DeliveredSince: solo los entregados desde esa hora ("Entregados hoy").
+	DeliveredSince *time.Time
 	// Search busca por guía, transportadora, número de unidad o nombre del residente.
 	Search   string
 	Page     int

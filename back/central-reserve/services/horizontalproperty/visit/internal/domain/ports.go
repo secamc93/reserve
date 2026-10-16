@@ -12,6 +12,9 @@ type VisitorRepository interface {
 	CreateVisitor(ctx context.Context, visitor *Visitor) (*Visitor, error)
 	GetVisitorByID(ctx context.Context, id uint) (*Visitor, error)
 	UpdateVisitor(ctx context.Context, visitor *Visitor) (*Visitor, error)
+	// UpsertVehicle devuelve el vehículo del negocio con esa placa (lo crea si no existe y
+	// actualiza marca, color y visitante).
+	UpsertVehicle(ctx context.Context, vehicle *VisitorVehicle) (*VisitorVehicle, error)
 }
 
 // VisitRepository - Puerto para repositorio de visitas
@@ -25,6 +28,8 @@ type VisitRepository interface {
 	// CountVisitsByStatusCodes cuenta visitas del negocio (0 = todos) con esos estados; si from/to
 	// no son nil, solo las programadas en [from, to).
 	CountVisitsByStatusCodes(ctx context.Context, businessID uint, codes []string, from *time.Time, to *time.Time) (int64, error)
+	// GetVisitsDayExtras: excedidos dentro ahora, próxima esperada y estadía promedio en [from, to).
+	GetVisitsDayExtras(ctx context.Context, businessID uint, from time.Time, to time.Time) (*VisitsDayExtras, error)
 	GetActiveVisits(ctx context.Context, businessID uint) ([]*Visit, error)
 	// Tipos y estados
 	GetVisitTypes(ctx context.Context, businessID uint) ([]*VisitType, error)
@@ -67,6 +72,8 @@ type VisitBlacklistRepository interface {
 type VisitUseCase interface {
 	SearchVisitor(ctx context.Context, businessID uint, dni string) (*Visitor, error)
 	CreateOrGetVisitor(ctx context.Context, businessID *uint, dni string, name string, phone string) (*Visitor, error)
+	CreateOrGetVisitorVehicle(ctx context.Context, vehicle VisitorVehicle) (*VisitorVehicle, error)
+	GetAssetsByVisitID(ctx context.Context, visitID uint) ([]*VisitAsset, error)
 	CreateVisit(ctx context.Context, dto CreateVisitDTO) (*Visit, error)
 	ListVisits(ctx context.Context, filters VisitFiltersDTO) (*PaginatedVisitsDTO, error)
 	// GetVisitsSummary cuenta las visitas programadas el día `day` (fecha a las 00:00 UTC, como se

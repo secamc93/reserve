@@ -42,5 +42,14 @@ func (uc *visitUseCase) GetVisitsSummary(ctx context.Context, businessID uint, d
 		return nil, err
 	}
 	s.Total = s.Inside + s.Expected + s.Left + s.Cancelled
+
+	extras, err := uc.visitRepo.GetVisitsDayExtras(ctx, businessID, from, to)
+	if err != nil {
+		uc.logger.Error(ctx).Err(err).Msg("Error calculando datos del día")
+		return nil, err
+	}
+	if extras != nil {
+		s.VisitsDayExtras = *extras
+	}
 	return s, nil
 }

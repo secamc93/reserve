@@ -26,6 +26,7 @@ import (
 // @Param package_status_id query int false "ID del estado"
 // @Param start_date query string false "Fecha inicio (YYYY-MM-DD)"
 // @Param end_date query string false "Fecha fin (YYYY-MM-DD)"
+// @Param delivered_today query bool false "Solo los entregados hoy (hora de Colombia)"
 // @Param status_group query string false "Grupo de estados: pending, delivered, closed"
 // @Param q query string false "Busca por guía, transportadora, unidad o residente"
 // @Param business_id query int false "Solo super admin: negocio a consultar"
@@ -68,6 +69,11 @@ func (h *PackageHandler) ListPackages(c *gin.Context) {
 		Search:      c.Query("q"),
 		Page:        page,
 		PageSize:    pageSize,
+	}
+
+	if c.Query("delivered_today") == "true" {
+		startOfDay := domain.StartOfDay(time.Now())
+		filters.DeliveredSince = &startOfDay
 	}
 
 	if unitIDStr := c.Query("property_unit_id"); unitIDStr != "" {

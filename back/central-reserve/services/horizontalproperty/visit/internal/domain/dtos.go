@@ -68,6 +68,26 @@ type VisitListDTO struct {
 	Purpose            string
 	NumberOfVisitors   int
 	CreatedAt          time.Time
+	// Placa del vehículo con que viene (si lo registró)
+	VisitorVehiclePlate string
+	AuthorizationCode   string
+	EntryGate           string
+	// Residente que recibe la visita y residente que la autorizó
+	ResidentName     string
+	AuthorizedByName string
+	// Minutos permitidos de permanencia según el tipo (max_duration_hours o default_duration_minutes)
+	StayLimitMinutes *int
+	// Dentro y pasado de su tiempo (duration_exceeded o entrada + límite < ahora)
+	ExceedsTime bool
+}
+
+// VisitsDayExtras - Datos de las tarjetas del día (portería)
+type VisitsDayExtras struct {
+	Exceeded       int64      // dentro ahora y pasados de su tiempo
+	NextExpectedAt *time.Time // hora programada de la próxima esperada del día
+	NextUnitNumber string
+	NextUnitBlock  string
+	AvgStayMinutes *int // estadía promedio de las que salieron ese día
 }
 
 // VisitsSummaryDTO - Conteos de visitas de un día por estado (chips de la lista)
@@ -79,6 +99,7 @@ type VisitsSummaryDTO struct {
 	Total     int64
 	// InsideNow: visitantes dentro ahora, sin importar el día programado.
 	InsideNow int64
+	VisitsDayExtras
 }
 
 // CreateVisitAssetDTO - DTO para crear activo de visita

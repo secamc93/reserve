@@ -30,7 +30,10 @@ type PackageData struct {
 	UpdatedAt          time.Time  `json:"updated_at"`
 	// Relaciones
 	PropertyUnitNumber string `json:"property_unit_number,omitempty"`
+	PropertyUnitBlock  string `json:"property_unit_block,omitempty"`
 	ResidentName       string `json:"resident_name,omitempty"`
+	ReceivedByName     string `json:"received_by_name,omitempty"`
+	DeliveredByName    string `json:"delivered_by_name,omitempty"`
 	StatusName         string `json:"status_name,omitempty"`
 	StatusCode         string `json:"status_code,omitempty"`
 }

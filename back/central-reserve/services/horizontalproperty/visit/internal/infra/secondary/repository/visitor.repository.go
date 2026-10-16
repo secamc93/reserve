@@ -145,3 +145,49 @@ func (r *VisitorRepository) UpdateVisitor(ctx context.Context, visitor *domain.V
 
 	return mappers.VisitorToDomain(&updated), nil
 }
+
+// UpsertVehicle devuelve el vehículo del negocio con esa placa; si no existe lo crea y si
+// existe actualiza visitante, marca y color (los que lleguen).
+func (r *VisitorRepository) UpsertVehicle(ctx context.Context, vehicle *domain.VisitorVehicle) (*domain.VisitorVehicle, error) {
+	var m models.VisitorVehicle
+	err := r.db.Conn(ctx).Where("business_id = ? AND plate = ?", vehicle.BusinessID, vehicle.Plate).First(&m).Error
+	switch {
+	case err == gorm.ErrRecordNotFound:
+		m = models.VisitorVehicle{
+			BusinessID: vehicle.BusinessID,
+			VisitorID:  vehicle.VisitorID,
+			Plate:      vehicle.Plate,
+			Brand:      vehicle.Brand,
+			Color:      vehicle.Color,
+			IsActive:   true,
+		}
+		if err := r.db.Conn(ctx).Create(&m).Error; err != nil {
+			return nil, fmt.Errorf("error creando vehículo: %w", err)
+		}
+	case err != nil:
+		return nil, fmt.Errorf("error buscando vehículo: %w", err)
+	default:
+		updates := map[string]interface{}{"is_active": true}
+		if vehicle.VisitorID != nil {
+			updates["visitor_id"] = *vehicle.VisitorID
+		}
+		if vehicle.Brand != "" {
+			updates["brand"] = vehicle.Brand
+		}
+		if vehicle.Color != "" {
+			updates["color"] = vehicle.Color
+		}
+		if err := r.db.Conn(ctx).Model(&m).Updates(updates).Error; err != nil {
+			return nil, fmt.Errorf("error actualizando vehículo: %w", err)
+		}
+	}
+	return &domain.VisitorVehicle{
+		ID:         m.ID,
+		BusinessID: m.BusinessID,
+		VisitorID:  m.VisitorID,
+		Plate:      m.Plate,
+		Brand:      m.Brand,
+		Color:      m.Color,
+		IsActive:   m.IsActive,
+	}, nil
+}

@@ -185,10 +185,17 @@ func (r *VisitRepository) UpdateVisit(ctx context.Context, visit *domain.Visit) 
 	return nil
 }
 
+// stayLimitSQL: minutos permitidos de permanencia según el tipo de visita.
+const stayLimitSQL = "COALESCE(vt.max_duration_hours * 60, vt.default_duration_minutes)"
+
+// exceedsSQL: la visita está dentro y pasó su tiempo (marcada por el back o entrada + límite < ahora).
+const exceedsSQL = "(vs.code = 'in_progress' AND (v.duration_exceeded OR (v.actual_entry_time IS NOT NULL AND " +
+	stayLimitSQL + " IS NOT NULL AND v.actual_entry_time + (" + stayLimitSQL + ") * INTERVAL '1 minute' < NOW())))"
+
 // ListVisits lista visitas con filtros y paginación.
 //
-// Orden: por día programado (el más reciente primero) y, dentro del día, como las atiende la
-// portería: dentro, esperadas, salieron y canceladas; luego por hora programada.
+// Orden como las atiende la portería: dentro (las que exceden su tiempo primero), esperadas,
+// salieron y canceladas; luego por día (el más reciente primero) y hora programada.
 func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFiltersDTO) (*domain.PaginatedVisitsDTO, error) {
 	base := func() *gorm.DB {
 		q := r.db.Conn(ctx).Table("horizontal_property.visits v").
@@ -196,6 +203,9 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 			Joins("JOIN horizontal_property.property_units pu ON pu.id = v.property_unit_id").
 			Joins("JOIN horizontal_property.visit_types vt ON vt.id = v.visit_type_id").
 			Joins("JOIN horizontal_property.visit_statuses vs ON vs.id = v.visit_status_id").
+			Joins("LEFT JOIN horizontal_property.visitor_vehicles vv ON vv.id = v.visitor_vehicle_id").
+			Joins("LEFT JOIN horizontal_property.residents r ON r.id = v.resident_id").
+			Joins("LEFT JOIN horizontal_property.residents ar ON ar.id = v.authorized_by_resident_id").
 			Where("v.deleted_at IS NULL")
 		return applyVisitFilters(q, filters)
 	}
@@ -223,6 +233,13 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 		Purpose            string
 		NumberOfVisitors   int
 		CreatedAt          time.Time
+		VisitorPlate       string
+		AuthorizationCode  string
+		EntryGate          string
+		ResidentName       string
+		AuthorizedByName   string
+		StayLimitMinutes   *int
+		ExceedsTime        bool
 	}
 
 	rows := []row{}
@@ -232,8 +249,12 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 			"pu.number as property_unit_number, COALESCE(pu.block, '') as property_unit_block, " +
 			"vt.name as visit_type_name, vs.name as visit_status_name, vs.code as visit_status_code, " +
 			"v.scheduled_date, v.scheduled_start_time, v.scheduled_end_time, v.actual_entry_time, v.actual_exit_time, " +
-			"COALESCE(v.purpose, '') as purpose, v.number_of_visitors, v.created_at").
-		Order("v.scheduled_date DESC, CASE vs.code WHEN 'in_progress' THEN 0 WHEN 'pending' THEN 1 WHEN 'authorized' THEN 1 WHEN 'completed' THEN 2 ELSE 3 END, v.scheduled_start_time ASC, v.id DESC").
+			"COALESCE(v.purpose, '') as purpose, v.number_of_visitors, v.created_at, " +
+			"COALESCE(vv.plate, '') as visitor_plate, COALESCE(v.authorization_code, '') as authorization_code, " +
+			"COALESCE(v.entry_gate, '') as entry_gate, COALESCE(r.name, '') as resident_name, COALESCE(ar.name, '') as authorized_by_name, " +
+			stayLimitSQL + " as stay_limit_minutes, " + exceedsSQL + " as exceeds_time").
+		Order("CASE vs.code WHEN 'in_progress' THEN 0 WHEN 'pending' THEN 1 WHEN 'authorized' THEN 1 WHEN 'completed' THEN 2 ELSE 3 END, " +
+			"CASE WHEN " + exceedsSQL + " THEN 0 ELSE 1 END, v.scheduled_date DESC, v.scheduled_start_time ASC, v.id DESC").
 		Limit(filters.PageSize).
 		Offset(offset).
 		Scan(&rows).Error; err != nil {
@@ -243,23 +264,30 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 	visits := make([]domain.VisitListDTO, len(rows))
 	for i, rw := range rows {
 		visits[i] = domain.VisitListDTO{
-			ID:                 rw.ID,
-			VisitorName:        rw.VisitorName,
-			VisitorDNI:         rw.VisitorDNI,
-			VisitorPhone:       rw.VisitorPhone,
-			PropertyUnitNumber: rw.PropertyUnitNumber,
-			PropertyUnitBlock:  rw.PropertyUnitBlock,
-			VisitTypeName:      rw.VisitTypeName,
-			VisitStatusName:    rw.VisitStatusName,
-			VisitStatusCode:    rw.VisitStatusCode,
-			ScheduledDate:      rw.ScheduledDate,
-			ScheduledStartTime: rw.ScheduledStartTime,
-			ScheduledEndTime:   rw.ScheduledEndTime,
-			ActualEntryTime:    rw.ActualEntryTime,
-			ActualExitTime:     rw.ActualExitTime,
-			Purpose:            rw.Purpose,
-			NumberOfVisitors:   rw.NumberOfVisitors,
-			CreatedAt:          rw.CreatedAt,
+			ID:                  rw.ID,
+			VisitorName:         rw.VisitorName,
+			VisitorDNI:          rw.VisitorDNI,
+			VisitorPhone:        rw.VisitorPhone,
+			PropertyUnitNumber:  rw.PropertyUnitNumber,
+			PropertyUnitBlock:   rw.PropertyUnitBlock,
+			VisitTypeName:       rw.VisitTypeName,
+			VisitStatusName:     rw.VisitStatusName,
+			VisitStatusCode:     rw.VisitStatusCode,
+			ScheduledDate:       rw.ScheduledDate,
+			ScheduledStartTime:  rw.ScheduledStartTime,
+			ScheduledEndTime:    rw.ScheduledEndTime,
+			ActualEntryTime:     rw.ActualEntryTime,
+			ActualExitTime:      rw.ActualExitTime,
+			Purpose:             rw.Purpose,
+			NumberOfVisitors:    rw.NumberOfVisitors,
+			CreatedAt:           rw.CreatedAt,
+			VisitorVehiclePlate: rw.VisitorPlate,
+			AuthorizationCode:   rw.AuthorizationCode,
+			EntryGate:           rw.EntryGate,
+			ResidentName:        rw.ResidentName,
+			AuthorizedByName:    rw.AuthorizedByName,
+			StayLimitMinutes:    rw.StayLimitMinutes,
+			ExceedsTime:         rw.ExceedsTime,
 		}
 	}
 
@@ -305,9 +333,63 @@ func applyVisitFilters(q *gorm.DB, filters domain.VisitFiltersDTO) *gorm.DB {
 	if filters.Search != "" {
 		like := "%" + strings.ToLower(filters.Search) + "%"
 		q = q.Where("(LOWER(vis.full_name) LIKE ? OR LOWER(vis.dni) LIKE ? OR LOWER(pu.number) LIKE ? "+
-			"OR LOWER(COALESCE(pu.block, '') || ' ' || pu.number) LIKE ?)", like, like, like, like)
+			"OR LOWER(COALESCE(pu.block, '') || ' ' || pu.number) LIKE ? OR LOWER(COALESCE(vv.plate, '')) LIKE ? "+
+			"OR LOWER(COALESCE(v.authorization_code, '')) LIKE ? OR LOWER(COALESCE(v.qr_code, '')) LIKE ?)",
+			like, like, like, like, like, like, like)
 	}
 	return q
+}
+
+// GetVisitsDayExtras calcula los datos de las tarjetas del día: excedidos dentro ahora,
+// próxima visita esperada del día y estadía promedio de las que salieron.
+func (r *VisitRepository) GetVisitsDayExtras(ctx context.Context, businessID uint, from time.Time, to time.Time) (*domain.VisitsDayExtras, error) {
+	base := func() *gorm.DB {
+		q := r.db.Conn(ctx).Table("horizontal_property.visits v").
+			Joins("JOIN horizontal_property.visit_types vt ON vt.id = v.visit_type_id").
+			Joins("JOIN horizontal_property.visit_statuses vs ON vs.id = v.visit_status_id").
+			Joins("JOIN horizontal_property.property_units pu ON pu.id = v.property_unit_id").
+			Where("v.deleted_at IS NULL")
+		if businessID > 0 {
+			q = q.Where("v.business_id = ?", businessID)
+		}
+		return q
+	}
+	extras := &domain.VisitsDayExtras{}
+
+	if err := base().Where(exceedsSQL).Count(&extras.Exceeded).Error; err != nil {
+		return nil, fmt.Errorf("error contando visitas excedidas: %w", err)
+	}
+
+	var next struct {
+		ScheduledStartTime *time.Time
+		Number             string
+		Block              string
+	}
+	if err := base().Select("v.scheduled_start_time, pu.number, COALESCE(pu.block, '') as block").
+		Where("vs.code IN ?", domain.VisitStateGroups[domain.VisitStateExpected]).
+		Where("v.scheduled_date >= ? AND v.scheduled_date < ?", from, to).
+		Order("v.scheduled_start_time ASC").Limit(1).Scan(&next).Error; err != nil {
+		return nil, fmt.Errorf("error buscando la próxima visita: %w", err)
+	}
+	if next.ScheduledStartTime != nil {
+		extras.NextExpectedAt = next.ScheduledStartTime
+		extras.NextUnitNumber = next.Number
+		extras.NextUnitBlock = next.Block
+	}
+
+	var avg struct{ Minutes *float64 }
+	if err := base().Select("AVG(EXTRACT(EPOCH FROM (v.actual_exit_time - v.actual_entry_time)) / 60) as minutes").
+		Where("vs.code = ?", "completed").
+		Where("v.actual_entry_time IS NOT NULL AND v.actual_exit_time IS NOT NULL").
+		Where("v.scheduled_date >= ? AND v.scheduled_date < ?", from, to).
+		Scan(&avg).Error; err != nil {
+		return nil, fmt.Errorf("error calculando la estadía promedio: %w", err)
+	}
+	if avg.Minutes != nil {
+		m := int(math.Round(*avg.Minutes))
+		extras.AvgStayMinutes = &m
+	}
+	return extras, nil
 }
 
 // CountVisitsByStatusCodes cuenta visitas del negocio con esos estados (y en el rango de días).

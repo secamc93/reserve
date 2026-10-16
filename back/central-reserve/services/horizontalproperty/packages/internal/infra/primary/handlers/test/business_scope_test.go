@@ -18,12 +18,14 @@ import (
 // useCaseSpy registra el negocio con el que el handler consulta.
 type useCaseSpy struct {
 	domain.PackageUseCase
+	listFilters       domain.PackageFiltersDTO
 	listBusinessID    uint
 	summaryBusinessID uint
 }
 
 func (s *useCaseSpy) ListPackages(ctx context.Context, f domain.PackageFiltersDTO) (*domain.PaginatedPackagesDTO, error) {
 	s.listBusinessID = f.BusinessID
+	s.listFilters = f
 	return &domain.PaginatedPackagesDTO{Page: 1, PageSize: 10}, nil
 }
 
@@ -67,5 +69,20 @@ func TestPackagesSummary_UsuarioNormalNoPuedeConsultarOtroNegocio(t *testing.T) 
 	spy := call(t, 7, "/horizontal-properties/packages/summary?business_id=99", func(h *handlers.PackageHandler, c *gin.Context) { h.GetPackagesSummary(c) })
 	if spy.summaryBusinessID != 7 {
 		t.Fatalf("contó el negocio %d; un usuario normal solo ve el de su token (7)", spy.summaryBusinessID)
+	}
+}
+
+func TestListPackages_EntregadosHoyFiltraDesdeLaMedianocheDeColombia(t *testing.T) {
+	spy := call(t, 7, "/horizontal-properties/packages?status_group=delivered&delivered_today=true", func(h *handlers.PackageHandler, c *gin.Context) { h.ListPackages(c) })
+	since := spy.listFilters.DeliveredSince
+	if since == nil {
+		t.Fatal("delivered_today no aplicó el filtro")
+	}
+	want := domain.StartOfDay(time.Now())
+	if !since.Equal(want) {
+		t.Fatalf("desde = %v, se esperaba %v", since, want)
+	}
+	if spy.listFilters.StatusGroup != "delivered" {
+		t.Fatalf("grupo = %q", spy.listFilters.StatusGroup)
 	}
 }
