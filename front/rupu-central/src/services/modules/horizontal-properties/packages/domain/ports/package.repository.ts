@@ -26,6 +26,8 @@ export interface GetPackagesParams {
   startDate?: string;
   endDate?: string;
   statusGroup?: PackageStatusGroup;
+  /** Solo los entregados hoy (hora de Colombia). */
+  deliveredToday?: boolean;
   /** Busca por guía, transportadora, unidad ("Casa 126") o residente. */
   search?: string;
 }

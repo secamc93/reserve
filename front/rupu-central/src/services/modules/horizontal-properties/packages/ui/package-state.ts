@@ -8,9 +8,6 @@ import type { Package, PackageListDTO, PackageStatusGroup } from '../domain';
 
 export const PROPERTY_TZ = 'America/Bogota';
 
-/** Desde cuántas horas un paquete por entregar se marca atrasado (igual que el back). */
-export const OVERDUE_HOURS = 72;
-
 // ===================== Grupo de estado =====================
 
 export const PACKAGE_GROUP_ORDER: PackageStatusGroup[] = ['pending', 'delivered', 'closed'];
@@ -20,6 +17,9 @@ export const PACKAGE_GROUP_META: Record<PackageStatusGroup, { label: string; chi
   delivered: { label: 'Entregado', chip: 'Entregados', color: '#1f8a4c' },
   closed: { label: 'Devuelto', chip: 'Devueltos', color: '#8a8580' },
 };
+
+/** Paquetes que llevan más de esto se marcan como viejos en la lista. */
+export const OLD_DAYS = 5;
 
 const CODE_TO_GROUP: Record<string, PackageStatusGroup> = {
   received: 'pending',
@@ -60,36 +60,42 @@ export function packageActions(p: Pick<PackageListDTO, 'statusCode' | 'delivered
 
 // ===================== Antigüedad =====================
 
-export type AgeLevel = 'fresh' | 'aging' | 'overdue';
-
 function valid(iso?: string | null): Date | null {
   if (!iso) return null;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** Horas desde que llegó el paquete (hasta que se entregó, o hasta ahora). */
-export function packageAgeHours(p: Pick<PackageListDTO, 'receivedAt' | 'createdAt' | 'deliveredAt'>, now: Date = new Date()): number {
+/** Fecha YYYY-MM-DD en Colombia. */
+function dayInProperty(d: Date): string {
+  return d.toLocaleDateString('en-CA', { timeZone: PROPERTY_TZ });
+}
+
+/**
+ * Días en portería (calendario de Colombia): desde que llegó hasta que se entregó, o hasta hoy.
+ * 0 = llegó hoy.
+ */
+export function packageDays(p: Pick<PackageListDTO, 'receivedAt' | 'createdAt' | 'deliveredAt'>, now: Date = new Date()): number {
   const from = valid(p.receivedAt) ?? valid(p.createdAt);
   if (!from) return 0;
   const to = valid(p.deliveredAt) ?? now;
-  return Math.max(0, (to.getTime() - from.getTime()) / 3_600_000);
+  const a = Date.parse(`${dayInProperty(from)}T00:00:00Z`);
+  const b = Date.parse(`${dayInProperty(to)}T00:00:00Z`);
+  return Math.max(0, Math.round((b - a) / 86_400_000));
 }
 
-/** "< 1 h", "5 h", "2 d", "12 d". */
-export function formatAge(hours: number): string {
-  if (hours < 1) return '< 1 h';
-  if (hours < 24) return `${Math.floor(hours)} h`;
-  return `${Math.floor(hours / 24)} d`;
+/** "hoy", "1 día", "6 días". */
+export function formatDays(days: number): string {
+  if (days <= 0) return 'hoy';
+  return days === 1 ? '1 día' : `${days} días`;
 }
 
-export function ageLevel(hours: number): AgeLevel {
-  if (hours >= OVERDUE_HOURS) return 'overdue';
-  if (hours >= 24) return 'aging';
-  return 'fresh';
+/** Color de la antigüedad: terracota desde 5 días, gris oscuro desde 2, gris claro antes. */
+export function daysColor(days: number): string {
+  if (days >= 5) return '#c8603f';
+  if (days >= 2) return '#4b4a46';
+  return '#8a8580';
 }
-
-export const AGE_COLOR: Record<AgeLevel, string> = { fresh: '#4b4a46', aging: '#c8603f', overdue: '#c8382d' };
 
 // ===================== Unidad y fechas =====================
 
@@ -127,13 +133,20 @@ export interface TimelineStep {
 }
 
 type TimelineInput = Pick<PackageListDTO, 'statusCode' | 'receivedAt' | 'createdAt' | 'deliveredAt'> &
-  Partial<Pick<Package, 'notificationSentAt' | 'notifyResident'>>;
+  Partial<Pick<Package, 'notificationSentAt' | 'notifyResident' | 'receivedByName' | 'deliveredByName'>>;
 
 /** Recibido → notificado (si aplica) → entregado (o devuelto / perdido). */
 export function packageTimeline(p: TimelineInput, now: Date = new Date()): TimelineStep[] {
   const group = packageGroupOf(p);
   const steps: TimelineStep[] = [
-    { key: 'received', label: 'Recibido en portería', at: formatDateTime(p.receivedAt || p.createdAt), done: true, tone: 'muted' },
+    {
+      key: 'received',
+      label: 'Recibido en portería',
+      at: formatDateTime(p.receivedAt || p.createdAt),
+      detail: p.receivedByName ? `recibió ${p.receivedByName}` : undefined,
+      done: true,
+      tone: 'muted',
+    },
   ];
   if (p.notificationSentAt || p.statusCode === 'notified') {
     steps.push({ key: 'notified', label: 'Residente notificado', at: formatDateTime(p.notificationSentAt), done: true, tone: 'muted' });
@@ -144,14 +157,28 @@ export function packageTimeline(p: TimelineInput, now: Date = new Date()): Timel
     steps.push({ key: 'closed', label: p.statusCode === 'lost' ? 'Marcado como perdido' : 'Devuelto al remitente', at: '', done: true, tone: 'danger' });
     return steps;
   }
-  const age = formatAge(packageAgeHours(p, now));
+  const days = packageDays(p, now);
   steps.push({
     key: 'delivered',
     label: 'Entregado',
     at: formatDateTime(p.deliveredAt),
-    detail: p.deliveredAt ? `Estuvo ${age} en portería` : `En portería hace ${age}`,
+    detail: p.deliveredAt ? (days === 0 ? 'entregado el mismo día' : `estuvo ${formatDays(days)} en portería`) : days === 0 ? 'llegó hoy' : `${formatDays(days)} en portería`,
     done: group === 'delivered',
     tone: 'ok',
   });
   return steps;
+}
+
+// ===================== Entrega =====================
+
+/**
+ * Nota de la entrega con quién recibió (el back guarda solo notas): "Entregado a: Ana Ruiz
+ * (CC 123). Recibió en la portería".
+ */
+export function deliveryNotes(recipient: { name: string; doc?: string } | null, note: string): string {
+  const parts: string[] = [];
+  const name = recipient?.name.trim();
+  if (name) parts.push(`Entregado a: ${name}${recipient?.doc?.trim() ? ` (${recipient.doc.trim()})` : ''}.`);
+  if (note.trim()) parts.push(note.trim());
+  return parts.join(' ');
 }

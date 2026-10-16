@@ -42,29 +42,31 @@ packages/
 │   ├── receive-package-modal.tsx # P2: recibir (modal 560 px)
 │   ├── package-detail-panel.tsx  # P3: detalle + entregar / devolver (panel lateral 420 px)
 │   ├── package-state.ts          # Lógica pura: grupo, antigüedad (+3 días), acciones, línea de tiempo
-│   ├── packages-filters.ts       # Filtros en la URL (?group=&q=)
+│   ├── packages-filters.ts       # Pestañas y búsqueda en la URL (?tab=&q=)
 │   ├── unit-picker.tsx           # Buscador de unidad ("Casa 126")
 │   ├── side-panel.tsx            # Panel lateral + línea de tiempo (candidato a shared/ui/ds)
 │   └── index.ts
 └── index.ts
 ```
 
-## Componentes UI
+## Componentes UI ("PH - Visitas y Paquetes", P1–P4)
 
 ### PackagesTable (P1 / P4)
-- Por entregar primero, del más antiguo al más reciente (orden del back); antigüedad con
-  alerta a partir de 3 días.
-- Chips Todos / Por entregar / Entregados / Devueltos con conteos (`GET /packages/summary`).
-- Buscador por guía, transportadora, unidad o residente; filtros y paginación en la URL.
-- Teléfono: tarjetas con "Entregar".
+- Pestañas Por entregar (por defecto, del más antiguo al más reciente) · Entregados hoy · Todos,
+  con conteos (`GET /packages/summary`); filtros y paginación en la URL (`?tab=&q=`).
+- Columnas unidad, residente (+ descripción), transportadora, guía, días en portería ("hoy",
+  "1 día", "6 días": terracota desde 5, gris oscuro desde 2) y "Entregar" + ⋮ (detalle, devolver).
+- "Recordar a residentes" deshabilitado: no hay servicio de notificaciones.
+- Teléfono: buscador grande por unidad, tarjetas con "Entregar" y "+ Recibir paquete" fijo.
 
 ### ReceivePackageModal (P2)
-Unidad, residente (opcional), transportadora (frecuentes con un toque), guía, descripción,
-notas y aviso al residente.
+Un paso: unidad y "Para", transportadora en chips (Otra → campo), guía opcional, foto
+(deshabilitada hasta que haya subida de archivos), descripción y aviso al residente.
 
 ### PackageDetailPanel (P3)
-Envío, línea de tiempo (recibido → notificado → entregado / devuelto) y la entrega en el mismo
-panel con notas, o marcar como devuelto. "Notificado" no se entrega directo (regla del back).
+Panel de 460 px: unidad en grande, guía y días en portería, descripción y quién recibió,
+"Entregar a" (residentes de la unidad u otra persona: queda en la nota de la entrega), nota,
+"Confirmar entrega · HH:MM" y "Devolver". "Notificado" no se entrega directo (regla del back).
 
 ## Flujo de Datos
 

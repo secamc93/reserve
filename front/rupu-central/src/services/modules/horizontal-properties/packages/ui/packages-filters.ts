@@ -1,26 +1,32 @@
 /**
- * Filtros de la lista de paquetes en la URL (sin React ni red):
- *   ?group=pending|delivered|closed  &q=  (+ page / page_size)
- * Sin grupo se ven todos, con los por entregar primero (orden del back).
+ * Filtros de la lista de paquetes en la URL (sin React ni red). Las pestañas del diseño P1 son
+ * los filtros: ?tab=pending|today|all  &q=  (+ page / page_size).
+ *   pending (por defecto): por entregar, del más antiguo al más reciente.
+ *   today: entregados hoy.  all: todos (por entregar primero).
  */
 
-import type { GetPackagesParams, PackageStatusGroup } from '../domain';
-import { PACKAGE_GROUP_ORDER } from './package-state';
+import type { GetPackagesParams } from '../domain';
+
+export type PackagesTab = 'pending' | 'today' | 'all';
+export const PACKAGES_TABS: PackagesTab[] = ['pending', 'today', 'all'];
 
 export interface PackagesUrlFilters {
-  group?: PackageStatusGroup;
+  tab: PackagesTab;
   q: string;
 }
 
 type Readable = { get(name: string): string | null } | null | undefined;
 
 export function readPackagesFilters(sp: Readable): PackagesUrlFilters {
-  const group = (sp?.get('group') ?? '') as PackageStatusGroup;
-  return { group: PACKAGE_GROUP_ORDER.includes(group) ? group : undefined, q: sp?.get('q') ?? '' };
+  const tab = (sp?.get('tab') ?? '') as PackagesTab;
+  return { tab: PACKAGES_TABS.includes(tab) ? tab : 'pending', q: sp?.get('q') ?? '' };
 }
 
-export function packagesQueryFor(f: PackagesUrlFilters): Pick<GetPackagesParams, 'statusGroup' | 'search'> {
-  return { statusGroup: f.group, search: f.q.trim() || undefined };
+export function packagesQueryFor(f: PackagesUrlFilters): Pick<GetPackagesParams, 'statusGroup' | 'search' | 'deliveredToday'> {
+  const search = f.q.trim() || undefined;
+  if (f.tab === 'pending') return { statusGroup: 'pending', search };
+  if (f.tab === 'today') return { statusGroup: 'delivered', deliveredToday: true, search };
+  return { search };
 }
 
 /** Query string con los cambios aplicados; un cambio de filtro vuelve a la página 1. */

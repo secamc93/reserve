@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Patrón C · Detalle ("PH - Mapa del producto"): panel lateral de 420 px a la derecha con
- * cabecera, secciones rotuladas en mono y acciones abajo. En teléfono ocupa toda la pantalla.
+ * Patrón C · Detalle ("PH - Visitas y Paquetes", V3/P3): panel lateral de 460 px a la derecha
+ * sobre la lista atenuada, con cabecera (rótulo mono, avatar, título y datos), secciones
+ * rotuladas en mono y acciones abajo. En teléfono ocupa toda la pantalla.
  * Candidato a subir a shared/ui/ds (DsSidePanel + DsTimeline).
  */
 
@@ -17,9 +18,11 @@ export function SidePanel({
   title,
   subtitle,
   status,
+  avatar,
   children,
   footer,
   busy = false,
+  width = 460,
 }: {
   open: boolean;
   onClose: () => void;
@@ -27,9 +30,12 @@ export function SidePanel({
   title: ReactNode;
   subtitle?: ReactNode;
   status?: ReactNode;
+  /** Avatar o bloque a la izquierda del título (iniciales, unidad en grande…). */
+  avatar?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   busy?: boolean;
+  width?: number;
 }) {
   const titleId = useId();
   const ref = useRef<HTMLElement>(null);
@@ -48,34 +54,39 @@ export function SidePanel({
 
   return (
     <div className={`fixed inset-0 z-[55] ${dsFontRoot}`}>
-      <div className="absolute inset-0 bg-black/25 md:bg-black/10" onClick={() => !busy && onClose()} aria-hidden="true" />
+      <div className="absolute inset-0 bg-[rgba(245,245,244,.72)]" onClick={() => !busy && onClose()} aria-hidden="true" />
       <aside
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="absolute right-0 top-0 h-full w-full md:w-[420px] bg-white flex flex-col outline-none shadow-[-12px_0_40px_rgba(0,0,0,.12)]"
-        style={{ color: DS.ink, borderLeft: `1px solid ${DS.border}` }}
+        className="absolute right-0 top-0 h-full w-full md:w-[var(--panel-w)] bg-white flex flex-col outline-none shadow-[-12px_0_40px_rgba(0,0,0,.12)]"
+        style={{ color: DS.ink, borderLeft: `1px solid ${DS.border}`, ['--panel-w' as string]: `${width}px` }}
       >
-        <header className="px-5 md:px-6 pt-5 pb-4 border-b border-[#efedea] flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            {eyebrow && <DsEyebrow className="mb-1.5">{eyebrow}</DsEyebrow>}
-            <h2 id={titleId} className="m-0 text-lg font-semibold tracking-[-.015em] leading-tight">
-              {title}
-            </h2>
-            {subtitle && <div className="text-[13px] mt-0.5 text-[#8a8580]">{subtitle}</div>}
-            {status && <div className="mt-2">{status}</div>}
-          </div>
-          <button
+        <header className="px-5 md:px-6 pt-4 pb-4 border-b border-[#efedea] flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <DsEyebrow>{eyebrow}</DsEyebrow>
+            <button
             type="button"
             onClick={onClose}
             disabled={busy}
             aria-label="Cerrar detalle"
-            className="w-9 h-9 max-md:w-11 max-md:h-11 -mr-2 -mt-1 flex items-center justify-center text-[#8a8580] hover:text-[#1a1a1a] disabled:opacity-40"
+            className="w-8 h-8 max-md:w-11 max-md:h-11 -mr-2 flex items-center justify-center text-[#8a8580] hover:text-[#1a1a1a] disabled:opacity-40"
           >
             <VtIcon name="close" size={20} />
-          </button>
+            </button>
+          </div>
+          <div className="flex items-center gap-3 min-w-0">
+            {avatar}
+            <div className="min-w-0 flex-1">
+              <h2 id={titleId} className="m-0 text-lg font-semibold tracking-[-.015em] leading-tight">
+                {title}
+              </h2>
+              {subtitle && <div className="text-xs mt-0.5 text-[#8a8580]">{subtitle}</div>}
+            </div>
+          </div>
+          {status && <div>{status}</div>}
         </header>
         <div className="flex-1 overflow-y-auto px-5 md:px-6 py-4 flex flex-col gap-5">{children}</div>
         {footer && (
@@ -123,10 +134,10 @@ export function Timeline({ steps }: { steps: TimelineStep[] }) {
         return (
           <li key={s.key} className="relative pl-6 pb-4 last:pb-0">
             {i < steps.length - 1 && (
-              <span className="absolute left-[5px] top-3.5 bottom-0 w-px" style={{ background: s.done ? DS.borderStrong : DS.border }} aria-hidden="true" />
+              <span className="absolute left-[4.5px] top-3.5 bottom-0 w-px" style={{ background: s.done ? DS.borderStrong : DS.border }} aria-hidden="true" />
             )}
             <span
-              className="absolute left-0 top-1 w-[11px] h-[11px] rounded-full"
+              className="absolute left-0 top-1 w-[10px] h-[10px] rounded-full"
               style={s.done ? { background: color } : { border: `1.5px dashed ${color}`, background: '#fff' }}
               aria-hidden="true"
             />

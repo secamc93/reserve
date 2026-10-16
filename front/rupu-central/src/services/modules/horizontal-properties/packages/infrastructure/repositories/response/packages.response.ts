@@ -22,7 +22,10 @@ export interface BackendPackage {
   created_at: string;
   updated_at: string;
   property_unit_number?: string;
+  property_unit_block?: string;
   resident_name?: string;
+  received_by_name?: string;
+  delivered_by_name?: string;
   status_name?: string;
   status_code?: string;
 }

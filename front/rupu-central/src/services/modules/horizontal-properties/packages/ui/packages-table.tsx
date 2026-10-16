@@ -1,54 +1,31 @@
 'use client';
 
 /**
- * P1 · Paquetes / P4 · móvil ("PH - Visitas y Paquetes", Patrón A · Lista).
- * Por entregar primero, del más antiguo al más reciente, con su antigüedad (más de 3 días en
- * alerta). Chips por grupo con conteos, buscador, tabla densa en escritorio y tarjetas con
- * "Entregar" a mano en teléfono. Filtros y paginación en la URL.
+ * P1 · Paquetes / P4 · móvil ("PH - Visitas y Paquetes").
+ * Escritorio: pestañas Por entregar · Entregados hoy · Todos con conteos, "Recordar a residentes"
+ * y "+ Recibir paquete"; buscador a la derecha; tabla con unidad, residente, transportadora, guía,
+ * días en portería y "Entregar" + ⋮. Teléfono: título con el conteo, buscador grande por unidad,
+ * tarjetas con "Entregar" y "+ Recibir paquete" fijo abajo. Filtros y paginación en la URL.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  DsBody,
-  DsChips,
-  DsPage,
-  DsSearch,
-  DsSectionHeader,
-  DsStatus,
-  DsTable,
-  DsToolbar,
-  VtNotice,
-  dsMono,
-  vtBtn,
-  type DsColumn,
-} from '@/shared/ui/ds';
+import { DsBody, DsPage, DsSearch, DsSectionHeader, DsTable, VtMenu, VtNotice, dsMono, vtBtn, type DsColumn } from '@/shared/ui/ds';
 import { Pagination, usePaginationParams } from '@shared/ui/pagination';
 import { getPackagesAction, getPackagesSummaryAction } from '../infrastructure/actions';
-import type { PackageListDTO, PackageStatusGroup, PackagesSummary } from '../domain';
+import type { PackageListDTO, PackagesSummary } from '../domain';
 import { PackageDetailPanel } from './package-detail-panel';
 import { ReceivePackageModal } from './receive-package-modal';
 import { useBusinessToken } from './use-business-token';
-import { packagesQueryFor, patchQuery, readPackagesFilters } from './packages-filters';
-import {
-  AGE_COLOR,
-  PACKAGE_GROUP_META,
-  PACKAGE_GROUP_ORDER,
-  ageLevel,
-  formatAge,
-  formatDateTime,
-  packageActions,
-  packageAgeHours,
-  packageGroupOf,
-  packageStatusLabel,
-  unitLabel,
-} from './package-state';
+import { packagesQueryFor, patchQuery, readPackagesFilters, type PackagesTab } from './packages-filters';
+import { daysColor, formatDays, packageActions, packageDays, packageGroupOf, unitLabel } from './package-state';
 
 interface PackagesTableProps {
   businessId: number;
 }
 
 type Notice = { tone: 'ok' | 'error'; text: string } | null;
+type Selection = { row: PackageListDTO; mode: 'detail' | 'deliver' | 'return' } | null;
 
 export function PackagesTable({ businessId }: PackagesTableProps) {
   const router = useRouter();
@@ -67,7 +44,7 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PackagesSummary | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
-  const [selected, setSelected] = useState<{ row: PackageListDTO; deliver: boolean } | null>(null);
+  const [selected, setSelected] = useState<Selection>(null);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState(filters.q);
 
@@ -135,17 +112,18 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
     loadSummary();
   }, [loadList, loadSummary]);
 
-  const chipCount = (g: PackageStatusGroup) => (summary ? (g === 'pending' ? summary.pending : g === 'delivered' ? summary.delivered : summary.closed) : undefined);
-  const chips = [{ id: 'all' as const, label: 'Todos', count: summary?.total }, ...PACKAGE_GROUP_ORDER.map((g) => ({ id: g, label: PACKAGE_GROUP_META[g].chip, count: chipCount(g) }))];
-
-  const open = (row: PackageListDTO, deliver = false) => setSelected({ row, deliver });
+  const tabs: { id: PackagesTab; label: string; count?: number }[] = [
+    { id: 'pending', label: 'Por entregar', count: summary?.pending },
+    { id: 'today', label: 'Entregados hoy', count: summary?.deliveredToday },
+    { id: 'all', label: 'Todos' },
+  ];
 
   const columns: DsColumn<PackageListDTO>[] = [
-    { key: 'unit', label: 'Unidad', width: '110px', render: (p) => <span className="font-semibold">{unitLabel(p.propertyUnitBlock, p.propertyUnitNumber)}</span> },
+    { key: 'unit', label: 'Unidad', width: '110px', render: (p) => <span className={`${dsMono} font-semibold`}>{unitLabel(p.propertyUnitBlock, p.propertyUnitNumber)}</span> },
     {
-      key: 'for',
-      label: 'Para',
-      width: 'minmax(150px,1fr)',
+      key: 'resident',
+      label: 'Residente',
+      width: 'minmax(160px,1.3fr)',
       render: (p) => (
         <div className="min-w-0">
           <div className="truncate">{p.residentName || <span className="text-[#8a8580]">Cualquier residente</span>}</div>
@@ -153,94 +131,101 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
         </div>
       ),
     },
-    {
-      key: 'shipping',
-      label: 'Envío',
-      width: 'minmax(150px,1fr)',
-      render: (p) => (
-        <div className="min-w-0">
-          <div className="truncate">{p.carrier}</div>
-          <div className={`${dsMono} text-[11px] text-[#8a8580] truncate`}>{p.trackingNumber}</div>
-        </div>
-      ),
-    },
-    { key: 'received', label: 'Recibido', width: '110px', render: (p) => <span className={`${dsMono} text-xs`}>{formatDateTime(p.receivedAt || p.createdAt)}</span> },
-    { key: 'age', label: 'Antigüedad', width: '84px', render: (p) => <Age p={p} /> },
-    {
-      key: 'state',
-      label: 'Estado',
-      width: '110px',
-      render: (p) => <DsStatus label={packageStatusLabel(p)} color={PACKAGE_GROUP_META[packageGroupOf(p)].color} />,
-    },
+    { key: 'carrier', label: 'Transportadora', width: 'minmax(110px,.8fr)', render: (p) => <span className="truncate">{p.carrier}</span> },
+    { key: 'tracking', label: 'Guía', width: 'minmax(110px,.8fr)', render: (p) => <span className={`${dsMono} text-xs truncate`}>{p.trackingNumber || '—'}</span> },
+    { key: 'days', label: 'En portería', width: '96px', render: (p) => <Days p={p} /> },
     {
       key: 'action',
       label: <span className="sr-only">Acción</span>,
-      width: '100px',
+      width: '130px',
       align: 'right',
-      render: (p) =>
-        packageActions(p).canDeliver ? (
-          <button
-            type="button"
-            className={vtBtn.accent}
-            onClick={(e) => {
-              e.stopPropagation();
-              open(p, true);
-            }}
-            aria-label={`Entregar paquete de ${unitLabel(p.propertyUnitBlock, p.propertyUnitNumber)}`}
-          >
-            Entregar
-          </button>
-        ) : null,
+      render: (p) => {
+        const a = packageActions(p);
+        const unit = unitLabel(p.propertyUnitBlock, p.propertyUnitNumber);
+        return (
+          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+            {a.canDeliver ? (
+              <button type="button" className={`${vtBtn.primary} h-[30px]! px-3! text-xs!`} onClick={() => setSelected({ row: p, mode: 'deliver' })} aria-label={`Entregar paquete de ${unit}`}>
+                Entregar
+              </button>
+            ) : (
+              <button type="button" className={vtBtn.small} onClick={() => setSelected({ row: p, mode: 'detail' })} aria-label={`Ver paquete de ${unit}`}>
+                Ver
+              </button>
+            )}
+            <VtMenu
+              label={`Más acciones del paquete de ${unit}`}
+              items={[
+                { label: 'Ver detalle', onSelect: () => setSelected({ row: p, mode: 'detail' }) },
+                ...(a.canReturn ? [{ label: 'Devolver', danger: true, onSelect: () => setSelected({ row: p, mode: 'return' }) }] : []),
+              ]}
+            />
+          </div>
+        );
+      },
     },
   ];
 
   const empty = filters.q
     ? `Ningún paquete coincide con “${filters.q}”`
-    : filters.group === 'pending'
+    : filters.tab === 'pending'
       ? 'No hay paquetes por entregar'
-      : 'No hay paquetes registrados';
+      : filters.tab === 'today'
+        ? 'Hoy no se han entregado paquetes'
+        : 'No hay paquetes registrados';
 
   return (
     <DsPage>
-      <DsSectionHeader
-        title={
-          <span className="flex items-baseline gap-2">
-            Paquetes
-            {summary && <span className="text-[13px] font-normal text-[#6b6a66]">{summary.pending} por entregar</span>}
-          </span>
-        }
-        actions={
-          <>
-            {summary && summary.pendingOverdue > 0 && (
-              <button
-                type="button"
-                onClick={() => navigate({ group: 'pending' })}
-                className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold mr-1"
-                style={{ color: AGE_COLOR.overdue }}
-              >
-                <span className="w-[7px] h-[7px] rounded-full" style={{ background: AGE_COLOR.overdue }} aria-hidden="true" />
-                {summary.pendingOverdue} con más de 3 días
+      <div className="hidden md:block">
+        <DsSectionHeader<PackagesTab>
+          ariaLabel="Vistas de paquetes"
+          tabs={tabs}
+          active={filters.tab}
+          onChange={(tab) => navigate({ tab: tab === 'pending' ? undefined : tab })}
+          actions={
+            <>
+              <span title="Pronto: avisar por WhatsApp y correo a los residentes con paquetes por entregar. Aún no hay servicio de notificaciones.">
+                <button type="button" className={vtBtn.secondary} disabled aria-describedby="remind-help">
+                  Recordar a residentes
+                </button>
+              </span>
+              <span id="remind-help" className="sr-only">
+                Aún no hay servicio de notificaciones para recordar a los residentes.
+              </span>
+              <button type="button" className={vtBtn.primary} onClick={() => setReceiveOpen(true)}>
+                + Recibir paquete
               </button>
-            )}
-            {summary && <span className="hidden md:inline text-xs text-[#4b4a46] mr-2">{summary.deliveredToday} entregados hoy</span>}
-            <button type="button" className={vtBtn.primary} onClick={() => setReceiveOpen(true)}>
-              + Recibir paquete
-            </button>
-          </>
-        }
-      />
-      <DsBody>
-        <DsToolbar
-          left={
-            <DsChips<PackageStatusGroup | 'all'>
-              ariaLabel="Estado del paquete"
-              chips={chips}
-              active={filters.group ?? 'all'}
-              onChange={(id) => navigate({ group: id === 'all' ? undefined : id })}
-            />
+            </>
           }
-          right={<DsSearch value={searchDraft} onChange={onSearch} placeholder="Buscar guía, unidad o residente" />}
         />
+      </div>
+
+      {/* Teléfono (P4): título con el conteo y buscador grande por unidad */}
+      <div className="md:hidden px-4 pt-4 flex flex-col gap-3">
+        <div>
+          <h1 className="m-0 text-[22px] font-semibold tracking-[-.015em]">Paquetes</h1>
+          <div className={`${dsMono} text-xs text-[#8a8580]`}>{summary?.pending ?? 0} por entregar</div>
+        </div>
+        <input
+          type="search"
+          aria-label="Buscar paquete por unidad"
+          placeholder="126"
+          inputMode="search"
+          className={`${dsMono} h-12 w-full rounded-lg border-[1.5px] border-[#1a1a1a] bg-white px-3.5 text-lg outline-none`}
+          value={searchDraft}
+          onChange={(e) => onSearch(e.target.value)}
+        />
+        {filters.q && !loading && (
+          <div className="text-[13px] text-[#4b4a46]">
+            {total} {total === 1 ? 'coincidencia' : 'coincidencias'} con «{filters.q}»
+          </div>
+        )}
+      </div>
+
+      <DsBody className="max-md:pb-32">
+        <div className="hidden md:flex justify-end">
+          <DsSearch value={searchDraft} onChange={onSearch} placeholder="Unidad, residente o guía" className="md:w-[260px]" ariaLabel="Buscar paquete" />
+        </div>
 
         {notice && <VtNotice tone={notice.tone}>{notice.text}</VtNotice>}
 
@@ -251,7 +236,7 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
             rows={packages}
             rowKey={(p) => p.id}
             loading={loading}
-            onRowClick={(p) => open(p)}
+            onRowClick={(p) => setSelected({ row: p, mode: 'detail' })}
             selectedKey={selected?.row.id ?? null}
             empty={empty}
             minWidth={900}
@@ -265,18 +250,27 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
           ) : packages.length === 0 ? (
             <div className="py-10 text-center text-sm text-[#8a8580]">{empty}</div>
           ) : (
-            packages.map((p) => <PackageCard key={p.id} p={p} onOpen={() => open(p)} onDeliver={() => open(p, true)} />)
+            packages.map((p) => <PackageCard key={p.id} p={p} onOpen={() => setSelected({ row: p, mode: 'detail' })} onDeliver={() => setSelected({ row: p, mode: 'deliver' })} />)
           )}
-          <div className="rounded-[10px] overflow-hidden border border-[#e4e2dd]">
-            <Pagination total={total} totalPages={totalPages} />
-          </div>
+          {totalPages > 1 && (
+            <div className="rounded-[10px] overflow-hidden border border-[#e4e2dd]">
+              <Pagination total={total} totalPages={totalPages} />
+            </div>
+          )}
         </div>
       </DsBody>
+
+      {/* Teléfono: recibir paquete, fijo abajo (sobre la barra de navegación) */}
+      <div className="md:hidden fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] px-4 z-30">
+        <button type="button" className={`${vtBtn.primary} w-full h-[52px]! text-[15px]!`} onClick={() => setReceiveOpen(true)}>
+          + Recibir paquete
+        </button>
+      </div>
 
       <PackageDetailPanel
         businessId={businessId}
         row={selected?.row ?? null}
-        startDelivering={selected?.deliver}
+        mode={selected?.mode}
         onClose={() => setSelected(null)}
         onChanged={(text) => {
           showNotice({ tone: 'ok', text });
@@ -298,46 +292,36 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
   );
 }
 
-function Age({ p }: { p: PackageListDTO }) {
+/** Días en portería ("hoy", "1 día", "6 días"); en entregados, cuánto estuvo. */
+function Days({ p }: { p: PackageListDTO }) {
+  const days = packageDays(p);
   const pending = packageGroupOf(p) === 'pending';
-  if (!pending) return <span className="text-[#8a8580]">—</span>;
-  const hours = packageAgeHours(p);
-  const level = ageLevel(hours);
   return (
-    <span className={`${dsMono} text-xs ${level === 'fresh' ? '' : 'font-semibold'}`} style={{ color: AGE_COLOR[level] }}>
-      {formatAge(hours)}
+    <span className={`${dsMono} text-xs font-semibold`} style={{ color: pending ? daysColor(days) : '#8a8580' }}>
+      {formatDays(days)}
     </span>
   );
 }
 
 function PackageCard({ p, onOpen, onDeliver }: { p: PackageListDTO; onOpen: () => void; onDeliver: () => void }) {
-  const group = packageGroupOf(p);
-  const meta = PACKAGE_GROUP_META[group];
   const canDeliver = packageActions(p).canDeliver;
   const unit = unitLabel(p.propertyUnitBlock, p.propertyUnitNumber);
+  const days = packageDays(p);
+  const pending = packageGroupOf(p) === 'pending';
   return (
-    <article className="bg-white border border-[#e4e2dd] rounded-[10px] overflow-hidden" style={{ borderLeft: `3px solid ${meta.color}` }}>
-      <button type="button" onClick={onOpen} className="w-full text-left px-4 pt-3 pb-2.5 flex gap-3 items-start" aria-label={`Ver paquete de ${unit}`}>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="text-[15px] font-semibold">{unit}</span>
-            <Age p={p} />
-          </div>
-          <div className="text-[13px] text-[#4b4a46] truncate">{p.residentName || 'Cualquier residente'}</div>
-          <div className={`${dsMono} text-[11px] text-[#8a8580] truncate mt-0.5`}>
-            {p.carrier} · {p.trackingNumber}
-          </div>
-          <div className="mt-1.5">
-            <DsStatus label={packageStatusLabel(p)} color={meta.color} />
-          </div>
+    <article className="bg-white border border-[#e4e2dd] rounded-[10px] px-4 py-3 flex items-center gap-3">
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left" aria-label={`Ver paquete de ${unit}`}>
+        <div className={`${dsMono} text-base font-semibold`}>{unit}</div>
+        <div className="text-[13px] text-[#4b4a46] truncate">{p.residentName || 'Cualquier residente'}</div>
+        <div className="text-xs truncate">
+          <span className="text-[#8a8580]">{p.carrier} · </span>
+          <span style={{ color: pending ? daysColor(days) : '#8a8580' }}>{formatDays(days)}</span>
         </div>
       </button>
       {canDeliver && (
-        <div className="px-4 pb-3">
-          <button type="button" className={`${vtBtn.primary} w-full`} onClick={onDeliver}>
-            Entregar
-          </button>
-        </div>
+        <button type="button" className={`${vtBtn.primary} h-11! px-4!`} onClick={onDeliver} aria-label={`Entregar paquete de ${unit}`}>
+          Entregar
+        </button>
       )}
     </article>
   );

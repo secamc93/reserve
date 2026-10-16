@@ -53,7 +53,10 @@ export class PackagesRepository implements IPackagesRepository {
       createdAt: pkg.created_at,
       updatedAt: pkg.updated_at,
       propertyUnitNumber: pkg.property_unit_number,
+      propertyUnitBlock: pkg.property_unit_block,
       residentName: pkg.resident_name,
+      receivedByName: pkg.received_by_name,
+      deliveredByName: pkg.delivered_by_name,
       statusName: pkg.status_name,
       statusCode: pkg.status_code,
     };
@@ -64,7 +67,7 @@ export class PackagesRepository implements IPackagesRepository {
   }
 
   async getPackages(params: GetPackagesParams): Promise<PackagesPaginated> {
-    const { businessId, token, page = 1, pageSize = 10, propertyUnitId, residentId, packageStatusId, startDate, endDate, statusGroup, search } = params;
+    const { businessId, token, page = 1, pageSize = 10, propertyUnitId, residentId, packageStatusId, startDate, endDate, statusGroup, search, deliveredToday } = params;
 
     const queryParams = new URLSearchParams();
     queryParams.set('page', page.toString());
@@ -72,6 +75,7 @@ export class PackagesRepository implements IPackagesRepository {
     // Solo lo usa el super admin; a un usuario normal el back le aplica el negocio de su token.
     if (businessId) queryParams.set('business_id', businessId.toString());
     if (statusGroup) queryParams.set('status_group', statusGroup);
+    if (deliveredToday) queryParams.set('delivered_today', 'true');
     if (search && search.trim()) queryParams.set('q', search.trim());
     if (propertyUnitId) queryParams.set('property_unit_id', propertyUnitId.toString());
     if (residentId) queryParams.set('resident_id', residentId.toString());

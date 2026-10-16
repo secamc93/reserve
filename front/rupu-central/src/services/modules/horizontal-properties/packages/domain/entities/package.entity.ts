@@ -24,7 +24,10 @@ export interface Package {
   updatedAt: string;
   // Relaciones
   propertyUnitNumber?: string;
+  propertyUnitBlock?: string;
   residentName?: string;
+  receivedByName?: string;
+  deliveredByName?: string;
   statusName?: string;
   statusCode?: string;
 }
