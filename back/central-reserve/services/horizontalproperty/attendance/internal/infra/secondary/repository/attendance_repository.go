@@ -760,3 +760,42 @@ func (r *AttendanceRepository) UpdateAttendanceRecordsByPropertyUnit(ctx context
 	}
 	return nil
 }
+
+// SetAttendanceRecordProxy asigna o quita el apoderado de un registro. Con apoderado la unidad
+// queda presente como apoderado; al quitarlo queda sin asistencia.
+func (r *AttendanceRepository) SetAttendanceRecordProxy(ctx context.Context, recordID uint, proxyID *uint) (*domain.AttendanceRecord, error) {
+	updates := map[string]interface{}{
+		"attended_as_owner": false,
+		"attended_as_proxy": proxyID != nil,
+		"updated_at":        time.Now(),
+	}
+	if proxyID != nil {
+		updates["proxy_id"] = *proxyID
+	} else {
+		updates["proxy_id"] = gorm.Expr("NULL")
+	}
+	res := r.db.Conn(ctx).Model(&models.AttendanceRecord{}).Where("id = ?", recordID).Updates(updates)
+	if res.Error != nil {
+		r.logger.Error().Err(res.Error).Uint("record_id", recordID).Msg("Error asignando apoderado al registro")
+		return nil, fmt.Errorf("error asignando apoderado al registro: %w", res.Error)
+	}
+	if res.RowsAffected == 0 {
+		return nil, domain.ErrAttendanceRecordNotFound
+	}
+	return r.GetAttendanceRecordByID(ctx, recordID)
+}
+
+// GetAttendanceListBusinessID devuelve la propiedad del grupo de votación de la lista (0 si no
+// existe). Tabla consultada fuera del módulo: voting_groups (solo lectura).
+func (r *AttendanceRepository) GetAttendanceListBusinessID(ctx context.Context, attendanceListID uint) (uint, error) {
+	var businessID uint
+	if err := r.db.Conn(ctx).Model(&models.AttendanceList{}).
+		Select("voting_groups.business_id").
+		Joins("JOIN horizontal_property.voting_groups ON voting_groups.id = attendance_lists.voting_group_id").
+		Where("attendance_lists.id = ?", attendanceListID).
+		Scan(&businessID).Error; err != nil {
+		r.logger.Error().Err(err).Uint("attendance_list_id", attendanceListID).Msg("Error obteniendo propiedad de la lista")
+		return 0, fmt.Errorf("error obteniendo propiedad de la lista: %w", err)
+	}
+	return businessID, nil
+}

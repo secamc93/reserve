@@ -435,7 +435,18 @@ func (uc *AttendanceUseCase) MarkAttendanceSimple(ctx context.Context, recordID 
 		Uint("record_id", recordID).
 		Msg("Llamando a UpdateAttendanceRecordSimple")
 
-	updated, err := uc.attendanceRepo.UpdateAttendanceRecordSimple(ctx, recordID, attended, false)
+	// Si la unidad tiene apoderado en esta lista, asiste como apoderado (no como propietario).
+	asOwner, asProxy := attended, false
+	if attended {
+		current, err := uc.attendanceRepo.GetAttendanceRecordByID(ctx, recordID)
+		if err != nil {
+			return nil, err
+		}
+		if current != nil && current.ProxyID != nil {
+			asOwner, asProxy = false, true
+		}
+	}
+	updated, err := uc.attendanceRepo.UpdateAttendanceRecordSimple(ctx, recordID, asOwner, asProxy)
 	if err != nil {
 		uc.logger.Error().
 			Err(err).

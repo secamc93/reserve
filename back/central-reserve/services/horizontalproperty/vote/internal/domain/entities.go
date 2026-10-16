@@ -74,3 +74,12 @@ type UnvotedUnit struct {
 	ResidentID   uint
 	ResidentName string
 }
+
+// VotingCredential - Contraseña de voto de una unidad dentro de un grupo de votación
+type VotingCredential struct {
+	ID             uint
+	BusinessID     uint
+	VotingGroupID  uint
+	PropertyUnitID uint
+	Password       string
+}

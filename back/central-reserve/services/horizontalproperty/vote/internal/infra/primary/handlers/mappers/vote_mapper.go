@@ -218,3 +218,24 @@ func MapBulkVoteResultDTOToResponse(dto *domain.BulkVoteResultDTO) response.Bulk
 		Results:        results,
 	}
 }
+
+// MapVotingCredentialsToResponse mapea una página de contraseñas a la respuesta HTTP.
+func MapVotingCredentialsToResponse(p *domain.PaginatedVotingCredentialsDTO) response.PaginatedVotingCredentialsResponse {
+	items := make([]response.VotingCredentialResponse, len(p.Credentials))
+	for i, c := range p.Credentials {
+		items[i] = response.VotingCredentialResponse{
+			PropertyUnitID: c.PropertyUnitID,
+			UnitNumber:     c.UnitNumber,
+			UnitBlock:      c.UnitBlock,
+			OwnerName:      c.OwnerName,
+			Password:       c.Password,
+		}
+	}
+	return response.PaginatedVotingCredentialsResponse{
+		Credentials: items,
+		Total:       p.Total,
+		Page:        p.Page,
+		PageSize:    p.PageSize,
+		TotalPages:  p.TotalPages,
+	}
+}

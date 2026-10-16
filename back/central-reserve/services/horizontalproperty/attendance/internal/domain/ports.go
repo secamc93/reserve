@@ -34,6 +34,11 @@ type AttendanceRepository interface {
 	UpdateAttendanceRecordSimple(ctx context.Context, id uint, attendedAsOwner, attendedAsProxy bool) (*AttendanceRecord, error)
 	UpdateAttendanceRecordsByPropertyUnit(ctx context.Context, propertyUnitID uint, proxyID *uint) error
 	DeleteAttendanceRecord(ctx context.Context, id uint) error
+	// SetAttendanceRecordProxy asigna (proxyID != nil) o quita (nil) el apoderado de un solo
+	// registro. Con apoderado la unidad queda presente como apoderado; sin él, queda sin asistencia.
+	SetAttendanceRecordProxy(ctx context.Context, recordID uint, proxyID *uint) (*AttendanceRecord, error)
+	// GetAttendanceListBusinessID devuelve la propiedad (business) del grupo de la lista.
+	GetAttendanceListBusinessID(ctx context.Context, attendanceListID uint) (uint, error)
 
 	// Bulk operations
 	CreateAttendanceRecordsInBatch(ctx context.Context, records []AttendanceRecord) error
@@ -74,6 +79,11 @@ type AttendanceUseCase interface {
 	// Special operations
 	MarkAttendance(ctx context.Context, attendanceListID, propertyUnitID uint, residentID *uint, proxyID *uint, attendedAsOwner, attendedAsProxy bool, signature, signatureMethod string) (*AttendanceRecordDTO, error)
 	MarkAttendanceSimple(ctx context.Context, recordID uint, attended bool) (*AttendanceRecordDTO, error)
+	// AssignRecordProxy crea o edita el apoderado de un registro de la lista y marca la unidad
+	// presente como apoderado. scopeBusinessID = 0 (super admin) no restringe la propiedad.
+	AssignRecordProxy(ctx context.Context, scopeBusinessID, recordID uint, proxyName, proxyDni string) (*AttendanceRecordDTO, error)
+	// RemoveRecordProxy quita el apoderado del registro (la unidad queda sin asistencia).
+	RemoveRecordProxy(ctx context.Context, scopeBusinessID, recordID uint) (*AttendanceRecordDTO, error)
 	VerifyAttendance(ctx context.Context, recordID uint, verifiedBy uint, verificationNotes string) (*AttendanceRecordDTO, error)
 	GetAttendanceSummary(ctx context.Context, attendanceListID uint) (*AttendanceSummaryDTO, error)
 	GetVotingGroupTitleByListID(ctx context.Context, attendanceListID uint) (string, error)

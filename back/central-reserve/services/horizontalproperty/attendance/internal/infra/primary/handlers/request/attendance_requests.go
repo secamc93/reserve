@@ -68,3 +68,9 @@ type VerifyAttendanceRequest struct {
 	VerifiedBy        uint   `json:"verified_by" binding:"required" example:"5"`
 	VerificationNotes string `json:"verification_notes" binding:"omitempty,max=500" example:"Verificado por administrador"`
 }
+
+// AssignRecordProxyRequest - Apoderado que asiste por la unidad en esta lista
+type AssignRecordProxyRequest struct {
+	ProxyName string `json:"proxy_name" binding:"required,max=255" example:"María Gómez"`
+	ProxyDni  string `json:"proxy_dni" binding:"max=30" example:"52123456"`
+}

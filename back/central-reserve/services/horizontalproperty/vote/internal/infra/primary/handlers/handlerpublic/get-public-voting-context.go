@@ -139,7 +139,20 @@ func (h *PublicHandler) GetPublicVotingContext(c *gin.Context) {
 
 	logEvent.Msg("✅ [VOTACION PUBLICA] Contexto obtenido exitosamente")
 
+	// Si el grupo tiene contraseñas generadas, /public/validate-resident exige la de la unidad.
+	requirePassword, err := h.publicUseCase.GroupRequiresPassword(c.Request.Context(), groupID)
+	if err != nil {
+		h.logger.Error().Err(err).Uint("group_id", groupID).Msg("Error consultando si el grupo exige contraseña")
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+			Success: false,
+			Message: "Error obteniendo contexto de votación",
+			Error:   err.Error(),
+		})
+		return
+	}
+
 	responseData := gin.H{
+		"require_password": requirePassword,
 		"property": gin.H{
 			"id":      hp.ID,
 			"name":    hp.Name,

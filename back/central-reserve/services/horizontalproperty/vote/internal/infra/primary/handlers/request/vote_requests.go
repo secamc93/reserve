@@ -58,3 +58,16 @@ type CreateBulkVotesRequest struct {
 	UserAgent          string `json:"user_agent"`
 	Notes              string `json:"notes"`
 }
+
+// GenerateVotingCredentialsRequest - Request para generar las contraseñas de voto del grupo
+type GenerateVotingCredentialsRequest struct {
+	// Regenerate reemplaza todas las contraseñas del grupo (las credenciales impresas antes dejan
+	// de servir). Si es false solo se generan para las unidades que aún no tienen.
+	Regenerate bool `json:"regenerate" example:"false"`
+}
+
+// ListVotingCredentialsRequest - Paginación del listado de contraseñas
+type ListVotingCredentialsRequest struct {
+	Page     int `form:"page" binding:"omitempty,min=1"`
+	PageSize int `form:"page_size" binding:"omitempty,min=1,max=200"`
+}

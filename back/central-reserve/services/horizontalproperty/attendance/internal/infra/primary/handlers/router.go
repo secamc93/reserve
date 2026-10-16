@@ -35,6 +35,8 @@ func (h *AttendanceHandler) RegisterRoutes(router *gin.RouterGroup) {
 		attendance.POST("/records/:id/mark", middleware.JWT(), h.MarkAttendance)
 		attendance.POST("/records/:id/unmark", middleware.JWT(), h.UnmarkAttendance)
 		attendance.POST("/records/:id/verify", middleware.JWT(), h.VerifyAttendance)
+		attendance.PUT("/records/:id/proxy", middleware.JWT(), h.AssignRecordProxy)
+		attendance.DELETE("/records/:id/proxy", middleware.JWT(), h.RemoveRecordProxy)
 
 		// Exportación
 		attendance.GET("/lists/:id/export-excel", middleware.JWT(), h.ExportAttendanceExcel)

@@ -16,12 +16,15 @@ type ValidateResidentRequest struct {
 	PropertyUnitID uint `json:"property_unit_id" binding:"required" example:"1"`
 	// Dni es obligatorio solo si el grupo tiene require_document_validation = true; si no, se ignora.
 	Dni string `json:"dni" example:"123456789"`
+	// Password es obligatoria solo si el grupo tiene contraseñas generadas (la de la credencial
+	// impresa de la unidad).
+	Password string `json:"password" example:"K7M2QX"`
 }
 
 // ValidateResidentForVoting godoc
 //
 //	@Summary		Validar residente/unidad para votación pública
-//	@Description	Valida a quien vota por QR y devuelve el token de votación (voting_auth_token). Si el grupo del token tiene require_document_validation=true, `dni` es obligatorio (400 "Documento requerido") y debe ser de un residente activo de la unidad (404 si no). Si es false, `dni` se ignora: basta que la unidad exista, sea de la propiedad (404) y esté activa (400); si no tiene residentes igual puede votar (resident_id 0, resident_name "Unidad <número>").
+//	@Description	Valida a quien vota por QR y devuelve el token de votación (voting_auth_token). Si el grupo tiene contraseñas generadas, `password` es obligatoria (400 "Contraseña requerida") y debe ser la de la unidad (403 "Contraseña incorrecta"). Si el grupo del token tiene require_document_validation=true, `dni` es obligatorio (400 "Documento requerido") y debe ser de un residente activo de la unidad (404 si no). Si es false, `dni` se ignora: basta que la unidad exista, sea de la propiedad (404) y esté activa (400); si no tiene residentes igual puede votar (resident_id 0, resident_name "Unidad <número>").
 //	@Tags			Votaciones Públicas
 //	@Accept			json
 //	@Produce		json
@@ -76,7 +79,7 @@ func (h *PublicHandler) ValidateResidentForVoting(c *gin.Context) {
 		return
 	}
 
-	voter, err := h.publicUseCase.ValidateResidentForVoting(c.Request.Context(), hpID, groupID, req.PropertyUnitID, req.Dni)
+	voter, err := h.publicUseCase.ValidateResidentForVoting(c.Request.Context(), hpID, groupID, req.PropertyUnitID, req.Dni, req.Password)
 	if err != nil {
 		status, message := validateResidentErrorStatus(err)
 		if status >= http.StatusInternalServerError {
@@ -124,6 +127,7 @@ func (h *PublicHandler) ValidateResidentForVoting(c *gin.Context) {
 		"hp_id":                       hpID,
 		"is_group_token":              isGroupToken,
 		"require_document_validation": voter.RequireDocumentValidation,
+		"require_password":            voter.RequirePassword,
 	}
 	if !isGroupToken {
 		responseData["voting_id"] = *votingID
@@ -141,6 +145,10 @@ func validateResidentErrorStatus(err error) (int, string) {
 	switch {
 	case errors.Is(err, domain.ErrDocumentRequired):
 		return http.StatusBadRequest, "Documento requerido"
+	case errors.Is(err, domain.ErrPasswordRequired):
+		return http.StatusBadRequest, "Contraseña requerida"
+	case errors.Is(err, domain.ErrInvalidPassword):
+		return http.StatusForbidden, "Contraseña incorrecta"
 	case errors.Is(err, domain.ErrPropertyUnitRequired):
 		return http.StatusBadRequest, "Unidad requerida"
 	case errors.Is(err, domain.ErrPropertyUnitInactive):

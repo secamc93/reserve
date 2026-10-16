@@ -18,4 +18,7 @@ var (
 	ErrPropertyUnitNotFound    = errors.New("unidad no encontrada en esta propiedad")
 	ErrPropertyUnitInactive    = errors.New("unidad inactiva")
 	ErrVotingNotInGroup        = errors.New("la votación no pertenece al grupo")
+	ErrPasswordRequired        = errors.New("contraseña de votación requerida")
+	ErrInvalidPassword         = errors.New("contraseña de votación incorrecta")
+	ErrNoUnitsForCredentials   = errors.New("la propiedad no tiene unidades activas para generar contraseñas")
 )

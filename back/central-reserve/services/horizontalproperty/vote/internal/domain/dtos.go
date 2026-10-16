@@ -194,6 +194,8 @@ type ValidatedVoterDTO struct {
 	PropertyUnitID            uint
 	PropertyUnitNumber        string
 	RequireDocumentValidation bool
+	// RequirePassword: el grupo tiene contraseñas generadas y se validó la de la unidad.
+	RequirePassword bool
 }
 
 // PropertyUnitDetailDTO - DTO para respuesta detallada de unidad
@@ -348,4 +350,28 @@ type VotingWithStatusDTO struct {
 	RequiredPercentage *float64
 	OptionsCount       int
 	HasVoted           bool
+}
+
+// VotingCredentialDTO - Contraseña de una unidad con los datos que se imprimen en la credencial
+type VotingCredentialDTO struct {
+	PropertyUnitID uint
+	UnitNumber     string
+	UnitBlock      string // Etiqueta del tipo de unidad ("Casa", "Local"...) o bloque/torre
+	OwnerName      string // Residente principal de la unidad (vacío si no tiene)
+	Password       string
+}
+
+// PaginatedVotingCredentialsDTO - Página de contraseñas de un grupo
+type PaginatedVotingCredentialsDTO struct {
+	Credentials []VotingCredentialDTO
+	Total       int64
+	Page        int
+	PageSize    int
+	TotalPages  int
+}
+
+// GenerateCredentialsResultDTO - Resultado de generar contraseñas para un grupo
+type GenerateCredentialsResultDTO struct {
+	Generated int   // Contraseñas creadas en esta llamada
+	Total     int64 // Contraseñas que tiene el grupo después de generar
 }

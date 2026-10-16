@@ -53,7 +53,7 @@ func TestValidateResident_ConDocumento_SinDniEsDocumentoRequerido(t *testing.T) 
 		return nil, nil
 	}
 	for _, dni := range []string{"", "   "} {
-		_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, dni)
+		_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, dni, "")
 		if !errors.Is(err, domain.ErrDocumentRequired) {
 			t.Fatalf("dni %q: se esperaba ErrDocumentRequired, got %v", dni, err)
 		}
@@ -64,7 +64,7 @@ func TestValidateResident_ConDocumento_SinDniEsDocumentoRequerido(t *testing.T) 
 }
 
 func TestValidateResident_ConDocumento_DniCorrecto(t *testing.T) {
-	v, err := nuevoUC(repoConGrupo(true, nil)).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, " 1010 ")
+	v, err := nuevoUC(repoConGrupo(true, nil)).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, " 1010 ", "")
 	if err != nil {
 		t.Fatalf("error inesperado: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestValidateResident_ConDocumento_DniCorrecto(t *testing.T) {
 }
 
 func TestValidateResident_ConDocumento_DniAjenoRechazado(t *testing.T) {
-	_, err := nuevoUC(repoConGrupo(true, nil)).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "9999")
+	_, err := nuevoUC(repoConGrupo(true, nil)).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "9999", "")
 	if !errors.Is(err, domain.ErrResidentNotFound) {
 		t.Fatalf("se esperaba ErrResidentNotFound, got %v", err)
 	}
@@ -87,7 +87,7 @@ func TestValidateResident_SinDocumento_IgnoraDniYUsaResidente(t *testing.T) {
 		return nil, domain.ErrResidentNotFound
 	}
 	// Un dni cualquiera (incluso erróneo) se ignora.
-	v, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "no-importa")
+	v, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "no-importa", "")
 	if err != nil {
 		t.Fatalf("error inesperado: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestValidateResident_SinDocumento_IgnoraDniYUsaResidente(t *testing.T) {
 
 func TestValidateResident_SinDocumento_UnidadSinResidentePuedeVotar(t *testing.T) {
 	repo := repoConGrupo(false, &domain.PublicVoterUnitDTO{PropertyUnitID: unitID, PropertyUnitNumber: "T1-101", IsActive: true})
-	v, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "")
+	v, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "", "")
 	if err != nil {
 		t.Fatalf("una unidad sin residentes debe poder votar si el grupo no exige documento: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestValidateResident_SinDocumento_UnidadSinResidentePuedeVotar(t *testing.T
 
 func TestValidateResident_SinDocumento_UnidadDeOtraPropiedadRechazada(t *testing.T) {
 	repo := repoConGrupo(false, &domain.PublicVoterUnitDTO{PropertyUnitID: unitID, PropertyUnitNumber: "101", IsActive: true})
-	_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, 999, "")
+	_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, 999, "", "")
 	if !errors.Is(err, domain.ErrPropertyUnitNotFound) {
 		t.Fatalf("se esperaba ErrPropertyUnitNotFound, got %v", err)
 	}
@@ -117,7 +117,7 @@ func TestValidateResident_SinDocumento_UnidadDeOtraPropiedadRechazada(t *testing
 
 func TestValidateResident_SinDocumento_UnidadInactivaRechazada(t *testing.T) {
 	repo := repoConGrupo(false, &domain.PublicVoterUnitDTO{PropertyUnitID: unitID, PropertyUnitNumber: "101", IsActive: false, ResidentID: 55, ResidentName: "Ana"})
-	_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "")
+	_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID, groupID, unitID, "", "")
 	if !errors.Is(err, domain.ErrPropertyUnitInactive) {
 		t.Fatalf("se esperaba ErrPropertyUnitInactive, got %v", err)
 	}
@@ -125,14 +125,14 @@ func TestValidateResident_SinDocumento_UnidadInactivaRechazada(t *testing.T) {
 
 func TestValidateResident_GrupoDeOtraPropiedadRechazado(t *testing.T) {
 	repo := repoConGrupo(false, &domain.PublicVoterUnitDTO{PropertyUnitID: unitID, PropertyUnitNumber: "101", IsActive: true})
-	_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID+1, groupID, unitID, "")
+	_, err := nuevoUC(repo).ValidateResidentForVoting(context.Background(), hpID+1, groupID, unitID, "", "")
 	if !errors.Is(err, domain.ErrVotingGroupNotFound) {
 		t.Fatalf("se esperaba ErrVotingGroupNotFound, got %v", err)
 	}
 }
 
 func TestValidateResident_UnidadRequerida(t *testing.T) {
-	_, err := nuevoUC(repoConGrupo(false, nil)).ValidateResidentForVoting(context.Background(), hpID, groupID, 0, "")
+	_, err := nuevoUC(repoConGrupo(false, nil)).ValidateResidentForVoting(context.Background(), hpID, groupID, 0, "", "")
 	if !errors.Is(err, domain.ErrPropertyUnitRequired) {
 		t.Fatalf("se esperaba ErrPropertyUnitRequired, got %v", err)
 	}

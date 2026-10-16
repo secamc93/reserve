@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"central_reserve/services/auth/middleware"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlercredentials"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerpublic"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerresults"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotes"
@@ -20,6 +21,7 @@ type VotingHandler struct {
 	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler
 	votesHandler         handlervotes.IVotesHandler
 	publicHandler        handlerpublic.IPublicHandler
+	credentialsHandler   handlercredentials.ICredentialsHandler
 	scopeGuard           gin.HandlerFunc
 }
 
@@ -31,6 +33,7 @@ func New(
 	votingOptionsHandler handlervotingoptions.IVotingOptionsHandler,
 	votesHandler handlervotes.IVotesHandler,
 	publicHandler handlerpublic.IPublicHandler,
+	credentialsHandler handlercredentials.ICredentialsHandler,
 	groupLookup GroupLookup,
 	votingLookup VotingLookup,
 ) *VotingHandler {
@@ -41,6 +44,7 @@ func New(
 		votingOptionsHandler: votingOptionsHandler,
 		votesHandler:         votesHandler,
 		publicHandler:        publicHandler,
+		credentialsHandler:   credentialsHandler,
 		scopeGuard:           ScopeGuard(groupLookup, votingLookup),
 	}
 }
@@ -60,6 +64,9 @@ func (h *VotingHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// ✅ NUEVO: Ruta para generar QR de grupo (privada, requiere JWT)
 		// /horizontal-properties/voting-groups/:group_id/generate-public-url
 		groups.POST("/:group_id/generate-public-url", middleware.JWT(), h.publicHandler.GeneratePublicGroupURL)
+
+		// handler-credentials: /horizontal-properties/voting-groups/:group_id/credentials{,/generate}
+		h.credentialsHandler.Router(groups)
 
 		// handler-votings: /horizontal-properties/voting-groups/:group_id/votings
 		votings := groups.Group("/:group_id/votings")

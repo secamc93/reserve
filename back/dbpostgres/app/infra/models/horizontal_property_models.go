@@ -455,6 +455,34 @@ func (AttendanceList) TableName() string {
 
 // ───────────────────────────────────────────
 //
+//	VOTING CREDENTIALS - Contraseña de voto por unidad en un grupo
+//
+// ───────────────────────────────────────────
+//
+// VotingCredential es la contraseña que el sistema genera para cada unidad de un grupo de
+// votación. Se entrega impresa en la asistencia (PDF con QR, unidad, propietario y contraseña) y
+// el voto público por QR la exige cuando el grupo tiene contraseñas generadas. Se guarda en claro
+// porque hay que poder reimprimirla.
+type VotingCredential struct {
+	gorm.Model
+	BusinessID     uint   `gorm:"not null;index"`
+	VotingGroupID  uint   `gorm:"not null;uniqueIndex:idx_voting_credential_group_unit,priority:1"`
+	PropertyUnitID uint   `gorm:"not null;uniqueIndex:idx_voting_credential_group_unit,priority:2"`
+	Password       string `gorm:"size:20;not null"`
+
+	// Relaciones
+	Business     Business     `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	VotingGroup  VotingGroup  `gorm:"foreignKey:VotingGroupID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	PropertyUnit PropertyUnit `gorm:"foreignKey:PropertyUnitID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+// TableName especifica el nombre de tabla con esquema para VotingCredential
+func (VotingCredential) TableName() string {
+	return "horizontal_property.voting_credentials"
+}
+
+// ───────────────────────────────────────────
+//
 //	PROXIES – Apoderados para representar unidades en votaciones
 //
 // ───────────────────────────────────────────

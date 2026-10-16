@@ -10,6 +10,7 @@ import (
 
 	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/vote/internal/app/test/mocks"
+	"central_reserve/services/horizontalproperty/vote/internal/app/usecasecredentials"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasepublic"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecaseresults"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecaseshared"
@@ -19,6 +20,7 @@ import (
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasevotings"
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers"
+	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlercredentials"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerpublic"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlerresults"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/handlervotes"
@@ -60,6 +62,7 @@ func newRouter(t *testing.T, repo domain.VotingRepository) (*gin.Engine, *cache.
 		handlervotingoptions.New(options, logger),
 		handlervotes.New(votes, logger),
 		handlerpublic.New(public, groups, votings, votes, results, shared, vc, testSecret, logger),
+		handlercredentials.New(usecasecredentials.New(repo, logger, nil), logger),
 		groups,
 		votings,
 	)
