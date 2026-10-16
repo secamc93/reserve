@@ -20,6 +20,9 @@ interface AttendanceListModalProps {
   attendanceList: AttendanceList;
   token: string;
   businessId: number;
+  /** Si se pasa, la cabecera muestra "Eliminar lista". */
+  onDeleteList?: () => void;
+  deleting?: boolean;
 }
 
 interface PropertyUnit {
@@ -38,6 +41,8 @@ interface PropertyUnit {
 export function AttendanceListModal({
   isOpen,
   onClose,
+  onDeleteList,
+  deleting = false,
   attendanceList,
   token,
   businessId,
@@ -383,8 +388,13 @@ export function AttendanceListModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-stretch md:items-center justify-center z-50">
-      <div className="bg-white md:rounded-lg shadow-xl w-full h-full md:w-[60vw] md:max-w-[60vw] md:h-[90vh] md:mx-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-stretch md:items-center justify-center z-50"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div role="dialog" aria-modal="true" aria-label={attendanceList.title} className="bg-white md:rounded-xl shadow-[0_24px_64px_rgba(0,0,0,.25)] w-full h-full md:w-[90vw] md:max-w-[90vw] md:h-[90vh] overflow-y-auto overscroll-contain">
         <div className="p-4 md:p-6">
           {/* Header */}
           <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
@@ -413,6 +423,15 @@ export function AttendanceListModal({
               >
                 📊 Resumen Excel
               </button>
+              {onDeleteList && (
+                <button
+                  onClick={onDeleteList}
+                  disabled={deleting}
+                  className="btn btn-outline btn-sm flex-1 md:flex-none text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  {deleting ? 'Eliminando…' : 'Eliminar lista'}
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors min-w-[44px] md:min-w-0"

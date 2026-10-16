@@ -50,12 +50,14 @@ import {
 interface AttendancePanelProps {
   businessId: number;
   groupId: number;
+  /** Si se pasa (panel flotante), la cabecera muestra un botón para cerrarlo. */
+  onClose?: () => void;
 }
 
 /** Tope de páginas al traer los registros (100 por página). */
 const MAX_PAGES = 20;
 
-export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
+export function AttendancePanel({ businessId, groupId, onClose }: AttendancePanelProps) {
   const [group, setGroup] = useState<VotingGroup | null>(null);
   const [liveVoting, setLiveVoting] = useState<Voting | null>(null);
   /** Votación del grupo usada para marcar unidades que aún no tienen registro. */
@@ -229,17 +231,24 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
     <DsPage>
       <DsSectionHeader
         title={
-          <span className="inline-flex items-center gap-2">
-            <Link
-              href={`/properties/${businessId}/voting-groups`}
-              aria-label="Volver a los grupos de votación"
-              title={group?.name ?? 'Grupos de votación'}
-              className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
-            >
-              <VtIcon name="back" size={14} />
-            </Link>
-            Asistencia
-          </span>
+          onClose ? (
+            <span>
+              Asistencia
+              {group?.name && <span className="font-normal text-[#6b6a66]">{` · ${group.name}`}</span>}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <Link
+                href={`/properties/${businessId}/voting-groups`}
+                aria-label="Volver a los grupos de votación"
+                title={group?.name ?? 'Grupos de votación'}
+                className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
+              >
+                <VtIcon name="back" size={14} />
+              </Link>
+              Asistencia
+            </span>
+          )
         }
         actions={
           <>
@@ -260,6 +269,17 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
             ) : (
               <button type="button" className={vtBtn.primary} disabled title="No hay una votación abierta en este grupo">
                 Ir al panel en vivo
+              </button>
+            )}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Cerrar asistencia"
+                title="Cerrar (Esc)"
+                className="inline-flex items-center justify-center w-9 h-9 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
+              >
+                ✕
               </button>
             )}
           </>

@@ -1,5 +1,6 @@
 /**
- * Page: Specific Attendance List Management
+ * Poderes y exportar de una lista de asistencia: modal flotante (90 %) sobre los grupos de
+ * votación, con el fondo difuminado. Al cerrarlo se vuelve a la asistencia del grupo.
  */
 
 'use client';
@@ -10,6 +11,9 @@ import { AttendanceListModal } from '@/services/modules/horizontal-properties/at
 import { removeAttendanceListAction, getAttendanceListAction, getAttendanceListRecordsAction, getAttendanceListSummaryAction } from '@/services/modules/horizontal-properties/attendance/infrastructure/actions';
 import { ConfirmModal } from '@shared/ui/confirm-modal';
 import { TokenStorage } from '@shared/config';
+import { Spinner } from '@shared/ui';
+import { DsFloatingPanel, VtNotice } from '@shared/ui/ds';
+import { VotingGroupsSection } from '@/services/modules/horizontal-properties/voting/ui/voting-groups-section';
 import { AttendanceList } from '@/services/modules/horizontal-properties/attendance/domain/entities';
 
 export default function AttendanceListPage() {
@@ -84,96 +88,35 @@ export default function AttendanceListPage() {
   };
   const handleDeleteList = () => setShowConfirm(true);
 
-  if (!token) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !attendanceList) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Error
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {error || 'Lista de asistencia no encontrada'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const close = () => router.push(`/properties/${businessId}/voting-groups/${groupId}/attendance`);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
-        <div className="mb-4 md:mb-6">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 min-h-[44px] md:min-h-0 text-gray-600 hover:text-gray-900 transition-colors mb-2 md:mb-4"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Volver
-          </button>
-
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">
-            {attendanceList.title}
-          </h1>
-          {attendanceList.description && (
-            <p className="text-gray-600 mt-2">
-              {attendanceList.description}
-            </p>
-          )}
-
-          <div className="mt-4">
-            <button
-              onClick={handleDeleteList}
-              disabled={deleting}
-              className="btn btn-outline w-full md:w-auto min-h-[44px] md:min-h-0 text-red-600 border-red-300 hover:bg-red-50"
-            >
-              {deleting ? 'Eliminando...' : 'Eliminar lista'}
-            </button>
+    <>
+      <VotingGroupsSection businessId={businessId} />
+      {attendanceList && token && !loading ? (
+        <AttendanceListModal
+          isOpen={true}
+          onClose={close}
+          attendanceList={attendanceList}
+          token={token}
+          businessId={businessId}
+          onDeleteList={handleDeleteList}
+          deleting={deleting}
+        />
+      ) : (
+        <DsFloatingPanel onClose={close} ariaLabel="Poderes y exportar">
+          <div className="p-6 md:p-8">
+            {loading || !token ? (
+              <div className="flex justify-center py-16">
+                <Spinner size="md" text="Cargando lista de asistencia..." />
+              </div>
+            ) : (
+              <VtNotice>{error || 'Lista de asistencia no encontrada'}</VtNotice>
+            )}
           </div>
-        </div>
-
-        {/* Attendance List Modal Component */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <AttendanceListModal
-            isOpen={true}
-            onClose={() => router.back()}
-            attendanceList={attendanceList}
-            token={token}
-            businessId={businessId}
-          />
-        </div>
-
+        </DsFloatingPanel>
+      )}
+      {attendanceList && (
         <ConfirmModal
           isOpen={showConfirm}
           onClose={() => setShowConfirm(false)}
@@ -184,7 +127,7 @@ export default function AttendanceListPage() {
           cancelText="Cancelar"
           type="danger"
         />
-      </div>
-    </div>
+      )}
+    </>
   );
 }

@@ -6,3 +6,4 @@ export * from './layout';
 export * from './breadcrumb';
 export * from './pieces';
 export * from './url-filters';
+export * from './floating-panel';
