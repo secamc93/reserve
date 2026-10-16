@@ -36,7 +36,7 @@ import { getUnitsBusinessToken } from './business-token';
 import { CreatePropertyUnitModal } from './create-property-unit-modal';
 import { EditPropertyUnitModal } from './edit-property-unit-modal';
 import { ImportUnitsModal } from './import-units-modal';
-import { DsConfirmDialog, DsGroupedTable, useDebouncedValue, useUrlFilters } from './kit';
+import { DsConfirmDialog, DsGroupedTable, useDebouncedValue, useUrlFilters } from '@shared/ui/ds';
 
 /** Filtros en la URL: pestaña (bloque, sin residente…) y búsqueda. */
 const FILTER_KEYS = ['pestana', 'q'] as const;

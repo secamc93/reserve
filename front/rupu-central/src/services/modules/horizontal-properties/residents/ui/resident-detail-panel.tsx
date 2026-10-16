@@ -15,7 +15,7 @@ import { getResidentByIdAction, getResidentOverviewAction } from '../infrastruct
 import type { Resident, ResidentActivityKind, ResidentOverview } from '../domain';
 import { formatActivityDate, residentSubtitle } from '../domain';
 import { formatUnitLabel } from '../../units/domain';
-import { DsAvatar, DsSidePanel } from '../../units/ui/kit';
+import { DsAvatar, DsSidePanel } from '@shared/ui/ds';
 
 const ACTIVITY_ICON: Record<ResidentActivityKind, string> = {
   package: 'M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8',

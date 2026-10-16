@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { TokenStorage } from '@shared/config';
 import { DsEyebrow, VtDialog, VtNotice, dsMono, vtBtn } from '@shared/ui/ds';
 import { bulkUpdateResidentsAction } from '../infrastructure/actions/bulk-update-residents.action';
-import { DsFileDrop, validateExcelFile } from '../../units/ui/kit';
+import { DsFileDrop, validateExcelFile } from '@shared/ui/ds';
 import { ExcelErrorList, ExcelFormatExample, ExcelResultStats } from './excel-result';
 
 interface BulkEditResidentsModalProps {

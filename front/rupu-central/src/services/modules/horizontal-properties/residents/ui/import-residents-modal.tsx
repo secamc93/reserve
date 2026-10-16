@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { TokenStorage } from '@shared/config';
 import { DsEyebrow, VtDialog, VtNotice, vtBtn } from '@shared/ui/ds';
 import { importResidentsFromExcelAction } from '../infrastructure/actions';
-import { DsFileDrop, validateExcelFile } from '../../units/ui/kit';
+import { DsFileDrop, validateExcelFile } from '@shared/ui/ds';
 import { ExcelErrorList, ExcelFormatExample, ExcelResultStats } from './excel-result';
 
 interface ImportResidentsModalProps {

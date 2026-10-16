@@ -30,7 +30,7 @@ import type { Resident, ResidentsSummary } from '../domain';
 import { RESIDENT_TAB_ALL, buildResidentTabs, formatMonthYear, residentTabToFilters, residentTypeOptions } from '../domain';
 import { getPropertyUnitsSummaryAction } from '../../units/infrastructure/actions';
 import { formatUnitLabel } from '../../units/domain';
-import { DsAvatar, DsConfirmDialog, dsSelect, useDebouncedValue, useUrlFilters } from '../../units/ui/kit';
+import { DsAvatar, DsConfirmDialog, dsSelect, useDebouncedValue, useUrlFilters } from '@shared/ui/ds';
 import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
 import { ImportResidentsModal } from './import-residents-modal';

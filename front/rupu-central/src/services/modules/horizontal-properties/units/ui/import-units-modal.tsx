@@ -22,7 +22,7 @@ import {
   type UnitImportPreview,
 } from '../domain';
 import { getUnitsBusinessToken } from './business-token';
-import { DsFileDrop, validateExcelFile } from './kit';
+import { DsFileDrop, validateExcelFile } from '@shared/ui/ds';
 
 interface ImportUnitsModalProps {
   isOpen: boolean;

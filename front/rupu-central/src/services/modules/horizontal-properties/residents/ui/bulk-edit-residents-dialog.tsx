@@ -22,7 +22,7 @@ import {
   type BulkRow,
 } from '../domain';
 import { formatUnitLabel } from '../../units/domain';
-import { dsSelect } from '../../units/ui/kit';
+import { dsSelect } from '@shared/ui/ds';
 
 const PAGE_SIZE = 200;
 

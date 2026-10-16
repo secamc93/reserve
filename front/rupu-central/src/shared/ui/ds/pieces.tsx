@@ -11,8 +11,11 @@
 'use client';
 
 import { useEffect, useId, useRef, type ReactNode } from 'react';
-import type { DsColumn } from '@shared/ui/ds';
-import { DS, DsEyebrow, VtDialog, VtIcon, VtNotice, dsFontRoot, dsMono, vtBtn } from '@shared/ui/ds';
+import type { DsColumn } from './layout';
+import { DS } from './tokens';
+import { dsFontRoot, dsMono } from './fonts';
+import { DsEyebrow } from './layout';
+import { VtDialog, VtIcon, VtNotice, vtBtn } from './primitives';
 
 /** Select compacto (30 px) para la barra de filtros. */
 export const dsSelect =
