@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner, Alert, MobileTopBar, useActiveProperty } from '@shared/ui';
 import { HORIZONTAL_PROPERTY_TYPE, PROPERTY_PICKER_PATH, mustPickProperty } from '@/shared/utils/properties';
+import { breadcrumbFor } from '@/shared/ui/ds/breadcrumb';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 
 export default function PropertyHorizontalLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ export default function PropertyHorizontalLayout({ children }: { children: React
   const [loading, setLoading] = useState(true);
   const { error: permissionsError } = usePermissions();
   const activeProperty = useActiveProperty();
+  const crumbs = breadcrumbFor(pathname, activeProperty?.name);
 
   useEffect(() => {
     const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
@@ -48,7 +50,13 @@ export default function PropertyHorizontalLayout({ children }: { children: React
         className="flex-1 min-w-0 min-h-screen bg-gray-50 transition-all duration-300 md:ml-20 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
         <MobileTopBar property={activeProperty} />
-        <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-3 hidden md:flex items-center justify-end">
+        {/* Barra superior (52 px): miga de pan "propiedad / módulo". */}
+        <div className="sticky top-0 z-20 h-[52px] bg-white border-b border-[#e4e2dd] px-6 hidden md:flex items-center justify-between">
+          <nav aria-label="Ubicación" className="flex items-center gap-2.5 text-[13px] min-w-0">
+            <span className="text-[#8a8580] truncate">{crumbs.parent}</span>
+            <span className="text-[#c9c6c0]" aria-hidden="true">/</span>
+            <span className="font-semibold text-[#1a1a1a] truncate">{crumbs.current}</span>
+          </nav>
           {user?.is_super_admin && (
             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-600 text-white">
               SUPER ADMIN
