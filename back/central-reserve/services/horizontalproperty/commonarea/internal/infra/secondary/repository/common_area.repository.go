@@ -53,6 +53,21 @@ func (r *CommonAreaRepository) CreateCommonArea(ctx context.Context, area *domai
 		r.logger.Error().Err(err).Msg("Error creando zona común")
 		return nil, fmt.Errorf("error creando zona común: %w", err)
 	}
+	// requires_approval / is_active tienen default:true en el modelo: GORM omite el false en Create.
+	falseDefaults := map[string]interface{}{}
+	if !area.RequiresApproval {
+		falseDefaults["requires_approval"] = false
+	}
+	if !area.IsActive {
+		falseDefaults["is_active"] = false
+	}
+	if len(falseDefaults) > 0 {
+		if err := r.db.Conn(ctx).Model(model).Updates(falseDefaults).Error; err != nil {
+			return nil, fmt.Errorf("error creando zona común: %w", err)
+		}
+		model.RequiresApproval = area.RequiresApproval
+		model.IsActive = area.IsActive
+	}
 
 	return mappers.CommonAreaToDomain(model), nil
 }

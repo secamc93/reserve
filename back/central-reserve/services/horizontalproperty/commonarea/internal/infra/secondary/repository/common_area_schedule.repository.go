@@ -39,6 +39,13 @@ func (r *CommonAreaScheduleRepository) CreateSchedule(ctx context.Context, sched
 		r.logger.Error().Err(err).Msg("Error creando horario")
 		return nil, fmt.Errorf("error creando horario: %w", err)
 	}
+	// is_active tiene default:true en el modelo: GORM omite el false en Create.
+	if !schedule.IsActive {
+		if err := r.db.Conn(ctx).Model(model).Update("is_active", false).Error; err != nil {
+			return nil, fmt.Errorf("error creando horario: %w", err)
+		}
+		model.IsActive = false
+	}
 
 	return mappers.ScheduleToDomain(model), nil
 }
