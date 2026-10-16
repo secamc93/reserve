@@ -24,6 +24,7 @@ import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
 import { getResidentsAction } from '../../residents/infrastructure/actions';
 import type { Voting, VotingGroup } from '../domain/entities';
 import { liveVotingPath } from './votings-list';
+import { VotingCredentialsActions } from './credentials/voting-credentials-actions';
 import {
   DEFAULT_QUORUM_PERCENTAGE,
   VT,
@@ -66,6 +67,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
   const [filter, setFilter] = useState<AttendanceFilter>('all');
   const [term, setTerm] = useState('');
   const [pending, setPending] = useState<Set<number>>(new Set());
+  const [token, setToken] = useState<string | null>(null);
 
   /** Trae los registros de la lista y las unidades de la propiedad (con su residente principal). */
   const loadRecords = useCallback(
@@ -136,6 +138,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
   }, [businessId, groupId, loadRecords]);
 
   useEffect(() => {
+    setToken(TokenStorage.getBusinessToken());
     load();
   }, [load]);
 
@@ -245,6 +248,20 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
             )}
           </div>
         </div>
+
+        <section
+          aria-label="Contraseñas de voto"
+          className="bg-white rounded-[10px] px-4 md:px-[18px] py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+          style={{ border: `1px solid ${VT.border}` }}
+        >
+          <div className="min-w-0">
+            <h2 className="m-0 text-[13px] font-semibold">Contraseñas de voto</h2>
+            <p className="m-0 mt-0.5 text-xs" style={{ color: VT.muted }}>
+              Una contraseña por casa. El PDF trae por casa el código QR, el propietario y su contraseña para entregar en la mesa de asistencia.
+            </p>
+          </div>
+          {token && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} />}
+        </section>
 
         {error && <VtNotice>{error}</VtNotice>}
 

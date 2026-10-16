@@ -52,7 +52,8 @@ type AttendanceRepository interface {
 type AttendanceUseCase interface {
 	// Attendance Lists
 	CreateAttendanceList(ctx context.Context, dto CreateAttendanceListDTO) (*AttendanceListDTO, error)
-	GetAttendanceListByID(ctx context.Context, id uint) (*AttendanceListDTO, error)
+	// GetAttendanceListByID devuelve la lista si es de la propiedad scopeBusinessID (0 = super admin sin restricción).
+	GetAttendanceListByID(ctx context.Context, scopeBusinessID, id uint) (*AttendanceListDTO, error)
 	GetAttendanceListByVotingGroup(ctx context.Context, votingGroupID uint) (*AttendanceListDTO, error)
 	ListAttendanceListsPaged(ctx context.Context, businessID uint, filters map[string]interface{}, page, pageSize int) (*PaginatedAttendanceListsDTO, error)
 	UpdateAttendanceList(ctx context.Context, id uint, dto UpdateAttendanceListDTO) (*AttendanceListDTO, error)

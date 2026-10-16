@@ -19,6 +19,7 @@ import {
 } from '../../infrastructure/actions/voting-credentials.action';
 import { generateGroupPublicUrlAction } from '../../infrastructure/actions/public-voting/generate-group-public-url.action';
 import { buildCredentialsPdf } from './credentials-pdf';
+import { vtBtn } from '@shared/ui/ds';
 
 /** El QR impreso se entrega antes de la asamblea: el enlace dura 30 días. */
 const QR_DURATION_HOURS = 24 * 30;
@@ -101,28 +102,28 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2 [&>button]:min-h-[44px] md:[&>button]:min-h-0">
+      <div className="flex flex-wrap items-center gap-2 max-md:[&>button]:flex-1">
         <button
           type="button"
           onClick={() => generate(false)}
           disabled={busy !== null}
-          className="btn btn-outline btn-sm flex-1 md:flex-none"
+          className={vtBtn.secondary}
           title="Generar una contraseña aleatoria por unidad para este grupo de votación"
         >
-          {busy === 'generate' ? 'Generando…' : '🔑 Generar contraseñas'}
+          {busy === 'generate' ? 'Generando…' : 'Generar contraseñas'}
         </button>
         <button
           type="button"
           onClick={downloadPdf}
           disabled={busy !== null}
-          className="btn btn-outline btn-sm flex-1 md:flex-none"
+          className={vtBtn.primary}
           title="PDF con el código QR, la unidad, el propietario y la contraseña de cada unidad"
         >
-          {busy === 'pdf' ? 'Armando PDF…' : '🖨️ Credenciales PDF'}
+          {busy === 'pdf' ? 'Armando PDF…' : 'Descargar PDF con QR'}
         </button>
       </div>
       {message && (
-        <p role="status" className={`text-sm ${message.kind === 'ok' ? 'text-green-700' : 'text-red-700'}`}>
+        <p role="status" className={`text-[13px] ${message.kind === 'ok' ? 'text-[#2f6b4f]' : 'text-[#b4432b]'}`}>
           {message.text}
         </p>
       )}
