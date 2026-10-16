@@ -19,6 +19,7 @@ func (h *VisitHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// Tipos y estados
 		visits.GET("/types", middleware.JWT(), h.ListVisitTypes)
 		visits.GET("/statuses", middleware.JWT(), h.ListVisitStatuses)
+		visits.GET("/summary", middleware.JWT(), h.GetVisitsSummary)
 
 		// Visitantes
 		visits.GET("/search-visitor", middleware.JWT(), h.SearchVisitor)

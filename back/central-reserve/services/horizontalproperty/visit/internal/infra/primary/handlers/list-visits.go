@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
 	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/visit/internal/infra/primary/handlers/response"
@@ -26,7 +25,12 @@ import (
 // @Param visitor_id query int false "ID del visitante"
 // @Param property_unit_id query int false "ID de la unidad"
 // @Param start_date query string false "Fecha inicio (YYYY-MM-DD)"
-// @Param end_date query string false "Fecha fin (YYYY-MM-DD)"
+// @Param end_date query string false "Fecha fin (YYYY-MM-DD, inclusiva)"
+// @Param visit_type_id query int false "ID del tipo de visita"
+// @Param visit_status_id query int false "ID del estado"
+// @Param state query string false "Estado de portería: inside, expected, left, cancelled"
+// @Param q query string false "Busca por visitante (nombre o documento) o unidad"
+// @Param business_id query int false "Solo super admin: negocio a consultar"
 // @Success 200 {object} response.PaginatedVisitsResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Router /horizontal-properties/visits [get]
@@ -34,11 +38,18 @@ func (h *VisitHandler) ListVisits(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctx = log.WithFunctionCtx(ctx, "ListVisits")
 
-	businessID, exists := middleware.GetBusinessID(c)
+	businessID, exists, bizErr := resolveBusinessID(c)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
 			Success: false,
 			Message: "business_id no disponible",
+		})
+		return
+	}
+	if bizErr != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Success: false,
+			Message: bizErr.Error(),
 		})
 		return
 	}
@@ -55,8 +66,24 @@ func (h *VisitHandler) ListVisits(c *gin.Context) {
 
 	filters := domain.VisitFiltersDTO{
 		BusinessID: businessID,
+		State:      c.Query("state"),
+		Search:     c.Query("q"),
 		Page:       page,
 		PageSize:   pageSize,
+	}
+
+	if typeIDStr := c.Query("visit_type_id"); typeIDStr != "" {
+		if typeID, err := strconv.ParseUint(typeIDStr, 10, 32); err == nil {
+			id := uint(typeID)
+			filters.VisitTypeID = &id
+		}
+	}
+
+	if statusIDStr := c.Query("visit_status_id"); statusIDStr != "" {
+		if statusID, err := strconv.ParseUint(statusIDStr, 10, 32); err == nil {
+			id := uint(statusID)
+			filters.VisitStatusID = &id
+		}
 	}
 
 	if visitorIDStr := c.Query("visitor_id"); visitorIDStr != "" {
@@ -81,7 +108,9 @@ func (h *VisitHandler) ListVisits(c *gin.Context) {
 
 	if endDateStr := c.Query("end_date"); endDateStr != "" {
 		if endDate, err := time.Parse("2006-01-02", endDateStr); err == nil {
-			filters.EndDate = &endDate
+			// Fecha fin inclusiva: hasta el último instante de ese día
+			endOfDay := endDate.Add(24*time.Hour - time.Nanosecond)
+			filters.EndDate = &endOfDay
 		}
 	}
 

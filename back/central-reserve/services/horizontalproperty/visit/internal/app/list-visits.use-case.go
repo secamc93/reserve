@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"strings"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
 	"central_reserve/shared/log"
@@ -17,6 +18,8 @@ func (uc *visitUseCase) ListVisits(ctx context.Context, filters domain.VisitFilt
 
 	// Validar paginación
 	filters.Page, filters.PageSize = pagination.Normalize(filters.Page, filters.PageSize)
+	filters.State = domain.NormalizeVisitState(filters.State)
+	filters.Search = strings.TrimSpace(filters.Search)
 
 	// Llamar al repositorio
 	result, err := uc.visitRepo.ListVisits(ctx, filters)

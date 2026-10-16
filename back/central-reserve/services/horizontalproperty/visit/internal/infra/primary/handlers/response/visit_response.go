@@ -60,13 +60,37 @@ type VisitListData struct {
 	ID                 uint       `json:"id"`
 	VisitorName        string     `json:"visitor_name"`
 	VisitorDNI         string     `json:"visitor_dni"`
+	VisitorPhone       string     `json:"visitor_phone"`
 	PropertyUnitNumber string     `json:"property_unit_number"`
+	PropertyUnitBlock  string     `json:"property_unit_block"`
 	VisitTypeName      string     `json:"visit_type_name"`
 	VisitStatusName    string     `json:"visit_status_name"`
+	VisitStatusCode    string     `json:"visit_status_code"`
 	ScheduledDate      time.Time  `json:"scheduled_date"`
+	ScheduledStartTime time.Time  `json:"scheduled_start_time"`
+	ScheduledEndTime   *time.Time `json:"scheduled_end_time"`
 	ActualEntryTime    *time.Time `json:"actual_entry_time"`
 	ActualExitTime     *time.Time `json:"actual_exit_time"`
+	Purpose            string     `json:"purpose"`
+	NumberOfVisitors   int        `json:"number_of_visitors"`
 	CreatedAt          time.Time  `json:"created_at"`
+}
+
+// VisitsSummaryData - Conteos de visitas de un día por estado de portería
+type VisitsSummaryData struct {
+	Date      string `json:"date"`
+	Inside    int64  `json:"inside"`
+	Expected  int64  `json:"expected"`
+	Left      int64  `json:"left"`
+	Cancelled int64  `json:"cancelled"`
+	Total     int64  `json:"total"`
+	InsideNow int64  `json:"inside_now"`
+}
+
+// VisitsSummaryResponse - Respuesta del resumen de visitas
+type VisitsSummaryResponse struct {
+	Success bool              `json:"success"`
+	Data    VisitsSummaryData `json:"data"`
 }
 
 // PaginatedVisitsResponse - Respuesta paginada de visitas

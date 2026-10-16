@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"time"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
 )
@@ -14,6 +15,7 @@ type MockVisitRepository struct {
 	GetVisitByAuthorizationCodeFunc func(ctx context.Context, authCode string) (*domain.Visit, error)
 	UpdateVisitFunc                 func(ctx context.Context, visit *domain.Visit) error
 	ListVisitsFunc                  func(ctx context.Context, filters domain.VisitFiltersDTO) (*domain.PaginatedVisitsDTO, error)
+	CountVisitsByStatusCodesFunc    func(ctx context.Context, businessID uint, codes []string, from *time.Time, to *time.Time) (int64, error)
 	GetActiveVisitsFunc             func(ctx context.Context, businessID uint) ([]*domain.Visit, error)
 	GetVisitTypesFunc               func(ctx context.Context, businessID uint) ([]*domain.VisitType, error)
 	GetVisitStatusesFunc            func(ctx context.Context) ([]*domain.VisitStatus, error)
@@ -118,6 +120,13 @@ func (m *MockVisitRepository) SaveVisit(ctx context.Context, visit *domain.Visit
 func (m *MockVisitRepository) GetPropertyUnitBusinessID(ctx context.Context, propertyUnitID uint) (uint, error) {
 	if m.GetPropertyUnitBusinessIDFunc != nil {
 		return m.GetPropertyUnitBusinessIDFunc(ctx, propertyUnitID)
+	}
+	return 0, nil
+}
+
+func (m *MockVisitRepository) CountVisitsByStatusCodes(ctx context.Context, businessID uint, codes []string, from *time.Time, to *time.Time) (int64, error) {
+	if m.CountVisitsByStatusCodesFunc != nil {
+		return m.CountVisitsByStatusCodesFunc(ctx, businessID, codes, from, to)
 	}
 	return 0, nil
 }

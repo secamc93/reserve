@@ -2,20 +2,22 @@ package mocks
 
 import (
 	"context"
+	"time"
 
 	"central_reserve/services/horizontalproperty/packages/internal/domain"
 )
 
 // PackageRepositoryMock - Mock del repositorio de paquetes
 type PackageRepositoryMock struct {
-	CreatePackageFunc             func(ctx context.Context, pkg *domain.Package) (*domain.Package, error)
-	GetPackageByIDFunc            func(ctx context.Context, id uint) (*domain.Package, error)
-	GetPackageByQRCodeFunc        func(ctx context.Context, qrCode string) (*domain.Package, error)
-	UpdatePackageFunc             func(ctx context.Context, pkg *domain.Package) error
-	ListPackagesFunc              func(ctx context.Context, filters domain.PackageFiltersDTO) (*domain.PaginatedPackagesDTO, error)
-	GetPackageStatusByCodeFunc    func(ctx context.Context, code string) (*domain.PackageStatus, error)
-	GetPackageStatusesFunc        func(ctx context.Context) ([]*domain.PackageStatus, error)
-	GetPropertyUnitBusinessIDFunc func(ctx context.Context, propertyUnitID uint) (uint, error)
+	CreatePackageFunc              func(ctx context.Context, pkg *domain.Package) (*domain.Package, error)
+	GetPackageByIDFunc             func(ctx context.Context, id uint) (*domain.Package, error)
+	GetPackageByQRCodeFunc         func(ctx context.Context, qrCode string) (*domain.Package, error)
+	UpdatePackageFunc              func(ctx context.Context, pkg *domain.Package) error
+	ListPackagesFunc               func(ctx context.Context, filters domain.PackageFiltersDTO) (*domain.PaginatedPackagesDTO, error)
+	CountPackagesByStatusCodesFunc func(ctx context.Context, businessID uint, codes []string, receivedBefore *time.Time, deliveredSince *time.Time) (int64, error)
+	GetPackageStatusByCodeFunc     func(ctx context.Context, code string) (*domain.PackageStatus, error)
+	GetPackageStatusesFunc         func(ctx context.Context) ([]*domain.PackageStatus, error)
+	GetPropertyUnitBusinessIDFunc  func(ctx context.Context, propertyUnitID uint) (uint, error)
 }
 
 func (m *PackageRepositoryMock) CreatePackage(ctx context.Context, pkg *domain.Package) (*domain.Package, error) {
@@ -85,4 +87,11 @@ func (m *PackageRepositoryMock) GetPropertyUnitBusinessID(ctx context.Context, p
 		return m.GetPropertyUnitBusinessIDFunc(ctx, propertyUnitID)
 	}
 	return 1, nil
+}
+
+func (m *PackageRepositoryMock) CountPackagesByStatusCodes(ctx context.Context, businessID uint, codes []string, receivedBefore *time.Time, deliveredSince *time.Time) (int64, error) {
+	if m.CountPackagesByStatusCodesFunc != nil {
+		return m.CountPackagesByStatusCodesFunc(ctx, businessID, codes, receivedBefore, deliveredSince)
+	}
+	return 0, nil
 }

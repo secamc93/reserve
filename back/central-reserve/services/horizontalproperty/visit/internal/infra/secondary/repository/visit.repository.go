@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"central_reserve/services/horizontalproperty/visit/internal/domain"
@@ -184,96 +185,55 @@ func (r *VisitRepository) UpdateVisit(ctx context.Context, visit *domain.Visit) 
 	return nil
 }
 
-// ListVisits lista visitas con filtros y paginación
+// ListVisits lista visitas con filtros y paginación.
+//
+// Orden: por día programado (el más reciente primero) y, dentro del día, como las atiende la
+// portería: dentro, esperadas, salieron y canceladas; luego por hora programada.
 func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFiltersDTO) (*domain.PaginatedVisitsDTO, error) {
-	// Conteo total
+	base := func() *gorm.DB {
+		q := r.db.Conn(ctx).Table("horizontal_property.visits v").
+			Joins("JOIN horizontal_property.visitors vis ON vis.id = v.visitor_id").
+			Joins("JOIN horizontal_property.property_units pu ON pu.id = v.property_unit_id").
+			Joins("JOIN horizontal_property.visit_types vt ON vt.id = v.visit_type_id").
+			Joins("JOIN horizontal_property.visit_statuses vs ON vs.id = v.visit_status_id").
+			Where("v.deleted_at IS NULL")
+		return applyVisitFilters(q, filters)
+	}
+
 	var total int64
-	countQuery := r.db.Conn(ctx).Model(&models.Visit{})
-	
-	// Si BusinessID > 0, filtrar por negocio; si es 0 (super admin), mostrar todas
-	if filters.BusinessID > 0 {
-		countQuery = countQuery.Where("business_id = ?", filters.BusinessID)
-	}
-
-	if filters.VisitorID != nil {
-		countQuery = countQuery.Where("visitor_id = ?", *filters.VisitorID)
-	}
-	if filters.PropertyUnitID != nil {
-		countQuery = countQuery.Where("property_unit_id = ?", *filters.PropertyUnitID)
-	}
-	if filters.ResidentID != nil {
-		countQuery = countQuery.Where("resident_id = ?", *filters.ResidentID)
-	}
-	if filters.VisitTypeID != nil {
-		countQuery = countQuery.Where("visit_type_id = ?", *filters.VisitTypeID)
-	}
-	if filters.VisitStatusID != nil {
-		countQuery = countQuery.Where("visit_status_id = ?", *filters.VisitStatusID)
-	}
-	if filters.StartDate != nil {
-		countQuery = countQuery.Where("scheduled_date >= ?", *filters.StartDate)
-	}
-	if filters.EndDate != nil {
-		countQuery = countQuery.Where("scheduled_date <= ?", *filters.EndDate)
-	}
-
-	if err := countQuery.Count(&total).Error; err != nil {
+	if err := base().Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("error contando visitas: %w", err)
 	}
 
-	// Consulta paginada
 	type row struct {
 		ID                 uint
 		VisitorName        string
 		VisitorDNI         string
+		VisitorPhone       string
 		PropertyUnitNumber string
+		PropertyUnitBlock  string
 		VisitTypeName      string
 		VisitStatusName    string
+		VisitStatusCode    string
 		ScheduledDate      time.Time
+		ScheduledStartTime time.Time
+		ScheduledEndTime   *time.Time
 		ActualEntryTime    *time.Time
 		ActualExitTime     *time.Time
+		Purpose            string
+		NumberOfVisitors   int
 		CreatedAt          time.Time
 	}
 
 	rows := []row{}
-	query := r.db.Conn(ctx).Table("horizontal_property.visits v").
-		Select("v.id, vis.full_name as visitor_name, vis.dni as visitor_dni, pu.number as property_unit_number, "+
-			"vt.name as visit_type_name, vs.name as visit_status_name, v.scheduled_date, "+
-			"v.actual_entry_time, v.actual_exit_time, v.created_at").
-		Joins("JOIN horizontal_property.visitors vis ON vis.id = v.visitor_id").
-		Joins("JOIN horizontal_property.property_units pu ON pu.id = v.property_unit_id").
-		Joins("JOIN horizontal_property.visit_types vt ON vt.id = v.visit_type_id").
-		Joins("JOIN horizontal_property.visit_statuses vs ON vs.id = v.visit_status_id")
-	
-	// Si BusinessID > 0, filtrar por negocio; si es 0 (super admin), mostrar todas
-	if filters.BusinessID > 0 {
-		query = query.Where("v.business_id = ?", filters.BusinessID)
-	}
-
-	if filters.VisitorID != nil {
-		query = query.Where("v.visitor_id = ?", *filters.VisitorID)
-	}
-	if filters.PropertyUnitID != nil {
-		query = query.Where("v.property_unit_id = ?", *filters.PropertyUnitID)
-	}
-	if filters.ResidentID != nil {
-		query = query.Where("v.resident_id = ?", *filters.ResidentID)
-	}
-	if filters.VisitTypeID != nil {
-		query = query.Where("v.visit_type_id = ?", *filters.VisitTypeID)
-	}
-	if filters.VisitStatusID != nil {
-		query = query.Where("v.visit_status_id = ?", *filters.VisitStatusID)
-	}
-	if filters.StartDate != nil {
-		query = query.Where("v.scheduled_date >= ?", *filters.StartDate)
-	}
-	if filters.EndDate != nil {
-		query = query.Where("v.scheduled_date <= ?", *filters.EndDate)
-	}
-
 	offset := (filters.Page - 1) * filters.PageSize
-	if err := query.Order("v.scheduled_date DESC, v.created_at DESC").
+	if err := base().
+		Select("v.id, vis.full_name as visitor_name, vis.dni as visitor_dni, COALESCE(vis.phone, '') as visitor_phone, " +
+			"pu.number as property_unit_number, COALESCE(pu.block, '') as property_unit_block, " +
+			"vt.name as visit_type_name, vs.name as visit_status_name, vs.code as visit_status_code, " +
+			"v.scheduled_date, v.scheduled_start_time, v.scheduled_end_time, v.actual_entry_time, v.actual_exit_time, " +
+			"COALESCE(v.purpose, '') as purpose, v.number_of_visitors, v.created_at").
+		Order("v.scheduled_date DESC, CASE vs.code WHEN 'in_progress' THEN 0 WHEN 'pending' THEN 1 WHEN 'authorized' THEN 1 WHEN 'completed' THEN 2 ELSE 3 END, v.scheduled_start_time ASC, v.id DESC").
 		Limit(filters.PageSize).
 		Offset(offset).
 		Scan(&rows).Error; err != nil {
@@ -286,12 +246,19 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 			ID:                 rw.ID,
 			VisitorName:        rw.VisitorName,
 			VisitorDNI:         rw.VisitorDNI,
+			VisitorPhone:       rw.VisitorPhone,
 			PropertyUnitNumber: rw.PropertyUnitNumber,
+			PropertyUnitBlock:  rw.PropertyUnitBlock,
 			VisitTypeName:      rw.VisitTypeName,
 			VisitStatusName:    rw.VisitStatusName,
+			VisitStatusCode:    rw.VisitStatusCode,
 			ScheduledDate:      rw.ScheduledDate,
+			ScheduledStartTime: rw.ScheduledStartTime,
+			ScheduledEndTime:   rw.ScheduledEndTime,
 			ActualEntryTime:    rw.ActualEntryTime,
 			ActualExitTime:     rw.ActualExitTime,
+			Purpose:            rw.Purpose,
+			NumberOfVisitors:   rw.NumberOfVisitors,
 			CreatedAt:          rw.CreatedAt,
 		}
 	}
@@ -303,6 +270,65 @@ func (r *VisitRepository) ListVisits(ctx context.Context, filters domain.VisitFi
 		PageSize:   filters.PageSize,
 		TotalPages: int(math.Ceil(float64(total) / float64(filters.PageSize))),
 	}, nil
+}
+
+// applyVisitFilters aplica los filtros de la lista (alias: v, vis, pu, vs).
+func applyVisitFilters(q *gorm.DB, filters domain.VisitFiltersDTO) *gorm.DB {
+	// business_id 0 = super admin sin negocio elegido: todas
+	if filters.BusinessID > 0 {
+		q = q.Where("v.business_id = ?", filters.BusinessID)
+	}
+	if filters.VisitorID != nil {
+		q = q.Where("v.visitor_id = ?", *filters.VisitorID)
+	}
+	if filters.PropertyUnitID != nil {
+		q = q.Where("v.property_unit_id = ?", *filters.PropertyUnitID)
+	}
+	if filters.ResidentID != nil {
+		q = q.Where("v.resident_id = ?", *filters.ResidentID)
+	}
+	if filters.VisitTypeID != nil {
+		q = q.Where("v.visit_type_id = ?", *filters.VisitTypeID)
+	}
+	if filters.VisitStatusID != nil {
+		q = q.Where("v.visit_status_id = ?", *filters.VisitStatusID)
+	}
+	if codes, ok := domain.VisitStateGroups[filters.State]; ok {
+		q = q.Where("vs.code IN ?", codes)
+	}
+	if filters.StartDate != nil {
+		q = q.Where("v.scheduled_date >= ?", *filters.StartDate)
+	}
+	if filters.EndDate != nil {
+		q = q.Where("v.scheduled_date <= ?", *filters.EndDate)
+	}
+	if filters.Search != "" {
+		like := "%" + strings.ToLower(filters.Search) + "%"
+		q = q.Where("(LOWER(vis.full_name) LIKE ? OR LOWER(vis.dni) LIKE ? OR LOWER(pu.number) LIKE ? "+
+			"OR LOWER(COALESCE(pu.block, '') || ' ' || pu.number) LIKE ?)", like, like, like, like)
+	}
+	return q
+}
+
+// CountVisitsByStatusCodes cuenta visitas del negocio con esos estados (y en el rango de días).
+func (r *VisitRepository) CountVisitsByStatusCodes(ctx context.Context, businessID uint, codes []string, from *time.Time, to *time.Time) (int64, error) {
+	q := r.db.Conn(ctx).Model(&models.Visit{}).
+		Joins("JOIN horizontal_property.visit_statuses vs ON vs.id = visits.visit_status_id").
+		Where("vs.code IN ?", codes)
+	if businessID > 0 {
+		q = q.Where("visits.business_id = ?", businessID)
+	}
+	if from != nil {
+		q = q.Where("visits.scheduled_date >= ?", *from)
+	}
+	if to != nil {
+		q = q.Where("visits.scheduled_date < ?", *to)
+	}
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return 0, fmt.Errorf("error contando visitas: %w", err)
+	}
+	return total, nil
 }
 
 // GetVisitStatusByCode obtiene un estado de visita por código (retorna entidad de dominio)

@@ -10,6 +10,7 @@ func (h *PackageHandler) RegisterRoutes(router *gin.RouterGroup) {
 	packages := router.Group("/horizontal-properties/packages")
 	{
 		packages.GET("/statuses", middleware.JWT(), h.ListPackageStatuses)
+		packages.GET("/summary", middleware.JWT(), h.GetPackagesSummary)
 		packages.POST("", middleware.JWT(), h.ReceivePackage)
 		packages.GET("", middleware.JWT(), h.ListPackages)
 		packages.GET("/:id", middleware.JWT(), h.GetPackageByID)
