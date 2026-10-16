@@ -160,6 +160,17 @@ export interface PageChunk<T> {
 }
 
 /** Tope de "traer todo": 50 páginas de 200 = 10.000 registros. */
+/**
+ * Página `page` (desde 1) de una lista que ya está completa en memoria, para tablas que
+ * necesitan todos los datos (p. ej. resúmenes por coeficiente) pero muestran solo una página.
+ */
+export function pageSlice<T>(items: readonly T[], page: number, pageSize: number): T[] {
+  const size = normalizePageSize(String(pageSize));
+  const last = getTotalPages(items.length, size);
+  const current = Math.min(Math.max(1, Math.floor(page) || 1), Math.max(1, last));
+  return items.slice((current - 1) * size, current * size);
+}
+
 export const FETCH_ALL_MAX_PAGES = 50;
 
 /**

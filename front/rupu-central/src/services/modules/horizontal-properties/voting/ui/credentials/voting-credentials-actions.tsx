@@ -29,11 +29,20 @@ interface VotingCredentialsActionsProps {
   businessId: number;
   groupId: number;
   propertyName?: string;
+  /**
+   * Si se pasa, los avisos (éxito / error) se entregan a quien llama en vez de pintarse debajo
+   * de los botones (p. ej. cuando los botones van en la cabecera secundaria).
+   */
+  onMessage?: (message: { kind: 'ok' | 'error'; text: string } | null) => void;
 }
 
-export function VotingCredentialsActions({ token, businessId, groupId, propertyName }: VotingCredentialsActionsProps) {
+export function VotingCredentialsActions({ token, businessId, groupId, propertyName, onMessage }: VotingCredentialsActionsProps) {
   const [busy, setBusy] = useState<'generate' | 'pdf' | null>(null);
-  const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [message, setLocalMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const setMessage = (next: { kind: 'ok' | 'error'; text: string } | null) => {
+    setLocalMessage(next);
+    onMessage?.(next);
+  };
   const [confirmRegenerate, setConfirmRegenerate] = useState(false);
 
   const generate = async (regenerate: boolean) => {
@@ -101,8 +110,8 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2 max-md:[&>button]:flex-1">
+    <div className={onMessage ? 'contents' : 'flex flex-col gap-2'}>
+      <div className={onMessage ? 'contents' : 'flex flex-wrap items-center gap-2 max-md:[&>button]:flex-1'}>
         <button
           type="button"
           onClick={() => generate(false)}
@@ -122,7 +131,7 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
           {busy === 'pdf' ? 'Armando PDF…' : 'Descargar PDF con QR'}
         </button>
       </div>
-      {message && (
+      {message && !onMessage && (
         <p role="status" className={`text-[13px] ${message.kind === 'ok' ? 'text-[#2f6b4f]' : 'text-[#b4432b]'}`}>
           {message.text}
         </p>

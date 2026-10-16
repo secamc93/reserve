@@ -7,10 +7,12 @@
 
 'use client';
 
-import { fetchAllPages } from '@shared/utils/pagination';
+import { fetchAllPages, pageSlice } from '@shared/utils/pagination';
+import { Pagination, usePaginationParams } from '@shared/ui/pagination';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Spinner } from '@shared/ui';
+import { DsBody, DsPage, DsSectionHeader } from '@shared/ui/ds';
 import { TokenStorage } from '@shared/config';
 import { getVotingGroupsAction, getVotingsAction, markUnitAttendanceAction } from '../infrastructure/actions';
 import {
@@ -38,7 +40,6 @@ import {
   getQuorumStatus,
   setRowPresence,
   summarizeAttendance,
-  votingFontRoot,
   vtBtn,
   vtMono,
   type AttendanceFilter,
@@ -68,6 +69,8 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
   const [term, setTerm] = useState('');
   const [pending, setPending] = useState<Set<number>>(new Set());
   const [token, setToken] = useState<string | null>(null);
+  const [credentialsMessage, setCredentialsMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const { page, pageSize, setPage } = usePaginationParams();
 
   /** Trae los registros de la lista y las unidades de la propiedad (con su residente principal). */
   const loadRecords = useCallback(
@@ -202,6 +205,16 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
 
   const summary = useMemo(() => summarizeAttendance(rows), [rows]);
   const visible = useMemo(() => filterAttendanceRows(rows, filter, term), [rows, filter, term]);
+  const pageRows = useMemo(() => pageSlice(visible, page, pageSize), [visible, page, pageSize]);
+  /** Cambiar el filtro o la búsqueda vuelve a la primera página. */
+  const changeFilter = (next: AttendanceFilter) => {
+    setFilter(next);
+    if (page !== 1) setPage(1, { replace: true });
+  };
+  const changeTerm = (next: string) => {
+    setTerm(next);
+    if (page !== 1) setPage(1, { replace: true });
+  };
   const quorum = group?.requiresQuorum && group.quorumPercentage > 0 ? group.quorumPercentage : DEFAULT_QUORUM_PERCENTAGE;
   const status = getQuorumStatus(summary.presentCoefPct, quorum);
 
@@ -213,21 +226,24 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
   ];
 
   return (
-    <div className={`min-h-[calc(100vh-57px)] ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
-      <div className="px-3 sm:px-8 py-4 md:py-7 flex flex-col gap-4 md:gap-[18px] w-full">
-        <div className="flex flex-wrap justify-between items-end gap-3">
-          <div>
+    <DsPage>
+      <DsSectionHeader
+        title={
+          <span className="inline-flex items-center gap-2">
             <Link
               href={`/properties/${businessId}/voting-groups`}
-              className="inline-flex items-center gap-1.5 text-xs mb-2 hover:text-[#c8603f] max-md:min-h-11 max-md:mb-0 max-md:text-[13px] max-w-full"
-              style={{ color: VT.muted }}
+              aria-label="Volver a los grupos de votación"
+              title={group?.name ?? 'Grupos de votación'}
+              className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
             >
-              <VtIcon name="back" size={12} />
-              {group?.name ?? 'Grupos de votación'}
+              <VtIcon name="back" size={14} />
             </Link>
-            <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em]">Asistencia</h1>
-          </div>
-          <div className="flex gap-2 flex-wrap max-md:w-full max-md:flex-col-reverse max-md:[&>*]:w-full">
+            Asistencia
+          </span>
+        }
+        actions={
+          <>
+            {token && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} />}
             {listId && (
               <Link
                 href={`/properties/${businessId}/voting-groups/${groupId}/attendance/${listId}`}
@@ -246,23 +262,16 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                 Ir al panel en vivo
               </button>
             )}
+          </>
+        }
+      />
+      <DsBody>
+        {credentialsMessage && (
+          <div className="flex items-start justify-between gap-3">
+            <VtNotice tone={credentialsMessage.kind === 'ok' ? 'ok' : undefined}>{credentialsMessage.text}</VtNotice>
+            <button type="button" onClick={() => setCredentialsMessage(null)} className="text-xs text-[#8a8580] hover:text-[#1a1a1a] mt-2" aria-label="Cerrar aviso">✕</button>
           </div>
-        </div>
-
-        <section
-          aria-label="Contraseñas de voto"
-          className="bg-white rounded-[10px] px-4 md:px-[18px] py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-          style={{ border: `1px solid ${VT.border}` }}
-        >
-          <div className="min-w-0">
-            <h2 className="m-0 text-[13px] font-semibold">Contraseñas de voto</h2>
-            <p className="m-0 mt-0.5 text-xs" style={{ color: VT.muted }}>
-              Una contraseña por casa. El PDF trae por casa el código QR, el propietario y su contraseña para entregar en la mesa de asistencia.
-            </p>
-          </div>
-          {token && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} />}
-        </section>
-
+        )}
         {error && <VtNotice>{error}</VtNotice>}
 
         {loading ? (
@@ -324,7 +333,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                       type="button"
                       role="tab"
                       aria-selected={filter === t.key}
-                      onClick={() => setFilter(t.key)}
+                      onClick={() => changeFilter(t.key)}
                       className="px-2.5 py-1 max-md:h-9 max-md:px-3 rounded-[5px] text-xs font-medium"
                       style={filter === t.key ? { background: VT.ink, color: '#fff' } : { color: VT.inkSoft }}
                     >
@@ -340,7 +349,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                   <input
                     type="search"
                     value={term}
-                    onChange={(e) => setTerm(e.target.value)}
+                    onChange={(e) => changeTerm(e.target.value)}
                     placeholder="Unidad, residente o apoderado"
                     aria-label="Buscar unidad, residente o apoderado"
                     className="flex-1 min-w-0 bg-transparent outline-none"
@@ -351,7 +360,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
 
               {/* Teléfono: una fila táctil por unidad (tocar la fila marca o quita la presencia) */}
               <ul className="md:hidden m-0 p-0 list-none" aria-label="Unidades">
-                {visible.map((row) => {
+                {pageRows.map((row) => {
                   const busy = pending.has(row.unitId);
                   return (
                     <li
@@ -397,7 +406,7 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {visible.map((row) => (
+                    {pageRows.map((row) => (
                       <tr key={row.unitId} style={{ borderTop: `1px solid #efedea` }}>
                         <td className={`${vtMono} px-4 sm:px-[18px] py-2 font-medium`}>{row.unitNumber}</td>
                         <td className="px-2 py-2">{row.residentName}</td>
@@ -428,10 +437,15 @@ export function AttendancePanel({ businessId, groupId }: AttendancePanelProps) {
                     {rows.length === 0 ? 'La lista no tiene unidades.' : 'No hay unidades con ese criterio.'}
                   </p>
                 )}
+              {visible.length > 0 && (
+                <div className="px-4 sm:px-[18px] py-2.5" style={{ borderTop: `1px solid ${VT.border}` }}>
+                  <Pagination total={visible.length} disabled={loading} />
+                </div>
+              )}
             </div>
           </>
         )}
-      </div>
-    </div>
+      </DsBody>
+    </DsPage>
   );
 }
