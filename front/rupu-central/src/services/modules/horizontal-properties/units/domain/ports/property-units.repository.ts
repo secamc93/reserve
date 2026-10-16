@@ -3,7 +3,7 @@
  * Define los métodos para gestionar unidades de propiedad
  */
 
-import { PropertyUnit, PropertyUnitsPaginated, CreatePropertyUnitDTO, UpdatePropertyUnitDTO } from '../entities';
+import { PropertyUnit, PropertyUnitsPaginated, PropertyUnitsSummary, CreatePropertyUnitDTO, UpdatePropertyUnitDTO } from '../entities';
 
 export interface GetPropertyUnitsParams {
   businessId: number;
@@ -42,11 +42,17 @@ export interface DeletePropertyUnitParams {
   token: string;
 }
 
+export interface GetPropertyUnitsSummaryParams {
+  businessId: number;
+  token: string;
+}
+
 export interface IPropertyUnitsRepository {
   getPropertyUnits(params: GetPropertyUnitsParams): Promise<PropertyUnitsPaginated>;
   getPropertyUnitById(params: GetPropertyUnitByIdParams): Promise<PropertyUnit>;
   createPropertyUnit(params: CreatePropertyUnitParams): Promise<PropertyUnit>;
   updatePropertyUnit(params: UpdatePropertyUnitParams): Promise<PropertyUnit>;
   deletePropertyUnit(params: DeletePropertyUnitParams): Promise<void>;
+  getPropertyUnitsSummary(params: GetPropertyUnitsSummaryParams): Promise<PropertyUnitsSummary>;
 }
 

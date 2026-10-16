@@ -6,12 +6,26 @@
 export interface BackendResidentListItem {
   id: number;
   property_unit_number: string;
+  property_unit_block?: string;
+  dni?: string;
   resident_type_name: string;
   name: string;
   email: string;
   phone?: string;
   is_main_resident: boolean;
   is_active: boolean;
+}
+
+export interface BackendResidentsSummaryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    active: number;
+    inactive: number;
+    main: number;
+    types: Array<{ resident_type_id: number; name: string; code: string; total: number }>;
+  };
 }
 
 // Interfaz para el detalle completo

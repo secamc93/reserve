@@ -18,6 +18,26 @@ export interface PropertyUnit {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Ocupación (solo en el listado): residentes de la unidad y nombre del principal. */
+  residentsCount?: number;
+  mainResidentName?: string;
+}
+
+/** Totales de un bloque/torre ("Casa", "Dúplex", "Torre A"). */
+export interface PropertyUnitBlockSummary {
+  block: string;
+  total: number;
+  active: number;
+  coefficientSum: number;
+}
+
+/** Resumen de las unidades de una propiedad: totales, suma de coeficientes y bloques. */
+export interface PropertyUnitsSummary {
+  total: number;
+  active: number;
+  withResidents: number;
+  coefficientSum: number;
+  blocks: PropertyUnitBlockSummary[];
 }
 
 export interface PropertyUnitsPaginated {

@@ -1,497 +1,331 @@
+/**
+ * R1 · Residentes (Patrón A · Lista): cabecera secundaria con pestañas por estado (Todos,
+ * Activos, Inactivos) y acciones (Edición masiva, Importar Excel, Nuevo residente); chips por
+ * tipo (ids reales del catálogo), buscador por nombre / unidad / documento, filtro de
+ * principales, tabla densa y paginación en la URL. Clic en una fila → R3 (panel lateral).
+ */
+
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Badge, Spinner, Alert, ConfirmModal, Button } from '@shared/ui';
-import { useIsMobile, mobileColumn, MobileCard, MobileActionButton } from '@/services/mobile-ui';
-import { Table, TableColumn, TableUrlPagination, TableFiltersProps, FilterOption, ActiveFilter } from '@shared/ui/table';
-import { usePaginationParams } from '@shared/ui/pagination';
-import { getResidentsAction, deleteResidentAction } from '../infrastructure/actions';
-import { Resident } from '../domain/entities';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TokenStorage } from '@shared/config';
+import {
+  DS,
+  DsBody,
+  DsChips,
+  DsPage,
+  DsSearch,
+  DsSectionHeader,
+  DsStatus,
+  DsTable,
+  DsTag,
+  DsToolbar,
+  VtMenu,
+  VtNotice,
+  dsMono,
+  vtBtn,
+  type DsColumn,
+} from '@shared/ui/ds';
+import { Pagination, usePaginationParams } from '@shared/ui/pagination';
+import { deleteResidentAction, getResidentsAction, getResidentsSummaryAction } from '../infrastructure/actions';
+import type { Resident, ResidentsSummary } from '../domain';
+import {
+  ALL_TYPES,
+  RESIDENT_SEARCH_FIELDS,
+  buildResidentTypeChips,
+  parseSearchField,
+  parseStatusFilter,
+  residentTypeOptions,
+  resolveResidentSearch,
+  statusToIsActive,
+  type ResidentStatusFilter,
+} from '../domain';
+import { formatUnitLabel } from '../../units/domain';
+import { DsConfirmDialog, dsSelect, useDebouncedValue, useUrlFilters } from '../../units/ui/kit';
 import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
 import { ImportResidentsModal } from './import-residents-modal';
 import { BulkEditResidentsModal } from './bulk-edit-residents-modal';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { ResidentDetailPanel } from './resident-detail-panel';
+
+/** Filtros en la URL: estado (pestaña), tipo, campo y texto de búsqueda, principales. */
+const FILTER_KEYS = ['estado', 'tipo', 'campo', 'q', 'principal'] as const;
 
 export function ResidentsTable({ businessId }: { businessId: number }) {
+  const { page, pageSize } = usePaginationParams();
+  const { values, setFilters } = useUrlFilters(FILTER_KEYS);
+  const status = parseStatusFilter(values.estado);
+  const field = parseSearchField(values.campo);
+  const typeId = values.tipo && Number.isFinite(Number(values.tipo)) ? Number(values.tipo) : undefined;
+  const onlyMain = values.principal === 'si' ? true : values.principal === 'no' ? false : undefined;
+  const [search, setSearch] = useDebouncedValue(values.q, (q) => setFilters({ q }));
+
   const [residents, setResidents] = useState<Resident[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { page: currentPage, pageSize, setPage: setCurrentPage } = usePaginationParams();
+  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalResidents, setTotalResidents] = useState(0);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
-  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<ResidentsSummary | null>(null);
+  const [notice, setNotice] = useState<{ tone: 'error' | 'ok'; text: string } | null>(null);
 
-  // Estados para alertas y confirmación
-  const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [residentToDelete, setResidentToDelete] = useState<number | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showBulk, setShowBulk] = useState(false);
+  const [editing, setEditing] = useState<Resident | null>(null);
+  const [viewing, setViewing] = useState<Resident | null>(null);
+  const [toDelete, setToDelete] = useState<Resident | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Estados para filtros (formato compatible con API)
-  const [filters, setFilters] = useState({
-    name: undefined as string | undefined,
-    propertyUnitId: undefined as number | undefined,
-    residentTypeId: undefined as number | undefined,
-    isActive: undefined as boolean | undefined,
-    isMainResident: undefined as boolean | undefined,
-    dni: undefined as string | undefined,
-  });
+  const requestRef = useRef(0);
+  const types = useMemo(() => residentTypeOptions(summary?.types), [summary]);
 
-  // Estados para opciones de filtros
-  const [units, setUnits] = useState<Array<{ id: number; number: string }>>([]);
-  const [unitOptions, setUnitOptions] = useState<Array<{ value: string; label: string }>>([]);
-
-  // Cargar opciones de unidades para el filtro
-  const fetchUnits = useCallback(async () => {
-    try {
-      const token = TokenStorage.getBusinessToken();
-      if (!token) return;
-      const { getPropertyUnitsAction } = await import('../../units/infrastructure/actions');
-      const data = await getPropertyUnitsAction({
-        businessId,
-        token,
-        page: 1,
-        pageSize: 100, // Cargar más unidades para el filtro
-      });
-      const unitsList = data.units.map(u => ({ id: u.id, number: u.number }));
-      setUnits(unitsList);
-      setUnitOptions(unitsList.map(u => ({ value: u.id.toString(), label: u.number })));
-    } catch (error) {
-      console.error('Error loading units:', error);
-      setUnits([]);
-      setUnitOptions([]);
-    }
-  }, [businessId]);
-
-  // Cargar unidades al montar el componente
-  useEffect(() => {
-    fetchUnits();
-  }, [fetchUnits]);
-
-  const loadResidents = async () => {
+  const loadResidents = useCallback(async () => {
+    const requestId = ++requestRef.current;
     setLoading(true);
     try {
       const token = TokenStorage.getBusinessToken();
-      if (!token) throw new Error('No token found');
-
+      if (!token) throw new Error('token');
       const data = await getResidentsAction({
         businessId,
         token,
-        page: currentPage,
-        pageSize: pageSize,
-        ...filters, // Aplicar filtros activos
+        page,
+        pageSize,
+        residentTypeId: typeId,
+        isActive: statusToIsActive(status),
+        isMainResident: onlyMain,
+        ...resolveResidentSearch(field, values.q),
       });
-
+      if (requestId !== requestRef.current) return;
       setResidents(data.residents);
+      setTotal(data.total);
       setTotalPages(data.totalPages);
-      setTotalResidents(data.total);
-    } catch (error) {
-      console.error('Error al cargar residentes:', error);
-      setAlert({ type: 'error', message: 'Error al cargar los residentes' });
-      setTimeout(() => setAlert(null), 5000);
+    } catch {
+      if (requestId !== requestRef.current) return;
+      setNotice({ tone: 'error', text: 'No se pudieron cargar los residentes' });
     } finally {
-      setLoading(false);
+      if (requestId === requestRef.current) setLoading(false);
     }
-  };
+  }, [businessId, page, pageSize, typeId, status, onlyMain, field, values.q]);
+
+  const loadSummary = useCallback(async () => {
+    try {
+      const token = TokenStorage.getBusinessToken();
+      if (!token) return;
+      setSummary(await getResidentsSummaryAction({ businessId, token }));
+    } catch {
+      setSummary(null);
+    }
+  }, [businessId]);
 
   useEffect(() => {
     loadResidents();
-  }, [currentPage, pageSize, filters]);
+  }, [loadResidents]);
 
-  // Manejar agregar filtro
-  const handleAddFilter = (filterKey: string, value: any) => {
-    const newFilters = { ...filters };
-    
-    if (filterKey === 'isActive') {
-      newFilters.isActive = value === true;
-    } else if (filterKey === 'isMainResident') {
-      newFilters.isMainResident = value === true;
-    } else if (filterKey === 'propertyUnitId') {
-      newFilters.propertyUnitId = parseInt(value);
-    } else if (filterKey === 'residentTypeId') {
-      newFilters.residentTypeId = parseInt(value);
-    } else {
-      (newFilters as any)[filterKey] = value;
-    }
-    
-    setFilters(newFilters);
-    setCurrentPage(1);
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  const refresh = useCallback(() => {
+    loadResidents();
+    loadSummary();
+  }, [loadResidents, loadSummary]);
+
+  const askDelete = (r: Resident) => {
+    setDeleteError(null);
+    setToDelete(r);
   };
 
-  // Manejar remover filtro
-  const handleRemoveFilter = (filterKey: string) => {
-    const newFilters = { ...filters };
-    
-    if (filterKey === 'isActive') {
-      delete newFilters.isActive;
-    } else if (filterKey === 'isMainResident') {
-      delete newFilters.isMainResident;
-    } else if (filterKey === 'propertyUnitId') {
-      delete newFilters.propertyUnitId;
-    } else if (filterKey === 'residentTypeId') {
-      delete newFilters.residentTypeId;
-    } else {
-      delete (newFilters as any)[filterKey];
-    }
-    
-    setFilters(newFilters);
-  };
-
-  const handleDeleteClick = (residentId: number) => {
-    setResidentToDelete(residentId);
-    setShowDeleteConfirm(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!residentToDelete) return;
-
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    setDeleteError(null);
     try {
       const token = TokenStorage.getBusinessToken();
-      if (!token) throw new Error('No token found');
-
-      await deleteResidentAction({ businessId, residentId: residentToDelete, token });
-      await loadResidents();
-
-      setAlert({ type: 'success', message: 'Residente eliminado correctamente' });
-      setTimeout(() => setAlert(null), 3000);
-    } catch (error) {
-      console.error('Error al eliminar residente:', error);
-      setAlert({ type: 'error', message: 'Error al eliminar el residente' });
-      setTimeout(() => setAlert(null), 5000);
+      if (!token) throw new Error('token');
+      await deleteResidentAction({ businessId, residentId: toDelete.id, token });
+      setNotice({ tone: 'ok', text: `${toDelete.name} eliminado` });
+      if (viewing?.id === toDelete.id) setViewing(null);
+      setToDelete(null);
+      refresh();
+    } catch {
+      setDeleteError('No se pudo eliminar el residente');
     } finally {
-      setShowDeleteConfirm(false);
-      setResidentToDelete(null);
+      setDeleting(false);
     }
   };
 
-  const handleEdit = (resident: Resident) => {
-    setSelectedResident(resident);
-    setShowEditModal(true);
-  };
+  const unitOf = (r: Resident) => (r.propertyUnitNumber ? formatUnitLabel(r.propertyUnitNumber, r.propertyUnitBlock) : 'Sin unidad');
+  const hasFilters = Boolean(values.q || values.tipo || values.principal);
+  const searchMeta = RESIDENT_SEARCH_FIELDS.find((f) => f.id === field) ?? RESIDENT_SEARCH_FIELDS[0];
 
-  // Convertir filtros a ActiveFilter[]
-  const activeFilters: ActiveFilter[] = [];
-  if (filters.name) {
-    activeFilters.push({
-      key: 'name',
-      label: 'Nombre',
-      value: filters.name,
-      type: 'text',
-    });
-  }
-  if (filters.dni) {
-    activeFilters.push({
-      key: 'dni',
-      label: 'DNI',
-      value: filters.dni,
-      type: 'text',
-    });
-  }
-  if (filters.propertyUnitId) {
-    const unit = units.find(u => u.id === filters.propertyUnitId);
-    activeFilters.push({
-      key: 'propertyUnitId',
-      label: 'Unidad',
-      value: filters.propertyUnitId.toString(),
-      type: 'select',
-    });
-  }
-  if (filters.residentTypeId) {
-    activeFilters.push({
-      key: 'residentTypeId',
-      label: 'Tipo',
-      value: filters.residentTypeId.toString(),
-      type: 'select',
-    });
-  }
-  if (filters.isActive !== undefined) {
-    activeFilters.push({
-      key: 'isActive',
-      label: 'Estado',
-      value: filters.isActive,
-      type: 'boolean',
-    });
-  }
-  if (filters.isMainResident !== undefined) {
-    activeFilters.push({
-      key: 'isMainResident',
-      label: 'Principal',
-      value: filters.isMainResident,
-      type: 'boolean',
-    });
-  }
-
-  // Definir filtros disponibles
-  const availableFilters: FilterOption[] = [
+  const columns: DsColumn<Resident>[] = [
     {
       key: 'name',
-      label: 'Nombre',
-      type: 'text',
-      placeholder: 'Buscar por nombre',
-    },
-    {
-      key: 'dni',
-      label: 'DNI',
-      type: 'text',
-      placeholder: 'Buscar por DNI',
-    },
-    {
-      key: 'propertyUnitId',
-      label: 'Unidad',
-      type: 'select',
-      options: unitOptions,
-    },
-    {
-      key: 'residentTypeId',
-      label: 'Tipo',
-      type: 'select',
-      options: [
-        { value: '1', label: 'Propietario' },
-        { value: '2', label: 'Arrendatario' },
-        { value: '3', label: 'Familiar' },
-        { value: '4', label: 'Invitado' },
-      ],
-    },
-    {
-      key: 'isActive',
-      label: 'Estado',
-      type: 'boolean',
-    },
-    {
-      key: 'isMainResident',
-      label: 'Principal',
-      type: 'boolean',
-    },
-  ];
-
-  // Definir columnas de la tabla
-  const isMobile = useIsMobile();
-  const columns: TableColumn<Resident>[] = [
-    {
-      key: 'name',
-      label: 'Nombre',
-      render: (_, resident) => (
-        <div className="font-semibold text-gray-900">{resident.name}</div>
+      label: 'Residente',
+      width: 'minmax(180px,1.6fr)',
+      render: (r) => (
+        <div className="min-w-0">
+          <div className="font-semibold truncate">{r.name}</div>
+          {r.email && <div className="text-[11px] text-[#8a8580] truncate">{r.email}</div>}
+        </div>
       ),
     },
-    {
-      key: 'propertyUnitNumber',
-      label: 'Unidad',
-      render: (_, resident) => (
-        <span className="text-gray-700">{resident.propertyUnitNumber || '-'}</span>
-      ),
-    },
-    {
-      key: 'residentTypeName',
-      label: 'Tipo',
-      render: (_, resident) => (
-        <span className="text-gray-700">{resident.residentTypeName}</span>
-      ),
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      render: (_, resident) => (
-        <span className="text-gray-700">{resident.email || '-'}</span>
-      ),
-    },
-    {
-      key: 'phone',
-      label: 'Teléfono',
-      render: (_, resident) => (
-        <span className="text-gray-700">{resident.phone || '-'}</span>
-      ),
-    },
-    {
-      key: 'isMainResident',
-      label: 'Principal',
-      render: (_, resident) => (
-        <Badge type={resident.isMainResident ? 'success' : 'primary'}>
-          {resident.isMainResident ? 'Sí' : 'No'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'isActive',
-      label: 'Estado',
-      render: (_, resident) => (
-        <Badge type={resident.isActive ? 'success' : 'error'}>
-          {resident.isActive ? 'Activo' : 'Inactivo'}
-        </Badge>
-      ),
-    },
+    { key: 'unit', label: 'Unidad', width: 'minmax(100px,.8fr)', render: (r) => <span className="truncate">{unitOf(r)}</span> },
+    { key: 'type', label: 'Tipo', width: '120px', render: (r) => (r.residentTypeName ? <DsTag>{r.residentTypeName}</DsTag> : <span>—</span>) },
+    { key: 'dni', label: 'Documento', width: '120px', render: (r) => <span className={`${dsMono} text-xs truncate`}>{r.dni || '—'}</span> },
+    { key: 'phone', label: 'Teléfono', width: '120px', render: (r) => <span className={`${dsMono} text-xs truncate`}>{r.phone || '—'}</span> },
+    { key: 'main', label: 'Principal', width: '84px', render: (r) => (r.isMainResident ? <DsTag strong>Principal</DsTag> : <span className="text-[#8a8580]">—</span>) },
+    { key: 'status', label: 'Estado', width: '84px', render: (r) => <DsStatus label={r.isActive ? 'Activo' : 'Inactivo'} color={r.isActive ? DS.yes : DS.muted} /> },
     {
       key: 'actions',
-      label: 'Acciones',
-      align: 'center',
-      render: (_, resident) => (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEdit(resident)}
-            className="p-2 hover:bg-green-50 hover:text-green-600"
-            title="Editar residente"
-          >
-            ✏️
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDeleteClick(resident.id)}
-            className="p-2 hover:bg-red-50 hover:text-red-600"
-            title="Eliminar residente"
-          >
-            🗑️
-          </Button>
+      label: '',
+      width: '40px',
+      align: 'right',
+      render: (r) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <VtMenu
+            label={`Acciones de ${r.name}`}
+            items={[
+              { label: 'Ver detalle', onSelect: () => setViewing(r) },
+              { label: 'Editar', onSelect: () => setEditing(r) },
+              { label: 'Eliminar', danger: true, onSelect: () => askDelete(r) },
+            ]}
+          />
         </div>
       ),
     },
   ];
 
-  // Configuración de paginación
-  const pagination: TableUrlPagination = { total: totalResidents, totalPages };
-
-  // Configuración de filtros
-  const tableFilters: TableFiltersProps = {
-    availableFilters,
-    activeFilters,
-    onAddFilter: handleAddFilter,
-    onRemoveFilter: handleRemoveFilter,
-    headerActions: (
-      <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center [&>button]:min-h-[44px] md:[&>button]:min-h-0">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowImportModal(true)}
-          className="btn-outline btn-sm"
-        >
-          📊 Importar Excel
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowBulkEditModal(true)}
-          className="btn-outline btn-sm"
-        >
-          ✏️ Edición Masiva
-        </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary btn-sm col-span-2 order-first md:order-none justify-center"
-        >
-          <PlusIcon className="w-4 h-4 mr-2" />
-          Agregar Residente
-        </Button>
-      </div>
-    ),
-  };
-
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Título */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Residentes</h2>
-      </div>
+    <DsPage>
+      <DsSectionHeader<ResidentStatusFilter>
+        ariaLabel="Estado de los residentes"
+        tabs={[
+          { id: 'todos', label: 'Todos', count: summary?.total ?? null },
+          { id: 'activos', label: 'Activos', count: summary?.active ?? null },
+          { id: 'inactivos', label: 'Inactivos', count: summary?.inactive ?? null },
+        ]}
+        active={status}
+        onChange={(id) => setFilters({ estado: id === 'todos' ? null : id })}
+        actions={
+          <>
+            <button type="button" className={vtBtn.secondary} onClick={() => setShowBulk(true)}>Edición masiva</button>
+            <button type="button" className={vtBtn.secondary} onClick={() => setShowImport(true)}>Importar Excel</button>
+            <button type="button" className={vtBtn.primary} onClick={() => setShowCreate(true)}>+ Nuevo residente</button>
+          </>
+        }
+      />
+      <DsBody>
+        {notice && (
+          <div onClick={() => setNotice(null)}>
+            <VtNotice tone={notice.tone}>{notice.text}</VtNotice>
+          </div>
+        )}
 
-      {/* Alertas */}
-      {alert && (
-        <div>
-          <Alert type={alert.type} onClose={() => setAlert(null)}>
-            {alert.message}
-          </Alert>
-        </div>
-      )}
+        <DsToolbar
+          left={
+            <DsChips
+              ariaLabel="Filtrar por tipo"
+              chips={buildResidentTypeChips(summary)}
+              active={values.tipo || ALL_TYPES}
+              onChange={(id) => setFilters({ tipo: id === ALL_TYPES ? null : id })}
+            />
+          }
+          right={
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <select aria-label="Principal" className={dsSelect} value={values.principal} onChange={(e) => setFilters({ principal: e.target.value })}>
+                <option value="">Principales y no</option>
+                <option value="si">Solo principales</option>
+                <option value="no">No principales</option>
+              </select>
+              <select aria-label="Buscar por" className={dsSelect} value={field} onChange={(e) => setFilters({ campo: e.target.value === 'name' ? null : e.target.value })}>
+                {RESIDENT_SEARCH_FIELDS.map((f) => (
+                  <option key={f.id} value={f.id}>{f.label}</option>
+                ))}
+              </select>
+              <DsSearch value={search} onChange={setSearch} placeholder={searchMeta.placeholder} ariaLabel={searchMeta.placeholder} className="md:w-56" />
+            </div>
+          }
+        />
 
-      {/* Tabla con filtros y paginación integrados */}
-      <Table
-        columns={isMobile ? mobileColumn<Resident>('Residentes', (r) => (
-          <MobileCard
-            title={r.name}
-            subtitle={[r.propertyUnitNumber || 'Sin unidad', r.residentTypeName].filter(Boolean).join(' · ')}
-            badge={<Badge type={r.isActive ? 'success' : 'error'}>{r.isActive ? 'Activo' : 'Inactivo'}</Badge>}
-            fields={[
-              { label: 'Teléfono', value: r.phone || '-' },
-              { label: 'Principal', value: r.isMainResident ? 'Sí' : 'No' },
-              { label: 'Email', value: r.email || '-', full: true },
-            ]}
-            actions={<>
-              <MobileActionButton className="flex-1" onClick={() => handleEdit(r)}>✏️ Editar</MobileActionButton>
-              <MobileActionButton className="flex-1" variant="danger" onClick={() => handleDeleteClick(r.id)}>🗑️ Eliminar</MobileActionButton>
-            </>}
-          />
-        )) : columns}
-        data={residents}
-        loading={loading}
-        emptyMessage="No hay residentes disponibles"
-        keyExtractor={(resident) => resident.id.toString()}
-        pagination={pagination}
-        filters={tableFilters}
+        <DsTable
+          ariaLabel="Residentes"
+          columns={columns}
+          rows={residents}
+          rowKey={(r) => r.id}
+          onRowClick={(r) => setViewing(r)}
+          selectedKey={viewing?.id ?? null}
+          loading={loading}
+          minWidth={960}
+          empty={
+            hasFilters ? (
+              <span>
+                Ningún residente coincide con los filtros.{' '}
+                <button type="button" className="underline text-[#1a1a1a]" onClick={() => setFilters({ q: null, tipo: null, principal: null })}>
+                  Limpiar filtros
+                </button>
+              </span>
+            ) : status === 'inactivos' ? (
+              'No hay residentes inactivos.'
+            ) : (
+              'Aún no hay residentes. Agrégalos uno a uno o impórtalos desde Excel.'
+            )
+          }
+          footer={<Pagination total={total} totalPages={totalPages} disabled={loading} className="border-t-0! bg-transparent! px-0!" />}
+        />
+      </DsBody>
+
+      <ResidentDetailPanel
+        businessId={businessId}
+        resident={viewing}
+        onClose={() => setViewing(null)}
+        onEdit={(r) => {
+          setViewing(null);
+          setEditing(r);
+        }}
+        onDelete={askDelete}
       />
 
-      {showCreateModal && (
+      {showCreate && (
         <CreateResidentModal
           businessId={businessId}
-          onClose={() => setShowCreateModal(false)}
+          types={types}
+          onClose={() => setShowCreate(false)}
           onSuccess={() => {
-            setShowCreateModal(false);
-            loadResidents();
+            setShowCreate(false);
+            setNotice({ tone: 'ok', text: 'Residente agregado' });
+            refresh();
           }}
         />
       )}
 
-      {showEditModal && selectedResident && (
+      {editing && (
         <EditResidentModal
           businessId={businessId}
-          resident={selectedResident}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedResident(null);
-          }}
+          resident={editing}
+          types={types}
+          onClose={() => setEditing(null)}
           onSuccess={() => {
-            setShowEditModal(false);
-            setSelectedResident(null);
-            loadResidents();
+            setEditing(null);
+            setViewing(null);
+            setNotice({ tone: 'ok', text: 'Residente actualizado' });
+            refresh();
           }}
         />
       )}
 
-      {/* Modal de confirmación para eliminar */}
-      <ConfirmModal
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          setShowDeleteConfirm(false);
-          setResidentToDelete(null);
-        }}
-        onConfirm={handleDeleteConfirm}
-        title="Confirmar eliminación"
-        message="¿Estás seguro de que deseas eliminar este residente? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        type="danger"
+      <DsConfirmDialog
+        open={Boolean(toDelete)}
+        title={toDelete ? `¿Eliminar a ${toDelete.name}?` : ''}
+        message="Esta acción no se puede deshacer."
+        busy={deleting}
+        error={deleteError}
+        onConfirm={confirmDelete}
+        onClose={() => !deleting && setToDelete(null)}
       />
 
-      {/* Modal de importación */}
-      <ImportResidentsModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onSuccess={loadResidents}
-        businessId={businessId}
-      />
-
-      {/* Modal de edición masiva */}
-      <BulkEditResidentsModal
-        isOpen={showBulkEditModal}
-        onClose={() => setShowBulkEditModal(false)}
-        onSuccess={loadResidents}
-        businessId={businessId}
-      />
-    </div>
+      <ImportResidentsModal isOpen={showImport} onClose={() => setShowImport(false)} onSuccess={refresh} businessId={businessId} />
+      <BulkEditResidentsModal isOpen={showBulk} onClose={() => setShowBulk(false)} onSuccess={refresh} businessId={businessId} />
+    </DsPage>
   );
 }

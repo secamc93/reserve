@@ -4,3 +4,4 @@ export * from './create-property-unit.action';
 export * from './update-property-unit.action';
 export * from './delete-property-unit.action';
 export * from './import-units-from-excel.action';
+export * from './get-property-units-summary.action';

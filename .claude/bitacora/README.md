@@ -11,3 +11,4 @@ Un archivo por caso. Reglas: `.claude/rules/bitacora.md`.
 | 2026-10-14 | [Voto masivo pierde unidades: carrera al crear la lista de asistencia](2026-10-14-voto-masivo-pierde-unidades-por-carrera.md) | back / votaciones |
 | 2026-10-15 | [Apoderados en asistencia, contraseñas de voto y carga real de Tayazal](2026-10-15-apoderados-contrasenas-y-carga-tayazal.md) | back / front / votaciones |
 | 2026-10-15 | [Rediseño de parqueaderos: esquema, catálogos y propiedad del super admin](2026-10-15-rediseno-parqueaderos-y-esquema.md) | back / migrador |
+| 2026-10-15 | [Unidades que no se podían desactivar y filtro por documento ignorado](2026-10-15-unidades-no-se-desactivaban-y-filtro-dni.md) | back / unidades / residentes |

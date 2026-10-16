@@ -8,6 +8,8 @@ export interface Resident {
   businessId: number;
   propertyUnitId: number;
   propertyUnitNumber: string;
+  /** Bloque de la unidad ("Casa"); viene en el listado. */
+  propertyUnitBlock?: string;
   residentTypeId: number;
   residentTypeName: string;
   residentTypeCode: string;
@@ -25,6 +27,23 @@ export interface Resident {
   monthlyRent?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Residentes de un tipo (Propietario, Arrendatario…) con el id real del catálogo. */
+export interface ResidentTypeCount {
+  id: number;
+  name: string;
+  code: string;
+  total: number;
+}
+
+/** Totales de residentes de la propiedad y conteo por tipo. */
+export interface ResidentsSummary {
+  total: number;
+  active: number;
+  inactive: number;
+  main: number;
+  types: ResidentTypeCount[];
 }
 
 export interface ResidentsPaginated {

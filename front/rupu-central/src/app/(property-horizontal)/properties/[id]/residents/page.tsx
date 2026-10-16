@@ -1,28 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { DsBody, DsPage, VtNotice } from '@shared/ui/ds';
 import { ResidentsTable } from '@/services/modules/horizontal-properties/residents/ui/residents-table';
 
+/** Residentes de la propiedad (R1–R4). La barra superior con la miga de pan la pone el layout. */
 export default function ResidentsPage() {
   const params = useParams();
   const businessId = parseInt(params.id as string);
 
   if (isNaN(businessId)) {
     return (
-      <div className="p-3 md:p-6">
-        <div className="text-red-600">ID de propiedad inválido</div>
-      </div>
+      <DsPage>
+        <DsBody>
+          <VtNotice>ID de propiedad inválido</VtNotice>
+        </DsBody>
+      </DsPage>
     );
   }
 
-  return (
-    <div>
-      {/* Navegación */}
-
-      <div className="p-3 md:p-6">
-        <ResidentsTable businessId={businessId} />
-      </div>
-    </div>
-  );
+  return <ResidentsTable businessId={businessId} />;
 }

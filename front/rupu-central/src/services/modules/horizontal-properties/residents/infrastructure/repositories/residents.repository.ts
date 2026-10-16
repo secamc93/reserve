@@ -12,8 +12,10 @@ import {
   DeleteResidentParams,
   BulkUpdateResidentsParams,
   BulkUpdateResidentsResponse,
+  GetResidentsSummaryParams,
   Resident,
   ResidentsPaginated,
+  ResidentsSummary,
 } from '../../domain';
 import {
   BackendGetResidentsResponse,
@@ -23,37 +25,50 @@ import {
   BackendDeleteResidentResponse,
   BackendResident,
   BackendResidentListItem,
+  BackendResidentsSummaryResponse,
 } from './response/residents.response';
+
+/** Convierte un elemento del listado del back al dominio (campos que no vienen quedan vacíos). */
+export function mapBackendResidentListItem(resident: BackendResidentListItem): Resident {
+  return {
+    id: resident.id,
+    businessId: 0, // No viene en el listado
+    propertyUnitId: 0, // No viene en el listado
+    propertyUnitNumber: resident.property_unit_number,
+    propertyUnitBlock: resident.property_unit_block || undefined,
+    residentTypeId: 0, // No viene en el listado
+    residentTypeName: resident.resident_type_name,
+    residentTypeCode: '', // No viene en el listado
+    name: resident.name,
+    email: resident.email,
+    phone: resident.phone,
+    dni: resident.dni ?? '',
+    emergencyContact: '', // No viene en el listado
+    isMainResident: resident.is_main_resident,
+    isActive: resident.is_active,
+    moveInDate: undefined,
+    moveOutDate: undefined,
+    leaseStartDate: undefined,
+    leaseEndDate: undefined,
+    monthlyRent: undefined,
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
+/** Convierte el resumen del back al dominio. */
+export function mapBackendResidentsSummary(data: BackendResidentsSummaryResponse['data']): ResidentsSummary {
+  return {
+    total: data.total ?? 0,
+    active: data.active ?? 0,
+    inactive: data.inactive ?? 0,
+    main: data.main ?? 0,
+    types: (data.types ?? []).map((t) => ({ id: t.resident_type_id, name: t.name, code: t.code, total: t.total ?? 0 })),
+  };
+}
 
 export class ResidentsRepository implements IResidentsRepository {
   private baseUrl = env.API_BASE_URL;
-
-  // Mapear listado resumido (solo campos básicos)
-  private mapBackendResidentListItem(resident: BackendResidentListItem): Resident {
-    return {
-      id: resident.id,
-      businessId: 0, // No viene en el listado
-      propertyUnitId: 0, // No viene en el listado
-      propertyUnitNumber: resident.property_unit_number,
-      residentTypeId: 0, // No viene en el listado
-      residentTypeName: resident.resident_type_name,
-      residentTypeCode: '', // No viene en el listado
-      name: resident.name,
-      email: resident.email,
-      phone: resident.phone,
-      dni: '', // No viene en el listado
-      emergencyContact: '', // No viene en el listado
-      isMainResident: resident.is_main_resident,
-      isActive: resident.is_active,
-      moveInDate: undefined,
-      moveOutDate: undefined,
-      leaseStartDate: undefined,
-      leaseEndDate: undefined,
-      monthlyRent: undefined,
-      createdAt: '',
-      updatedAt: '',
-    };
-  }
 
   // Mapear detalle completo
   private mapBackendResident(resident: BackendResident): Resident {
@@ -131,7 +146,7 @@ export class ResidentsRepository implements IResidentsRepository {
       logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
 
       return {
-        residents: data.data.residents.map(this.mapBackendResidentListItem.bind(this)),
+        residents: data.data.residents.map(mapBackendResidentListItem),
         total: data.data.total,
         page: data.data.page,
         pageSize: data.data.page_size,
@@ -435,5 +450,29 @@ export class ResidentsRepository implements IResidentsRepository {
       });
       throw error;
     }
+  }
+
+  async getResidentsSummary(params: GetResidentsSummaryParams): Promise<ResidentsSummary> {
+    const { businessId, token } = params;
+    const url = `${this.baseUrl}/horizontal-properties/residents/summary?business_id=${businessId}`;
+    const method = 'GET';
+    const startTime = Date.now();
+
+    logHttpRequest({ method, url });
+
+    const response = await fetch(url, {
+      method,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    const duration = Date.now() - startTime;
+    const data: BackendResidentsSummaryResponse = await response.json();
+
+    if (!response.ok) {
+      logHttpError({ status: response.status, statusText: response.statusText, duration, data });
+      throw new Error(data.message || 'Error al obtener el resumen de residentes');
+    }
+    logHttpSuccess({ status: response.status, statusText: response.statusText, duration, data });
+    return mapBackendResidentsSummary(data.data);
   }
 }

@@ -3,7 +3,7 @@
  * Define los métodos para gestionar residentes
  */
 
-import { Resident, ResidentsPaginated, CreateResidentDTO, UpdateResidentDTO, BulkUpdateResidentDTO } from '../entities/';
+import { Resident, ResidentsPaginated, ResidentsSummary, CreateResidentDTO, UpdateResidentDTO, BulkUpdateResidentDTO } from '../entities/';
 
 export interface GetResidentsParams {
   businessId: number;
@@ -65,6 +65,11 @@ export interface BulkUpdateResidentsResponse {
   };
 }
 
+export interface GetResidentsSummaryParams {
+  businessId: number;
+  token: string;
+}
+
 export interface IResidentsRepository {
   getResidents(params: GetResidentsParams): Promise<ResidentsPaginated>;
   getResidentById(params: GetResidentByIdParams): Promise<Resident>;
@@ -72,5 +77,6 @@ export interface IResidentsRepository {
   updateResident(params: UpdateResidentParams): Promise<Resident>;
   deleteResident(params: DeleteResidentParams): Promise<void>;
   bulkUpdateResidents(params: BulkUpdateResidentsParams): Promise<BulkUpdateResidentsResponse>;
+  getResidentsSummary(params: GetResidentsSummaryParams): Promise<ResidentsSummary>;
 }
 
