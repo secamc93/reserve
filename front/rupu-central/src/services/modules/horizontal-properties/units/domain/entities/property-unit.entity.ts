@@ -37,7 +37,44 @@ export interface PropertyUnitsSummary {
   active: number;
   withResidents: number;
   coefficientSum: number;
+  /** Unidades de tipo local comercial. */
+  commercial: number;
   blocks: PropertyUnitBlockSummary[];
+}
+
+/** Estado de una fila del archivo de importación (vista previa del back). */
+export type UnitImportRowStatus =
+  | 'ready'
+  | 'exists'
+  | 'empty_number'
+  | 'duplicate'
+  | 'empty_coefficient'
+  | 'invalid_coefficient'
+  | 'unknown_type'
+  | 'invalid_floor';
+
+export interface UnitImportRow {
+  row: number;
+  number: string;
+  block: string;
+  floor?: number;
+  unitType: string;
+  coefficient?: number;
+  status: UnitImportRowStatus;
+  message: string;
+  duplicateOf?: number;
+}
+
+/** Vista previa de una importación: no guarda nada. */
+export interface UnitImportPreview {
+  columns: number;
+  totalRows: number;
+  ready: number;
+  existing: number;
+  errors: number;
+  /** Suma de coeficientes de la propiedad si se importa (actualizando las existentes). */
+  coefficientTotal: number;
+  rows: UnitImportRow[];
 }
 
 export interface PropertyUnitsPaginated {

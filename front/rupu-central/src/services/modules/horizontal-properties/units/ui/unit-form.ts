@@ -33,6 +33,8 @@ export const emptyUnitForm: UnitFormValues = {
 };
 
 const str = (v: number | undefined | null) => (v === undefined || v === null ? '' : String(v));
+/** Decimal con coma (es-CO) para mostrar en el campo: 0.842 → "0,842". */
+const dec = (v: number | undefined | null) => str(v).replace('.', ',');
 
 export function unitToForm(unit: PropertyUnit): UnitFormValues {
   return {
@@ -40,10 +42,10 @@ export function unitToForm(unit: PropertyUnit): UnitFormValues {
     block: unit.block ?? '',
     unitType: unit.unitType || UNIT_TYPES.APARTMENT,
     floor: str(unit.floor),
-    area: str(unit.area),
+    area: dec(unit.area),
     bedrooms: str(unit.bedrooms),
     bathrooms: str(unit.bathrooms),
-    coefficient: str(unit.coefficient),
+    coefficient: dec(unit.coefficient),
     description: unit.description ?? '',
     isActive: unit.isActive,
   };

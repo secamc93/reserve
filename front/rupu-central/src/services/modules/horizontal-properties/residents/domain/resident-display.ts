@@ -1,14 +1,17 @@
 /**
- * Presentación de residentes (lógica pura, sin efectos): chips por tipo, búsqueda por campo,
- * filtro de estado y línea de tiempo del detalle.
+ * Presentación de residentes (lógica pura, sin efectos): pestañas, tipos, fechas en español,
+ * subtítulo del detalle y cambios de la edición masiva.
  */
 
-import type { GetResidentsParams } from './ports/residents.repository';
-import type { Resident, ResidentsSummary, ResidentTypeCount } from './entities';
+import type { Resident, ResidentsSummary, ResidentTypeCount, UpdateResidentDTO } from './entities';
 import { RESIDENT_TYPE_LABELS } from './entities';
 
-/** Valor del chip "Todos" (sin filtro de tipo). */
-export const ALL_TYPES = 'all';
+// ===================== Pestañas =====================
+
+export const RESIDENT_TAB_ALL = 'todos';
+export const RESIDENT_TAB_NO_EMAIL = 'sin-correo';
+export const RESIDENT_TAB_INACTIVE = 'inactivos';
+const TYPE_PREFIX = 'tipo:';
 
 /** Plural en español de un tipo ("Propietario" → "Propietarios", "Familiar" → "Familiares"). */
 export function pluralizeType(name: string): string {
@@ -17,85 +20,94 @@ export function pluralizeType(name: string): string {
   return /[aeiouáéíóú]$/i.test(n) ? `${n}s` : `${n}es`;
 }
 
-export interface TypeChip {
+export interface ResidentTab {
   id: string;
   label: string;
   count: number;
 }
 
-/** Chips de tipo: "Todos" con el total y un chip por tipo del catálogo (ids reales del back). */
-export function buildResidentTypeChips(summary: ResidentsSummary | null): TypeChip[] {
+/** Pestañas: Todos, una por tipo del catálogo (ids reales), Sin correo e Inactivos. */
+export function buildResidentTabs(summary: ResidentsSummary | null): ResidentTab[] {
   return [
-    { id: ALL_TYPES, label: 'Todos', count: summary?.total ?? 0 },
-    ...(summary?.types ?? []).map((t) => ({ id: String(t.id), label: pluralizeType(t.name), count: t.total })),
+    { id: RESIDENT_TAB_ALL, label: 'Todos', count: summary?.total ?? 0 },
+    ...(summary?.types ?? []).map((t) => ({ id: `${TYPE_PREFIX}${t.id}`, label: pluralizeType(t.name), count: t.total })),
+    { id: RESIDENT_TAB_NO_EMAIL, label: 'Sin correo', count: summary?.withoutEmail ?? 0 },
+    { id: RESIDENT_TAB_INACTIVE, label: 'Inactivos', count: summary?.inactive ?? 0 },
   ];
 }
+
+export interface ResidentTabFilters {
+  residentTypeId?: number;
+  withoutEmail?: boolean;
+  isActive?: boolean;
+}
+
+/** Filtros del listado según la pestaña (id inválido o vacío → Todos). */
+export function residentTabToFilters(tab: string | null | undefined): ResidentTabFilters {
+  if (!tab || tab === RESIDENT_TAB_ALL) return {};
+  if (tab.startsWith(TYPE_PREFIX)) {
+    const id = Number(tab.slice(TYPE_PREFIX.length));
+    return Number.isFinite(id) && id > 0 ? { residentTypeId: id } : {};
+  }
+  if (tab === RESIDENT_TAB_NO_EMAIL) return { withoutEmail: true };
+  if (tab === RESIDENT_TAB_INACTIVE) return { isActive: false };
+  return {};
+}
+
+// ===================== Tipos =====================
+
+export interface ResidentTypeOption {
+  id: number;
+  name: string;
+  code: string;
+}
+
+const DEFAULT_TYPE_CODES: Record<number, string> = { 1: 'owner', 2: 'tenant', 3: 'family', 4: 'guest' };
 
 /**
  * Tipos para el formulario: los del catálogo del back (resumen) o, si no hay resumen, los
  * conocidos por defecto.
  */
-export function residentTypeOptions(types: ResidentTypeCount[] | undefined): Array<{ id: number; name: string }> {
-  if (types && types.length > 0) return types.map((t) => ({ id: t.id, name: t.name }));
-  return Object.entries(RESIDENT_TYPE_LABELS).map(([id, name]) => ({ id: Number(id), name }));
+export function residentTypeOptions(types: ResidentTypeCount[] | undefined): ResidentTypeOption[] {
+  if (types && types.length > 0) return types.map((t) => ({ id: t.id, name: t.name, code: t.code }));
+  return Object.entries(RESIDENT_TYPE_LABELS).map(([id, name]) => ({ id: Number(id), name, code: DEFAULT_TYPE_CODES[Number(id)] ?? '' }));
 }
 
-export type ResidentSearchField = 'name' | 'unit' | 'dni';
-
-export const RESIDENT_SEARCH_FIELDS: Array<{ id: ResidentSearchField; label: string; placeholder: string }> = [
-  { id: 'name', label: 'Nombre', placeholder: 'Buscar por nombre' },
-  { id: 'unit', label: 'Unidad', placeholder: 'Buscar por unidad (126)' },
-  { id: 'dni', label: 'Documento', placeholder: 'Buscar por documento' },
-];
-
-export function parseSearchField(value: string | null | undefined): ResidentSearchField {
-  return value === 'unit' || value === 'dni' ? value : 'name';
+/** El tipo es arrendatario (muestra el contrato de arrendamiento). */
+export function isTenantType(type: { code?: string; name?: string } | undefined): boolean {
+  if (!type) return false;
+  return type.code === 'tenant' || /arrend/i.test(type.name ?? '');
 }
 
-/** Convierte la búsqueda (campo + texto) en el filtro que entiende el back. */
-export function resolveResidentSearch(
-  field: ResidentSearchField,
-  query: string,
-): Pick<GetResidentsParams, 'name' | 'propertyUnitNumber' | 'dni'> {
-  const q = query.trim();
-  if (!q) return {};
-  if (field === 'unit') return { propertyUnitNumber: q };
-  if (field === 'dni') return { dni: q };
-  return { name: q };
+// ===================== Fechas y dinero =====================
+
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+function parseDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime()) || d.getUTCFullYear() < 1900) return null;
+  return d;
 }
 
-export type ResidentStatusFilter = 'activos' | 'inactivos' | 'todos';
-
-/** Estado del filtro (pestañas). Por defecto: todos. */
-export function parseStatusFilter(value: string | null | undefined): ResidentStatusFilter {
-  return value === 'activos' || value === 'inactivos' ? value : 'todos';
+/** "2021-03-01T00:00:00Z" → "mar 2021". Vacía o inválida → "". */
+export function formatMonthYear(value: string | null | undefined): string {
+  const d = parseDate(value);
+  return d ? `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : '';
 }
-
-export function statusToIsActive(status: ResidentStatusFilter): boolean | undefined {
-  return status === 'activos' ? true : status === 'inactivos' ? false : undefined;
-}
-
-// ===================== Línea de tiempo =====================
-
-const dateFormatter = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 /** Fecha corta en español ("15 ene 2024"); vacía o inválida → "". */
 export function formatShortDate(value: string | null | undefined): string {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime()) || d.getUTCFullYear() < 1900) return '';
-  const parts = Object.fromEntries(dateFormatter.formatToParts(d).map((p) => [p.type, p.value]));
-  return `${parts.day} ${String(parts.month).replace(/\./g, '')} ${parts.year}`;
+  const d = parseDate(value);
+  return d ? `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : '';
 }
 
-export interface ResidentTimelineEvent {
-  key: string;
-  label: string;
-  date: string;
-  /** Fecha ISO para ordenar. */
-  at: number;
-  upcoming: boolean;
-  detail?: string;
+/** Fecha de actividad: "12 oct" si es del año de `now`, si no "12 oct 2024". */
+export function formatActivityDate(value: string | null | undefined, now: Date = new Date()): string {
+  const d = parseDate(value);
+  if (!d) return '';
+  const base = `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+  return d.getUTCFullYear() === now.getUTCFullYear() ? base : `${base} ${d.getUTCFullYear()}`;
 }
 
 const moneyFormatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -105,36 +117,77 @@ export function formatMoney(value: number | undefined | null): string {
   return typeof value === 'number' && Number.isFinite(value) ? moneyFormatter.format(value).replace(/ /g, ' ') : '—';
 }
 
-/**
- * Eventos del residente en orden cronológico: registro, ingreso, inicio y fin de arriendo,
- * salida y última actualización (si es distinta del registro). Los eventos posteriores a
- * `now` se marcan como próximos.
- */
-export function buildResidentTimeline(resident: Resident, now: Date = new Date()): ResidentTimelineEvent[] {
-  const candidates: Array<{ key: string; label: string; value?: string; detail?: string }> = [
-    { key: 'created', label: 'Registrado en Rupü', value: resident.createdAt },
-    { key: 'move-in', label: 'Ingreso a la unidad', value: resident.moveInDate },
-    {
-      key: 'lease-start',
-      label: 'Inicio del arriendo',
-      value: resident.leaseStartDate,
-      detail: resident.monthlyRent ? `Canon ${formatMoney(resident.monthlyRent)}` : undefined,
-    },
-    { key: 'lease-end', label: 'Fin del arriendo', value: resident.leaseEndDate },
-    { key: 'move-out', label: 'Salida de la unidad', value: resident.moveOutDate },
-  ];
-  const events: ResidentTimelineEvent[] = [];
-  for (const c of candidates) {
-    const date = formatShortDate(c.value);
-    if (!date || !c.value) continue;
-    const at = new Date(c.value).getTime();
-    events.push({ key: c.key, label: c.label, date, at, upcoming: at > now.getTime(), detail: c.detail });
+/** Subtítulo del detalle: "Propietario · CC 123 · desde mar 2021" (omite lo que falte). */
+export function residentSubtitle(r: Pick<Resident, 'residentTypeName' | 'dni' | 'since' | 'moveInDate' | 'createdAt'>): string {
+  const since = formatMonthYear(r.since || r.moveInDate || r.createdAt);
+  return [r.residentTypeName, r.dni ? `CC ${r.dni}` : '', since ? `desde ${since}` : ''].filter(Boolean).join(' · ');
+}
+
+// ===================== Edición masiva =====================
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Correo válido o vacío (el correo es opcional al editar). */
+export function isValidOptionalEmail(email: string): boolean {
+  const e = email.trim();
+  return e === '' || EMAIL_RE.test(e);
+}
+
+export interface BulkRow {
+  id: number;
+  /** Clave de la unidad para agrupar el residente principal. */
+  unitKey: string;
+  unitLabel: string;
+  name: string;
+  dni: string;
+  email: string;
+  phone: string;
+  isMain: boolean;
+  isActive: boolean;
+}
+
+export type BulkField = 'name' | 'dni' | 'email' | 'phone' | 'isMain' | 'isActive';
+const BULK_FIELDS: BulkField[] = ['name', 'dni', 'email', 'phone', 'isMain', 'isActive'];
+
+export function bulkRowFromResident(r: Resident, unitLabel: string): BulkRow {
+  return {
+    id: r.id,
+    unitKey: `${r.propertyUnitBlock ?? ''}|${r.propertyUnitNumber ?? ''}`,
+    unitLabel,
+    name: r.name ?? '',
+    dni: r.dni ?? '',
+    email: r.email ?? '',
+    phone: r.phone ?? '',
+    isMain: r.isMainResident,
+    isActive: r.isActive,
+  };
+}
+
+/** Campos cambiados de una fila (comparando sin espacios en los extremos). */
+export function changedFields(original: BulkRow, edited: BulkRow): BulkField[] {
+  return BULK_FIELDS.filter((f) => {
+    const a = original[f];
+    const b = edited[f];
+    return typeof a === 'string' ? a.trim() !== String(b).trim() : a !== b;
+  });
+}
+
+/** DTO de actualización con solo lo cambiado (null si no cambió nada). */
+export function bulkRowToUpdate(original: BulkRow, edited: BulkRow): UpdateResidentDTO | null {
+  const fields = changedFields(original, edited);
+  if (fields.length === 0) return null;
+  const dto: UpdateResidentDTO = {};
+  for (const f of fields) {
+    if (f === 'isMain') dto.isMainResident = edited.isMain;
+    else if (f === 'isActive') dto.isActive = edited.isActive;
+    else dto[f] = edited[f].trim();
   }
-  const created = resident.createdAt ? new Date(resident.createdAt).getTime() : NaN;
-  const updated = resident.updatedAt ? new Date(resident.updatedAt).getTime() : NaN;
-  if (Number.isFinite(updated) && (!Number.isFinite(created) || updated - created > 60_000)) {
-    const date = formatShortDate(resident.updatedAt);
-    if (date) events.push({ key: 'updated', label: 'Última actualización', date, at: updated, upcoming: false });
-  }
-  return events.sort((a, b) => a.at - b.at);
+  return dto;
+}
+
+/** Marca a `id` como principal de su unidad y desmarca a los demás de esa unidad. */
+export function setMainInUnit(rows: BulkRow[], id: number): BulkRow[] {
+  const target = rows.find((r) => r.id === id);
+  if (!target) return rows;
+  return rows.map((r) => (r.unitKey === target.unitKey ? { ...r, isMain: r.id === id } : r));
 }

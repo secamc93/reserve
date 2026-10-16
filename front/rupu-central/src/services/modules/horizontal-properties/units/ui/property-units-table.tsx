@@ -1,69 +1,58 @@
 /**
- * U1 · Unidades (Patrón A · Lista): cabecera secundaria con pestañas "Unidades" y
- * "Por bloque" y acciones (Importar Excel, Nueva unidad); cifras de resumen (unidades,
- * activas, con residentes, suma de coeficientes); chips por bloque (Casa, Dúplex, Local…),
- * buscador por número, filtros de tipo/piso/estado, tabla densa y paginación en la URL.
- * "Por bloque" agrupa las unidades por bloque/torre con su suma de coeficientes.
+ * U1 · Unidades por torre/bloque, coeficiente acumulado (Patrón A · Lista).
+ * Cabecera secundaria con pestañas "Todas", una por bloque con su conteo, "Sin residente"
+ * (y "Locales" / "Inactivas" si aplican) y acciones Importar · Exportar · Nueva unidad;
+ * buscador "Número o residente"; tabla densa agrupada por bloque con el coeficiente
+ * acumulado del bloque y paginación en la URL.
  */
 
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  DS,
-  DsBody,
-  DsChips,
-  DsPage,
-  DsSearch,
-  DsSectionHeader,
-  DsStatus,
-  DsTable,
-  DsToolbar,
-  VtMenu,
-  VtNotice,
-  dsMono,
-  vtBtn,
-  type DsColumn,
-} from '@shared/ui/ds';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DS, DsBody, DsPage, DsSearch, DsSectionHeader, VtIcon, VtNotice, dsMono, vtBtn, type DsColumn } from '@shared/ui/ds';
 import { Pagination, usePaginationParams } from '@shared/ui/pagination';
+import { fetchAllPages } from '@shared/utils/pagination';
 import { deletePropertyUnitAction, getPropertyUnitsAction, getPropertyUnitsSummaryAction } from '../infrastructure/actions';
 import {
-  ALL_BLOCKS,
   PropertyUnit,
   PropertyUnitsSummary,
-  UNIT_TYPE_LABELS,
-  buildBlockChips,
+  UNIT_TAB_ALL,
+  blockLabel,
+  blockTotals,
+  buildUnitTabs,
+  formatArea,
   formatCoefficient,
+  formatCoefficientPct,
   formatOccupancy,
+  formatRoomsBaths,
   formatUnitLabel,
+  groupUnitsByBlock,
+  unitTabToFilters,
+  unitTypeLabel,
+  unitsToCsv,
+  type GetPropertyUnitsParams,
 } from '../domain';
 import { getUnitsBusinessToken } from './business-token';
 import { CreatePropertyUnitModal } from './create-property-unit-modal';
 import { EditPropertyUnitModal } from './edit-property-unit-modal';
 import { ImportUnitsModal } from './import-units-modal';
-import { UnitsByBlock } from './units-by-block';
-import { UnitsSummaryStats } from './units-summary-stats';
-import { DsConfirmDialog, dsSelect, useDebouncedValue, useUrlFilters } from './kit';
+import { DsConfirmDialog, DsGroupedTable, useDebouncedValue, useUrlFilters } from './kit';
 
-/** Filtros en la URL: vista (lista | bloques), bloque, búsqueda, tipo, piso y estado. */
-const FILTER_KEYS = ['vista', 'bloque', 'q', 'tipo', 'piso', 'estado'] as const;
-
-type View = 'list' | 'blocks';
+/** Filtros en la URL: pestaña (bloque, sin residente…) y búsqueda. */
+const FILTER_KEYS = ['pestana', 'q'] as const;
 
 export function PropertyUnitsTable({ businessId }: { businessId: number }) {
   const { page, pageSize } = usePaginationParams();
   const { values, setFilters } = useUrlFilters(FILTER_KEYS);
-  const view: View = values.vista === 'bloques' ? 'blocks' : 'list';
-  const floor = values.piso.trim() !== '' && Number.isFinite(Number(values.piso)) ? Number(values.piso) : undefined;
-  const isActive = values.estado === 'activas' ? true : values.estado === 'inactivas' ? false : undefined;
-
+  const tab = values.pestana || UNIT_TAB_ALL;
+  const tabFilters = useMemo(() => unitTabToFilters(tab), [tab]);
   const [search, setSearch] = useDebouncedValue(values.q, (q) => setFilters({ q }));
-  const [floorDraft, setFloorDraft] = useDebouncedValue(values.piso, (piso) => setFilters({ piso }));
 
   const [units, setUnits] = useState<PropertyUnit[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [summary, setSummary] = useState<PropertyUnitsSummary | null>(null);
   const [notice, setNotice] = useState<{ tone: 'error' | 'ok'; text: string } | null>(null);
 
@@ -76,22 +65,23 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
 
   const requestRef = useRef(0);
 
+  const listParams = useCallback(
+    (token: string): GetPropertyUnitsParams => ({
+      businessId,
+      token,
+      query: values.q.trim() || undefined,
+      groupByBlock: true,
+      ...tabFilters,
+    }),
+    [businessId, values.q, tabFilters],
+  );
+
   const loadUnits = useCallback(async () => {
     const requestId = ++requestRef.current;
     setLoading(true);
     try {
       const token = await getUnitsBusinessToken(businessId);
-      const data = await getPropertyUnitsAction({
-        businessId,
-        token,
-        page,
-        pageSize,
-        number: values.q.trim() || undefined,
-        block: values.bloque || undefined,
-        unitType: values.tipo || undefined,
-        floor,
-        isActive,
-      });
+      const data = await getPropertyUnitsAction({ ...listParams(token), page, pageSize });
       if (requestId !== requestRef.current) return;
       setUnits(data.units);
       setTotal(data.total);
@@ -102,7 +92,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     } finally {
       if (requestId === requestRef.current) setLoading(false);
     }
-  }, [businessId, page, pageSize, values.q, values.bloque, values.tipo, floor, isActive]);
+  }, [businessId, listParams, page, pageSize]);
 
   const loadSummary = useCallback(async () => {
     try {
@@ -126,6 +116,27 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     loadSummary();
   }, [loadUnits, loadSummary]);
 
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const token = await getUnitsBusinessToken(businessId);
+      const all = await fetchAllPages((p, size) =>
+        getPropertyUnitsAction({ ...listParams(token), page: p, pageSize: size }).then((r) => ({ items: r.units, total: r.total, totalPages: r.totalPages })),
+      );
+      const blob = new Blob([unitsToCsv(all)], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `unidades-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setNotice({ tone: 'error', text: 'No se pudo exportar las unidades' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const confirmDelete = async () => {
     if (!toDelete) return;
     setDeleting(true);
@@ -135,6 +146,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
       await deletePropertyUnitAction({ businessId, unitId: toDelete.id, token });
       setNotice({ tone: 'ok', text: `${formatUnitLabel(toDelete.number, toDelete.block)} eliminada` });
       setToDelete(null);
+      setEditing(null);
       refresh();
     } catch (err) {
       setDeleteError(err instanceof Error && err.message ? err.message : 'No se pudo eliminar la unidad');
@@ -143,73 +155,83 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
     }
   };
 
-  const hasFilters = Boolean(values.q || values.bloque || values.tipo || values.piso || values.estado);
+  const tabs = buildUnitTabs(summary);
+  const blocks = (summary?.blocks ?? []).map((b) => b.block).filter((b) => b.trim() !== '');
 
   const columns: DsColumn<PropertyUnit>[] = [
     {
       key: 'unit',
       label: 'Unidad',
-      width: 'minmax(120px,1.1fr)',
-      render: (u) => <span className="font-semibold truncate">{formatUnitLabel(u.number, u.block)}</span>,
+      width: 'minmax(110px,1fr)',
+      render: (u) => <span className={`${dsMono} font-semibold truncate`}>{formatUnitLabel(u.number, u.block)}</span>,
     },
-    { key: 'type', label: 'Tipo', width: '120px', render: (u) => <span className="text-[#4b4a46]">{UNIT_TYPE_LABELS[u.unitType] || u.unitType}</span> },
-    { key: 'floor', label: 'Piso', width: '56px', align: 'right', render: (u) => <span className={`${dsMono} text-xs`}>{u.floor ?? '—'}</span> },
-    { key: 'area', label: 'Área m²', width: '80px', align: 'right', render: (u) => <span className={`${dsMono} text-xs`}>{u.area ?? '—'}</span> },
+    { key: 'type', label: 'Tipo', width: '110px', render: (u) => <span className="text-[#4b4a46] truncate">{unitTypeLabel(u.unitType)}</span> },
+    { key: 'floor', label: 'Piso', width: '52px', render: (u) => <span className={`${dsMono} text-xs`}>{u.floor ?? '—'}</span> },
+    { key: 'area', label: 'Área', width: '84px', render: (u) => <span className={`${dsMono} text-xs`}>{formatArea(u.area)}</span> },
+    { key: 'rooms', label: 'Hab/Bañ', width: '70px', render: (u) => <span className={`${dsMono} text-xs`}>{formatRoomsBaths(u.bedrooms, u.bathrooms)}</span> },
     {
       key: 'coef',
-      label: 'Coeficiente',
-      width: '100px',
+      label: 'Coef.',
+      width: '84px',
       align: 'right',
       render: (u) => <span className={`${dsMono} text-xs font-medium`}>{formatCoefficient(u.coefficient)}</span>,
     },
     {
-      key: 'residents',
-      label: 'Residentes',
-      width: 'minmax(150px,1.4fr)',
-      render: (u) => (
-        <span className={`truncate ${u.residentsCount ? '' : 'text-[#8a8580]'}`} title={u.mainResidentName}>
-          {formatOccupancy(u.residentsCount, u.mainResidentName)}
-        </span>
-      ),
+      key: 'resident',
+      label: 'Residente principal',
+      width: 'minmax(160px,1.5fr)',
+      render: (u) =>
+        u.residentsCount ? (
+          <span className="truncate" title={u.mainResidentName}>{formatOccupancy(u.residentsCount, u.mainResidentName)}</span>
+        ) : (
+          <span className="font-medium" style={{ color: DS.accent }}>Sin residente</span>
+        ),
     },
     {
-      key: 'status',
-      label: 'Estado',
-      width: '88px',
-      render: (u) => <DsStatus label={u.isActive ? 'Activa' : 'Inactiva'} color={u.isActive ? DS.yes : DS.muted} />,
-    },
-    {
-      key: 'actions',
+      key: 'edit',
       label: '',
-      width: '40px',
+      width: '28px',
       align: 'right',
       render: (u) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          <VtMenu
-            label={`Acciones de ${formatUnitLabel(u.number, u.block)}`}
-            items={[
-              { label: 'Editar', onSelect: () => setEditing(u) },
-              { label: 'Eliminar', danger: true, onSelect: () => { setDeleteError(null); setToDelete(u); } },
-            ]}
-          />
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditing(u);
+          }}
+          className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md border border-[#d6d3cd] bg-white text-[#4b4a46] hover:bg-[#f5f5f4]"
+          aria-label={`Editar ${formatUnitLabel(u.number, u.block)}`}
+          title="Editar"
+        >
+          <VtIcon name="edit" size={14} />
+        </button>
       ),
     },
   ];
 
+  const groups = groupUnitsByBlock(units).map((g) => {
+    const totals = blockTotals(summary, g.block);
+    return {
+      key: g.block || '__sin_bloque__',
+      label: `${blockLabel(g.block)} · ${totals?.total ?? g.units.length} unidades`,
+      right: totals ? `coef. ${formatCoefficientPct(totals.coefficientSum)}` : undefined,
+      rows: g.units,
+    };
+  });
+
   return (
     <DsPage>
-      <DsSectionHeader<View>
-        ariaLabel="Vistas de unidades"
-        tabs={[
-          { id: 'list', label: 'Unidades', count: summary?.total ?? null },
-          { id: 'blocks', label: 'Por bloque', count: summary ? summary.blocks.length : null },
-        ]}
-        active={view}
-        onChange={(id) => setFilters({ vista: id === 'blocks' ? 'bloques' : null })}
+      <DsSectionHeader<string>
+        ariaLabel="Unidades por bloque"
+        tabs={tabs.map((t) => ({ id: t.id, label: t.label, count: t.count }))}
+        active={tab}
+        onChange={(id) => setFilters({ pestana: id === UNIT_TAB_ALL ? null : id })}
         actions={
           <>
             <button type="button" className={vtBtn.secondary} onClick={() => setShowImport(true)}>Importar Excel</button>
+            <button type="button" className={vtBtn.secondary} onClick={exportCsv} disabled={exporting}>
+              {exporting ? 'Exportando…' : 'Exportar'}
+            </button>
             <button type="button" className={vtBtn.primary} onClick={() => setShowCreate(true)}>+ Nueva unidad</button>
           </>
         }
@@ -221,83 +243,40 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
           </div>
         )}
 
-        <UnitsSummaryStats summary={summary} />
+        <div className="flex justify-end">
+          <DsSearch value={search} onChange={setSearch} placeholder="Número o residente" ariaLabel="Buscar por número o residente" className="md:w-[220px]" />
+        </div>
 
-        {view === 'blocks' ? (
-          <UnitsByBlock
-            summary={summary}
-            onSelectBlock={(block) => setFilters({ vista: null, bloque: block })}
-          />
-        ) : (
-          <>
-            <DsToolbar
-              left={
-                <DsChips
-                  ariaLabel="Filtrar por bloque"
-                  chips={buildBlockChips(summary)}
-                  active={values.bloque || ALL_BLOCKS}
-                  onChange={(id) => setFilters({ bloque: id === ALL_BLOCKS ? null : id })}
-                />
-              }
-              right={
-                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                  <select aria-label="Tipo de unidad" className={dsSelect} value={values.tipo} onChange={(e) => setFilters({ tipo: e.target.value })}>
-                    <option value="">Todos los tipos</option>
-                    {Object.entries(UNIT_TYPE_LABELS).map(([v, l]) => (
-                      <option key={v} value={v}>{l}</option>
-                    ))}
-                  </select>
-                  <input
-                    aria-label="Piso"
-                    placeholder="Piso"
-                    inputMode="numeric"
-                    className={`${dsSelect} w-16`}
-                    value={floorDraft}
-                    onChange={(e) => setFloorDraft(e.target.value)}
-                  />
-                  <select aria-label="Estado" className={dsSelect} value={values.estado} onChange={(e) => setFilters({ estado: e.target.value })}>
-                    <option value="">Todas</option>
-                    <option value="activas">Activas</option>
-                    <option value="inactivas">Inactivas</option>
-                  </select>
-                  <DsSearch value={search} onChange={setSearch} placeholder="Buscar por número" ariaLabel="Buscar unidad por número" className="md:w-48" />
-                </div>
-              }
-            />
-
-            <DsTable
-              ariaLabel="Unidades"
-              columns={columns}
-              rows={units}
-              rowKey={(u) => u.id}
-              onRowClick={(u) => setEditing(u)}
-              loading={loading}
-              minWidth={900}
-              empty={
-                hasFilters ? (
-                  <span>
-                    Ninguna unidad coincide con los filtros.{' '}
-                    <button
-                      type="button"
-                      className="underline text-[#1a1a1a]"
-                      onClick={() => setFilters({ q: null, bloque: null, tipo: null, piso: null, estado: null })}
-                    >
-                      Limpiar filtros
-                    </button>
-                  </span>
-                ) : (
-                  'Aún no hay unidades. Créalas una a una o impórtalas desde Excel.'
-                )
-              }
-              footer={<Pagination total={total} totalPages={totalPages} disabled={loading} className="border-t-0! bg-transparent! px-0!" />}
-            />
-          </>
-        )}
+        <DsGroupedTable
+          ariaLabel="Unidades"
+          columns={columns}
+          groups={groups}
+          rowKey={(u) => u.id}
+          onRowClick={(u) => setEditing(u)}
+          loading={loading}
+          minWidth={880}
+          empty={
+            values.q || tab !== UNIT_TAB_ALL ? (
+              <span>
+                Ninguna unidad coincide.{' '}
+                <button type="button" className="underline text-[#1a1a1a]" onClick={() => setFilters({ q: null, pestana: null })}>
+                  Ver todas
+                </button>
+              </span>
+            ) : (
+              'Aún no hay unidades. Créalas una a una o impórtalas desde Excel.'
+            )
+          }
+          footer={<Pagination total={total} totalPages={totalPages} disabled={loading} className="border-t-0! bg-transparent! px-0!" />}
+        />
       </DsBody>
 
       {showCreate && (
         <CreatePropertyUnitModal
           businessId={businessId}
+          blocks={blocks}
+          coefficientSum={summary?.coefficientSum}
+          defaultBlock={tabFilters.block}
           onClose={() => setShowCreate(false)}
           onSuccess={() => {
             setShowCreate(false);
@@ -311,7 +290,13 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
         <EditPropertyUnitModal
           businessId={businessId}
           unit={editing}
+          blocks={blocks}
+          coefficientSum={summary?.coefficientSum}
           onClose={() => setEditing(null)}
+          onDelete={(u) => {
+            setDeleteError(null);
+            setToDelete(u);
+          }}
           onSuccess={() => {
             setEditing(null);
             setNotice({ tone: 'ok', text: 'Unidad actualizada' });

@@ -4,11 +4,14 @@ import { UnitFormDialog } from './unit-form-dialog';
 
 interface CreatePropertyUnitModalProps {
   businessId: number;
+  blocks?: string[];
+  coefficientSum?: number;
+  defaultBlock?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-/** U2 · Crear unidad (modal de 560 px). */
-export function CreatePropertyUnitModal({ businessId, onClose, onSuccess }: CreatePropertyUnitModalProps) {
-  return <UnitFormDialog businessId={businessId} onClose={onClose} onSuccess={onSuccess} />;
+/** U2 · Nueva unidad (modal de 560 px). */
+export function CreatePropertyUnitModal(props: CreatePropertyUnitModalProps) {
+  return <UnitFormDialog {...props} />;
 }

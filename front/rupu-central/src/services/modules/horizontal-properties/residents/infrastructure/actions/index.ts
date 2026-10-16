@@ -6,3 +6,4 @@ export * from './delete-resident.action';
 export * from './import-residents-from-excel.action';
 export * from './bulk-update-residents.action';
 export * from './get-residents-summary.action';
+export * from './get-resident-overview.action';

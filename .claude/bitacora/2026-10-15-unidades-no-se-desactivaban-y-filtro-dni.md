@@ -40,3 +40,11 @@ go test -tags=integration -count=1 ./services/horizontalproperty/unit/... ./serv
 
 - En repositorios GORM, `Updates` con struct solo para cambios parciales donde el cero no importe;
   si un campo puede volver a cero/false, usar `Select` o un `map`.
+
+## Adenda (segunda pasada): importación de unidades del super admin
+
+- **Síntoma:** importar unidades como super admin respondía 400 "business_id requerido".
+- **Causa:** el handler leía `business_id` solo del formulario multipart (`c.PostForm`) y el front
+  lo enviaba por query (`?business_id=`).
+- **Arreglo:** el handler también acepta la query y el front lo envía en ambos. Prueba:
+  `unit/internal/infra/primary/handlers/test/import_dry_run_handler_test.go`.

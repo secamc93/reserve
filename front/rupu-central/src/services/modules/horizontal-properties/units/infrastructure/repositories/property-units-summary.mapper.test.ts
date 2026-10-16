@@ -12,9 +12,10 @@ describe('resumen de unidades (mapper y repositorio)', () => {
         active: 193,
         with_residents: 190,
         coefficient_sum: 100,
+        commercial: 2,
         blocks: [{ block: 'Casa', total: 156, active: 156, coefficient_sum: 78.568 }],
       }),
-    ).toEqual({ total: 194, active: 193, withResidents: 190, coefficientSum: 100, blocks: [{ block: 'Casa', total: 156, active: 156, coefficientSum: 78.568 }] });
+    ).toEqual({ total: 194, active: 193, withResidents: 190, coefficientSum: 100, commercial: 2, blocks: [{ block: 'Casa', total: 156, active: 156, coefficientSum: 78.568 }] });
   });
 
   it('pide el resumen con el business_id y el token', async () => {

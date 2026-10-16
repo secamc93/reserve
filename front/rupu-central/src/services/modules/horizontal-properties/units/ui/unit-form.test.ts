@@ -44,7 +44,7 @@ describe('formulario de unidad', () => {
 
   it('editar: conserva los valores, permite vaciar el bloque y envía el estado', () => {
     const values = unitToForm(unit);
-    expect(values.coefficient).toBe('0.503');
+    expect(values.coefficient).toBe('0,503');
     const dto = formToUpdateDTO({ ...values, block: '', isActive: false });
     expect(dto).toMatchObject({ number: '126', block: '', coefficient: 0.503, isActive: false });
   });

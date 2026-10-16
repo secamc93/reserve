@@ -35,8 +35,8 @@ async function loginAndChooseProperty(page: Page) {
 }
 
 function rows(page: Page) {
-  // Una fila por unidad: cada una tiene su menú "Acciones de <unidad>".
-  return page.getByRole("table", { name: "Unidades" }).getByRole("button", { name: /^Acciones de / });
+  // Una fila por unidad: cada una tiene su lápiz "Editar <unidad>".
+  return page.getByRole("table", { name: "Unidades" }).getByRole("button", { name: /^Editar / });
 }
 
 test.describe("paginación de tablas (unidades)", () => {

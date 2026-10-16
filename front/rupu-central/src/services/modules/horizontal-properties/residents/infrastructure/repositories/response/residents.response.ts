@@ -8,6 +8,7 @@ export interface BackendResidentListItem {
   property_unit_number: string;
   property_unit_block?: string;
   dni?: string;
+  since?: string;
   resident_type_name: string;
   name: string;
   email: string;
@@ -24,6 +25,7 @@ export interface BackendResidentsSummaryResponse {
     active: number;
     inactive: number;
     main: number;
+    without_email?: number;
     types: Array<{ resident_type_id: number; name: string; code: string; total: number }>;
   };
 }
@@ -88,3 +90,13 @@ export interface BackendDeleteResidentResponse {
   message: string;
 }
 
+
+export interface BackendResidentOverviewResponse {
+  success: boolean;
+  message: string;
+  data: {
+    stats: { visits_30d: number; packages_pending: number; reservations: number; votes_cast: number; votes_total: number };
+    housemates: Array<{ id: number; name: string; type_name: string; is_main: boolean }>;
+    activity: Array<{ kind: string; title: string; subtitle: string; at: string }>;
+  };
+}

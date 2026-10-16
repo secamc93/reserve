@@ -1,8 +1,8 @@
 /**
  * Piezas del sistema de diseño que aún no están en shared/ui/ds (candidatas a subir):
- *  - DsSidePanel: Patrón C · Detalle, panel lateral de 420 px.
- *  - DsTimeline: línea de tiempo del panel de detalle.
- *  - DsStat: cifra de resumen sobre la tabla.
+ *  - DsSidePanel: Patrón C · Detalle, panel lateral (420–460 px) con acciones en la cabecera.
+ *  - DsGroupedTable: tabla densa con filas de grupo (p. ej. por bloque/torre).
+ *  - DsAvatar: iniciales en mono dentro de un círculo.
  *  - DsFileDrop: selector de archivo para importaciones.
  *  - dsSelect: select compacto de la barra de filtros.
  *  - DsConfirmDialog: confirmación destructiva (eliminar) con el diálogo del sistema.
@@ -11,6 +11,7 @@
 'use client';
 
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import type { DsColumn } from '@shared/ui/ds';
 import { DS, DsEyebrow, VtDialog, VtIcon, VtNotice, dsFontRoot, dsMono, vtBtn } from '@shared/ui/ds';
 
 /** Select compacto (30 px) para la barra de filtros. */
@@ -27,11 +28,14 @@ export function DsSidePanel({
   subtitle,
   children,
   footer,
+  headerActions,
   width = 420,
 }: {
   open: boolean;
   onClose: () => void;
   eyebrow?: ReactNode;
+  /** Botones junto al cerrar (p. ej. "Editar"). */
+  headerActions?: ReactNode;
   title: ReactNode;
   subtitle?: ReactNode;
   children: ReactNode;
@@ -73,80 +77,16 @@ export function DsSidePanel({
             </h2>
             {subtitle && <div className="text-[13px] mt-0.5 text-[#8a8580]">{subtitle}</div>}
           </div>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="shrink-0 text-[#8a8580] hover:text-[#1a1a1a] max-md:w-11 max-md:h-11 flex items-center justify-center">
-            <VtIcon name="close" size={20} />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {headerActions}
+            <button type="button" onClick={onClose} aria-label="Cerrar" className="shrink-0 text-[#8a8580] hover:text-[#1a1a1a] max-md:w-11 max-md:h-11 flex items-center justify-center">
+              <VtIcon name="close" size={20} />
+            </button>
+          </div>
         </header>
         <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">{children}</div>
         {footer && <footer className="px-6 py-4 border-t border-[#efedea] flex flex-wrap justify-end gap-2 max-md:[&>*]:flex-1">{footer}</footer>}
       </aside>
-    </div>
-  );
-}
-
-/** Sección rotulada del panel ("CONTACTO", "UNIDAD"). */
-export function DsPanelSection({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-2">
-      <DsEyebrow>{label}</DsEyebrow>
-      {children}
-    </section>
-  );
-}
-
-/** Par rótulo / valor dentro de una sección del panel. */
-export function DsField({ label, children, mono = false }: { label: string; children: ReactNode; mono?: boolean }) {
-  return (
-    <div className="flex justify-between gap-4 text-[13px] py-1 border-b border-[#f3f2ef] last:border-b-0">
-      <span className="text-[#8a8580] shrink-0">{label}</span>
-      <span className={`text-right min-w-0 break-words ${mono ? dsMono : ''}`}>{children}</span>
-    </div>
-  );
-}
-
-// ===================== Línea de tiempo =====================
-
-export interface DsTimelineItem {
-  key: string;
-  label: string;
-  date: string;
-  detail?: string;
-  /** Evento futuro (p. ej. fin de arriendo): punto hueco. */
-  upcoming?: boolean;
-}
-
-export function DsTimeline({ items, empty = 'Sin eventos' }: { items: DsTimelineItem[]; empty?: string }) {
-  if (items.length === 0) return <div className="text-[13px] text-[#8a8580]">{empty}</div>;
-  return (
-    <ol className="relative flex flex-col gap-3.5 pl-5" aria-label="Línea de tiempo">
-      <span className="absolute left-[5px] top-1.5 bottom-1.5 w-px bg-[#e4e2dd]" aria-hidden="true" />
-      {items.map((item) => (
-        <li key={item.key} className="relative">
-          <span
-            className="absolute -left-5 top-1 w-[11px] h-[11px] rounded-full border-2"
-            style={{ borderColor: item.upcoming ? DS.pendingBorder : DS.ink, background: item.upcoming ? '#fff' : DS.ink }}
-            aria-hidden="true"
-          />
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[13px] font-semibold">{item.label}</span>
-            <span className={`${dsMono} text-[11px] text-[#8a8580] whitespace-nowrap`}>{item.date}</span>
-          </div>
-          {item.detail && <div className="text-xs text-[#8a8580] mt-0.5">{item.detail}</div>}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-// ===================== Cifras de resumen =====================
-
-export function DsStat({ label, value, hint, tone = 'default' }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'default' | 'ok' | 'warn' }) {
-  const hintColor = tone === 'ok' ? DS.reachedFg : tone === 'warn' ? DS.missingFg : DS.muted;
-  return (
-    <div className="bg-white border border-[#e4e2dd] rounded-[10px] px-4 py-3 min-w-0">
-      <DsEyebrow>{label}</DsEyebrow>
-      <div className={`${dsMono} text-[22px] font-semibold tracking-[-.02em] mt-1 tabular-nums`}>{value}</div>
-      {hint && <div className="text-xs mt-0.5" style={{ color: hintColor }}>{hint}</div>}
     </div>
   );
 }
@@ -253,5 +193,106 @@ export function DsConfirmDialog({
       <p className="m-0 text-[13px] text-[#4b4a46]">{message}</p>
       {error && <VtNotice>{error}</VtNotice>}
     </VtDialog>
+  );
+}
+
+// ===================== Avatar =====================
+
+/** Iniciales de un nombre ("Ana María Pérez" → "AM"; "ROJAS" → "RO"). */
+export function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '?';
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+export function DsAvatar({ name, size = 30 }: { name: string; size?: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`${dsMono} inline-flex items-center justify-center rounded-full bg-[#efedea] text-[#4b4a46] font-semibold shrink-0`}
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
+    >
+      {initialsOf(name)}
+    </span>
+  );
+}
+
+// ===================== Tabla agrupada =====================
+
+export interface DsGroup<T> {
+  key: string;
+  /** Texto del grupo a la izquierda ("Casa · 156 unidades"). */
+  label: ReactNode;
+  /** Dato del grupo a la derecha, en mono ("coef. 79,410 %"). */
+  right?: ReactNode;
+  rows: T[];
+}
+
+/** Tabla densa con filas de grupo (fondo #faf9f7) antes de las filas de cada grupo. */
+export function DsGroupedTable<T>({
+  columns,
+  groups,
+  rowKey,
+  onRowClick,
+  loading,
+  empty = 'Sin registros',
+  minWidth = 860,
+  footer,
+  ariaLabel,
+}: {
+  columns: DsColumn<T>[];
+  groups: DsGroup<T>[];
+  rowKey: (row: T) => string | number;
+  onRowClick?: (row: T) => void;
+  loading?: boolean;
+  empty?: ReactNode;
+  minWidth?: number;
+  footer?: ReactNode;
+  ariaLabel?: string;
+}) {
+  const template = columns.map((c) => c.width).join(' ');
+  const align = (a?: 'left' | 'right' | 'center') => (a === 'right' ? 'text-right justify-end' : a === 'center' ? 'text-center justify-center' : '');
+  const hasRows = groups.some((g) => g.rows.length > 0);
+  return (
+    <div className="bg-white border border-[#e4e2dd] rounded-[10px] overflow-hidden flex flex-col">
+      <div className="overflow-x-auto">
+        <div role="table" aria-label={ariaLabel} style={{ minWidth }}>
+          <div role="row" className={`${dsMono} grid gap-3.5 px-[18px] py-[9px] border-b border-[#efedea] text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`} style={{ gridTemplateColumns: template }}>
+            {columns.map((c) => (
+              <span key={c.key} role="columnheader" className={`flex ${align(c.align)}`}>{c.label}</span>
+            ))}
+          </div>
+          {loading ? (
+            <div className="px-[18px] py-10 text-center text-sm text-[#8a8580]">Cargando…</div>
+          ) : !hasRows ? (
+            <div className="px-[18px] py-10 text-center text-sm text-[#8a8580]">{empty}</div>
+          ) : (
+            groups.map((g) => (
+              <div key={g.key} role="rowgroup" aria-label={typeof g.label === 'string' ? g.label : undefined}>
+                <div role="row" className="flex items-center justify-between gap-3 px-[18px] py-2 bg-[#faf9f7] border-b border-[#efedea] text-xs">
+                  <span role="cell" className="font-semibold text-[#1a1a1a]">{g.label}</span>
+                  {g.right && <span role="cell" className={`${dsMono} text-[11px] text-[#4b4a46]`}>{g.right}</span>}
+                </div>
+                {g.rows.map((row) => (
+                  <div
+                    key={rowKey(row)}
+                    role="row"
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    className={`grid gap-3.5 px-[18px] py-2.5 items-center border-b border-[#efedea] text-[13px] ${onRowClick ? 'cursor-pointer hover:bg-[#faf9f7]' : ''}`}
+                    style={{ gridTemplateColumns: template }}
+                  >
+                    {columns.map((c) => (
+                      <div key={c.key} role="cell" className={`min-w-0 flex items-center ${align(c.align)}`}>{c.render(row)}</div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      {footer && <div className="border-t border-[#efedea] px-[18px] py-2">{footer}</div>}
+    </div>
   );
 }

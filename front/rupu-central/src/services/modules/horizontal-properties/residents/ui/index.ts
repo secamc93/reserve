@@ -5,3 +5,4 @@ export * from './import-residents-modal';
 export * from './bulk-edit-residents-modal';
 export * from './resident-detail-panel';
 export * from './resident-form-dialog';
+export * from './bulk-edit-residents-dialog';

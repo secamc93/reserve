@@ -32,6 +32,7 @@ export function mapBackendPropertyUnitsSummary(data: BackendPropertyUnitsSummary
     active: data.active ?? 0,
     withResidents: data.with_residents ?? 0,
     coefficientSum: data.coefficient_sum ?? 0,
+    commercial: data.commercial ?? 0,
     blocks: (data.blocks ?? []).map((b) => ({
       block: b.block ?? '',
       total: b.total ?? 0,
@@ -66,7 +67,7 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
   }
 
   async getPropertyUnits(params: GetPropertyUnitsParams): Promise<PropertyUnitsPaginated> {
-    const { businessId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive } = params;
+    const { businessId, token, page = 1, pageSize = 10, number, unitType, floor, block, isActive, query, withoutResidents, groupByBlock } = params;
 
     if (businessId == null) {
       throw new Error('businessId es requerido para listar las unidades');
@@ -86,6 +87,9 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
     if (floor !== undefined) queryParams.append('floor', floor.toString());
     if (block) queryParams.append('block', block);
     if (isActive !== undefined) queryParams.append('is_active', isActive.toString());
+    if (query) queryParams.append('q', query);
+    if (withoutResidents !== undefined) queryParams.append('without_residents', withoutResidents.toString());
+    if (groupByBlock) queryParams.append('group_by_block', 'true');
 
     // URL correcta para listar unidades (con business_id como query param)
     const url = `${this.baseUrl}/horizontal-properties/property-units?${queryParams.toString()}`;

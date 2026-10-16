@@ -1,113 +1,98 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ALL_TYPES,
-  buildResidentTimeline,
-  buildResidentTypeChips,
+  RESIDENT_TAB_ALL,
+  bulkRowFromResident,
+  bulkRowToUpdate,
+  buildResidentTabs,
+  changedFields,
+  formatActivityDate,
+  formatMonthYear,
   formatShortDate,
-  parseSearchField,
-  parseStatusFilter,
+  isTenantType,
+  isValidOptionalEmail,
   pluralizeType,
+  residentSubtitle,
+  residentTabToFilters,
   residentTypeOptions,
-  resolveResidentSearch,
-  statusToIsActive,
+  setMainInUnit,
 } from './resident-display';
 import type { Resident, ResidentsSummary } from './entities';
 
 const summary: ResidentsSummary = {
-  total: 194,
-  active: 190,
+  total: 214,
+  active: 210,
   inactive: 4,
   main: 194,
+  withoutEmail: 31,
   types: [
     { id: 7, name: 'Propietario', code: 'owner', total: 150 },
-    { id: 8, name: 'Arrendatario', code: 'tenant', total: 40 },
-    { id: 9, name: 'Familiar', code: 'family', total: 4 },
+    { id: 8, name: 'Arrendatario', code: 'tenant', total: 50 },
+    { id: 9, name: 'Familiar', code: 'family', total: 14 },
   ],
 };
 
-const base: Resident = {
-  id: 1,
-  businessId: 1,
-  propertyUnitId: 10,
-  propertyUnitNumber: '126',
-  residentTypeId: 8,
-  residentTypeName: 'Arrendatario',
-  residentTypeCode: 'tenant',
-  name: 'Ana Pérez',
-  email: 'ana@correo.co',
-  dni: '123',
-  isMainResident: true,
-  isActive: true,
-  createdAt: '2024-01-10T15:00:00Z',
-  updatedAt: '2024-01-10T15:00:00Z',
-};
+const resident = (id: number, extra: Partial<Resident> = {}): Resident => ({
+  id, businessId: 1, propertyUnitId: 0, propertyUnitNumber: '126', propertyUnitBlock: 'Casa', residentTypeId: 0,
+  residentTypeName: 'Propietario', residentTypeCode: '', name: 'Ana Pérez', email: 'ana@correo.co', phone: '300',
+  dni: '123', isMainResident: true, isActive: true, createdAt: '', updatedAt: '', ...extra,
+});
 
-describe('chips por tipo', () => {
-  it('usa los ids reales del catálogo y el plural del nombre', () => {
-    const chips = buildResidentTypeChips(summary);
-    expect(chips[0]).toEqual({ id: ALL_TYPES, label: 'Todos', count: 194 });
-    expect(chips.slice(1)).toEqual([
-      { id: '7', label: 'Propietarios', count: 150 },
-      { id: '8', label: 'Arrendatarios', count: 40 },
-      { id: '9', label: 'Familiares', count: 4 },
+describe('pestañas', () => {
+  it('Todos, tipos del catálogo, Sin correo e Inactivos', () => {
+    expect(buildResidentTabs(summary).map((t) => `${t.label} · ${t.count}`)).toEqual([
+      'Todos · 214', 'Propietarios · 150', 'Arrendatarios · 50', 'Familiares · 14', 'Sin correo · 31', 'Inactivos · 4',
     ]);
   });
-  it('sin resumen solo "Todos"', () => {
-    expect(buildResidentTypeChips(null)).toHaveLength(1);
+  it('filtros por pestaña', () => {
+    expect(residentTabToFilters(RESIDENT_TAB_ALL)).toEqual({});
+    expect(residentTabToFilters('tipo:8')).toEqual({ residentTypeId: 8 });
+    expect(residentTabToFilters('tipo:x')).toEqual({});
+    expect(residentTabToFilters('sin-correo')).toEqual({ withoutEmail: true });
+    expect(residentTabToFilters('inactivos')).toEqual({ isActive: false });
   });
-  it('pluralizeType', () => {
+  it('plural y tipos', () => {
     expect(pluralizeType('Invitado')).toBe('Invitados');
-    expect(pluralizeType('Familiar')).toBe('Familiares');
-  });
-  it('opciones del formulario: catálogo o los tipos por defecto', () => {
-    expect(residentTypeOptions(summary.types)[0]).toEqual({ id: 7, name: 'Propietario' });
-    expect(residentTypeOptions([]).map((t) => t.name)).toContain('Propietario');
-  });
-});
-
-describe('búsqueda y estado', () => {
-  it('traduce el campo de búsqueda al filtro del back', () => {
-    expect(resolveResidentSearch('name', ' Ana ')).toEqual({ name: 'Ana' });
-    expect(resolveResidentSearch('unit', '126')).toEqual({ propertyUnitNumber: '126' });
-    expect(resolveResidentSearch('dni', '123')).toEqual({ dni: '123' });
-    expect(resolveResidentSearch('name', '  ')).toEqual({});
-  });
-  it('campo y estado por defecto', () => {
-    expect(parseSearchField(null)).toBe('name');
-    expect(parseSearchField('dni')).toBe('dni');
-    expect(parseStatusFilter('')).toBe('todos');
-    expect(parseStatusFilter('activos')).toBe('activos');
-    expect(statusToIsActive('activos')).toBe(true);
-    expect(statusToIsActive('inactivos')).toBe(false);
-    expect(statusToIsActive('todos')).toBeUndefined();
+    expect(residentTypeOptions(summary.types)[1]).toEqual({ id: 8, name: 'Arrendatario', code: 'tenant' });
+    expect(residentTypeOptions([]).find((t) => t.name === 'Arrendatario')?.code).toBe('tenant');
+    expect(isTenantType({ code: 'tenant' })).toBe(true);
+    expect(isTenantType({ name: 'Arrendataria' })).toBe(true);
+    expect(isTenantType({ code: 'owner', name: 'Propietario' })).toBe(false);
   });
 });
 
-describe('línea de tiempo', () => {
-  it('formatea fechas cortas en español', () => {
+describe('fechas', () => {
+  it('mes y año, fecha corta y fecha de actividad', () => {
+    expect(formatMonthYear('2021-03-01T00:00:00Z')).toBe('mar 2021');
+    expect(formatMonthYear('0001-01-01T00:00:00Z')).toBe('');
     expect(formatShortDate('2024-01-15T00:00:00Z')).toBe('15 ene 2024');
-    expect(formatShortDate('')).toBe('');
-    expect(formatShortDate('0001-01-01T00:00:00Z')).toBe('');
+    const now = new Date('2026-10-15T00:00:00Z');
+    expect(formatActivityDate('2026-10-12T10:00:00Z', now)).toBe('12 oct');
+    expect(formatActivityDate('2025-12-01T10:00:00Z', now)).toBe('1 dic 2025');
   });
-
-  it('ordena los eventos y marca los futuros', () => {
-    const events = buildResidentTimeline(
-      {
-        ...base,
-        moveInDate: '2024-02-01T00:00:00Z',
-        leaseStartDate: '2024-02-01T00:00:00Z',
-        leaseEndDate: '2027-02-01T00:00:00Z',
-        monthlyRent: 1500000,
-        updatedAt: '2025-03-01T10:00:00Z',
-      },
-      new Date('2026-10-15T00:00:00Z'),
-    );
-    expect(events.map((e) => e.key)).toEqual(['created', 'move-in', 'lease-start', 'updated', 'lease-end']);
-    expect(events.find((e) => e.key === 'lease-end')?.upcoming).toBe(true);
-    expect(events.find((e) => e.key === 'lease-start')?.detail).toContain('1.500.000');
+  it('subtítulo del detalle', () => {
+    expect(residentSubtitle({ residentTypeName: 'Propietaria', dni: '52', since: '2021-03-01T00:00:00Z', createdAt: '' })).toBe('Propietaria · CC 52 · desde mar 2021');
+    expect(residentSubtitle({ residentTypeName: 'Familiar', dni: '', createdAt: '' })).toBe('Familiar');
   });
+});
 
-  it('no repite la actualización si coincide con el registro', () => {
-    expect(buildResidentTimeline(base).map((e) => e.key)).toEqual(['created']);
+describe('edición masiva', () => {
+  const a = bulkRowFromResident(resident(1), 'Casa 126');
+  const b = bulkRowFromResident(resident(2, { name: 'Luis', isMainResident: false }), 'Casa 126');
+  const c = bulkRowFromResident(resident(3, { propertyUnitNumber: '7', name: 'Eva' }), 'Casa 7');
+
+  it('detecta solo los campos cambiados', () => {
+    expect(changedFields(a, { ...a, name: ' Ana Pérez ' })).toEqual([]);
+    expect(changedFields(a, { ...a, email: 'nuevo@correo.co', isActive: false })).toEqual(['email', 'isActive']);
+    expect(bulkRowToUpdate(a, a)).toBeNull();
+    expect(bulkRowToUpdate(a, { ...a, phone: ' 311 ', isMain: false })).toEqual({ phone: '311', isMainResident: false });
+  });
+  it('el principal es único por unidad', () => {
+    const rows = setMainInUnit([a, b, c], 2);
+    expect(rows.map((r) => [r.id, r.isMain])).toEqual([[1, false], [2, true], [3, true]]);
+  });
+  it('correo opcional', () => {
+    expect(isValidOptionalEmail('')).toBe(true);
+    expect(isValidOptionalEmail('ana@correo.co')).toBe(true);
+    expect(isValidOptionalEmail('ana@')).toBe(false);
   });
 });

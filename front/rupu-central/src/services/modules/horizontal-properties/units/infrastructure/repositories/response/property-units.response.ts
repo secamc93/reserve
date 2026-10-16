@@ -29,6 +29,7 @@ export interface BackendPropertyUnitsSummaryResponse {
     active: number;
     with_residents: number;
     coefficient_sum: number;
+    commercial?: number;
     blocks: Array<{ block: string; total: number; active: number; coefficient_sum: number }>;
   };
 }

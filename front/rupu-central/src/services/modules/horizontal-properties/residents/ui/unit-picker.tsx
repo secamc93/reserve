@@ -7,13 +7,15 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { TokenStorage } from '@shared/config';
-import { vtInput, vtLabel } from '@shared/ui/ds';
+import { dsMono, vtInput, vtLabel } from '@shared/ui/ds';
 import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
 import { formatUnitLabel } from '../../units/domain';
 
 export interface UnitOption {
   id: number;
   label: string;
+  /** Residentes actuales de la unidad. */
+  residentsCount?: number;
 }
 
 export function UnitPicker({
@@ -57,7 +59,7 @@ export function UnitPicker({
         const q = term.trim().split(/\s+/).pop() ?? '';
         const data = await getPropertyUnitsAction({ businessId, token, page: 1, pageSize: 20, number: q || undefined });
         if (id !== requestRef.current) return;
-        setOptions(data.units.map((u) => ({ id: u.id, label: formatUnitLabel(u.number, u.block) })));
+        setOptions(data.units.map((u) => ({ id: u.id, label: formatUnitLabel(u.number, u.block), residentsCount: u.residentsCount ?? 0 })));
         setHighlight(0);
       } catch {
         if (id === requestRef.current) setOptions([]);
@@ -86,7 +88,7 @@ export function UnitPicker({
         aria-invalid={Boolean(error)}
         autoComplete="off"
         disabled={disabled}
-        className={vtInput}
+        className={`${vtInput} ${dsMono}`}
         placeholder="Buscar por número (126)"
         value={term}
         onFocus={() => setOpen(true)}
@@ -110,7 +112,16 @@ export function UnitPicker({
           }
         }}
       />
-      {error && <p className="text-xs mt-1 text-[#c8382d]">{error}</p>}
+      {error ? (
+        <p className="text-xs mt-1 text-[#c8382d]">{error}</p>
+      ) : (
+        value.id > 0 &&
+        value.residentsCount !== undefined && (
+          <p className="text-xs mt-1 text-[#8a8580]">
+            {value.residentsCount} residente{value.residentsCount === 1 ? '' : 's'} actual{value.residentsCount === 1 ? '' : 'es'}
+          </p>
+        )
+      )}
       {open && (
         <ul
           id={listId}
@@ -132,7 +143,8 @@ export function UnitPicker({
                 }}
                 className={`px-3 py-2 max-md:py-3 text-[13px] cursor-pointer ${i === highlight ? 'bg-[#f5f5f4]' : ''}`}
               >
-                {o.label}
+                <span className={dsMono}>{o.label}</span>
+                {o.residentsCount !== undefined && <span className="ml-2 text-[11px] text-[#8a8580]">{o.residentsCount} residente{o.residentsCount === 1 ? '' : 's'}</span>}
               </li>
             ))}
         </ul>

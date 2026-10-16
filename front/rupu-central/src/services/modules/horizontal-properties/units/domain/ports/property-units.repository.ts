@@ -15,6 +15,12 @@ export interface GetPropertyUnitsParams {
   floor?: number;
   block?: string;
   isActive?: boolean;
+  /** Número de unidad o nombre de un residente. */
+  query?: string;
+  /** true: solo unidades sin residentes. */
+  withoutResidents?: boolean;
+  /** Ordena primero por bloque (para agrupar las filas). */
+  groupByBlock?: boolean;
 }
 
 export interface GetPropertyUnitByIdParams {

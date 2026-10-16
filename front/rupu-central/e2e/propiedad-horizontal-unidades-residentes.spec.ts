@@ -20,67 +20,69 @@ async function shot(page: Page, name: string) {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
 }
 
-test("Unidades: lista con chips por bloque, vista por bloque y formularios", async ({ page, request }) => {
+test("Unidades: pestañas por bloque, filas agrupadas, formulario y vista previa de importación", async ({ page, request }) => {
   const business = await apiFindBusiness(request, PROPERTY_NAME);
   expect(business, `la BD debe tener el negocio "${PROPERTY_NAME}"`).toBeDefined();
   await openProperty(page, business!.id, "units");
   const table = page.getByRole("table", { name: "Unidades" });
-  await expect(table.getByRole("row").nth(1)).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("tab", { name: /Unidades/ })).toHaveAttribute("aria-selected", "true");
+  await expect(table.getByRole("rowgroup").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("tab", { name: /^Todas/ })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("ID de propiedad inválido")).toHaveCount(0);
-  await expect(page.getByLabel("Resumen de unidades")).toContainText("Suma de coeficientes");
+  // Fila de grupo con el coeficiente acumulado del bloque.
+  await expect(table.getByText(/^coef\. [\d.,]+ %$/).first()).toBeVisible();
   await shot(page, "u1-lista");
 
-  // Chip de bloque → URL y lista filtrada ("Casa 126", nunca el id).
-  const chips = page.getByRole("group", { name: "Filtrar por bloque" });
-  await chips.getByRole("button", { name: /^Casa/ }).click();
-  await expect(page).toHaveURL(/bloque=Casa/);
-  await expect(table.getByRole("cell").filter({ hasText: /^Casa \d+$/ }).first()).toBeVisible({ timeout: 30_000 });
+  // Pestaña de bloque → URL y filas solo de ese bloque ("Casa 126", nunca el id).
+  await page.getByRole("tab", { name: /^Casa/ }).click();
+  await expect(page).toHaveURL(/pestana=bloque%3ACasa|pestana=bloque:Casa/);
+  await expect(table.getByRole("rowgroup")).toHaveCount(1, { timeout: 30_000 });
+  await expect(table.getByRole("cell").filter({ hasText: /^Casa \d+$/ }).first()).toBeVisible();
+  await shot(page, "u1-casa");
 
-  await page.getByRole("tab", { name: /Por bloque/ }).click();
-  await expect(page).toHaveURL(/vista=bloques/);
-  const byBlock = page.getByRole("table", { name: "Unidades por bloque" });
-  await expect(byBlock).toContainText("Participación");
-  await shot(page, "u1-por-bloque");
+  // U2: editar desde el lápiz (se cancela).
+  await table.getByRole("button", { name: /^Editar Casa / }).first().click();
+  const edit = page.getByRole("dialog", { name: /^Editar Casa / });
+  await expect(edit.getByText("Suma de la propiedad con este valor")).toBeVisible();
+  await expect(edit.getByRole("radiogroup")).toBeVisible();
+  await shot(page, "u2-editar");
+  await edit.getByRole("button", { name: "Cancelar" }).click();
 
-  await page.getByRole("tab", { name: /Unidades/ }).click();
-  await page.getByRole("button", { name: "+ Nueva unidad" }).click();
-  const create = page.getByRole("dialog", { name: "Crear unidad" });
-  await expect(create.getByLabel("Coeficiente de copropiedad")).toBeVisible();
-  await shot(page, "u2-crear");
-  await create.getByRole("button", { name: "Cancelar" }).click();
-
+  // U3: paso 1 del importador (sin subir archivo).
   await page.getByRole("button", { name: "Importar Excel" }).click();
-  const imp = page.getByRole("dialog", { name: "Importar unidades desde Excel" });
+  const imp = page.getByRole("dialog", { name: "Elige el archivo" });
   await expect(imp).toContainText("Formato del archivo");
   await shot(page, "u3-importar");
   await imp.getByRole("button", { name: "Cancelar" }).click();
 });
 
-test("Residentes: lista con chips por tipo, panel de detalle y formularios", async ({ page, request }) => {
+test("Residentes: pestañas por tipo, panel de detalle, formulario y edición masiva", async ({ page, request }) => {
   const business = await apiFindBusiness(request, PROPERTY_NAME);
   expect(business, `la BD debe tener el negocio "${PROPERTY_NAME}"`).toBeDefined();
   await openProperty(page, business!.id, "residents");
   const table = page.getByRole("table", { name: "Residentes" });
   const firstRow = table.getByRole("row").nth(1);
   await expect(firstRow).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("group", { name: "Filtrar por tipo" }).getByRole("button", { name: /^Todos/ })).toBeVisible();
+  await expect(page.getByRole("tab", { name: /^Todos/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: /^Sin correo/ })).toBeVisible();
   await shot(page, "r1-lista");
 
   await firstRow.click();
-  const panel = page.getByRole("dialog").filter({ hasText: "Línea de tiempo" });
+  const panel = page.getByRole("dialog").filter({ hasText: "Actividad reciente" });
   await expect(panel).toBeVisible();
   await expect(panel).toContainText(/Residente · /);
-  await shot(page, "r3-detalle");
+  await expect(panel.getByRole("link", { name: "Registrar visita" })).toBeVisible();
+  await shot(page, "r4-detalle");
   await panel.getByRole("button", { name: "Editar" }).click();
-  await expect(page.getByText("Editar residente")).toBeVisible();
+  const edit = page.getByRole("dialog", { name: /^Editar / });
+  await expect(edit.getByRole("checkbox", { name: "Residente principal de la unidad" })).toBeVisible();
   await shot(page, "r2-editar");
-  await page.getByRole("button", { name: "Cancelar" }).click();
-  await page.keyboard.press("Escape");
+  await edit.getByRole("button", { name: "Cancelar" }).click();
 
   await page.getByRole("button", { name: "Edición masiva" }).click();
-  await expect(page.getByRole("dialog", { name: "Actualizar residentes por Excel" })).toBeVisible();
-  await shot(page, "r4-edicion-masiva");
+  const bulk = page.getByRole("dialog").filter({ hasText: /Edición masiva/i });
+  await expect(bulk.getByRole("table", { name: "Residentes a editar" })).toBeVisible();
+  await expect(bulk.getByText(/0 cambios sin guardar/)).toBeVisible({ timeout: 30_000 });
+  await shot(page, "r3-edicion-masiva");
 });
 
 test.describe("en teléfono (390 px)", () => {

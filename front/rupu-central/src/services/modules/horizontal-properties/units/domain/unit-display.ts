@@ -1,9 +1,10 @@
 /**
- * Presentación de unidades (lógica pura, sin efectos): etiqueta "Casa 126", formato del
- * coeficiente, estado de la suma de coeficientes y agrupación por bloque.
+ * Presentación de unidades (lógica pura, sin efectos): etiqueta "Casa 126", formatos es-CO,
+ * pestañas por bloque, agrupación de filas por bloque, suma de coeficientes y exportación CSV.
  */
 
-import type { PropertyUnitBlockSummary, PropertyUnitsSummary } from './entities';
+import type { PropertyUnit, PropertyUnitsSummary, UnitImportRow } from './entities';
+import { UNIT_TYPE_LABELS } from './entities';
 
 /**
  * Etiqueta visible de una unidad: bloque + número ("Casa 126", "Dúplex 4", "Torre A 201").
@@ -21,7 +22,9 @@ export function formatUnitLabel(number: string | null | undefined, block?: strin
 
 const coefFormatter = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 3, maximumFractionDigits: 6 });
 const sumFormatter = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 3 });
-const pctFormatter = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const pct3Formatter = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const pct2Formatter = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const areaFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 });
 
 /** Coeficiente de una unidad (3 a 6 decimales, es-CO). Sin valor: "—". */
 export function formatCoefficient(value: number | null | undefined): string {
@@ -33,9 +36,20 @@ export function formatCoefficientSum(value: number): string {
   return sumFormatter.format(Number.isFinite(value) ? value : 0);
 }
 
-/** Porcentaje con un decimal (es-CO). */
-export function formatPercent(value: number): string {
-  return `${pctFormatter.format(Number.isFinite(value) ? value : 0)} %`;
+/** Coeficiente acumulado en porcentaje con 3 decimales ("79,410 %"). */
+export function formatCoefficientPct(value: number): string {
+  return `${pct3Formatter.format(Number.isFinite(value) ? value : 0)} %`;
+}
+
+/** Área en metros cuadrados ("72,5 m²"). Sin valor: "—". */
+export function formatArea(value: number | null | undefined): string {
+  return typeof value === 'number' && Number.isFinite(value) ? `${areaFormatter.format(value)} m²` : '—';
+}
+
+/** Habitaciones / baños ("3 / 2"). Sin ninguno: "—". */
+export function formatRoomsBaths(bedrooms?: number | null, bathrooms?: number | null): string {
+  if ((bedrooms ?? null) === null && (bathrooms ?? null) === null) return '—';
+  return `${bedrooms ?? '—'} / ${bathrooms ?? '—'}`;
 }
 
 export interface CoefficientStatus {
@@ -56,22 +70,103 @@ export function getCoefficientStatus(sum: number): CoefficientStatus {
   const value = Number.isFinite(sum) ? sum : 0;
   const scale: 100 | 1 = Math.abs(value - 1) < Math.abs(value - 100) && value < 10 ? 1 : 100;
   const diff = value - scale;
-  const tolerance = scale === 100 ? 0.01 : 0.0001;
+  const tolerance = scale === 100 ? 0.0005 : 0.000005;
   const ok = Math.abs(diff) <= tolerance;
   const target = scale === 100 ? '100' : '1';
   if (value === 0) return { ok: false, scale, diff, label: 'Sin coeficientes' };
   if (ok) return { ok, scale, diff, label: `Suman ${target}` };
-  return {
-    ok,
-    scale,
-    diff,
-    label: diff > 0 ? `Sobran ${formatCoefficientSum(diff)}` : `Faltan ${formatCoefficientSum(-diff)}`,
-  };
+  const amount = scale === 100 ? pct2Formatter.format(Math.abs(diff)) : formatCoefficient(Math.abs(diff));
+  return { ok, scale, diff, label: diff > 0 ? `sobran ${amount}` : `faltan ${amount}` };
 }
 
-/** Participación de un valor sobre el total, en porcentaje (0 si el total es 0). */
-export function shareOf(value: number, total: number): number {
-  return total > 0 ? (value / total) * 100 : 0;
+/** Suma de la propiedad si la unidad pasa de `previous` a `next` (coeficientes). */
+export function projectCoefficientSum(total: number, previous: number | undefined, next: number | undefined): number {
+  return (Number.isFinite(total) ? total : 0) - (previous ?? 0) + (next ?? 0);
+}
+
+/** Texto de ocupación de una unidad: "Ana Pérez", "Ana Pérez +2" o "Sin residente". */
+export function formatOccupancy(count: number | undefined, mainName: string | undefined): string {
+  const c = count ?? 0;
+  if (c <= 0) return 'Sin residente';
+  const name = (mainName ?? '').trim() || `${c} residente${c === 1 ? '' : 's'}`;
+  return c > 1 && mainName ? `${name} +${c - 1}` : name;
+}
+
+// ===================== Pestañas =====================
+
+export const UNIT_TAB_ALL = 'todas';
+export const UNIT_TAB_NO_RESIDENT = 'sin-residente';
+export const UNIT_TAB_COMMERCIAL = 'locales';
+export const UNIT_TAB_INACTIVE = 'inactivas';
+const BLOCK_PREFIX = 'bloque:';
+
+export interface UnitTab {
+  id: string;
+  label: string;
+  count: number;
+}
+
+/**
+ * Pestañas de Unidades: "Todas", una por bloque/torre (de más a menos unidades), "Sin
+ * residente", "Locales" (si hay locales comerciales y no hay ya un bloque de locales) e
+ * "Inactivas" (si hay). Los bloques vacíos no generan pestaña (el back no filtra por vacío).
+ */
+export function buildUnitTabs(summary: PropertyUnitsSummary | null): UnitTab[] {
+  if (!summary) return [{ id: UNIT_TAB_ALL, label: 'Todas', count: 0 }];
+  const blocks = summary.blocks
+    .filter((b) => b.block.trim() !== '')
+    .sort((a, b) => b.total - a.total || a.block.localeCompare(b.block, 'es'));
+  const tabs: UnitTab[] = [
+    { id: UNIT_TAB_ALL, label: 'Todas', count: summary.total },
+    ...blocks.map((b) => ({ id: `${BLOCK_PREFIX}${b.block}`, label: b.block, count: b.total })),
+    { id: UNIT_TAB_NO_RESIDENT, label: 'Sin residente', count: Math.max(0, summary.total - summary.withResidents) },
+  ];
+  const hasLocalBlock = blocks.some((b) => /^local(es)?$/i.test(b.block.trim()));
+  if (summary.commercial > 0 && !hasLocalBlock) tabs.push({ id: UNIT_TAB_COMMERCIAL, label: 'Locales', count: summary.commercial });
+  if (summary.total > summary.active) tabs.push({ id: UNIT_TAB_INACTIVE, label: 'Inactivas', count: summary.total - summary.active });
+  return tabs;
+}
+
+export interface UnitTabFilters {
+  block?: string;
+  withoutResidents?: boolean;
+  unitType?: string;
+  isActive?: boolean;
+}
+
+/** Filtros del listado según la pestaña activa (id inválido o vacío → "Todas"). */
+export function unitTabToFilters(tab: string | null | undefined): UnitTabFilters {
+  if (!tab || tab === UNIT_TAB_ALL) return {};
+  if (tab.startsWith(BLOCK_PREFIX)) return { block: tab.slice(BLOCK_PREFIX.length) };
+  if (tab === UNIT_TAB_NO_RESIDENT) return { withoutResidents: true };
+  if (tab === UNIT_TAB_COMMERCIAL) return { unitType: 'commercial' };
+  if (tab === UNIT_TAB_INACTIVE) return { isActive: false };
+  return {};
+}
+
+// ===================== Agrupación por bloque =====================
+
+export interface UnitGroup {
+  block: string;
+  units: PropertyUnit[];
+}
+
+/** Agrupa filas consecutivas del mismo bloque (el back las entrega ordenadas por bloque). */
+export function groupUnitsByBlock(units: PropertyUnit[]): UnitGroup[] {
+  const groups: UnitGroup[] = [];
+  for (const u of units) {
+    const block = (u.block ?? '').trim();
+    const last = groups[groups.length - 1];
+    if (last && last.block === block) last.units.push(u);
+    else groups.push({ block, units: [u] });
+  }
+  return groups;
+}
+
+/** Totales de un bloque según el resumen (unidades y coeficiente acumulado). */
+export function blockTotals(summary: PropertyUnitsSummary | null, block: string): { total: number; coefficientSum: number } | null {
+  const b = summary?.blocks.find((x) => x.block.trim() === block.trim());
+  return b ? { total: b.total, coefficientSum: b.coefficientSum } : null;
 }
 
 /** Nombre visible de un bloque (sin bloque → "Sin bloque"). */
@@ -79,47 +174,72 @@ export function blockLabel(block: string): string {
   return block.trim() || 'Sin bloque';
 }
 
-/** Valor del chip "Todas" (sin filtro de bloque). */
-export const ALL_BLOCKS = 'all';
+// ===================== Tipos =====================
 
-export interface BlockChip {
-  id: string;
-  label: string;
-  count: number;
+/** Tipos en el orden del formulario (chips). */
+export const UNIT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'apartment', label: 'Apartamento' },
+  { value: 'penthouse', label: 'Penthouse' },
+  { value: 'house', label: 'Casa' },
+  { value: 'commercial', label: 'Local' },
+  { value: 'office', label: 'Oficina' },
+  { value: 'storage', label: 'Depósito' },
+  { value: 'parking', label: 'Parqueadero' },
+];
+
+export function unitTypeLabel(type: string): string {
+  return UNIT_TYPE_LABELS[type] ?? type ?? '—';
+}
+
+// ===================== Importación =====================
+
+/** Texto del estado de una fila del archivo de importación. */
+export function importRowStatusLabel(row: UnitImportRow, updateExisting: boolean): string {
+  if (row.status === 'ready') return 'Lista';
+  if (row.status === 'exists') return updateExisting ? 'Ya existe · se actualizará' : 'Ya existe · se omitirá';
+  return row.message || 'Con error';
+}
+
+export function isImportRowError(row: UnitImportRow): boolean {
+  return row.status !== 'ready' && row.status !== 'exists';
+}
+
+/** Cuántas unidades se importarán (nuevas + existentes si se actualizan). */
+export function importCount(ready: number, existing: number, updateExisting: boolean): number {
+  return ready + (updateExisting ? existing : 0);
+}
+
+// ===================== Exportación =====================
+
+function csvCell(value: string | number | undefined | null): string {
+  const s = value === undefined || value === null ? '' : String(value);
+  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 /**
- * Chips de filtro por bloque a partir del resumen: "Todas" primero y luego los bloques
- * ordenados por cantidad de unidades (desc) y nombre. Los bloques vacíos ("") no generan
- * chip porque el back no filtra por bloque vacío.
+ * CSV de unidades (separador ";" y coma decimal, como lo abre Excel en es-CO), con BOM para
+ * que respete tildes.
  */
-export function buildBlockChips(summary: PropertyUnitsSummary | null): BlockChip[] {
-  const blocks = (summary?.blocks ?? []).filter((b) => b.block.trim() !== '');
-  const sorted = [...blocks].sort((a, b) => b.total - a.total || a.block.localeCompare(b.block, 'es'));
-  return [
-    { id: ALL_BLOCKS, label: 'Todas', count: summary?.total ?? 0 },
-    ...sorted.map((b) => ({ id: b.block, label: b.block, count: b.total })),
-  ];
-}
-
-export interface BlockRow extends PropertyUnitBlockSummary {
-  /** Participación del bloque en la suma total de coeficientes (%). */
-  share: number;
-}
-
-/** Filas de la vista "Por bloque": cada bloque con su participación en el coeficiente total. */
-export function buildBlockRows(summary: PropertyUnitsSummary | null): BlockRow[] {
-  if (!summary) return [];
-  const total = summary.coefficientSum;
-  return [...summary.blocks]
-    .sort((a, b) => b.coefficientSum - a.coefficientSum || a.block.localeCompare(b.block, 'es'))
-    .map((b) => ({ ...b, share: shareOf(b.coefficientSum, total) }));
-}
-
-/** Texto de ocupación de una unidad: "Ana Pérez", "Ana Pérez +2" o "Sin residentes". */
-export function formatOccupancy(count: number | undefined, mainName: string | undefined): string {
-  const c = count ?? 0;
-  if (c <= 0) return 'Sin residentes';
-  const name = (mainName ?? '').trim() || `${c} residente${c === 1 ? '' : 's'}`;
-  return c > 1 && mainName ? `${name} +${c - 1}` : name;
+export function unitsToCsv(units: PropertyUnit[]): string {
+  const dec = (n: number | undefined) => (typeof n === 'number' && Number.isFinite(n) ? String(n).replace('.', ',') : '');
+  const header = ['Unidad', 'Bloque', 'Número', 'Tipo', 'Piso', 'Área m²', 'Habitaciones', 'Baños', 'Coeficiente', 'Residente principal', 'Residentes', 'Activa'];
+  const lines = units.map((u) =>
+    [
+      formatUnitLabel(u.number, u.block),
+      u.block ?? '',
+      u.number,
+      unitTypeLabel(u.unitType),
+      u.floor ?? '',
+      dec(u.area),
+      u.bedrooms ?? '',
+      u.bathrooms ?? '',
+      dec(u.coefficient),
+      u.mainResidentName ?? '',
+      u.residentsCount ?? 0,
+      u.isActive ? 'Sí' : 'No',
+    ]
+      .map(csvCell)
+      .join(';'),
+  );
+  return '﻿' + [header.join(';'), ...lines].join('\n');
 }

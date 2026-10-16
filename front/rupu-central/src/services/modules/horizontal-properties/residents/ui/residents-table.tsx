@@ -1,8 +1,9 @@
 /**
- * R1 · Residentes (Patrón A · Lista): cabecera secundaria con pestañas por estado (Todos,
- * Activos, Inactivos) y acciones (Edición masiva, Importar Excel, Nuevo residente); chips por
- * tipo (ids reales del catálogo), buscador por nombre / unidad / documento, filtro de
- * principales, tabla densa y paginación en la URL. Clic en una fila → R3 (panel lateral).
+ * R1 · Residentes (Patrón A · Lista): cabecera secundaria con pestañas Todos, una por tipo
+ * (ids reales del catálogo), Sin correo e Inactivos, y acciones Importar · Edición masiva ·
+ * Nuevo residente; selector de torre y buscador "Nombre, documento, unidad"; tabla densa
+ * (residente con avatar y documento, unidad, tipo, contacto, desde, estado) y paginación en
+ * la URL. Clic en una fila → R4 (panel lateral de detalle).
  */
 
 'use client';
@@ -12,14 +13,11 @@ import { TokenStorage } from '@shared/config';
 import {
   DS,
   DsBody,
-  DsChips,
   DsPage,
   DsSearch,
   DsSectionHeader,
   DsStatus,
   DsTable,
-  DsTag,
-  DsToolbar,
   VtMenu,
   VtNotice,
   dsMono,
@@ -29,35 +27,25 @@ import {
 import { Pagination, usePaginationParams } from '@shared/ui/pagination';
 import { deleteResidentAction, getResidentsAction, getResidentsSummaryAction } from '../infrastructure/actions';
 import type { Resident, ResidentsSummary } from '../domain';
-import {
-  ALL_TYPES,
-  RESIDENT_SEARCH_FIELDS,
-  buildResidentTypeChips,
-  parseSearchField,
-  parseStatusFilter,
-  residentTypeOptions,
-  resolveResidentSearch,
-  statusToIsActive,
-  type ResidentStatusFilter,
-} from '../domain';
+import { RESIDENT_TAB_ALL, buildResidentTabs, formatMonthYear, residentTabToFilters, residentTypeOptions } from '../domain';
+import { getPropertyUnitsSummaryAction } from '../../units/infrastructure/actions';
 import { formatUnitLabel } from '../../units/domain';
-import { DsConfirmDialog, dsSelect, useDebouncedValue, useUrlFilters } from '../../units/ui/kit';
+import { DsAvatar, DsConfirmDialog, dsSelect, useDebouncedValue, useUrlFilters } from '../../units/ui/kit';
 import { CreateResidentModal } from './create-resident-modal';
 import { EditResidentModal } from './edit-resident-modal';
 import { ImportResidentsModal } from './import-residents-modal';
 import { BulkEditResidentsModal } from './bulk-edit-residents-modal';
+import { BulkEditResidentsDialog } from './bulk-edit-residents-dialog';
 import { ResidentDetailPanel } from './resident-detail-panel';
 
-/** Filtros en la URL: estado (pestaña), tipo, campo y texto de búsqueda, principales. */
-const FILTER_KEYS = ['estado', 'tipo', 'campo', 'q', 'principal'] as const;
+/** Filtros en la URL: pestaña, torre/bloque y búsqueda. */
+const FILTER_KEYS = ['pestana', 'torre', 'q'] as const;
 
 export function ResidentsTable({ businessId }: { businessId: number }) {
   const { page, pageSize } = usePaginationParams();
   const { values, setFilters } = useUrlFilters(FILTER_KEYS);
-  const status = parseStatusFilter(values.estado);
-  const field = parseSearchField(values.campo);
-  const typeId = values.tipo && Number.isFinite(Number(values.tipo)) ? Number(values.tipo) : undefined;
-  const onlyMain = values.principal === 'si' ? true : values.principal === 'no' ? false : undefined;
+  const tab = values.pestana || RESIDENT_TAB_ALL;
+  const tabFilters = useMemo(() => residentTabToFilters(tab), [tab]);
   const [search, setSearch] = useDebouncedValue(values.q, (q) => setFilters({ q }));
 
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -65,11 +53,13 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<ResidentsSummary | null>(null);
+  const [blocks, setBlocks] = useState<string[]>([]);
   const [notice, setNotice] = useState<{ tone: 'error' | 'ok'; text: string } | null>(null);
 
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
+  const [showBulkExcel, setShowBulkExcel] = useState(false);
   const [editing, setEditing] = useState<Resident | null>(null);
   const [viewing, setViewing] = useState<Resident | null>(null);
   const [toDelete, setToDelete] = useState<Resident | null>(null);
@@ -90,10 +80,9 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
         token,
         page,
         pageSize,
-        residentTypeId: typeId,
-        isActive: statusToIsActive(status),
-        isMainResident: onlyMain,
-        ...resolveResidentSearch(field, values.q),
+        query: values.q.trim() || undefined,
+        block: values.torre || undefined,
+        ...tabFilters,
       });
       if (requestId !== requestRef.current) return;
       setResidents(data.residents);
@@ -105,13 +94,25 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
     } finally {
       if (requestId === requestRef.current) setLoading(false);
     }
-  }, [businessId, page, pageSize, typeId, status, onlyMain, field, values.q]);
+  }, [businessId, page, pageSize, values.q, values.torre, tabFilters]);
 
   const loadSummary = useCallback(async () => {
     try {
       const token = TokenStorage.getBusinessToken();
       if (!token) return;
-      setSummary(await getResidentsSummaryAction({ businessId, token }));
+      const [res, units] = await Promise.allSettled([
+        getResidentsSummaryAction({ businessId, token }),
+        getPropertyUnitsSummaryAction({ businessId, token }),
+      ]);
+      setSummary(res.status === 'fulfilled' ? res.value : null);
+      if (units.status === 'fulfilled') {
+        setBlocks(
+          [...units.value.blocks]
+            .filter((b) => b.block.trim() !== '')
+            .sort((a, b) => b.total - a.total)
+            .map((b) => b.block),
+        );
+      }
     } catch {
       setSummary(null);
     }
@@ -155,36 +156,54 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
   };
 
   const unitOf = (r: Resident) => (r.propertyUnitNumber ? formatUnitLabel(r.propertyUnitNumber, r.propertyUnitBlock) : 'Sin unidad');
-  const hasFilters = Boolean(values.q || values.tipo || values.principal);
-  const searchMeta = RESIDENT_SEARCH_FIELDS.find((f) => f.id === field) ?? RESIDENT_SEARCH_FIELDS[0];
 
   const columns: DsColumn<Resident>[] = [
     {
       key: 'name',
       label: 'Residente',
-      width: 'minmax(180px,1.6fr)',
+      width: 'minmax(220px,1.8fr)',
       render: (r) => (
-        <div className="min-w-0">
-          <div className="font-semibold truncate">{r.name}</div>
-          {r.email && <div className="text-[11px] text-[#8a8580] truncate">{r.email}</div>}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <DsAvatar name={r.name} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-medium truncate">{r.name}</span>
+              {r.isMainResident && <span className="px-1.5 py-0.5 rounded bg-[#1a1a1a] text-white text-[9px] font-semibold tracking-[.06em] shrink-0">PRINCIPAL</span>}
+            </div>
+            <div className={`${dsMono} text-[11px] text-[#8a8580] truncate`}>{r.dni || '—'}</div>
+          </div>
         </div>
       ),
     },
-    { key: 'unit', label: 'Unidad', width: 'minmax(100px,.8fr)', render: (r) => <span className="truncate">{unitOf(r)}</span> },
-    { key: 'type', label: 'Tipo', width: '120px', render: (r) => (r.residentTypeName ? <DsTag>{r.residentTypeName}</DsTag> : <span>—</span>) },
-    { key: 'dni', label: 'Documento', width: '120px', render: (r) => <span className={`${dsMono} text-xs truncate`}>{r.dni || '—'}</span> },
-    { key: 'phone', label: 'Teléfono', width: '120px', render: (r) => <span className={`${dsMono} text-xs truncate`}>{r.phone || '—'}</span> },
-    { key: 'main', label: 'Principal', width: '84px', render: (r) => (r.isMainResident ? <DsTag strong>Principal</DsTag> : <span className="text-[#8a8580]">—</span>) },
+    { key: 'unit', label: 'Unidad', width: '100px', render: (r) => <span className={`${dsMono} text-xs font-medium truncate`}>{unitOf(r)}</span> },
+    { key: 'type', label: 'Tipo', width: '110px', render: (r) => <span className="text-[#4b4a46] truncate">{r.residentTypeName || '—'}</span> },
+    {
+      key: 'contact',
+      label: 'Contacto',
+      width: 'minmax(170px,1.3fr)',
+      render: (r) => (
+        <div className="min-w-0">
+          {r.email ? (
+            <div className="text-xs truncate">{r.email}</div>
+          ) : (
+            <div className="text-xs font-medium" style={{ color: DS.accent }}>sin correo</div>
+          )}
+          <div className={`${dsMono} text-[11px] text-[#8a8580] truncate`}>{r.phone || '—'}</div>
+        </div>
+      ),
+    },
+    { key: 'since', label: 'Desde', width: '80px', render: (r) => <span className={`${dsMono} text-xs`}>{formatMonthYear(r.since) || '—'}</span> },
     { key: 'status', label: 'Estado', width: '84px', render: (r) => <DsStatus label={r.isActive ? 'Activo' : 'Inactivo'} color={r.isActive ? DS.yes : DS.muted} /> },
     {
       key: 'actions',
       label: '',
-      width: '40px',
+      width: '32px',
       align: 'right',
       render: (r) => (
         <div onClick={(e) => e.stopPropagation()}>
           <VtMenu
             label={`Acciones de ${r.name}`}
+            size={28}
             items={[
               { label: 'Ver detalle', onSelect: () => setViewing(r) },
               { label: 'Editar', onSelect: () => setEditing(r) },
@@ -196,21 +215,19 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
     },
   ];
 
+  const hasFilters = Boolean(values.q || values.torre || tab !== RESIDENT_TAB_ALL);
+
   return (
     <DsPage>
-      <DsSectionHeader<ResidentStatusFilter>
-        ariaLabel="Estado de los residentes"
-        tabs={[
-          { id: 'todos', label: 'Todos', count: summary?.total ?? null },
-          { id: 'activos', label: 'Activos', count: summary?.active ?? null },
-          { id: 'inactivos', label: 'Inactivos', count: summary?.inactive ?? null },
-        ]}
-        active={status}
-        onChange={(id) => setFilters({ estado: id === 'todos' ? null : id })}
+      <DsSectionHeader<string>
+        ariaLabel="Residentes por tipo"
+        tabs={buildResidentTabs(summary)}
+        active={tab}
+        onChange={(id) => setFilters({ pestana: id === RESIDENT_TAB_ALL ? null : id })}
         actions={
           <>
-            <button type="button" className={vtBtn.secondary} onClick={() => setShowBulk(true)}>Edición masiva</button>
             <button type="button" className={vtBtn.secondary} onClick={() => setShowImport(true)}>Importar Excel</button>
+            <button type="button" className={vtBtn.secondary} onClick={() => setShowBulk(true)}>Edición masiva</button>
             <button type="button" className={vtBtn.primary} onClick={() => setShowCreate(true)}>+ Nuevo residente</button>
           </>
         }
@@ -222,31 +239,15 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
           </div>
         )}
 
-        <DsToolbar
-          left={
-            <DsChips
-              ariaLabel="Filtrar por tipo"
-              chips={buildResidentTypeChips(summary)}
-              active={values.tipo || ALL_TYPES}
-              onChange={(id) => setFilters({ tipo: id === ALL_TYPES ? null : id })}
-            />
-          }
-          right={
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-              <select aria-label="Principal" className={dsSelect} value={values.principal} onChange={(e) => setFilters({ principal: e.target.value })}>
-                <option value="">Principales y no</option>
-                <option value="si">Solo principales</option>
-                <option value="no">No principales</option>
-              </select>
-              <select aria-label="Buscar por" className={dsSelect} value={field} onChange={(e) => setFilters({ campo: e.target.value === 'name' ? null : e.target.value })}>
-                {RESIDENT_SEARCH_FIELDS.map((f) => (
-                  <option key={f.id} value={f.id}>{f.label}</option>
-                ))}
-              </select>
-              <DsSearch value={search} onChange={setSearch} placeholder={searchMeta.placeholder} ariaLabel={searchMeta.placeholder} className="md:w-56" />
-            </div>
-          }
-        />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <select aria-label="Torre" className={dsSelect} value={values.torre} onChange={(e) => setFilters({ torre: e.target.value })}>
+            <option value="">Torre: todas</option>
+            {blocks.map((b) => (
+              <option key={b} value={b}>{`Torre: ${b}`}</option>
+            ))}
+          </select>
+          <DsSearch value={search} onChange={setSearch} placeholder="Nombre, documento, unidad" ariaLabel="Buscar por nombre, documento o unidad" className="md:w-[240px]" />
+        </div>
 
         <DsTable
           ariaLabel="Residentes"
@@ -256,17 +257,15 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
           onRowClick={(r) => setViewing(r)}
           selectedKey={viewing?.id ?? null}
           loading={loading}
-          minWidth={960}
+          minWidth={900}
           empty={
             hasFilters ? (
               <span>
-                Ningún residente coincide con los filtros.{' '}
-                <button type="button" className="underline text-[#1a1a1a]" onClick={() => setFilters({ q: null, tipo: null, principal: null })}>
-                  Limpiar filtros
+                Ningún residente coincide.{' '}
+                <button type="button" className="underline text-[#1a1a1a]" onClick={() => setFilters({ q: null, torre: null, pestana: null })}>
+                  Ver todos
                 </button>
               </span>
-            ) : status === 'inactivos' ? (
-              'No hay residentes inactivos.'
             ) : (
               'Aún no hay residentes. Agrégalos uno a uno o impórtalos desde Excel.'
             )
@@ -283,7 +282,6 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
           setViewing(null);
           setEditing(r);
         }}
-        onDelete={askDelete}
       />
 
       {showCreate && (
@@ -293,7 +291,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
           onClose={() => setShowCreate(false)}
           onSuccess={() => {
             setShowCreate(false);
-            setNotice({ tone: 'ok', text: 'Residente agregado' });
+            setNotice({ tone: 'ok', text: 'Residente creado' });
             refresh();
           }}
         />
@@ -307,9 +305,22 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
           onClose={() => setEditing(null)}
           onSuccess={() => {
             setEditing(null);
-            setViewing(null);
             setNotice({ tone: 'ok', text: 'Residente actualizado' });
             refresh();
+          }}
+        />
+      )}
+
+      {showBulk && (
+        <BulkEditResidentsDialog
+          businessId={businessId}
+          blocks={blocks}
+          initialBlock={values.torre || blocks[0]}
+          onClose={() => setShowBulk(false)}
+          onSuccess={refresh}
+          onOpenExcel={() => {
+            setShowBulk(false);
+            setShowBulkExcel(true);
           }}
         />
       )}
@@ -325,7 +336,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
       />
 
       <ImportResidentsModal isOpen={showImport} onClose={() => setShowImport(false)} onSuccess={refresh} businessId={businessId} />
-      <BulkEditResidentsModal isOpen={showBulk} onClose={() => setShowBulk(false)} onSuccess={refresh} businessId={businessId} />
+      <BulkEditResidentsModal isOpen={showBulkExcel} onClose={() => setShowBulkExcel(false)} onSuccess={refresh} businessId={businessId} />
     </DsPage>
   );
 }
