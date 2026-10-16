@@ -8,4 +8,5 @@ var (
 	ErrPropertyUnitNumberRequired = errors.New("el número de unidad es requerido")
 	ErrPropertyUnitHasResidents   = errors.New("no se puede eliminar una unidad que tiene residentes registrados")
 	ErrPropertyUnitRequired       = errors.New("la unidad de propiedad es requerida")
+	ErrBusinessIDRequired         = errors.New("el business_id es requerido")
 )

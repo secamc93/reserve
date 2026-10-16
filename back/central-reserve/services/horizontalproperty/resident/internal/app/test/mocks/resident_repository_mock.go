@@ -7,20 +7,21 @@ import (
 
 // MockResidentRepository - Mock del repositorio de residentes
 type MockResidentRepository struct {
-	CreateResidentFunc            func(ctx context.Context, resident *domain.Resident) (*domain.Resident, error)
-	GetResidentByIDFunc           func(ctx context.Context, id uint) (*domain.ResidentDetailDTO, error)
-	ListResidentsFunc             func(ctx context.Context, filters domain.ResidentFiltersDTO) (*domain.PaginatedResidentsDTO, error)
-	UpdateResidentFunc            func(ctx context.Context, id uint, resident *domain.Resident) (*domain.Resident, error)
-	DeleteResidentFunc            func(ctx context.Context, id uint) error
-	ExistsResidentByEmailFunc     func(ctx context.Context, businessID uint, email string, excludeID uint) (bool, error)
-	ExistsResidentByDniFunc       func(ctx context.Context, businessID uint, dni string, excludeID uint) (bool, error)
-	GetResidentByUnitAndDniFunc   func(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
-	GetPropertyUnitsByNumbersFunc func(ctx context.Context, businessID uint, numbers []string) (map[string]uint, error)
-	CreateResidentsInBatchFunc    func(ctx context.Context, residents []*domain.Resident) error
-	GetMainResidentsByUnitIDsFunc func(ctx context.Context, businessID uint, unitIDs []uint) (map[uint]domain.ResidentDetailDTO, error)
-	UpdateResidentsInBatchFunc    func(ctx context.Context, pairs []domain.ResidentUpdatePair) error
-	GetResidentIDsByDniFunc       func(ctx context.Context, businessID uint, dnis []string) (map[string]uint, error)
+	CreateResidentFunc             func(ctx context.Context, resident *domain.Resident) (*domain.Resident, error)
+	GetResidentByIDFunc            func(ctx context.Context, id uint) (*domain.ResidentDetailDTO, error)
+	ListResidentsFunc              func(ctx context.Context, filters domain.ResidentFiltersDTO) (*domain.PaginatedResidentsDTO, error)
+	UpdateResidentFunc             func(ctx context.Context, id uint, resident *domain.Resident) (*domain.Resident, error)
+	DeleteResidentFunc             func(ctx context.Context, id uint) error
+	ExistsResidentByEmailFunc      func(ctx context.Context, businessID uint, email string, excludeID uint) (bool, error)
+	ExistsResidentByDniFunc        func(ctx context.Context, businessID uint, dni string, excludeID uint) (bool, error)
+	GetResidentByUnitAndDniFunc    func(ctx context.Context, hpID, propertyUnitID uint, dni string) (*domain.ResidentBasicDTO, error)
+	GetPropertyUnitsByNumbersFunc  func(ctx context.Context, businessID uint, numbers []string) (map[string]uint, error)
+	CreateResidentsInBatchFunc     func(ctx context.Context, residents []*domain.Resident) error
+	GetMainResidentsByUnitIDsFunc  func(ctx context.Context, businessID uint, unitIDs []uint) (map[uint]domain.ResidentDetailDTO, error)
+	UpdateResidentsInBatchFunc     func(ctx context.Context, pairs []domain.ResidentUpdatePair) error
+	GetResidentIDsByDniFunc        func(ctx context.Context, businessID uint, dnis []string) (map[string]uint, error)
 	CreateResidentUnitsInBatchFunc func(ctx context.Context, pivots []domain.ResidentUnit) error
+	GetResidentsSummaryFunc        func(ctx context.Context, businessID uint) (*domain.ResidentsSummaryDTO, error)
 }
 
 // CreateResident mock implementation
@@ -133,4 +134,12 @@ func (m *MockResidentRepository) CreateResidentUnitsInBatch(ctx context.Context,
 		return m.CreateResidentUnitsInBatchFunc(ctx, pivots)
 	}
 	return nil
+}
+
+// GetResidentsSummary mock implementation
+func (m *MockResidentRepository) GetResidentsSummary(ctx context.Context, businessID uint) (*domain.ResidentsSummaryDTO, error) {
+	if m.GetResidentsSummaryFunc != nil {
+		return m.GetResidentsSummaryFunc(ctx, businessID)
+	}
+	return &domain.ResidentsSummaryDTO{Types: []domain.ResidentTypeCountDTO{}}, nil
 }

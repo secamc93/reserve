@@ -41,6 +41,8 @@ type ResidentResponse struct {
 type ResidentListItemResponse struct {
 	ID                 uint   `json:"id" example:"1"`
 	PropertyUnitNumber string `json:"property_unit_number" example:"101"`
+	PropertyUnitBlock  string `json:"property_unit_block" example:"Casa"`
+	Dni                string `json:"dni" example:"12345678"`
 	ResidentTypeName   string `json:"resident_type_name" example:"Propietario"`
 	Name               string `json:"name" example:"Juan Pérez"`
 	Email              string `json:"email" example:"juan@email.com"`
@@ -75,3 +77,24 @@ type BulkUpdateErrorDetailResult struct {
 type ResidentSuccess = SuccessResponse[ResidentResponse]
 type ResidentsSuccess = SuccessResponse[PaginatedResidentsResponse]
 type BulkUpdateResidentsSuccess = SuccessResponse[BulkUpdateResidentsResponse]
+
+type ResidentTypeCountResponse struct {
+	ResidentTypeID uint   `json:"resident_type_id" example:"1"`
+	Name           string `json:"name" example:"Propietario"`
+	Code           string `json:"code" example:"owner"`
+	Total          int64  `json:"total" example:"120"`
+}
+
+type ResidentsSummaryResponse struct {
+	Total    int64                       `json:"total" example:"194"`
+	Active   int64                       `json:"active" example:"190"`
+	Inactive int64                       `json:"inactive" example:"4"`
+	Main     int64                       `json:"main" example:"180"`
+	Types    []ResidentTypeCountResponse `json:"types"`
+}
+
+type ResidentsSummarySuccess struct {
+	Success bool                     `json:"success"`
+	Message string                   `json:"message"`
+	Data    ResidentsSummaryResponse `json:"data"`
+}

@@ -82,6 +82,8 @@ func MapPaginatedDTOToResponse(dto *domain.PaginatedPropertyUnitsDTO) response.P
 			Bathrooms:                unit.Bathrooms,
 			ParticipationCoefficient: unit.ParticipationCoefficient,
 			IsActive:                 unit.IsActive,
+			ResidentsCount:           unit.ResidentsCount,
+			MainResidentName:         unit.MainResidentName,
 		}
 	}
 
@@ -91,5 +93,21 @@ func MapPaginatedDTOToResponse(dto *domain.PaginatedPropertyUnitsDTO) response.P
 		Page:       dto.Page,
 		PageSize:   dto.PageSize,
 		TotalPages: dto.TotalPages,
+	}
+}
+
+func MapSummaryDTOToResponse(dto *domain.PropertyUnitsSummaryDTO) response.PropertyUnitsSummaryResponse {
+	blocks := make([]response.PropertyUnitBlockSummaryResponse, len(dto.Blocks))
+	for i, b := range dto.Blocks {
+		blocks[i] = response.PropertyUnitBlockSummaryResponse{
+			Block: b.Block, Total: b.Total, Active: b.Active, CoefficientSum: b.CoefficientSum,
+		}
+	}
+	return response.PropertyUnitsSummaryResponse{
+		Total:          dto.Total,
+		Active:         dto.Active,
+		WithResidents:  dto.WithResidents,
+		CoefficientSum: dto.CoefficientSum,
+		Blocks:         blocks,
 	}
 }

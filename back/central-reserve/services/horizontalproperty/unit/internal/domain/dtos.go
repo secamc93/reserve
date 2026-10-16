@@ -60,6 +60,27 @@ type PropertyUnitListDTO struct {
 	Bathrooms                *int
 	ParticipationCoefficient *float64
 	IsActive                 bool
+	// Ocupación (consulta de solo lectura a residents / resident_units)
+	ResidentsCount   int
+	MainResidentName string
+}
+
+// PropertyUnitBlockSummaryDTO - Totales de un bloque/torre (Casa, Dúplex, Torre A...)
+type PropertyUnitBlockSummaryDTO struct {
+	Block          string
+	Total          int64
+	Active         int64
+	CoefficientSum float64
+}
+
+// PropertyUnitsSummaryDTO - Resumen de las unidades de una propiedad: totales, suma de
+// coeficientes y agrupación por bloque.
+type PropertyUnitsSummaryDTO struct {
+	Total          int64
+	Active         int64
+	WithResidents  int64
+	CoefficientSum float64
+	Blocks         []PropertyUnitBlockSummaryDTO
 }
 
 // PropertyUnitFiltersDTO - DTO para filtros de búsqueda

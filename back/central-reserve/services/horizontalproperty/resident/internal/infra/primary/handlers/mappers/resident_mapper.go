@@ -91,6 +91,8 @@ func MapPaginatedDTOToResponse(dto *domain.PaginatedResidentsDTO) response.Pagin
 		residents[i] = response.ResidentListItemResponse{
 			ID:                 res.ID,
 			PropertyUnitNumber: res.PropertyUnitNumber,
+			PropertyUnitBlock:  res.PropertyUnitBlock,
+			Dni:                res.Dni,
 			ResidentTypeName:   res.ResidentTypeName,
 			Name:               res.Name,
 			Email:              res.Email,
@@ -105,5 +107,15 @@ func MapPaginatedDTOToResponse(dto *domain.PaginatedResidentsDTO) response.Pagin
 		Page:       dto.Page,
 		PageSize:   dto.PageSize,
 		TotalPages: dto.TotalPages,
+	}
+}
+
+func MapSummaryDTOToResponse(dto *domain.ResidentsSummaryDTO) response.ResidentsSummaryResponse {
+	types := make([]response.ResidentTypeCountResponse, len(dto.Types))
+	for i, t := range dto.Types {
+		types[i] = response.ResidentTypeCountResponse{ResidentTypeID: t.ResidentTypeID, Name: t.Name, Code: t.Code, Total: t.Total}
+	}
+	return response.ResidentsSummaryResponse{
+		Total: dto.Total, Active: dto.Active, Inactive: dto.Inactive, Main: dto.Main, Types: types,
 	}
 }

@@ -10,6 +10,7 @@ type PropertyUnitRepository interface {
 	UpdatePropertyUnit(ctx context.Context, id uint, unit *PropertyUnit) (*PropertyUnit, error)
 	DeletePropertyUnit(ctx context.Context, id uint) error
 	ExistsPropertyUnitByNumber(ctx context.Context, businessID uint, number string, excludeID uint) (bool, error)
+	GetPropertyUnitsSummary(ctx context.Context, businessID uint) (*PropertyUnitsSummaryDTO, error)
 }
 
 // PropertyUnitUseCase - Puerto para casos de uso de unidades de propiedad
@@ -20,4 +21,5 @@ type PropertyUnitUseCase interface {
 	UpdatePropertyUnit(ctx context.Context, id uint, dto UpdatePropertyUnitDTO) (*PropertyUnitDetailDTO, error)
 	DeletePropertyUnit(ctx context.Context, id uint) error
 	ImportPropertyUnitsFromExcel(ctx context.Context, businessID uint, filePath string) (*ImportPropertyUnitsResult, error)
+	GetPropertyUnitsSummary(ctx context.Context, businessID uint) (*PropertyUnitsSummaryDTO, error)
 }

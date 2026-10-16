@@ -142,6 +142,9 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 	if filters.IsMainResident != nil {
 		countQuery = countQuery.Where("resident_units.is_main_resident = ?", *filters.IsMainResident)
 	}
+	if filters.Dni != "" {
+		countQuery = countQuery.Where("residents.dni ILIKE ?", "%"+filters.Dni+"%")
+	}
 	if err := countQuery.Distinct("residents.id").Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("error contando: %w", err)
 	}
@@ -155,13 +158,17 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 		IsActive           bool
 		ResidentTypeName   string
 		PropertyUnitNumber string
+		PropertyUnitBlock  string
+		Dni                string
 		IsMainResident     bool
 	}
 	rows := []row{}
 	query := r.db.Conn(ctx).Model(&models.Resident{}).
 		Select("residents.id, residents.name, residents.email, residents.phone, residents.is_active, resident_types.name as resident_type_name, "+
 			"COALESCE(MAX(CASE WHEN resident_units.is_main_resident THEN property_units.number END), MIN(property_units.number)) as property_unit_number, "+
-			"COALESCE(BOOL_OR(resident_units.is_main_resident), FALSE) as is_main_resident").
+			"COALESCE(BOOL_OR(resident_units.is_main_resident), FALSE) as is_main_resident, "+
+			"COALESCE(residents.dni, '') as dni, "+
+			"COALESCE((ARRAY_AGG(property_units.block ORDER BY resident_units.is_main_resident DESC, property_units.number ASC))[1], '') as property_unit_block").
 		Joins("JOIN horizontal_property.resident_units ON resident_units.resident_id = residents.id").
 		Joins("JOIN horizontal_property.property_units ON property_units.id = resident_units.property_unit_id").
 		Joins("JOIN horizontal_property.resident_types ON resident_types.id = residents.resident_type_id").
@@ -184,6 +191,9 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 	if filters.IsMainResident != nil {
 		query = query.Where("resident_units.is_main_resident = ?", *filters.IsMainResident)
 	}
+	if filters.Dni != "" {
+		query = query.Where("residents.dni ILIKE ?", "%"+filters.Dni+"%")
+	}
 	offset := (filters.Page - 1) * filters.PageSize
 	if err := query.Group("residents.id, resident_types.name").Order("residents.name ASC").Limit(filters.PageSize).Offset(offset).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("error listando: %w", err)
@@ -191,6 +201,7 @@ func (r *ResidentRepository) ListResidents(ctx context.Context, filters domain.R
 	residents := make([]domain.ResidentListDTO, len(rows))
 	for i, rw := range rows {
 		residents[i] = domain.ResidentListDTO{ID: rw.ID, PropertyUnitNumber: rw.PropertyUnitNumber,
+			PropertyUnitBlock: rw.PropertyUnitBlock, Dni: rw.Dni,
 			ResidentTypeName: rw.ResidentTypeName, Name: rw.Name, Email: rw.Email, Phone: rw.Phone,
 			IsMainResident: rw.IsMainResident, IsActive: rw.IsActive}
 	}

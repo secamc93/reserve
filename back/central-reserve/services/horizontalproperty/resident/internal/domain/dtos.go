@@ -86,12 +86,32 @@ type ResidentDetailDTO struct {
 type ResidentListDTO struct {
 	ID                 uint
 	PropertyUnitNumber string
+	PropertyUnitBlock  string // Bloque de la unidad mostrada ("Casa", "Torre A")
+	Dni                string
 	ResidentTypeName   string
 	Name               string
 	Email              string
 	Phone              string
 	IsMainResident     bool
 	IsActive           bool
+}
+
+// ResidentTypeCountDTO - Residentes de un tipo (Propietario, Arrendatario...)
+type ResidentTypeCountDTO struct {
+	ResidentTypeID uint
+	Name           string
+	Code           string
+	Total          int64
+}
+
+// ResidentsSummaryDTO - Totales de residentes de una propiedad y conteo por tipo
+// (incluye los tipos activos sin residentes, con total 0).
+type ResidentsSummaryDTO struct {
+	Total    int64
+	Active   int64
+	Inactive int64
+	Main     int64
+	Types    []ResidentTypeCountDTO
 }
 
 // ResidentFiltersDTO - DTO para filtros de búsqueda

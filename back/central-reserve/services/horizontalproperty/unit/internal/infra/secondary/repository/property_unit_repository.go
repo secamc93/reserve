@@ -91,6 +91,14 @@ func (r *PropertyUnitRepository) ListPropertyUnits(ctx context.Context, filters 
 		Limit(filters.PageSize).Offset(offset).Find(&ms).Error; err != nil {
 		return nil, fmt.Errorf("error listando: %w", err)
 	}
+	unitIDs := make([]uint, len(ms))
+	for i, m := range ms {
+		unitIDs[i] = m.ID
+	}
+	occupancy, err := r.getOccupancyByUnitIDs(ctx, unitIDs)
+	if err != nil {
+		return nil, err
+	}
 	units := make([]domain.PropertyUnitListDTO, len(ms))
 	for i, m := range ms {
 		units[i] = domain.PropertyUnitListDTO{
@@ -104,6 +112,8 @@ func (r *PropertyUnitRepository) ListPropertyUnits(ctx context.Context, filters 
 			Bathrooms:                m.Bathrooms,
 			ParticipationCoefficient: m.ParticipationCoefficient,
 			IsActive:                 m.IsActive,
+			ResidentsCount:           occupancy[m.ID].ResidentsCount,
+			MainResidentName:         occupancy[m.ID].MainResidentName,
 		}
 	}
 	return &domain.PaginatedPropertyUnitsDTO{
@@ -128,7 +138,12 @@ func (r *PropertyUnitRepository) UpdatePropertyUnit(ctx context.Context, id uint
 		Description:              unit.Description,
 		IsActive:                 unit.IsActive,
 	}
-	if err := r.db.Conn(ctx).Model(&models.PropertyUnit{}).Where("id = ?", id).Updates(model).Error; err != nil {
+	// Select explícito: Updates con struct omite los valores cero (is_active=false, coeficiente 0).
+	// El caso de uso ya mezcló los valores existentes con los nuevos.
+	if err := r.db.Conn(ctx).Model(&models.PropertyUnit{}).Where("id = ?", id).
+		Select("number", "floor", "block", "unit_type", "area", "bedrooms", "bathrooms",
+			"participation_coefficient", "description", "is_active").
+		Updates(model).Error; err != nil {
 		return nil, fmt.Errorf("error actualizando: %w", err)
 	}
 	var updated models.PropertyUnit
