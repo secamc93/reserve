@@ -8,3 +8,4 @@ export * from './assign-parking.action';
 export * from './get-parking-reservations.action';
 export * from './create-parking-reservation.action';
 export * from './check-parking-availability.action';
+export * from './manage-parking.action';

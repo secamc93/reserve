@@ -106,6 +106,9 @@ export interface ParkingSlotListDTO {
   slotNumber: string;
   isCovered: boolean;
   hasCharger: boolean;
+  width?: number | null;
+  length?: number | null;
+  height?: number | null;
   isActive: boolean;
   isAvailable: boolean;
   isAssigned: boolean;
@@ -116,16 +119,56 @@ export interface ParkingAssignmentListDTO {
   id: number;
   parkingSlotId: number;
   parkingSlotNumber: string;
+  parkingZoneName?: string;
   propertyUnitId?: number;
   propertyUnitNumber: string;
+  /** Tipo/bloque de la unidad ("Casa", "Local"…) para mostrar "Casa 126". */
+  propertyUnitBlock?: string;
   residentId?: number;
   residentName: string;
   vehiclePlate: string;
   vehicleBrand?: string;
   vehicleModel?: string;
+  vehicleColor?: string;
+  notes?: string;
   startDate: string;
   endDate?: string;
   isActive: boolean;
+}
+
+/** Estado de vigencia para filtrar asignaciones. */
+export type AssignmentStatusFilter = 'active' | 'expiring' | 'expired';
+
+export interface ParkingAssignmentSummary {
+  active: number;
+  expiring30: number;
+  expired: number;
+  unitsWithoutSlot: number;
+}
+
+/** Varios cupos con numeración consecutiva: prefijo + desde..hasta (relleno a `pad` dígitos). */
+export interface CreateParkingSlotsBulkDTO {
+  parkingZoneId: number;
+  parkingTypeId: number;
+  prefix: string;
+  from: number;
+  to: number;
+  pad: number;
+  isCovered?: boolean;
+  hasCharger?: boolean;
+  width?: number;
+  length?: number;
+  height?: number;
+}
+
+export interface UpdateParkingAssignmentDTO {
+  vehiclePlate: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
+  vehicleColor?: string;
+  /** null = indefinida */
+  endDate: string | null;
+  notes?: string;
 }
 
 export interface ParkingReservationListDTO {
