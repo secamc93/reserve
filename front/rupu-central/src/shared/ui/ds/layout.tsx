@@ -75,7 +75,7 @@ export function DsSectionHeader<T extends string>({
                 }`}
               >
                 {tab.label}
-                {tab.count !== undefined && tab.count !== null && tab.count !== '' && <span>&nbsp;·&nbsp;{tab.count}</span>}
+                {tab.count !== undefined && tab.count !== null && tab.count !== '' && <span className="whitespace-pre">{` · ${tab.count}`}</span>}
               </button>
             );
           })}
@@ -123,7 +123,7 @@ export function DsChips<T extends string>({
             }`}
           >
             {chip.label}
-            {chip.count !== undefined && chip.count !== null && chip.count !== '' && <span>&nbsp;·&nbsp;{chip.count}</span>}
+            {chip.count !== undefined && chip.count !== null && chip.count !== '' && <span className="whitespace-pre">{` · ${chip.count}`}</span>}
           </button>
         );
       })}
