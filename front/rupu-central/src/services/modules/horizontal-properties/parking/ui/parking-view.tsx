@@ -136,6 +136,7 @@ export function ParkingView({ businessId }: { businessId: number }) {
       <ZoneFormDialog open={zoneOpen} businessId={businessId} onClose={() => setZoneOpen(false)} onSaved={() => { setZoneOpen(false); done('Zona creada.'); }} />
       <BulkSlotsDialog
         open={bulkOpen}
+        businessId={businessId}
         zones={data.zones}
         types={data.types}
         onClose={() => setBulkOpen(false)}
@@ -159,7 +160,7 @@ export function ParkingView({ businessId }: { businessId: number }) {
         onClose={() => setReservationOpen(false)}
         onSaved={() => { setReservationOpen(false); if (tab !== 'reservations') changeTab('reservations'); done('Reserva creada.'); }}
       />
-      <ReleaseDialog assignment={releasing} onClose={() => setReleasing(null)} onDone={() => { setReleasing(null); done('Cupo liberado.'); }} />
+      <ReleaseDialog assignment={releasing} businessId={businessId} onClose={() => setReleasing(null)} onDone={() => { setReleasing(null); done('Cupo liberado.'); }} />
     </DsPage>
   );
 }

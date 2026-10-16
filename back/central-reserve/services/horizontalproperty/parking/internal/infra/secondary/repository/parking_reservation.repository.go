@@ -207,7 +207,7 @@ func (r *ParkingReservationRepository) ListParkingReservations(ctx context.Conte
 	}
 
 	var rows []row
-	if err := query.Order("pr.reservation_date DESC, pr.start_time DESC").
+	if err := query.Order("parking_reservations.reservation_date DESC, parking_reservations.start_time DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&rows).Error; err != nil {
@@ -332,4 +332,16 @@ func (r *ParkingReservationRepository) GetPendingReservations(ctx context.Contex
 	}
 
 	return result, nil
+}
+
+// GetReservationStatusIDByCode devuelve el id del estado de reserva con ese código (0 si no existe).
+func (r *ParkingReservationRepository) GetReservationStatusIDByCode(ctx context.Context, code string) (uint, error) {
+	var ids []uint
+	if err := r.db.Conn(ctx).Model(&models.ParkingReservationStatus{}).Where("code = ?", code).Limit(1).Pluck("id", &ids).Error; err != nil {
+		return 0, fmt.Errorf("error buscando estado de reserva %q: %w", code, err)
+	}
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	return ids[0], nil
 }

@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/response"
@@ -27,12 +27,8 @@ func (h *ParkingHandler) CreateParkingReservation(c *gin.Context) {
 		return
 	}
 
-	businessID, exists := middleware.GetBusinessID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "business_id no disponible",
-		})
+	businessID, ok := businessScope(c)
+	if !ok {
 		return
 	}
 
@@ -58,6 +54,17 @@ func (h *ParkingHandler) CreateParkingReservation(c *gin.Context) {
 	reservation, err := h.useCase.CreateParkingReservation(ctx, dto)
 	if err != nil {
 		h.logger.Error(ctx).Err(err).Msg("Error creando reserva de parqueadero")
+		switch {
+		case errors.Is(err, domain.ErrParkingSlotNotAvailable), errors.Is(err, domain.ErrParkingReservationOverlap):
+			c.JSON(http.StatusConflict, response.ErrorResponse{Success: false, Message: "El cupo ya está reservado en ese horario", Error: err.Error()})
+			return
+		case errors.Is(err, domain.ErrParkingSlotNotFound):
+			c.JSON(http.StatusNotFound, response.ErrorResponse{Success: false, Message: "Cupo no encontrado", Error: err.Error()})
+			return
+		case errors.Is(err, domain.ErrParkingSlotInactive), errors.Is(err, domain.ErrInvalidTimeRange):
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: err.Error(), Error: err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{
 			Success: false,
 			Message: "Error creando reserva de parqueadero",

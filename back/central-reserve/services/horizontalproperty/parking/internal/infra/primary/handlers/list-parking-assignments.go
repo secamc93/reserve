@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/response"
@@ -39,12 +38,8 @@ func (h *ParkingHandler) ListParkingAssignments(c *gin.Context) {
 	}
 	req.Page, req.PageSize = page, pageSize
 
-	businessID, exists := middleware.GetBusinessID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{
-			Success: false,
-			Message: "business_id no disponible",
-		})
+	businessID, ok := businessScope(c)
+	if !ok {
 		return
 	}
 

@@ -55,6 +55,8 @@ type ParkingReservationRepository interface {
 	GetOverlappingReservations(ctx context.Context, slotID uint, date string, startTime, endTime string, excludeID *uint) ([]*ParkingReservation, error)
 	GetReservationsByDateRange(ctx context.Context, slotID uint, startDate, endDate string) ([]*ParkingReservation, error)
 	GetPendingReservations(ctx context.Context, businessID uint) ([]*ParkingReservation, error)
+	// GetReservationStatusIDByCode devuelve el id del estado de reserva con ese código (0 si no existe).
+	GetReservationStatusIDByCode(ctx context.Context, code string) (uint, error)
 }
 
 // ParkingOccupancyRepository - Puerto para repositorio de ocupación

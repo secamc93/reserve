@@ -91,9 +91,9 @@ export interface IParkingRepository {
   getParkingAssignments(params: GetParkingAssignmentsParams): Promise<ParkingAssignmentsPaginated>;
   assignParking(params: { businessId: number; token: string; data: AssignParkingDTO }): Promise<ParkingAssignment>;
   getParkingAssignmentSummary(params: { businessId: number; token: string }): Promise<ParkingAssignmentSummary>;
-  updateParkingAssignment(params: { id: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingAssignment>;
-  releaseParkingAssignment(params: { id: number; token: string }): Promise<ParkingAssignment>;
-  createParkingSlotsBulk(params: { token: string; data: CreateParkingSlotsBulkDTO }): Promise<{ created: number }>;
+  updateParkingAssignment(params: { id: number; businessId: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingAssignment>;
+  releaseParkingAssignment(params: { id: number; businessId: number; token: string }): Promise<ParkingAssignment>;
+  createParkingSlotsBulk(params: { businessId: number; token: string; data: CreateParkingSlotsBulkDTO }): Promise<{ created: number }>;
 
   // Reservas
   getParkingReservations(params: GetParkingReservationsParams): Promise<ParkingReservationsPaginated>;

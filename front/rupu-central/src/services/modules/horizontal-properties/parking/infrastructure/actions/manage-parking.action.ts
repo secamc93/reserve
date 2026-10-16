@@ -33,7 +33,7 @@ async function run<T>(fn: () => Promise<T>): Promise<ParkingActionResult<T>> {
   }
 }
 
-export async function createParkingSlotsBulkAction(input: { token: string; data: CreateParkingSlotsBulkDTO }): Promise<ParkingActionResult<{ created: number }>> {
+export async function createParkingSlotsBulkAction(input: { businessId: number; token: string; data: CreateParkingSlotsBulkDTO }): Promise<ParkingActionResult<{ created: number }>> {
   return run(() => new ParkingRepository().createParkingSlotsBulk(input));
 }
 
@@ -41,11 +41,11 @@ export async function getParkingAssignmentSummaryAction(input: { businessId: num
   return run(() => new ParkingRepository().getParkingAssignmentSummary(input));
 }
 
-export async function updateParkingAssignmentAction(input: { id: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingActionResult<ParkingAssignment>> {
+export async function updateParkingAssignmentAction(input: { id: number; businessId: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingActionResult<ParkingAssignment>> {
   return run(() => new ParkingRepository().updateParkingAssignment(input));
 }
 
-export async function releaseParkingAssignmentAction(input: { id: number; token: string }): Promise<ParkingActionResult<ParkingAssignment>> {
+export async function releaseParkingAssignmentAction(input: { id: number; businessId: number; token: string }): Promise<ParkingActionResult<ParkingAssignment>> {
   return run(() => new ParkingRepository().releaseParkingAssignment(input));
 }
 

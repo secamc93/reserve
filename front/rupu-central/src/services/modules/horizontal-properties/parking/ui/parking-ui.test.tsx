@@ -86,6 +86,7 @@ describe('K2 · cupos en lote', () => {
     render(
       <BulkSlotsDialog
         open
+        businessId={1}
         zones={[{ id: 1, name: 'Sótano 2', code: 'P2', location: '', totalSlots: 0, isActive: true }]}
         types={[{ id: 1, name: 'Carro', code: 'car', description: '', isActive: true, createdAt: '', updatedAt: '' }, { id: 2, name: 'Moto', code: 'moto', description: '', isActive: true, createdAt: '', updatedAt: '' }]}
         onClose={vi.fn()}
@@ -103,6 +104,7 @@ describe('K2 · cupos en lote', () => {
     await user.click(screen.getByRole('button', { name: 'Crear 12 cupos' }));
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(12));
     expect(actions.createParkingSlotsBulkAction).toHaveBeenCalledWith({
+      businessId: 1,
       token: 'T',
       data: expect.objectContaining({ parkingZoneId: 1, parkingTypeId: 2, prefix: 'P2-', from: 121, to: 132, pad: 3, isCovered: true }),
     });
@@ -110,7 +112,7 @@ describe('K2 · cupos en lote', () => {
 
   it('muestra el error del back (número repetido)', async () => {
     actions.createParkingSlotsBulkAction.mockResolvedValue({ success: false, error: 'Ya existen cupos con esos números' });
-    render(<BulkSlotsDialog open zones={[{ id: 1, name: 'Sótano 2', code: 'P2', location: '', totalSlots: 0, isActive: true }]} types={[{ id: 1, name: 'Carro', code: 'car', description: '', isActive: true, createdAt: '', updatedAt: '' }]} onClose={vi.fn()} onSaved={vi.fn()} />);
+    render(<BulkSlotsDialog open businessId={1} zones={[{ id: 1, name: 'Sótano 2', code: 'P2', location: '', totalSlots: 0, isActive: true }]} types={[{ id: 1, name: 'Carro', code: 'car', description: '', isActive: true, createdAt: '', updatedAt: '' }]} onClose={vi.fn()} onSaved={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: /Crear 10 cupos/ }));
     expect(await screen.findByText('Ya existen cupos con esos números')).toBeInTheDocument();
   });

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/response"
@@ -32,9 +31,8 @@ func (h *ParkingHandler) CreateParkingSlotsBulk(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "Datos inválidos", Error: err.Error()})
 		return
 	}
-	businessID, ok := middleware.GetBusinessID(c)
-	if !ok || businessID == 0 {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{Success: false, Message: "business_id no disponible"})
+	businessID, ok := businessScope(c)
+	if !ok {
 		return
 	}
 	slots, err := h.useCase.CreateParkingSlotsBulk(c.Request.Context(), domain.CreateParkingSlotsBulkDTO{

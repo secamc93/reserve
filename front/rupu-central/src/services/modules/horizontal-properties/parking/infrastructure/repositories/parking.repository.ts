@@ -806,8 +806,8 @@ export class ParkingRepository implements IParkingRepository {
     return { active: res.data.active, expiring30: res.data.expiring_30, expired: res.data.expired, unitsWithoutSlot: res.data.units_without_slot };
   }
 
-  async updateParkingAssignment(params: { id: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingAssignment> {
-    const res = await this.send<{ data: BackendParkingAssignment }>('PUT', `/horizontal-properties/parking/assignments/${params.id}`, params.token, {
+  async updateParkingAssignment(params: { id: number; businessId: number; token: string; data: UpdateParkingAssignmentDTO }): Promise<ParkingAssignment> {
+    const res = await this.send<{ data: BackendParkingAssignment }>('PUT', `/horizontal-properties/parking/assignments/${params.id}?business_id=${params.businessId}`, params.token, {
       vehicle_plate: params.data.vehiclePlate,
       vehicle_brand: params.data.vehicleBrand ?? '',
       vehicle_model: params.data.vehicleModel ?? '',
@@ -818,14 +818,14 @@ export class ParkingRepository implements IParkingRepository {
     return this.mapBackendParkingAssignment(res.data);
   }
 
-  async releaseParkingAssignment(params: { id: number; token: string }): Promise<ParkingAssignment> {
-    const res = await this.send<{ data: BackendParkingAssignment }>('POST', `/horizontal-properties/parking/assignments/${params.id}/release`, params.token);
+  async releaseParkingAssignment(params: { id: number; businessId: number; token: string }): Promise<ParkingAssignment> {
+    const res = await this.send<{ data: BackendParkingAssignment }>('POST', `/horizontal-properties/parking/assignments/${params.id}/release?business_id=${params.businessId}`, params.token);
     return this.mapBackendParkingAssignment(res.data);
   }
 
-  async createParkingSlotsBulk(params: { token: string; data: CreateParkingSlotsBulkDTO }): Promise<{ created: number }> {
+  async createParkingSlotsBulk(params: { businessId: number; token: string; data: CreateParkingSlotsBulkDTO }): Promise<{ created: number }> {
     const d = params.data;
-    const res = await this.send<{ data: { created: number } }>('POST', '/horizontal-properties/parking/slots/bulk', params.token, {
+    const res = await this.send<{ data: { created: number } }>('POST', `/horizontal-properties/parking/slots/bulk?business_id=${params.businessId}`, params.token, {
       parking_zone_id: d.parkingZoneId,
       parking_type_id: d.parkingTypeId,
       prefix: d.prefix,

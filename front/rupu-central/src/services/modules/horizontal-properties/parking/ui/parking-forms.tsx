@@ -92,12 +92,14 @@ export function ZoneFormDialog({ open, businessId, onClose, onSaved }: { open: b
 
 export function BulkSlotsDialog({
   open,
+  businessId,
   zones,
   types,
   onClose,
   onSaved,
 }: {
   open: boolean;
+  businessId: number;
   zones: ParkingZoneListDTO[];
   types: ParkingType[];
   onClose: () => void;
@@ -139,6 +141,7 @@ export function BulkSlotsDialog({
     if (preview.count > 200) { setError('Se pueden crear máximo 200 cupos a la vez'); return; }
     setBusy(true);
     const res = await createParkingSlotsBulkAction({
+      businessId,
       token: parkingToken(),
       data: { parkingZoneId: zoneId, parkingTypeId: typeId, prefix, from: Number(from), to: Number(to), pad, isCovered: covered, hasCharger: charger, width: num(width), length: num(length), height: num(height) },
     });
@@ -308,6 +311,7 @@ export function AssignSlotDialog({
     const res = editing
       ? await updateParkingAssignmentAction({
           id: editing.id,
+          businessId,
           token,
           data: { vehiclePlate: plate.trim().toUpperCase(), vehicleBrand: brand, vehicleModel: model, vehicleColor: color, endDate: end ? `${end}T00:00:00Z` : null, notes: editing.notes },
         })
@@ -574,14 +578,14 @@ export function VisitorReservationDialog({
 
 // ===================== Liberar =====================
 
-export function ReleaseDialog({ assignment, onClose, onDone }: { assignment: ParkingAssignmentListDTO | null; onClose: () => void; onDone: () => void }) {
+export function ReleaseDialog({ assignment, businessId, onClose, onDone }: { assignment: ParkingAssignmentListDTO | null; businessId: number; onClose: () => void; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => setError(null), [assignment]);
   const release = async () => {
     if (!assignment) return;
     setBusy(true);
-    const res = await releaseParkingAssignmentAction({ id: assignment.id, token: parkingToken() });
+    const res = await releaseParkingAssignmentAction({ id: assignment.id, businessId, token: parkingToken() });
     setBusy(false);
     if (!res.success) { setError(res.error || 'No se pudo liberar el cupo'); return; }
     onDone();

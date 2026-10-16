@@ -3,6 +3,7 @@ package usecases
 import (
 	"dbpostgres/app/infra/models"
 	"dbpostgres/pkg/log"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -29,6 +30,11 @@ func (uc *MigrationUseCase) MigrateDB() error {
 	if err := uc.createHorizontalPropertySchema(); err != nil {
 		return err
 	}
+
+	// Columnas de hora: el modelo las declara `time` ("08:00") pero bases creadas con una versión
+	// anterior las tienen como timestamptz, y AutoMigrate no cambia el tipo; ahí no se puede guardar
+	// ningún horario ni reserva. Se convierten solo si siguen en timestamptz.
+	uc.fixTimeColumns()
 
 	// El índice único viejo (parking_slot_id, is_active) solo permitía UNA asignación liberada por
 	// cupo en toda su historia; lo reemplaza idx_slot_one_active_assignment (parcial, solo activas).
@@ -167,8 +173,69 @@ func (uc *MigrationUseCase) seedInitialData() error {
 		}
 	}
 
+	// Tipos de parqueadero y estados de reserva de parqueadero (catálogos por código; sin ellos no
+	// se pueden crear cupos ni reservas).
+	parkingTypes := []models.ParkingType{
+		{Code: "car", Name: "Carro", Description: "Automóvil o camioneta", IsActive: true},
+		{Code: "motorcycle", Name: "Moto", Description: "Motocicleta", IsActive: true},
+		{Code: "bicycle", Name: "Bicicleta", Description: "Bicicleta o patineta", IsActive: true},
+		{Code: "disabled", Name: "Discapacidad", Description: "Cupo para personas con movilidad reducida", IsActive: true},
+	}
+	for _, pt := range parkingTypes {
+		var existing models.ParkingType
+		if uc.db.Where("code = ?", pt.Code).First(&existing).Error != nil {
+			if err := uc.db.Create(&pt).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", pt.Code).Msg("Error creando tipo de parqueadero")
+			}
+		}
+	}
+	parkingStatuses := []models.ParkingReservationStatus{
+		{Code: "pending", Name: "Pendiente", Description: "Pendiente de aprobación", IsActive: true},
+		{Code: "confirmed", Name: "Confirmada", Description: "Reserva confirmada", IsActive: true},
+		{Code: "checked_in", Name: "En uso", Description: "El vehículo está dentro", IsActive: true},
+		{Code: "checked_out", Name: "Completada", Description: "El vehículo salió", IsFinal: true, IsActive: true},
+		{Code: "cancelled", Name: "Cancelada", Description: "Reserva cancelada", IsFinal: true, IsActive: true},
+		{Code: "expired", Name: "Expirada", Description: "No se usó en su horario", IsFinal: true, IsActive: true},
+	}
+	for _, st := range parkingStatuses {
+		var existing models.ParkingReservationStatus
+		if uc.db.Where("code = ?", st.Code).First(&existing).Error != nil {
+			if err := uc.db.Create(&st).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("code", st.Code).Msg("Error creando estado de reserva de parqueadero")
+			}
+		}
+	}
+
 	uc.logger.Info().Msg("✅ Datos iniciales sembrados correctamente")
 	return nil
+}
+
+// timeColumnTables son las tablas cuyas columnas start_time / end_time son `time` en el modelo.
+var timeColumnTables = []string{
+	"common_area_schedules",
+	"common_area_restrictions",
+	"recurring_reservation_patterns",
+	"common_area_reservations",
+	"parking_reservations",
+}
+
+// fixTimeColumns convierte a `time` las columnas start_time / end_time que quedaron como timestamptz.
+func (uc *MigrationUseCase) fixTimeColumns() {
+	for _, table := range timeColumnTables {
+		for _, column := range []string{"start_time", "end_time"} {
+			var dataType string
+			uc.db.Raw(`SELECT data_type FROM information_schema.columns WHERE table_schema = 'horizontal_property' AND table_name = ? AND column_name = ?`, table, column).Scan(&dataType)
+			if dataType != "timestamp with time zone" {
+				continue
+			}
+			sql := fmt.Sprintf(`ALTER TABLE horizontal_property.%s ALTER COLUMN %s TYPE time USING (%s AT TIME ZONE 'America/Bogota')::time`, table, column, column)
+			if err := uc.db.Exec(sql).Error; err != nil {
+				uc.logger.Warn().Err(err).Str("table", table).Str("column", column).Msg("No se pudo convertir la columna de hora a time")
+				continue
+			}
+			uc.logger.Info().Str("table", table).Str("column", column).Msg("Columna de hora convertida de timestamptz a time")
+		}
+	}
 }
 
 // createHorizontalPropertySchema crea el esquema horizontal_property si no existe

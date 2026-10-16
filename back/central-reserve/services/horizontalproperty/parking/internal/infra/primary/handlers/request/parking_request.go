@@ -91,8 +91,8 @@ type ListParkingReservationsRequest struct {
 	ResidentID          *uint      `form:"resident_id"`
 	VisitorID           *uint      `form:"visitor_id"`
 	ReservationStatusID *uint      `form:"reservation_status_id"`
-	StartDate           *time.Time `form:"start_date"`
-	EndDate             *time.Time `form:"end_date"`
+	StartDate           *time.Time `form:"start_date" time_format:"2006-01-02"` // YYYY-MM-DD
+	EndDate             *time.Time `form:"end_date" time_format:"2006-01-02"`   // YYYY-MM-DD (inclusive)
 	Page                int        `form:"page,default=1"`
 	PageSize            int        `form:"page_size,default=10"`
 }

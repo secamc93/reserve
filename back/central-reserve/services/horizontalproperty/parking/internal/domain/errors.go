@@ -19,6 +19,7 @@ var (
 	ErrInvalidVehiclePlate         = errors.New("placa de vehículo inválida")
 	ErrParkingSlotInactive         = errors.New("espacio de parqueo está inactivo")
 	ErrParkingZoneInactive         = errors.New("zona de parqueo está inactiva")
+	ErrReservationStatusMissing    = errors.New("no está configurado el estado de reserva de parqueadero; corra las migraciones")
 	ErrInvalidSlotRange            = errors.New("rango de numeración inválido")
 	ErrTooManySlots                = errors.New("se pueden crear máximo 200 cupos a la vez")
 	ErrSlotNumberExists            = errors.New("ya existe un cupo con ese número en la zona")

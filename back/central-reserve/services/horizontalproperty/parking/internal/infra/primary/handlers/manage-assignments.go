@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"central_reserve/services/auth/middleware"
 	"central_reserve/services/horizontalproperty/parking/internal/domain"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/request"
 	"central_reserve/services/horizontalproperty/parking/internal/infra/primary/handlers/response"
@@ -63,9 +62,8 @@ func assignmentParams(c *gin.Context) (uint, uint, bool) {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "ID inválido"})
 		return 0, 0, false
 	}
-	businessID, ok := middleware.GetBusinessID(c)
-	if !ok || businessID == 0 {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{Success: false, Message: "business_id no disponible"})
+	businessID, ok := businessScope(c)
+	if !ok {
 		return 0, 0, false
 	}
 	return uint(id), businessID, true
@@ -148,9 +146,8 @@ func (h *ParkingHandler) ReleaseParkingAssignment(c *gin.Context) {
 //	@Success		200	{object}	response.ParkingAssignmentSummaryResponse
 //	@Router			/horizontal-properties/parking/assignments/summary [get]
 func (h *ParkingHandler) GetParkingAssignmentsSummary(c *gin.Context) {
-	businessID, ok := middleware.GetBusinessID(c)
-	if !ok || businessID == 0 {
-		c.JSON(http.StatusUnauthorized, response.ErrorResponse{Success: false, Message: "business_id no disponible"})
+	businessID, ok := businessScope(c)
+	if !ok {
 		return
 	}
 	s, err := h.useCase.GetParkingAssignmentSummary(c.Request.Context(), businessID, propertyToday())
