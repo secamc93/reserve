@@ -16,6 +16,7 @@ import type { Voting, VotingOption } from '../domain/entities';
 import { VotingFormModal } from './voting-form-modal';
 import { DeleteVotingModal } from './delete-voting-modal';
 import { VotesDetailModal } from './votes-detail-modal';
+import { VotingReportButton } from './report/voting-report-button';
 import {
   StackedBar,
   VT,
@@ -144,18 +145,21 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload,
         <h3 className="m-0 text-[13px] font-semibold">
           Votaciones <span className="font-normal" style={{ color: VT.muted }}>· {votings.length}</span>
         </h3>
-        {canManage && (
-          <button
-            type="button"
-            className={vtBtn.small}
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            + Nueva votación
-          </button>
-        )}
+        <div className="flex gap-2 items-center">
+          <VotingReportButton businessId={businessId} groupId={groupId} groupName={groupName} votings={votings} onError={setError} />
+          {canManage && (
+            <button
+              type="button"
+              className={vtBtn.small}
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              + Nueva votación
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <VtNotice>{error}</VtNotice>}
