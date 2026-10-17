@@ -13,6 +13,11 @@ vi.mock('../infrastructure/actions', () => ({
 }));
 vi.mock('../infrastructure/actions/activate-voting.action', () => ({ activateVotingAction: actions.activateVotingAction }));
 vi.mock('../infrastructure/actions/deactivate-voting.action', () => ({ deactivateVotingAction: vi.fn() }));
+const report = vi.hoisted(() => ({ save: vi.fn(), build: vi.fn() }));
+vi.mock('./report/voting-report-pdf', async (orig) => ({
+  ...(await orig<typeof import('./report/voting-report-pdf')>()),
+  buildVotingReportPdf: report.build,
+}));
 vi.mock('@shared/config', () => ({ TokenStorage: { getBusinessToken: () => 'T' } }));
 // next/font solo funciona compilado por Next.
 vi.mock('next/font/google', () => ({
@@ -93,5 +98,16 @@ describe('VotingsList: panel en vivo según el rol', () => {
     expect(screen.getByRole('listitem', { name: 'Punto 3' })).not.toContainElement(menu);
     expect(menu.parentElement).toBe(document.body);
     expect(screen.getByRole('menuitem', { name: 'Editar votación y opciones' })).toBeInTheDocument();
+  });
+
+  it('"Informe PDF" lee todas las votaciones del grupo, en orden, y descarga el informe', async () => {
+    report.build.mockResolvedValue({ save: report.save });
+    actions.getVotingDetailsAction.mockResolvedValue({ success: true, data: { units: [], total_units: 0, units_voted: 0, units_pending: 0 } });
+    renderIt(false, [voting(3, false), voting(1, true)], vi.fn(), false);
+    await userEvent.click(screen.getByRole('button', { name: 'Informe PDF' }));
+    await waitFor(() => expect(report.save).toHaveBeenCalledWith('informe-votaciones-asamblea.pdf'));
+    const input = report.build.mock.calls[0][0];
+    expect(input.groupName).toBe('Asamblea');
+    expect(input.votings.map((v: { title: string }) => v.title)).toEqual(['Punto 1', 'Punto 3']);
   });
 });
