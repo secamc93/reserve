@@ -84,4 +84,14 @@ describe('VotingsList: panel en vivo según el rol', () => {
     expect(screen.getByRole('menuitem', { name: 'Ver votos' })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Editar|Eliminar|Cerrar|Abrir/ })).not.toBeInTheDocument();
   });
+
+  it('el menú de acciones se abre fuera de la fila: la tarjeta del grupo (overflow-hidden) no lo recorta', async () => {
+    renderIt(true, [voting(1, true), voting(3, false)], vi.fn());
+    await waitFor(() => expect(actions.getVotingOptionsAction).toHaveBeenCalledTimes(2));
+    await userEvent.click(screen.getByRole('button', { name: 'Más acciones de Punto 3' }));
+    const menu = screen.getByRole('menu', { name: 'Más acciones de Punto 3' });
+    expect(screen.getByRole('listitem', { name: 'Punto 3' })).not.toContainElement(menu);
+    expect(menu.parentElement).toBe(document.body);
+    expect(screen.getByRole('menuitem', { name: 'Editar votación y opciones' })).toBeInTheDocument();
+  });
 });
