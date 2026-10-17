@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { ConfirmModal } from '@shared/ui/confirm-modal';
 import { fetchAllPages } from '@shared/utils/pagination';
@@ -19,7 +19,11 @@ import {
 } from '../../infrastructure/actions/voting-credentials.action';
 import { generateGroupPublicUrlAction } from '../../infrastructure/actions/public-voting/generate-group-public-url.action';
 import { buildCredentialsPdf } from './credentials-pdf';
-import { vtBtn } from '@shared/ui/ds';
+import { VtIcon, vtBtn } from '@shared/ui/ds';
+
+/** "Contraseñas ya generadas": rojo para advertir que volver a generarlas invalida las impresas. */
+const GENERATED_BTN =
+  'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-3.5 rounded-[7px] text-[13px] font-semibold bg-[#fbe9e4] text-[#c8382d] border border-[#c8382d] transition-colors hover:bg-[#f6d5cc] disabled:opacity-50 disabled:cursor-not-allowed';
 
 /** El QR impreso se entrega antes de la asamblea: el enlace dura 30 días. */
 const QR_DURATION_HOURS = 24 * 30;
@@ -34,12 +38,28 @@ interface VotingCredentialsActionsProps {
    * de los botones (p. ej. cuando los botones van en la cabecera secundaria).
    */
   onMessage?: (message: { kind: 'ok' | 'error'; text: string } | null) => void;
-  /** Muestra "Generar contraseñas" (el rol tiene el recurso de contraseñas de votación). */
+  /** Muestra "Generar contraseñas" y el PDF (el rol tiene el recurso de contraseñas de votación). */
   canGenerate?: boolean;
+  /** Se llama al generar o regenerar, para que quien muestra las contraseñas las vuelva a leer. */
+  onGenerated?: () => void;
 }
 
-export function VotingCredentialsActions({ token, businessId, groupId, propertyName, onMessage, canGenerate = true }: VotingCredentialsActionsProps) {
+export function VotingCredentialsActions({ token, businessId, groupId, propertyName, onMessage, canGenerate = true, onGenerated }: VotingCredentialsActionsProps) {
   const [busy, setBusy] = useState<'generate' | 'pdf' | null>(null);
+  /** Unidades con contraseña en el grupo (null mientras se consulta). */
+  const [generatedTotal, setGeneratedTotal] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!canGenerate) return;
+    let cancelled = false;
+    listVotingCredentialsAction({ token, businessId, groupId, page: 1, pageSize: 1 }).then((r) => {
+      if (!cancelled && r.success && r.data) setGeneratedTotal(r.data.total);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, businessId, groupId, canGenerate]);
+  const alreadyGenerated = (generatedTotal ?? 0) > 0;
   const [message, setLocalMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const setMessage = (next: { kind: 'ok' | 'error'; text: string } | null) => {
     setLocalMessage(next);
@@ -57,6 +77,8 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
         return;
       }
       const { generated, total } = res.data;
+      setGeneratedTotal(total);
+      if (generated > 0 || regenerate) onGenerated?.();
       if (generated === 0 && !regenerate) {
         setMessage({ kind: 'ok', text: `Las ${total} unidades ya tienen contraseña. Puede descargar el PDF.` });
         setConfirmRegenerate(true);
@@ -115,16 +137,29 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
     <div className={onMessage ? 'contents' : 'flex flex-col gap-2'}>
       <div className={onMessage ? 'contents' : 'flex flex-wrap items-center gap-2 max-md:[&>button]:flex-1'}>
         {canGenerate && (
-        <button
-          type="button"
-          onClick={() => generate(false)}
-          disabled={busy !== null}
-          className={vtBtn.secondary}
-          title="Generar una contraseña aleatoria por unidad para este grupo de votación"
-        >
-          {busy === 'generate' ? 'Generando…' : 'Generar contraseñas'}
-        </button>
+        alreadyGenerated ? (
+          <button
+            type="button"
+            onClick={() => setConfirmRegenerate(true)}
+            disabled={busy !== null}
+            className={GENERATED_BTN}
+            title={`Las ${generatedTotal} unidades ya tienen contraseña. Clic para regenerarlas.`}
+          >
+            {busy === 'generate' ? 'Regenerando…' : <><VtIcon name="check" size={14} /> Contraseñas ya generadas</>}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => generate(false)}
+            disabled={busy !== null}
+            className={vtBtn.secondary}
+            title="Generar una contraseña aleatoria por unidad para este grupo de votación"
+          >
+            {busy === 'generate' ? 'Generando…' : 'Generar contraseñas'}
+          </button>
+        )
         )}
+        {canGenerate && (
         <button
           type="button"
           onClick={downloadPdf}
@@ -134,6 +169,7 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
         >
           {busy === 'pdf' ? 'Armando PDF…' : 'Descargar PDF con QR'}
         </button>
+        )}
       </div>
       {message && !onMessage && (
         <p role="status" className={`text-[13px] ${message.kind === 'ok' ? 'text-[#2f6b4f]' : 'text-[#b4432b]'}`}>

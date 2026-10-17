@@ -22,11 +22,14 @@ vi.mock('next/font/google', () => ({
 import { VotingCredentialsActions } from './voting-credentials-actions';
 
 const renderIt = () => render(<VotingCredentialsActions token="T" businessId={1} groupId={9} />);
+const listed = (total: number) => ({ success: true, data: { credentials: [], total, page: 1, pageSize: 1, totalPages: 1 } });
 
 describe('Contraseñas de voto en la lista de asistencia', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     pdf.build.mockResolvedValue({ save: pdf.save });
+    // Al montar consulta si el grupo ya tiene contraseñas.
+    actions.listVotingCredentialsAction.mockResolvedValue(listed(0));
   });
 
   it('genera las contraseñas que faltan y lo informa', async () => {
@@ -83,9 +86,27 @@ describe('Contraseñas de voto en la lista de asistencia', () => {
     expect(pdf.build).not.toHaveBeenCalled();
   });
 
-  it('sin el recurso de contraseñas (p. ej. un consejero) no muestra "Generar contraseñas", pero sí el PDF', () => {
+  it('sin el recurso de contraseñas (p. ej. un consejero) no muestra ni "Generar contraseñas" ni el PDF, ni las consulta', () => {
     render(<VotingCredentialsActions token="T" businessId={1} groupId={9} canGenerate={false} />);
-    expect(screen.queryByRole('button', { name: /Generar contraseñas/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Descargar PDF con QR/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /contraseñas/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Descargar PDF con QR/ })).not.toBeInTheDocument();
+    expect(actions.listVotingCredentialsAction).not.toHaveBeenCalled();
+  });
+
+  it('al generarlas el botón cambia a "Contraseñas ya generadas" y avisa para recargar las de la tabla', async () => {
+    actions.generateVotingCredentialsAction.mockResolvedValue({ success: true, data: { generated: 194, total: 194 } });
+    const onGenerated = vi.fn();
+    render(<VotingCredentialsActions token="T" businessId={1} groupId={9} onGenerated={onGenerated} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Generar contraseñas' }));
+    expect(await screen.findByRole('button', { name: /Contraseñas ya generadas/ })).toBeInTheDocument();
+    expect(onGenerated).toHaveBeenCalled();
+  });
+
+  it('si el grupo ya tiene contraseñas el botón lo dice y pulsarlo pide confirmar la regeneración', async () => {
+    actions.listVotingCredentialsAction.mockResolvedValue(listed(194));
+    renderIt();
+    await userEvent.click(await screen.findByRole('button', { name: /Contraseñas ya generadas/ }));
+    expect(screen.getByRole('button', { name: 'Regenerar todas' })).toBeInTheDocument();
+    expect(actions.generateVotingCredentialsAction).not.toHaveBeenCalled();
   });
 });

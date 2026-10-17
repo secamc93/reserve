@@ -33,6 +33,8 @@ import { getResidentsAction } from '../../residents/infrastructure/actions';
 import type { Voting, VotingGroup } from '../domain/entities';
 import { liveVotingPath } from './votings-list';
 import { VotingCredentialsActions } from './credentials/voting-credentials-actions';
+import { UnitPasswordCell } from './credentials/unit-password-cell';
+import { listVotingCredentialsAction } from '../infrastructure/actions/voting-credentials.action';
 import { useVotingCapabilities } from './hooks';
 import {
   DEFAULT_QUORUM_PERCENTAGE,
@@ -85,6 +87,9 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [credentialsMessage, setCredentialsMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [liveScreen, setLiveScreen] = useState(false);
+  /** Contraseñas por unidad: se piden al ver la primera y se olvidan al regenerarlas. */
+  const passwordsRef = useRef<Promise<Map<number, string>> | null>(null);
+  const [passwordsVersion, setPasswordsVersion] = useState(0);
   /** Unidades de la propiedad (no cambian durante la asamblea): el refresco en vivo solo trae registros. */
   const unitsRef = useRef<Parameters<typeof buildAttendanceRows>[1]>([]);
   const { page, pageSize, setPage } = usePaginationParams();
@@ -130,6 +135,30 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
     const records = await collectRecords(token, listId, firstPage);
     setRows(buildAttendanceRows(records, unitsRef.current));
   }, [listId]);
+
+  const loadPassword = useCallback(
+    async (unitId: number) => {
+      const token = TokenStorage.getBusinessToken();
+      if (!token) throw new Error('Sin token');
+      if (!passwordsRef.current) {
+        passwordsRef.current = fetchAllPages((p, size) =>
+          listVotingCredentialsAction({ token, businessId, groupId, page: p, pageSize: size }).then((r) => {
+            if (!r.success || !r.data) throw new Error(r.error || 'No se pudieron consultar las contraseñas');
+            return { items: r.data.credentials, total: r.data.total, totalPages: r.data.totalPages };
+          }),
+        ).then((creds) => new Map(creds.map((c) => [c.propertyUnitId, c.password])));
+        passwordsRef.current.catch(() => {
+          passwordsRef.current = null;
+        });
+      }
+      return (await passwordsRef.current).get(unitId) ?? null;
+    },
+    [businessId, groupId],
+  );
+  const onPasswordsGenerated = useCallback(() => {
+    passwordsRef.current = null;
+    setPasswordsVersion((v) => v + 1);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -317,7 +346,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         }
         actions={
           <>
-            {token && caps.canManage && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} canGenerate={caps.canGeneratePasswords} />}
+            {token && caps.canManage && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} canGenerate={caps.canGeneratePasswords} onGenerated={onPasswordsGenerated} />}
             {listId && (
               <button type="button" className={vtBtn.secondary} onClick={() => setLiveScreen(true)} title="Asistencia en pantalla grande, se actualiza sola">
                 Asistencia en vivo
@@ -478,8 +507,11 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                           <span className={`${vtMono} text-[11px] shrink-0`} style={{ color: VT.muted }}>{formatCoef(row.coefPct)}%</span>
                         </div>
                         <div className="text-[13px] truncate" title={row.residentName}>{row.residentName}</div>
-                        <div className="mt-0.5">
+                        <div className="mt-0.5 flex items-center gap-3">
                           <ProxyButton row={row} onEdit={setProxyRow} canEdit={caps.canMarkAttendance} />
+                          {caps.canGeneratePasswords && (
+                            <UnitPasswordCell key={`${row.unitId}-${passwordsVersion}`} unitLabel={row.unitNumber} load={() => loadPassword(row.unitId)} />
+                          )}
                         </div>
                       </div>
                       <VtSwitch
@@ -502,6 +534,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                       <th scope="col" className="px-2 py-2 font-medium">RESIDENTE</th>
                       <th scope="col" className="px-2 py-2 font-medium w-[180px]">PODER</th>
                       <th scope="col" className="px-2 py-2 font-medium w-[100px]">COEF.</th>
+                      {caps.canGeneratePasswords && <th scope="col" className="px-2 py-2 font-medium w-[150px]">CONTRASEÑA</th>}
                       <th scope="col" className="px-4 sm:px-[18px] py-2 font-medium w-[110px] text-right">PRESENTE</th>
                     </tr>
                   </thead>
@@ -516,6 +549,11 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                         <td className={`${vtMono} px-2 py-2 text-xs`} style={{ color: VT.muted }}>
                           {formatCoef(row.coefPct)}%
                         </td>
+                        {caps.canGeneratePasswords && (
+                          <td className="px-2 py-2">
+                            <UnitPasswordCell key={`${row.unitId}-${passwordsVersion}`} unitLabel={row.unitNumber} load={() => loadPassword(row.unitId)} />
+                          </td>
+                        )}
                         <td className="px-4 sm:px-[18px] py-2">
                           <div className="flex justify-end">
                             <VtSwitch
