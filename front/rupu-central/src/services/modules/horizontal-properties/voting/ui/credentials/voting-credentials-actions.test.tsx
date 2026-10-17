@@ -82,4 +82,10 @@ describe('Contraseñas de voto en la lista de asistencia', () => {
     expect(await screen.findByText('Primero genere las contraseñas del grupo.')).toBeInTheDocument();
     expect(pdf.build).not.toHaveBeenCalled();
   });
+
+  it('sin el recurso de contraseñas (p. ej. un consejero) no muestra "Generar contraseñas", pero sí el PDF', () => {
+    render(<VotingCredentialsActions token="T" businessId={1} groupId={9} canGenerate={false} />);
+    expect(screen.queryByRole('button', { name: /Generar contraseñas/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Descargar PDF con QR/ })).toBeInTheDocument();
+  });
 });

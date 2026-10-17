@@ -42,6 +42,10 @@ interface VotingsListProps {
   votings: Voting[];
   /** Recarga las votaciones del grupo. */
   onReload: () => Promise<void> | void;
+  /** El rol puede abrir el panel en vivo (recurso "Votación en vivo"). */
+  canViewLive?: boolean;
+  /** Crear, configurar, iniciar, cerrar y eliminar votaciones (un consejero solo ve). */
+  canManage?: boolean;
 }
 
 interface RowData {
@@ -52,7 +56,7 @@ interface RowData {
 export const liveVotingPath = (businessId: number, groupId: number, votingId: number) =>
   `/properties/${businessId}/voting-groups/${groupId}/votings/${votingId}/live`;
 
-export function VotingsList({ businessId, groupId, groupName, votings, onReload }: VotingsListProps) {
+export function VotingsList({ businessId, groupId, groupName, votings, onReload, canViewLive = true, canManage = true }: VotingsListProps) {
   const [rows, setRows] = useState<Record<number, RowData>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Voting | null>(null);
@@ -122,6 +126,11 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
       const ok = await setActive(voting, true);
       if (!ok) return;
     }
+    // Sin panel en vivo (p. ej. un consejero): la votación queda abierta y solo se recarga la lista.
+    if (!canViewLive) {
+      await onReload();
+      return;
+    }
     // Navegación completa (como antes): con server actions en vuelo, router.push en `next dev`
     // a veces cambia la URL y deja renderizada la página anterior.
     window.location.assign(liveVotingPath(businessId, groupId, voting.id));
@@ -135,16 +144,18 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
         <h3 className="m-0 text-[13px] font-semibold">
           Votaciones <span className="font-normal" style={{ color: VT.muted }}>· {votings.length}</span>
         </h3>
-        <button
-          type="button"
-          className={vtBtn.small}
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          + Nueva votación
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            className={vtBtn.small}
+            onClick={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
+          >
+            + Nueva votación
+          </button>
+        )}
       </div>
 
       {error && <VtNotice>{error}</VtNotice>}
@@ -216,6 +227,7 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
                   {winner ? `${formatPct(winner.pct)}%` : '—'}
                 </div>
                 <div className="col-span-2 row-start-3 md:col-span-1 md:row-start-auto flex gap-1.5 items-center justify-end">
+                  {(status.key === 'draft' || status.key === 'ready' ? canManage : canViewLive) && (
                   <button
                     type="button"
                     disabled={busyId === voting.id}
@@ -231,9 +243,10 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload 
                     {status.primary && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: VT.accent }} />}
                     {busyId === voting.id ? '…' : status.action}
                   </button>
+                  )}
                   <VtMenu
                     label={`Más acciones de ${voting.title}`}
-                    items={[
+                    items={!canManage ? [{ label: 'Ver votos', onSelect: () => setDetail(voting) }] : [
                       {
                         label: 'Editar votación y opciones',
                         onSelect: () => {

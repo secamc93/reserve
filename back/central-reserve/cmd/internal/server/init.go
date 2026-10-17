@@ -29,6 +29,8 @@ func Init(ctx context.Context) error {
 	jwtService := jwt.New(jwtSecret)
 
 	v1Group := r.Group("/api/v1")
+	// Restringe los módulos según los recursos del rol (antes de registrar las rutas)
+	v1Group.Use(middleware.ModuleAccess(middleware.NewRoleResourceLookup(database), "/api/v1"))
 
 	auth.New(database, environment, logger, s3, v1Group, jwtService)
 	horizontalproperty.New(database, logger, s3, environment, v1Group)

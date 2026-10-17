@@ -32,6 +32,7 @@ import { getResidentsAction } from '../../residents/infrastructure/actions';
 import type { Voting, VotingGroup } from '../domain/entities';
 import { liveVotingPath } from './votings-list';
 import { VotingCredentialsActions } from './credentials/voting-credentials-actions';
+import { useVotingCapabilities } from './hooks';
 import {
   DEFAULT_QUORUM_PERCENTAGE,
   VT,
@@ -63,6 +64,7 @@ interface AttendancePanelProps {
 const MAX_PAGES = 20;
 
 export function AttendancePanel({ businessId, groupId, onClose }: AttendancePanelProps) {
+  const caps = useVotingCapabilities();
   const [group, setGroup] = useState<VotingGroup | null>(null);
   const [liveVoting, setLiveVoting] = useState<Voting | null>(null);
   /** Votación del grupo usada para marcar unidades que aún no tienen registro. */
@@ -307,8 +309,8 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         }
         actions={
           <>
-            {token && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} />}
-            {liveVoting ? (
+            {token && caps.canManage && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} canGenerate={caps.canGeneratePasswords} />}
+            {!caps.canViewLive ? null : liveVoting ? (
               <Link href={liveVotingPath(businessId, groupId, liveVoting.id)} className={vtBtn.primary}>
                 Ir al panel en vivo
               </Link>
@@ -324,7 +326,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                 items={[
                   { label: 'Descargar lista para firmar (Excel)', onSelect: () => download('list') },
                   { label: 'Descargar resumen (Excel)', onSelect: () => download('detailed') },
-                  { label: 'Eliminar lista', danger: true, onSelect: () => setConfirmDelete(true) },
+                  ...(caps.canManage ? [{ label: 'Eliminar lista', danger: true, onSelect: () => setConfirmDelete(true) }] : []),
                 ]}
               />
             )}
@@ -358,12 +360,20 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         ) : !listId && !anyVoting ? (
           <div className="bg-white rounded-[10px] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
             <h2 className="m-0 text-[17px] font-semibold">Este grupo aún no tiene lista de asistencia</h2>
-            <p className="mt-1.5 mb-5 text-[13px]" style={{ color: VT.muted }}>
-              Se genera con todas las unidades y sus residentes; luego marcas quién está presente.
-            </p>
-            <button type="button" className={vtBtn.primary} onClick={generateList} disabled={generating}>
-              {generating ? 'Generando…' : 'Generar lista de asistencia'}
-            </button>
+            {caps.canManage ? (
+              <>
+                <p className="mt-1.5 mb-5 text-[13px]" style={{ color: VT.muted }}>
+                  Se genera con todas las unidades y sus residentes; luego marcas quién está presente.
+                </p>
+                <button type="button" className={vtBtn.primary} onClick={generateList} disabled={generating}>
+                  {generating ? 'Generando…' : 'Generar lista de asistencia'}
+                </button>
+              </>
+            ) : (
+              <p className="mt-1.5 mb-0 text-[13px]" style={{ color: VT.muted }}>
+                El administrador de la asamblea debe generarla.
+              </p>
+            )}
           </div>
         ) : (
           <>
@@ -445,7 +455,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                       className="flex items-center gap-3 px-3 py-2.5 min-h-[56px] cursor-pointer active:bg-[#faf9f7]"
                       style={{ borderTop: `1px solid #efedea` }}
                       onClick={(e) => {
-                        if ((e.target as HTMLElement).closest('[role="switch"], button') || busy) return;
+                        if ((e.target as HTMLElement).closest('[role="switch"], button') || busy || !caps.canMarkAttendance) return;
                         togglePresence(row, !row.present);
                       }}
                     >
@@ -456,14 +466,14 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                         </div>
                         <div className="text-[13px] truncate" title={row.residentName}>{row.residentName}</div>
                         <div className="mt-0.5">
-                          <ProxyButton row={row} onEdit={setProxyRow} />
+                          <ProxyButton row={row} onEdit={setProxyRow} canEdit={caps.canMarkAttendance} />
                         </div>
                       </div>
                       <VtSwitch
                         checked={row.present}
                         onChange={(next) => togglePresence(row, next)}
                         label={`Presente ${row.unitNumber}`}
-                        disabled={busy}
+                        disabled={busy || !caps.canMarkAttendance}
                         busy={busy}
                       />
                     </li>
@@ -488,7 +498,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                         <td className={`${vtMono} px-4 sm:px-[18px] py-2 font-medium`}>{row.unitNumber}</td>
                         <td className="px-2 py-2">{row.residentName}</td>
                         <td className="px-2 py-2 text-xs">
-                          <ProxyButton row={row} onEdit={setProxyRow} />
+                          <ProxyButton row={row} onEdit={setProxyRow} canEdit={caps.canMarkAttendance} />
                         </td>
                         <td className={`${vtMono} px-2 py-2 text-xs`} style={{ color: VT.muted }}>
                           {formatCoef(row.coefPct)}%
@@ -499,7 +509,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                               checked={row.present}
                               onChange={(next) => togglePresence(row, next)}
                               label={`Presente ${row.unitNumber}`}
-                              disabled={pending.has(row.unitId)}
+                              disabled={pending.has(row.unitId) || !caps.canMarkAttendance}
                               busy={pending.has(row.unitId)}
                             />
                           </div>
@@ -540,7 +550,8 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
 }
 
 /** Celda de poder: el nombre del apoderado (para editarlo) o "+ Apoderado". */
-function ProxyButton({ row, onEdit }: { row: AttendanceRow; onEdit: (row: AttendanceRow) => void }) {
+function ProxyButton({ row, onEdit, canEdit }: { row: AttendanceRow; onEdit: (row: AttendanceRow) => void; canEdit: boolean }) {
+  if (!canEdit) return <span className="text-xs text-[#4b4a46]">{row.proxyName || '—'}</span>;
   const disabled = row.recordId == null;
   return (
     <button

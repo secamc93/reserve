@@ -34,9 +34,11 @@ interface VotingCredentialsActionsProps {
    * de los botones (p. ej. cuando los botones van en la cabecera secundaria).
    */
   onMessage?: (message: { kind: 'ok' | 'error'; text: string } | null) => void;
+  /** Muestra "Generar contraseñas" (el rol tiene el recurso de contraseñas de votación). */
+  canGenerate?: boolean;
 }
 
-export function VotingCredentialsActions({ token, businessId, groupId, propertyName, onMessage }: VotingCredentialsActionsProps) {
+export function VotingCredentialsActions({ token, businessId, groupId, propertyName, onMessage, canGenerate = true }: VotingCredentialsActionsProps) {
   const [busy, setBusy] = useState<'generate' | 'pdf' | null>(null);
   const [message, setLocalMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const setMessage = (next: { kind: 'ok' | 'error'; text: string } | null) => {
@@ -112,6 +114,7 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
   return (
     <div className={onMessage ? 'contents' : 'flex flex-col gap-2'}>
       <div className={onMessage ? 'contents' : 'flex flex-wrap items-center gap-2 max-md:[&>button]:flex-1'}>
+        {canGenerate && (
         <button
           type="button"
           onClick={() => generate(false)}
@@ -121,6 +124,7 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
         >
           {busy === 'generate' ? 'Generando…' : 'Generar contraseñas'}
         </button>
+        )}
         <button
           type="button"
           onClick={downloadPdf}
@@ -137,7 +141,7 @@ export function VotingCredentialsActions({ token, businessId, groupId, propertyN
         </p>
       )}
       <ConfirmModal
-        isOpen={confirmRegenerate}
+        isOpen={canGenerate && confirmRegenerate}
         onClose={() => setConfirmRegenerate(false)}
         onConfirm={() => generate(true)}
         title="Las unidades ya tienen contraseña"

@@ -7,16 +7,18 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner, Alert, MobileTopBar, useActiveProperty } from '@shared/ui';
-import { HORIZONTAL_PROPERTY_TYPE, PROPERTY_PICKER_PATH, mustPickProperty } from '@/shared/utils/properties';
+import { HORIZONTAL_PROPERTY_TYPE, PROPERTY_PICKER_PATH, hasActiveProperty, mustPickProperty } from '@/shared/utils/properties';
 import { breadcrumbFor } from '@/shared/ui/ds/breadcrumb';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
+import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
+import { resolveAllowedPath, resolveBusinessHref } from '@/shared/utils/navigation';
 
 export default function PropertyHorizontalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? '';
   const [user, setUser] = useState<{ userId: string; name: string; email: string; role: string; avatarUrl?: string; is_super_admin?: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
-  const { error: permissionsError } = usePermissions();
+  const { error: permissionsError, permissions, hasResource } = usePermissions();
   const activeProperty = useActiveProperty();
   const crumbs = breadcrumbFor(pathname, activeProperty?.name);
 
@@ -39,7 +41,19 @@ export default function PropertyHorizontalLayout({ children }: { children: React
     setLoading(false);
   }, [router, pathname]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner size="xl" color="primary" text="Cargando..." /></div>;
+  // Guarda de módulos: un rol sin el recurso del módulo se lleva al primero que sí tiene.
+  const activeBizId = TokenStorage.getActiveBusiness();
+  const moduleItems = (BUSINESS_TYPE_CONFIG[HORIZONTAL_PROPERTY_TYPE]?.sidebarItems ?? []).map((item) => ({
+    ...item,
+    href: resolveBusinessHref(item.href, activeBizId),
+  }));
+  const allowedPath = permissions && hasActiveProperty(activeBizId) ? resolveAllowedPath(pathname, moduleItems, hasResource) : pathname;
+
+  useEffect(() => {
+    if (allowedPath && allowedPath !== pathname) router.replace(allowedPath);
+  }, [allowedPath, pathname, router]);
+
+  if (loading || (allowedPath !== null && allowedPath !== pathname)) return <div className="min-h-screen flex items-center justify-center"><Spinner size="xl" color="primary" text="Cargando..." /></div>;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -64,7 +78,9 @@ export default function PropertyHorizontalLayout({ children }: { children: React
           )}
         </div>
         {permissionsError && <div className="p-4"><Alert type="error" onClose={() => {}}>{permissionsError}</Alert></div>}
-        {children}
+        {allowedPath === null
+          ? <div className="p-4"><Alert type="error" onClose={() => {}}>Tu rol no tiene acceso a ningún módulo de esta propiedad. Contacta al administrador.</Alert></div>
+          : children}
       </main>
     </div>
   );
