@@ -143,7 +143,9 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
       };
 
       if (target) {
-        const res = await updateVotingAction({ token, businessId, groupId, votingId: target.id, data: base });
+        // El back reemplaza la votación completa y exige display_order >= 1: se reenvía el que tiene.
+        const data = { ...base, displayOrder: Math.max(1, target.displayOrder) };
+        const res = await updateVotingAction({ token, businessId, groupId, votingId: target.id, data });
         if (!res.success) throw new Error(res.error || 'No se pudo actualizar la votación');
       } else {
         const res = await createVotingAction({
