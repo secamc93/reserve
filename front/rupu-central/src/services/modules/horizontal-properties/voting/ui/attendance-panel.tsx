@@ -9,7 +9,7 @@
 
 import { fetchAllPages, pageSlice } from '@shared/utils/pagination';
 import { Pagination, usePaginationParams } from '@shared/ui/pagination';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Spinner } from '@shared/ui';
 import { DsBody, DsConfirmDialog, DsPage, DsSectionHeader, VtMenu } from '@shared/ui/ds';
@@ -27,6 +27,7 @@ import {
   type RecordProxyData,
 } from '../../attendance/infrastructure/actions';
 import { AttendanceProxyDialog } from './attendance-proxy-dialog';
+import { AttendanceLiveScreen } from './attendance-live-screen';
 import { getPropertyUnitsAction } from '../../units/infrastructure/actions';
 import { getResidentsAction } from '../../residents/infrastructure/actions';
 import type { Voting, VotingGroup } from '../domain/entities';
@@ -83,6 +84,9 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [credentialsMessage, setCredentialsMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [liveScreen, setLiveScreen] = useState(false);
+  /** Unidades de la propiedad (no cambian durante la asamblea): el refresco en vivo solo trae registros. */
+  const unitsRef = useRef<Parameters<typeof buildAttendanceRows>[1]>([]);
   const { page, pageSize, setPage } = usePaginationParams();
 
   /** Trae los registros de la lista y las unidades de la propiedad (con su residente principal). */
@@ -98,13 +102,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         ).then((residents) => ({ residents })).catch(() => null),
         id ? getAttendanceListRecordsAction({ token, id, page: 1, pageSize: 100 }) : Promise.resolve(null),
       ]);
-      if (firstPage && !firstPage.success) throw new Error(firstPage.error || 'No se pudieron cargar los registros de asistencia');
-      const records = [...((firstPage?.data ?? []) as unknown as AttendanceRecordRaw[])];
-      const totalPages = Math.min(firstPage?.total_pages ?? 1, MAX_PAGES);
-      for (let page = 2; id && page <= totalPages; page++) {
-        const res = await getAttendanceListRecordsAction({ token, id, page, pageSize: 100 });
-        if (res.success && res.data) records.push(...(res.data as unknown as AttendanceRecordRaw[]));
-      }
+      const records = await collectRecords(token, id, firstPage);
       const residentByUnit = new Map<string, string>();
       (residentsRes?.residents ?? [])
         .sort((a, b) => Number(b.isMainResident) - Number(a.isMainResident))
@@ -118,10 +116,20 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         coefficient: u.coefficient ?? 0,
         residentName: residentByUnit.get(u.number) ?? null,
       }));
+      unitsRef.current = units;
       setRows(buildAttendanceRows(records, units));
     },
     [businessId]
   );
+
+  /** Refresco de la pantalla en vivo: solo los registros de la lista. Lanza si el back falla. */
+  const refreshRecords = useCallback(async () => {
+    const token = TokenStorage.getBusinessToken();
+    if (!token || !listId) return;
+    const firstPage = await getAttendanceListRecordsAction({ token, id: listId, page: 1, pageSize: 100 });
+    const records = await collectRecords(token, listId, firstPage);
+    setRows(buildAttendanceRows(records, unitsRef.current));
+  }, [listId]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -310,6 +318,11 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         actions={
           <>
             {token && caps.canManage && <VotingCredentialsActions token={token} businessId={businessId} groupId={groupId} onMessage={setCredentialsMessage} canGenerate={caps.canGeneratePasswords} />}
+            {listId && (
+              <button type="button" className={vtBtn.secondary} onClick={() => setLiveScreen(true)} title="Asistencia en pantalla grande, se actualiza sola">
+                Asistencia en vivo
+              </button>
+            )}
             {!caps.canViewLive ? null : liveVoting ? (
               <Link href={liveVotingPath(businessId, groupId, liveVoting.id)} className={vtBtn.primary}>
                 Ir al panel en vivo
@@ -545,6 +558,15 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
         onConfirm={deleteList}
         onClose={() => setConfirmDelete(false)}
       />
+      {liveScreen && (
+        <AttendanceLiveScreen
+          groupName={group?.name}
+          summary={summary}
+          quorum={quorum}
+          onRefresh={refreshRecords}
+          onClose={() => setLiveScreen(false)}
+        />
+      )}
     </DsPage>
   );
 }
@@ -567,4 +589,20 @@ function ProxyButton({ row, onEdit, canEdit }: { row: AttendanceRow; onEdit: (ro
       {row.proxyName || '+ Apoderado'}
     </button>
   );
+}
+
+/** Junta todas las páginas de registros de una lista (100 por página, hasta MAX_PAGES). */
+async function collectRecords(
+  token: string,
+  id: number | null,
+  firstPage: Awaited<ReturnType<typeof getAttendanceListRecordsAction>> | null,
+): Promise<AttendanceRecordRaw[]> {
+  if (firstPage && !firstPage.success) throw new Error(firstPage.error || 'No se pudieron cargar los registros de asistencia');
+  const records = [...((firstPage?.data ?? []) as unknown as AttendanceRecordRaw[])];
+  const totalPages = Math.min(firstPage?.total_pages ?? 1, MAX_PAGES);
+  for (let page = 2; id && page <= totalPages; page++) {
+    const res = await getAttendanceListRecordsAction({ token, id, page, pageSize: 100 });
+    if (res.success && res.data) records.push(...(res.data as unknown as AttendanceRecordRaw[]));
+  }
+  return records;
 }
