@@ -76,6 +76,8 @@ type moduleRule struct {
 // Las rutas que no coinciden con ninguna regla (/auth, /public…) no se restringen aquí.
 var moduleRules = []moduleRule{
 	{prefix: "/horizontal-properties/voting-groups", suffix: "/credentials/generate", resources: []string{ResourceContrasenasVotacion}, action: ActionCreate},
+	// Ver las contraseñas (columna de la asistencia y PDF de credenciales): solo quien tiene el recurso.
+	{prefix: "/horizontal-properties/voting-groups", suffix: "/credentials", resources: []string{ResourceContrasenasVotacion}, readResources: []string{ResourceContrasenasVotacion}},
 	{prefix: "/horizontal-properties/voting-groups", suffix: "/stream", resources: []string{ResourceVotacionEnVivo}, action: ActionRead},
 	// Marcar asistencia y apoderados: lo único que puede modificar un rol con "Asistencia".
 	{prefix: "/horizontal-properties/voting-groups", suffix: "/attendance", resources: []string{ResourceAsistencia, ResourceVotaciones}, action: ActionUpdate},

@@ -51,6 +51,9 @@ const paths: Record<string, string> = {
   check: 'M5 13l4 4L19 7',
   calendar: 'M3 10h18M8 3v4M16 3v4',
   eye: 'M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.5 12C3.7 7.9 7.5 5 12 5s8.3 2.9 9.5 7c-1.2 4.1-5 7-9.5 7s-8.3-2.9-9.5-7z',
+  eyeOff: 'M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.1A9.8 9.8 0 0112 5c4.5 0 8.3 2.9 9.5 7a9.7 9.7 0 01-2.6 4.1M6.6 6.6A9.7 9.7 0 002.5 12c1.2 4.1 5 7 9.5 7a9.7 9.7 0 005.4-1.6',
+  lock: 'M7 11V7a5 5 0 0110 0v4M5 11h14v10H5z',
+  unlock: 'M7 11V7a5 5 0 019.9-1M5 11h14v10H5z',
 };
 
 export function VtIcon({ name, size = 16, strokeWidth = 2 }: { name: keyof typeof paths | 'qr' | 'more'; size?: number; strokeWidth?: number }) {
