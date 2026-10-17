@@ -20,6 +20,7 @@ const row = (proxyName = ''): AttendanceRow => ({
   recordId: 900,
   unitId: 126,
   unitNumber: '126',
+  unitNo: '126',
   residentName: 'ROJAS BELTRAN CAROLINA',
   proxyName,
   present: false,

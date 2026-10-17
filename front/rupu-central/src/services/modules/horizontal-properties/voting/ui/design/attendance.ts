@@ -24,6 +24,8 @@ export interface AttendanceRow {
   unitId: number;
   /** Nombre visible de la unidad: tipo + número ("Casa 12", "Dúplex 3"). */
   unitNumber: string;
+  /** Número de la unidad sin el tipo ("12"): por él se busca. */
+  unitNo: string;
   residentName: string;
   proxyName: string;
   present: boolean;
@@ -64,6 +66,7 @@ export function buildAttendanceRows(records: AttendanceRecordRaw[], units: Atten
       unitNumber: r.unit_number || unit?.number
         ? formatUnitLabel(r.unit_number || unit?.number, r.unit_block || unit?.block)
         : `#${r.property_unit_id}`,
+      unitNo: (r.unit_number || unit?.number || '').trim(),
       residentName: (r.resident_name || unit?.residentName || '').trim() || 'Sin residente',
       proxyName: (r.proxy_name || '').trim(),
       present: !!r.attended_as_owner || !!r.attended_as_proxy,
@@ -79,6 +82,7 @@ export function buildAttendanceRows(records: AttendanceRecordRaw[], units: Atten
         recordId: null,
         unitId: u.id,
         unitNumber: formatUnitLabel(u.number, u.block),
+        unitNo: u.number.trim(),
         residentName: (u.residentName || '').trim() || 'Sin residente',
         proxyName: '',
         present: false,
@@ -89,16 +93,23 @@ export function buildAttendanceRows(records: AttendanceRecordRaw[], units: Atten
   return rows.sort(byUnit);
 }
 
-/** Filtra por pestaña (Todas / Presentes / Ausentes / Con poder) y por texto (unidad o residente). */
+/**
+ * Filtra por pestaña (Todas / Presentes / Ausentes / Con poder) y por el buscador:
+ *  - un número busca la unidad por su número exacto, sin el tipo: "2" es Casa 2 o Dúplex 2,
+ *    no Casa 12 ni Casa 20;
+ *  - un texto busca por residente o apoderado (o por el número exacto, p. ej. "T1-101").
+ */
 export function filterAttendanceRows(rows: AttendanceRow[], filter: AttendanceFilter, term: string): AttendanceRow[] {
   const q = term.trim().toLowerCase();
+  const numeric = /^\d+$/.test(q);
   return rows.filter((row) => {
     if (filter === 'present' && !row.present) return false;
     if (filter === 'absent' && row.present) return false;
     if (filter === 'proxy' && !row.proxyName) return false;
     if (!q) return true;
+    if (numeric) return /^\d+$/.test(row.unitNo) ? Number(row.unitNo) === Number(q) : row.unitNo === q;
     return (
-      row.unitNumber.toLowerCase().includes(q) ||
+      row.unitNo.toLowerCase() === q ||
       row.residentName.toLowerCase().includes(q) ||
       row.proxyName.toLowerCase().includes(q)
     );
