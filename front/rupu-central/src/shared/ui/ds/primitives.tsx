@@ -7,6 +7,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { DS as VT } from './tokens';
 import { votingFontRoot, vtMono } from './fonts';
 
@@ -228,13 +229,54 @@ export interface VtMenuItem {
   disabled?: boolean;
 }
 
+const MENU_WIDTH = 208;
+const MENU_GAP = 4;
+
+/**
+ * El menú se pinta en un portal sobre `body` con posición fija: así un contenedor con
+ * `overflow-hidden` (p. ej. la tarjeta de un grupo de votación) no lo recorta. Se abre hacia
+ * arriba si no cabe debajo y se cierra al desplazar o redimensionar la ventana.
+ */
 export function VtMenu({ label, items, size = 30 }: { label: string; items: VtMenuItem[]; size?: number }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const toggle = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (rect) {
+      const left = Math.max(8, rect.right - MENU_WIDTH);
+      const estimatedHeight = items.length * 44 + 8;
+      const fitsBelow = rect.bottom + MENU_GAP + estimatedHeight <= window.innerHeight;
+      setPos(fitsBelow ? { top: rect.bottom + MENU_GAP, left } : { bottom: window.innerHeight - rect.top + MENU_GAP, left });
+    }
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         className="inline-flex items-center justify-center rounded-md bg-white border border-[#d6d3cd] text-[#4b4a46] hover:bg-[#f5f5f4] max-md:w-11! max-md:h-11!"
         style={{ width: size, height: size }}
         aria-haspopup="menu"
@@ -244,14 +286,13 @@ export function VtMenu({ label, items, size = 30 }: { label: string; items: VtMe
       >
         <VtIcon name="more" size={14} />
       </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden="true" />
+      {open &&
+        createPortal(
           <div
             role="menu"
             aria-label={label}
-            className="absolute right-0 top-[calc(100%+4px)] z-20 w-52 rounded-lg bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,.12)]"
-            style={{ border: `1px solid ${VT.border}` }}
+            className="fixed z-[70] w-52 rounded-lg bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,.12)]"
+            style={{ border: `1px solid ${VT.border}`, ...pos }}
           >
             {items.map((item) => (
               <button
@@ -269,9 +310,14 @@ export function VtMenu({ label, items, size = 30 }: { label: string; items: VtMe
                 {item.label}
               </button>
             ))}
-          </div>
-        </>
-      )}
+          </div>,
+          document.body,
+        )}
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-[69]" onClick={() => setOpen(false)} aria-hidden="true" />,
+          document.body,
+        )}
     </div>
   );
 }
