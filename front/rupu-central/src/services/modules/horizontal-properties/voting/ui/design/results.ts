@@ -39,6 +39,7 @@ export function computeCoefficientResults(options: PaletteOption[], units: Resul
     label: option.text,
     color: palette.byId(option.id) || palette.forText(option.text, option.color),
     pct: 0,
+    pctOfVoted: 0,
     votes: 0,
     coef: 0,
   }));
@@ -67,8 +68,11 @@ export function computeCoefficientResults(options: PaletteOption[], units: Resul
   const totalCoef = segments.reduce((sum, s) => sum + s.coef, 0) + pendingCoef;
   const toPct = (coef: number) => (totalCoef > 0 ? Math.max(0, (coef / totalCoef) * 100) : 0);
 
+  // % sobre lo votado: el coeficiente de cada opción sobre el de las unidades que ya votaron.
+  const votedCoef = totalCoef - pendingCoef;
   segments.forEach((s) => {
     s.pct = toPct(s.coef);
+    s.pctOfVoted = votedCoef > 0 ? Math.max(0, (s.coef / votedCoef) * 100) : 0;
   });
 
   const pendingPct = toPct(pendingCoef);

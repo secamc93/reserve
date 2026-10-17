@@ -183,13 +183,13 @@ export function ResultsView({
                       <span className="truncate">{r.label}</span>
                     </span>
                     <span className={`${vtMono} text-[13px] hidden sm:block`} style={{ color: VT.muted }}>
-                      {r.votes} un. · coef {formatCoef(r.pct)}
+                      {r.votes} un. · coef {formatCoef(r.pct)}{!r.pending && ` · ${formatPct(r.pctOfVoted ?? 0)}% de lo votado`}
                     </span>
                     <span className={`${vtMono} text-2xl leading-none font-semibold tracking-[-.03em] min-w-[90px] text-right`}>
                       {formatPct(r.pct)}%
                     </span>
                     <span className={`${vtMono} text-xs sm:hidden col-start-2 col-span-2`} style={{ color: VT.muted }}>
-                      {r.votes} un. · coef {formatCoef(r.pct)}
+                      {r.votes} un. · coef {formatCoef(r.pct)}{!r.pending && ` · ${formatPct(r.pctOfVoted ?? 0)}% de lo votado`}
                     </span>
                   </div>
                 );
