@@ -54,6 +54,9 @@ export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps)
                     <span className="text-sm" style={{ color: VT.muted }}>%</span>
                   </span>
                   <span className="text-[11px]" style={{ color: VT.muted }}>{s.votes} un.</span>
+                  <span className="text-[11px] font-semibold" style={{ color: VT.inkSoft }} title="Sobre el coeficiente de las unidades que votaron">
+                    {formatPct(s.pctOfVoted ?? 0)}% de lo votado
+                  </span>
                 </span>
               </div>
             ))}

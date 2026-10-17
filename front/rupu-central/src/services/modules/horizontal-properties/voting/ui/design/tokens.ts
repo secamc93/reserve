@@ -135,6 +135,8 @@ export interface ResultSegment {
   color: string;
   /** % por coeficiente (0–100). */
   pct: number;
+  /** % sobre el coeficiente de los votos emitidos (0–100). Solo lo calculan las vistas de admin. */
+  pctOfVoted?: number;
   /** Unidades que votaron por la opción. */
   votes: number;
   /** Suma de coeficientes. */

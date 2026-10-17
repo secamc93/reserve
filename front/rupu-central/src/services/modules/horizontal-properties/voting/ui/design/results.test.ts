@@ -32,9 +32,25 @@ describe('computeCoefficientResults', () => {
     expect(r.votedUnits).toBe(3);
   });
 
+  it.each([
+    ['fracción', 1],
+    ['porcentaje', 100],
+  ])('coeficientes como %s: da también el %% sobre el coeficiente de los votos emitidos', (_caso, scale) => {
+    // Votaron 0,55 del coeficiente: Sí 0,35 / 0,55 y No 0,20 / 0,55.
+    const r = computeCoefficientResults(options, units(scale));
+    expect(r.segments[0].pctOfVoted).toBeCloseTo(63.64, 1);
+    expect(r.segments[1].pctOfVoted).toBeCloseTo(36.36, 1);
+    expect(r.segments[2].pctOfVoted).toBeCloseTo(0);
+  });
+
   it('sin unidades no divide por cero', () => {
     const r = computeCoefficientResults(options, []);
     expect(r.participation).toBe(0);
-    expect(r.segments.every((s) => s.pct === 0)).toBe(true);
+    expect(r.segments.every((s) => s.pct === 0 && s.pctOfVoted === 0)).toBe(true);
+  });
+
+  it('sin votos emitidos el % sobre los votos es 0', () => {
+    const r = computeCoefficientResults(options, units(1).map((u) => ({ ...u, hasVoted: false })));
+    expect(r.segments.every((s) => s.pctOfVoted === 0)).toBe(true);
   });
 });
