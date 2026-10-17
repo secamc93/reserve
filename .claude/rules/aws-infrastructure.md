@@ -30,8 +30,20 @@
 infra/scripts/rupu-up.sh   # enciende, apunta rupü.com/www a la IP nueva (TTL 60) y despliega lo último por SSM
 ```
 
-El instance role **no** tiene permiso de Route53: el DNS se actualiza desde la máquina local
-(perfil `default`).
+Desde 2026-10-16 la EC2 también se arregla sola al encender: `rupu-boot.service` (systemd, corre
+`/usr/local/bin/rupu-boot.sh`, versionado en `infra/scripts/rupu-boot.sh`) apunta rupü.com/www a la IP
+nueva y corre `deploy.sh all`. Para eso el instance role tiene la política inline `rupu-ec2-dns`
+(solo registros A de `xn--rup-joa.com` y `www`). Log: `journalctl -u rupu-boot.service`.
+
+**Encendido programado (sin la máquina local):** EventBridge Scheduler con el rol
+`rupu-scheduler-start` (solo `ec2:StartInstances` sobre `rupu-prod`). Ejemplo, una sola vez:
+
+```bash
+aws scheduler create-schedule --name rupu-encender-AAAAMMDD \
+  --schedule-expression "at(AAAA-MM-DDTHH:MM:00)" --schedule-expression-timezone America/Bogota \
+  --flexible-time-window Mode=OFF --action-after-completion DELETE \
+  --target '{"Arn":"arn:aws:scheduler:::aws-sdk:ec2:startInstances","RoleArn":"arn:aws:iam::334689162817:role/rupu-scheduler-start","Input":"{\"InstanceIds\":[\"<instance-id>\"]}"}'
+```
 
 > **Historial:** la instancia anterior `i-08c946b3dd12fc8c9` y su Elastic IP `3.220.183.29` se
 > dieron de baja el 2026-07-23 (BD perdida, sin backup). Esa IP **ya no es nuestra**: nada

@@ -29,6 +29,25 @@ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 # Apagado automático diario: 23:59 hora Bogotá (04:59 UTC)
 echo '59 4 * * * root /sbin/shutdown -h now "rupu auto-stop"' > /etc/cron.d/rupu-autostop
 
+# En cada arranque: DNS a la IP nueva y deploy (permite encenderla desde EventBridge Scheduler).
+# El script vive en el repo: infra/scripts/rupu-boot.sh (copiarlo a /usr/local/bin/rupu-boot.sh).
+cat > /etc/systemd/system/rupu-boot.service <<'UNIT'
+[Unit]
+Description=Rupu: DNS a la IP nueva y deploy al arrancar
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+Environment=AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1
+ExecStart=/usr/local/bin/rupu-boot.sh
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload && systemctl enable rupu-boot.service
+
 mkdir -p /home/ubuntu/reserve/infra/compose-prod
 chown -R ubuntu:ubuntu /home/ubuntu/reserve
 touch /var/log/rupu-userdata.done
