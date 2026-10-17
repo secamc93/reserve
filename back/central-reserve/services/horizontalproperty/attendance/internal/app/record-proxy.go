@@ -124,5 +124,6 @@ func toRecordDTO(r *domain.AttendanceRecord) *domain.AttendanceRecordDTO {
 		ResidentName:      r.ResidentName,
 		ProxyName:         r.ProxyName,
 		UnitNumber:        r.UnitNumber,
+		UnitBlock:         r.UnitBlock,
 	}
 }

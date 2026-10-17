@@ -56,7 +56,8 @@ type AttendanceRecordResponse struct {
 	UpdatedAt         time.Time  `json:"updated_at" example:"2025-01-15T10:30:00Z"`
 	ResidentName      string     `json:"resident_name" example:"Juan Pérez"`
 	ProxyName         string     `json:"proxy_name" example:"María García"`
-	UnitNumber        string     `json:"unit_number" example:"CASA 126"`
+	UnitNumber        string     `json:"unit_number" example:"126"`
+	UnitBlock         string     `json:"unit_block" example:"Casa"`
 }
 
 // AttendanceSummaryResponse - Response para resumen de asistencia

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"central_reserve/services/horizontalproperty/attendance/internal/domain"
+	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/mappers"
 	"central_reserve/services/horizontalproperty/attendance/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -98,7 +99,7 @@ func (h *AttendanceHandler) ExportAttendanceExcelDetailed(c *gin.Context) {
 
 	// Filas de datos
 	for _, r := range records {
-		unidad := r.UnitNumber
+		unidad := mappers.UnitLabel(r.UnitNumber, r.UnitBlock)
 		nombre := r.ResidentName
 
 		// Usar coeficiente como string directamente

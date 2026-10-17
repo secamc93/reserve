@@ -136,6 +136,7 @@ type AttendanceRecordDTO struct {
 	ResidentName             string
 	ProxyName                string
 	UnitNumber               string
+	UnitBlock                string
 	ParticipationCoefficient string
 }
 

@@ -62,5 +62,6 @@ type AttendanceRecord struct {
 	ResidentName             string
 	ProxyName                string
 	UnitNumber               string
+	UnitBlock                string // Bloque/tipo de la unidad ("Casa", "Dúplex", "Local")
 	ParticipationCoefficient string
 }

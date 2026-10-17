@@ -3,11 +3,15 @@
  * Lógica pura sobre los registros de la lista de asistencia del back.
  */
 
+import { formatUnitLabel } from '../../../units/domain/unit-display';
+
 /** Registro de `GET /attendance/lists/:id/records` (formato del back). */
 export interface AttendanceRecordRaw {
   id: number;
   property_unit_id: number;
   unit_number?: string | null;
+  /** Bloque/tipo de la unidad ("Casa", "Dúplex", "Local"). */
+  unit_block?: string | null;
   resident_name?: string | null;
   proxy_name?: string | null;
   attended_as_owner?: boolean;
@@ -18,6 +22,7 @@ export interface AttendanceRow {
   /** Id del registro en la lista; null si la unidad aún no tiene registro (nunca se marcó). */
   recordId: number | null;
   unitId: number;
+  /** Nombre visible de la unidad: tipo + número ("Casa 12", "Dúplex 3"). */
   unitNumber: string;
   residentName: string;
   proxyName: string;
@@ -31,6 +36,7 @@ export interface AttendanceRow {
 export interface AttendanceUnitInput {
   id: number;
   number: string;
+  block?: string | null;
   coefficient?: number | null;
   residentName?: string | null;
 }
@@ -55,7 +61,9 @@ export function buildAttendanceRows(records: AttendanceRecordRaw[], units: Atten
     return {
       recordId: r.id,
       unitId: r.property_unit_id,
-      unitNumber: r.unit_number || unit?.number || `#${r.property_unit_id}`,
+      unitNumber: r.unit_number || unit?.number
+        ? formatUnitLabel(r.unit_number || unit?.number, r.unit_block || unit?.block)
+        : `#${r.property_unit_id}`,
       residentName: (r.resident_name || unit?.residentName || '').trim() || 'Sin residente',
       proxyName: (r.proxy_name || '').trim(),
       present: !!r.attended_as_owner || !!r.attended_as_proxy,
@@ -70,7 +78,7 @@ export function buildAttendanceRows(records: AttendanceRecordRaw[], units: Atten
       rows.push({
         recordId: null,
         unitId: u.id,
-        unitNumber: u.number,
+        unitNumber: formatUnitLabel(u.number, u.block),
         residentName: (u.residentName || '').trim() || 'Sin residente',
         proxyName: '',
         present: false,

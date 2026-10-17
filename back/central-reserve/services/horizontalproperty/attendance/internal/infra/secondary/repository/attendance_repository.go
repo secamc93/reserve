@@ -349,6 +349,7 @@ func (r *AttendanceRepository) GetAttendanceRecordsByListPaged(ctx context.Conte
 		ResidentName             string
 		ProxyName                string
 		UnitNumber               string
+		UnitBlock                string
 		ParticipationCoefficient string
 	}
 
@@ -365,7 +366,9 @@ func (r *AttendanceRepository) GetAttendanceRecordsByListPaged(ctx context.Conte
 		Where("ar.attendance_list_id = ?", attendanceListID)
 
 	if unitNumber != "" {
-		base = base.Where("pu.number ILIKE ?", "%"+unitNumber+"%")
+		// Busca por número o por el nombre completo ("Casa 12", "Dúplex 3")
+		like := "%" + unitNumber + "%"
+		base = base.Where("(pu.number ILIKE ? OR CONCAT_WS(' ', NULLIF(pu.block, ''), pu.number) ILIKE ?)", like, like)
 	}
 	if attended != nil {
 		if *attended {
@@ -393,6 +396,7 @@ func (r *AttendanceRepository) GetAttendanceRecordsByListPaged(ctx context.Conte
 			COALESCE(r.name, r2.name, '') as resident_name, 
 			COALESCE(p.proxy_name,'') as proxy_name, 
 			pu.number as unit_number,
+			COALESCE(pu.block, '') as unit_block,
 			COALESCE(CAST(pu.participation_coefficient AS TEXT), '0.000000') as participation_coefficient`).
 		Order("pu.number ASC, ar.id ASC").
 		Offset(offset).Limit(pageSize).
@@ -417,6 +421,7 @@ func (r *AttendanceRepository) GetAttendanceRecordsByListPaged(ctx context.Conte
 		rec.ResidentName = item.ResidentName
 		rec.ProxyName = item.ProxyName
 		rec.UnitNumber = item.UnitNumber
+		rec.UnitBlock = item.UnitBlock
 
 		// Asignar coeficiente como string
 		rec.ParticipationCoefficient = item.ParticipationCoefficient
