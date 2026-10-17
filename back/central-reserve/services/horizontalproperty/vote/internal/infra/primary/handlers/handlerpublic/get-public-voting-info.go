@@ -228,9 +228,11 @@ func (h *PublicHandler) GetPublicVotingInfo(c *gin.Context) {
 		"resident_id":     residentID,
 	}
 
-	// Agregar voto y resultados si ya votó
+	// Agregar voto y resultados si ya votó; una votación cerrada muestra sus resultados a todos
 	if hasVoted {
 		responseData["my_vote"] = myVote
+	}
+	if hasVoted || !voting.IsActive {
 		responseData["results"] = results
 	}
 
