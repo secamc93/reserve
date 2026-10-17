@@ -36,7 +36,8 @@ describe('asistencia', () => {
   it('filtra por pestaña y por texto', () => {
     expect(filterAttendanceRows(rows, 'absent', '').map((r) => r.unitNumber)).toEqual(['T1-201', 'T2-102', 'T2-201']);
     expect(filterAttendanceRows(rows, 'proxy', '').map((r) => r.unitNumber)).toEqual(['T1-102']);
-    expect(filterAttendanceRows(rows, 'all', 't2').length).toBe(3);
+    expect(filterAttendanceRows(rows, 'all', 'T2-101').map((r) => r.unitNumber)).toEqual(['T2-101']);
+    expect(filterAttendanceRows(rows, 'all', 't2')).toEqual([]);
     expect(filterAttendanceRows(rows, 'present', 'ana').map((r) => r.unitNumber)).toEqual(['T1-102']);
   });
 
@@ -63,8 +64,18 @@ describe('asistencia: nombre completo de la unidad', () => {
     expect(rows.map((r) => r.unitNumber)).toEqual(['50', 'Casa 12', 'Dúplex 3', 'Local 1001']);
   });
 
-  it('se puede buscar por el nombre completo', () => {
-    const rows = buildAttendanceRows(conRegistro, unitsConTipo);
-    expect(filterAttendanceRows(rows, 'all', 'dúplex').map((r) => r.unitNumber)).toEqual(['Dúplex 3']);
+  it('el buscador busca la unidad por su número exacto, sin el tipo', () => {
+    const units = [
+      { id: 1, number: '2', block: 'Casa', coefficient: 1 },
+      { id: 2, number: '12', block: 'Casa', coefficient: 1 },
+      { id: 3, number: '20', block: 'Casa', coefficient: 1 },
+      { id: 4, number: '3', block: 'Dúplex', coefficient: 1 },
+    ];
+    const rows = buildAttendanceRows([], units);
+    expect(filterAttendanceRows(rows, 'all', '2').map((r) => r.unitNumber)).toEqual(['Casa 2']);
+    expect(filterAttendanceRows(rows, 'all', ' 3 ').map((r) => r.unitNumber)).toEqual(['Dúplex 3']);
+    expect(filterAttendanceRows(rows, 'all', '02').map((r) => r.unitNumber)).toEqual(['Casa 2']);
+    // el texto del tipo no filtra unidades
+    expect(filterAttendanceRows(rows, 'all', 'dúplex')).toEqual([]);
   });
 });
