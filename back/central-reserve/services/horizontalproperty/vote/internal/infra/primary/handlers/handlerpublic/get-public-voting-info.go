@@ -155,11 +155,12 @@ func (h *PublicHandler) GetPublicVotingInfo(c *gin.Context) {
 		hasVoted = false
 	}
 
-	// Si ya votó, obtener información del voto y resultados
+	// Si ya votó, obtener información del voto y resultados. Una votación cerrada también muestra
+	// sus resultados a quien no votó (mientras está abierta no, para no sesgar el voto).
 	var myVote *response.VoteResponse
 	var results []response.VotingResultResponse
 
-	if hasVoted {
+	if hasVoted || !voting.IsActive {
 		fmt.Printf("📊 [VOTACION PUBLICA - OBTENIENDO VOTO Y RESULTADOS]\n")
 
 		// Obtener el voto de la unidad
@@ -227,9 +228,11 @@ func (h *PublicHandler) GetPublicVotingInfo(c *gin.Context) {
 		"resident_id":     residentID,
 	}
 
-	// Agregar voto y resultados si ya votó
+	// Agregar voto y resultados si ya votó; una votación cerrada muestra sus resultados a todos
 	if hasVoted {
 		responseData["my_vote"] = myVote
+	}
+	if hasVoted || !voting.IsActive {
 		responseData["results"] = results
 	}
 

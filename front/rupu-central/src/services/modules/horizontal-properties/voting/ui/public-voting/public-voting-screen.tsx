@@ -204,8 +204,9 @@ export function PublicVotingScreen({
       <span>{label}</span>
     );
 
-  // ===================== R4 · Después de votar =====================
-  if (hasVoted) {
+  // ===================== R4 · Después de votar (o resultado de una votación cerrada) =====================
+  const closedWithResults = !isOpen && (info.results?.length ?? 0) > 0;
+  if (hasVoted || closedWithResults) {
     const quorum = resolveQuorum(info.voting.required_percentage);
     const results = resultsFromBackend(paletteOptions, info.results, totalUnits);
     const { segments, pending, participation } = results;
@@ -238,6 +239,7 @@ export function PublicVotingScreen({
             )}
           </div>
 
+          {hasVoted && (
           <div className="mt-[18px] px-4 py-3.5 rounded-[10px] text-white flex items-center gap-3" style={{ background: voteColor }} role="status">
             <VtIcon name="check" size={22} strokeWidth={2.5} />
             <div className="leading-tight min-w-0">
@@ -250,6 +252,7 @@ export function PublicVotingScreen({
               </div>
             </div>
           </div>
+          )}
 
           <h1 className="mt-[26px] mb-0 text-xl leading-tight font-semibold tracking-[-.015em]">{info.voting.title}</h1>
 

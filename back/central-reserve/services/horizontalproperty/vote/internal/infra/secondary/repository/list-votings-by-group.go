@@ -30,7 +30,8 @@ func (r *Repository) ListVotingsByGroupWithVoteStatus(
 			v.display_order,
 			v.required_percentage,
 			COUNT(DISTINCT vo.id) as options_count,
-			CASE WHEN vt.id IS NOT NULL THEN true ELSE false END as has_voted
+			CASE WHEN vt.id IS NOT NULL THEN true ELSE false END as has_voted,
+			(SELECT COUNT(*) FROM horizontal_property.votes vc WHERE vc.voting_id = v.id AND vc.deleted_at IS NULL) as votes_count
 		`).
 		Joins("LEFT JOIN horizontal_property.voting_options vo ON v.id = vo.voting_id AND vo.deleted_at IS NULL").
 		Joins("LEFT JOIN horizontal_property.votes vt ON v.id = vt.voting_id AND vt.property_unit_id = ? AND vt.deleted_at IS NULL", propertyUnitID).

@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Spinner } from '@shared/ui';
 import { getGroupVotingsAction, type GroupVoting } from '@/services/modules/horizontal-properties/voting/infrastructure/actions/public-voting';
-import { VT, VtIcon, VtNotice, formatOrder, initialsOf, publicVotingRowState, sortPublicVotings, votingFontRoot, vtMono } from '../design';
+import { VT, VtIcon, VtNotice, canViewPublicResult, closedVotingLabel, formatOrder, initialsOf, publicVotingRowState, sortPublicVotings, votingFontRoot, vtMono } from '../design';
 
 /** Cada cuánto se refresca la lista (ms). */
 const REFRESH_MS = 5000;
@@ -96,20 +96,31 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
           )}
           {ordered.map((voting) => {
             const state = publicVotingRowState(voting);
+            const canView = canViewPublicResult(voting);
+            const viewButton = canView ? (
+              <button
+                type="button"
+                onClick={() => onSelectVoting(voting.id, voting, total)}
+                className="inline-flex items-center justify-center w-8 h-8 max-md:w-11 max-md:h-11 max-md:-mr-2 rounded-md flex-shrink-0 transition-colors hover:bg-[#efedea]"
+                style={{ color: VT.inkSoft }}
+                aria-label={`Ver resultado de ${voting.title}`}
+                title="Ver resultado"
+              >
+                <VtIcon name="eye" size={16} />
+              </button>
+            ) : null;
+
             if (state === 'open') {
               return (
                 <li
                   key={voting.id}
                   aria-label={voting.title}
                   className="bg-white rounded-[10px] px-4 py-3.5 flex flex-col gap-2.5"
-                  style={{ border: `1.5px solid ${VT.ink}` }}
+                  style={{ border: `1.5px solid ${VT.yes}`, boxShadow: '0 0 0 4px rgba(31,138,76,.10)' }}
                 >
                   <div className="flex justify-between items-center">
                     <span className={`${vtMono} text-[11px] font-medium`} style={{ color: VT.muted }}>{formatOrder(voting.display_order)}</span>
-                    <span className={`${vtMono} inline-flex items-center gap-1.5 text-[10px] font-medium tracking-[.06em]`} style={{ color: VT.live }}>
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: VT.live }} />
-                      ABIERTA
-                    </span>
+                    <LiveBadge />
                   </div>
                   <div className="text-base font-semibold leading-tight">{voting.title}</div>
                   <button
@@ -123,29 +134,44 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
                 </li>
               );
             }
+
+            if (state === 'voted') {
+              return (
+                <li
+                  key={voting.id}
+                  aria-label={voting.title}
+                  className="bg-white rounded-[10px] px-4 py-3 flex gap-3 items-center"
+                  style={{ border: `1px solid ${voting.is_active ? VT.yes : VT.border}` }}
+                >
+                  <span className={`${vtMono} text-[11px] font-medium`} style={{ color: VT.muted }}>{formatOrder(voting.display_order)}</span>
+                  <span className="text-sm flex-1 min-w-0" style={{ color: VT.ink }}>{voting.title}</span>
+                  {voting.is_active && <LiveBadge compact />}
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap" style={{ color: VT.yes }}>
+                    <VtIcon name="check" size={12} strokeWidth={3} />
+                    Votaste
+                  </span>
+                  {viewButton}
+                </li>
+              );
+            }
+
+            // No abierta: atenuada, en gris
             return (
               <li
                 key={voting.id}
                 aria-label={voting.title}
-                className="bg-white rounded-[10px] px-4 py-3.5 flex gap-3 items-center"
-                style={{ border: `1px solid ${VT.border}`, color: VT.muted }}
+                className="rounded-[10px] px-4 py-3 flex gap-3 items-center"
+                style={{ background: '#ecebe8', border: `1px solid ${VT.border}`, color: VT.muted }}
               >
                 <span className={`${vtMono} text-[11px] font-medium`}>{formatOrder(voting.display_order)}</span>
-                <span className="text-sm flex-1 min-w-0" style={{ color: VT.inkSoft }}>{voting.title}</span>
-                {state === 'voted' ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelectVoting(voting.id, voting, total)}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold max-md:min-h-11 max-md:px-2 max-md:-mr-2 max-md:text-xs"
-                    style={{ color: VT.yes }}
-                    aria-label={`Ver resultado de ${voting.title}`}
-                  >
-                    <VtIcon name="check" size={12} strokeWidth={3} />
-                    Votaste
-                  </button>
-                ) : (
-                  <span className="text-[11px]">No abierta</span>
-                )}
+                <span className="text-sm flex-1 min-w-0" style={{ color: VT.muted }}>{voting.title}</span>
+                <span
+                  className={`${vtMono} text-[10px] font-medium tracking-[.04em] px-2 py-0.5 rounded-full whitespace-nowrap`}
+                  style={{ background: '#fff', border: `1px solid ${VT.borderStrong}`, color: VT.muted }}
+                >
+                  {closedVotingLabel(voting)}
+                </span>
+                {viewButton}
               </li>
             );
           })}
@@ -162,5 +188,22 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
         </p>
       </div>
     </div>
+  );
+}
+
+/** Etiqueta verde "EN VIVO" con un punto que late, como una transmisión al aire. */
+function LiveBadge({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      role="status"
+      className={`${vtMono} inline-flex items-center gap-1.5 rounded-full font-semibold tracking-[.08em] whitespace-nowrap ${compact ? 'text-[9px] px-2 py-0.5' : 'text-[10px] px-2.5 py-1'}`}
+      style={{ background: VT.reachedBg, color: VT.reachedFg }}
+    >
+      <span className="relative flex w-2 h-2">
+        <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping" style={{ background: VT.yes }} />
+        <span className="relative inline-flex w-2 h-2 rounded-full" style={{ background: VT.yes }} />
+      </span>
+      EN VIVO
+    </span>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { initialsOf, publicVoteErrorMessage, publicVotingRowState, resultsFromBackend, sortPublicVotings, unitFloor } from './public-flow';
+import { canViewPublicResult, closedVotingLabel, initialsOf, publicVoteErrorMessage, publicVotingRowState, resultsFromBackend, sortPublicVotings, unitFloor } from './public-flow';
 
 describe('publicVoteErrorMessage', () => {
   it('403 sin asistencia', () => {
@@ -68,5 +68,29 @@ describe('ayudas de la identificación (R1)', () => {
   it('iniciales del residente', () => {
     expect(initialsOf('María Fernanda Ruiz')).toBe('MF');
     expect(initialsOf('')).toBe('');
+  });
+});
+
+describe('ver resultado de una votación (R2)', () => {
+  const row = (is_active: boolean, has_voted: boolean, votes_count: number) => ({ id: 1, is_active, has_voted, display_order: 1, votes_count });
+
+  it('si la unidad ya votó se puede ver, abierta o cerrada', () => {
+    expect(canViewPublicResult(row(true, true, 3))).toBe(true);
+    expect(canViewPublicResult(row(false, true, 3))).toBe(true);
+  });
+
+  it('cerrada con votos se puede ver aunque la unidad no haya votado', () => {
+    expect(canViewPublicResult(row(false, false, 5))).toBe(true);
+  });
+
+  it('abierta sin votar, o cerrada sin votos, no', () => {
+    expect(canViewPublicResult(row(true, false, 5))).toBe(false);
+    expect(canViewPublicResult(row(false, false, 0))).toBe(false);
+    expect(canViewPublicResult({ id: 1, is_active: false, has_voted: false, display_order: 1 })).toBe(false);
+  });
+
+  it('la etiqueta de una no abierta dice "Cerrada" si ya tuvo votos', () => {
+    expect(closedVotingLabel(row(false, false, 2))).toBe('Cerrada');
+    expect(closedVotingLabel(row(false, false, 0))).toBe('No abierta');
   });
 });

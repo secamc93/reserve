@@ -50,6 +50,7 @@ const paths: Record<string, string> = {
   search: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
   check: 'M5 13l4 4L19 7',
   calendar: 'M3 10h18M8 3v4M16 3v4',
+  eye: 'M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.5 12C3.7 7.9 7.5 5 12 5s8.3 2.9 9.5 7c-1.2 4.1-5 7-9.5 7s-8.3-2.9-9.5-7z',
 };
 
 export function VtIcon({ name, size = 16, strokeWidth = 2 }: { name: keyof typeof paths | 'qr' | 'more'; size?: number; strokeWidth?: number }) {
