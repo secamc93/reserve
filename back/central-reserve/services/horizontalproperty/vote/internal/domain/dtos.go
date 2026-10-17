@@ -350,6 +350,7 @@ type VotingWithStatusDTO struct {
 	RequiredPercentage *float64
 	OptionsCount       int
 	HasVoted           bool
+	VotesCount         int // Votos registrados en la votación (todas las unidades)
 }
 
 // VotingCredentialDTO - Contraseña de una unidad con los datos que se imprimen en la credencial

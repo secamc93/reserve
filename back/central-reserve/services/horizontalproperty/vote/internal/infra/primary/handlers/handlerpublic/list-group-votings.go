@@ -113,6 +113,7 @@ func (h *PublicHandler) ListGroupVotings(c *gin.Context) {
 			RequiredPercentage: v.RequiredPercentage,
 			OptionsCount:       v.OptionsCount,
 			HasVoted:           v.HasVoted,
+			VotesCount:         v.VotesCount,
 		}
 		if v.IsActive {
 			activeCount++

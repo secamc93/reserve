@@ -23,6 +23,8 @@ export interface GroupVoting {
   required_percentage?: number;
   options_count: number;
   has_voted: boolean;
+  /** Votos registrados en la votación (todas las unidades). */
+  votes_count?: number;
 }
 
 export interface GetGroupVotingsResult {

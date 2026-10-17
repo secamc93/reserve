@@ -133,6 +133,7 @@ type VotingWithStatusResponse struct {
 	RequiredPercentage *float64 `json:"required_percentage,omitempty"`
 	OptionsCount       int      `json:"options_count"`
 	HasVoted           bool     `json:"has_voted"`
+	VotesCount         int      `json:"votes_count"`
 }
 
 // BulkVoteResultResponse - Response para resultado de votación masiva

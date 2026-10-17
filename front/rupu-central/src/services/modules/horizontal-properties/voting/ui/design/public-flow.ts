@@ -84,9 +84,25 @@ export interface PublicGroupVotingLike {
   is_active: boolean;
   has_voted: boolean;
   display_order: number;
+  /** Votos registrados en la votación (todas las unidades). */
+  votes_count?: number;
 }
 
 export type PublicVotingRowState = 'open' | 'voted' | 'closed';
+
+/**
+ * ¿La fila muestra "ver resultado"? Si la unidad ya votó, o si la votación está cerrada y tiene
+ * votos. Abierta y sin votar no: primero se vota (ver resultados antes podría sesgar el voto).
+ */
+export function canViewPublicResult(voting: PublicGroupVotingLike): boolean {
+  if (voting.has_voted) return true;
+  return !voting.is_active && (voting.votes_count ?? 0) > 0;
+}
+
+/** Etiqueta de una votación que no está abierta: "Cerrada" si ya tuvo votos, si no "No abierta". */
+export function closedVotingLabel(voting: PublicGroupVotingLike): string {
+  return (voting.votes_count ?? 0) > 0 ? 'Cerrada' : 'No abierta';
+}
 
 /** Estado de una fila de R2: abierta (se puede votar), ya votada o no abierta. */
 export function publicVotingRowState(voting: PublicGroupVotingLike): PublicVotingRowState {
