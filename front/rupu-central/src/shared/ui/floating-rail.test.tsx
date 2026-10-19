@@ -2,13 +2,13 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { FloatingRail } from './floating-rail';
-import { useSubmenuSlot } from './submenu-slot';
+import { useNavSlot } from './nav-slots';
 
 describe('FloatingRail', () => {
   it('registra el hueco de submenús y lo libera al desmontarse', () => {
     let slot: HTMLElement | null = null;
     function Probe() {
-      slot = useSubmenuSlot();
+      slot = useNavSlot('submenu');
       return null;
     }
     render(<Probe />);

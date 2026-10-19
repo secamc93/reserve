@@ -1,8 +1,9 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BUSINESS_TYPE_CONFIG } from '../config/business-type-config';
 import { buildNavItems } from '../utils/navigation';
+import { useNavSlot } from './nav-slots';
 import { FloatingNav, type FloatingNavProps } from './floating-nav';
 
 let pathname = '/properties/7/units';
@@ -39,7 +40,7 @@ function setup(props: Partial<FloatingNavProps> = {}) {
   return { ...utils, onLogout, onOpenProfile, user: userEvent.setup() };
 }
 
-const launcher = () => screen.getByRole('button', { name: /Módulos de Tayazal de Suba|Cerrar módulos/ });
+const launcher = () => screen.getByRole('button', { name: 'Módulos de Tayazal de Suba' });
 const modules = () => screen.queryByRole('navigation', { name: 'Módulos' });
 
 beforeEach(() => {
@@ -47,12 +48,47 @@ beforeEach(() => {
 });
 
 describe('FloatingNav — desplegable de módulos', () => {
-  it('cerrado muestra la propiedad y el módulo actual, sin la lista de módulos', () => {
+  it('cerrado deja fijo el módulo actual (icono y nombre) junto a la propiedad, sin la lista', () => {
     setup();
     expect(launcher()).toHaveAttribute('aria-expanded', 'false');
     expect(within(launcher()).getByText('Tayazal de Suba')).toBeInTheDocument();
     expect(within(launcher()).getByText('Unidades')).toBeInTheDocument();
+    expect(within(launcher()).getByTestId('current-module')).toBeInTheDocument();
     expect(modules()).toBeNull();
+  });
+
+  it('fuera de un módulo (selector de propiedad) no muestra módulo actual', () => {
+    pathname = '/properties';
+    setup();
+    expect(within(launcher()).queryByTestId('current-module')).toBeNull();
+  });
+
+  it('se abre al pasar el cursor y se cierra al salir', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { user } = setup();
+      await user.hover(launcher());
+      expect(launcher()).toHaveAttribute('aria-expanded', 'true');
+      expect(modules()).not.toBeNull();
+      await user.unhover(launcher());
+      act(() => { vi.advanceTimersByTime(200); });
+      expect(modules()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('pasar del logo a los iconos no lo cierra', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { user } = setup();
+      await user.hover(launcher());
+      await user.hover(within(modules()!).getByRole('link', { name: 'Residentes' }));
+      act(() => { vi.advanceTimersByTime(200); });
+      expect(modules()).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('el logo abre todos los módulos como iconos con nombre accesible y marca el actual', async () => {
@@ -82,6 +118,22 @@ describe('FloatingNav — desplegable de módulos', () => {
     await user.click(launcher());
     await user.click(document.body);
     expect(modules()).toBeNull();
+  });
+});
+
+describe('FloatingNav — botones del módulo', () => {
+  it('registra el hueco de botones a la izquierda del usuario y lo libera al desmontarse', () => {
+    let slot: HTMLElement | null = null;
+    function Probe() {
+      slot = useNavSlot('actions');
+      return null;
+    }
+    render(<Probe />);
+    const { container, unmount } = setup();
+    expect(slot).not.toBeNull();
+    expect(container.contains(slot)).toBe(true);
+    act(() => unmount());
+    expect(slot).toBeNull();
   });
 });
 

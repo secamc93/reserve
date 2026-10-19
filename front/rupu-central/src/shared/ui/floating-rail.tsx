@@ -9,7 +9,7 @@
 
 'use client';
 
-import { setSubmenuSlot } from './submenu-slot';
+import { setSubmenuSlot } from './nav-slots';
 
 export interface FloatingRailProps {
   onChangeProperty?: () => void;

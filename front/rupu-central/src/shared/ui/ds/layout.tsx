@@ -11,7 +11,7 @@
 
 import type { CSSProperties, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useSubmenuSlot } from '../submenu-slot';
+import { useNavSlot } from '../nav-slots';
 import { getInitials } from '../../utils/navigation';
 import { tabIcon } from './tab-icons';
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '../use-media-query';
@@ -47,9 +47,9 @@ export interface DsTab<T extends string = string> {
  * Cabecera secundaria (52 px, fondo #efedea): pestañas en píldora a la izquierda y acciones a
  * la derecha. Sin pestañas sirve como barra de título + acciones.
  *
- * En escritorio con el riel lateral flotante, las pestañas (submenús del módulo) pasan al riel
- * como iconos verticales (nombre y conteo al pasar el mouse; ver `tab-icons`) y aquí quedan solo
- * las acciones, alineadas a la derecha.
+ * En escritorio con la navegación flotante, las pestañas (submenús del módulo) pasan al riel
+ * lateral como iconos verticales (nombre y conteo al pasar el mouse; ver `tab-icons`) y las
+ * acciones a la barra superior, junto al usuario. Un encabezado solo con título se queda aquí.
  */
 export function DsSectionHeader<T extends string>({
   tabs,
@@ -67,7 +67,8 @@ export function DsSectionHeader<T extends string>({
   actions?: ReactNode;
   ariaLabel?: string;
 }) {
-  const submenuSlot = useSubmenuSlot();
+  const submenuSlot = useNavSlot('submenu');
+  const actionsSlot = useNavSlot('actions');
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
   const hasTabs = !!tabs && tabs.length > 0;
 
@@ -107,7 +108,10 @@ export function DsSectionHeader<T extends string>({
           </div>,
           submenuSlot,
         )}
-        {actions && <div className="flex flex-wrap items-center justify-end gap-2 px-8 pt-4">{actions}</div>}
+        {actions &&
+          (actionsSlot
+            ? createPortal(<div className={`${dsFontRoot} flex items-center gap-2`}>{actions}</div>, actionsSlot)
+            : <div className="flex flex-wrap items-center justify-end gap-2 px-8 pt-4">{actions}</div>)}
       </>
     );
   }

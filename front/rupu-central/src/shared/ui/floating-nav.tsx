@@ -2,10 +2,12 @@
  * Barra de navegación flotante de escritorio (>= md; en teléfono se usa `MobileNav`).
  *
  * Islas blancas sobre el fondo papel, fijas arriba al hacer scroll:
- * - Izquierda: el logo de la propiedad activa es un desplegable. Cerrado muestra el nombre y el
- *   módulo actual; abierto se expande a la derecha con los módulos como iconos (nombre al pasar
+ * - Izquierda: el logo de la propiedad activa es un desplegable que se abre al pasar el cursor
+ *   (o con clic / teclado). Cerrado muestra el icono del módulo actual, el nombre de la propiedad
+ *   y el del módulo; abierto se expande a la derecha con los módulos como iconos (nombre al pasar
  *   el mouse). Al elegir uno se cierra; sus submenús aparecen en `FloatingRail`.
- * - Derecha: etiqueta de super admin, usuario (abre el perfil) y cerrar sesión.
+ * - Derecha: los botones del módulo actual (los pone `DsSectionHeader` en el hueco `actions`),
+ *   etiqueta de super admin, usuario (abre el perfil) y cerrar sesión.
  */
 
 'use client';
@@ -14,6 +16,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PropertyLogo } from './property-logo';
+import { setActionsSlot } from './nav-slots';
 import { isNavItemActive, type ActiveProperty, type NavItem } from '../utils/navigation';
 
 export interface FloatingNavUser {
@@ -49,7 +52,24 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
   const pathname = usePathname() ?? '';
   const [open, setOpen] = useState(false);
   const launcherRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const modulesId = useId();
+
+  // Con el cursor: abre al entrar y cierra al salir, con una pausa corta para que no parpadee al
+  // cruzar el borde entre el logo y los iconos.
+  const cancelClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  };
+  const openOnHover = () => {
+    cancelClose();
+    setOpen(true);
+  };
+  const closeOnLeave = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpen(false), 150);
+  };
+  useEffect(() => cancelClose, []);
 
   const allHrefs = items.map((i) => i.href);
   const isActive = (item: NavItem) => isNavItemActive(item.href, pathname, allHrefs);
@@ -76,19 +96,34 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
     <header className="hidden md:block sticky top-0 z-30 px-4 lg:px-6 pt-3 pb-2 bg-[#f5f5f4]/85 backdrop-blur-md">
       <div className="flex items-center gap-3">
         {/* Propiedad + desplegable de módulos */}
-        <div ref={launcherRef} className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center gap-1 min-w-0`}>
+        <div
+          ref={launcherRef}
+          onMouseEnter={openOnHover}
+          onMouseLeave={closeOnLeave}
+          className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center gap-1 min-w-0 flex-shrink-0`}
+        >
           <button
             type="button"
-            onClick={() => setOpen((o) => !o)}
+            // Con el cursor ya está abierto al hacer clic: el clic solo abre (táctil / teclado).
+            onClick={openOnHover}
             aria-expanded={open}
             aria-controls={modulesId}
-            aria-label={open ? 'Cerrar módulos' : `Módulos de ${propertyName}`}
+            aria-label={`Módulos de ${propertyName}`}
             title={propertyName}
             className="flex items-center gap-2.5 rounded-full pr-2 hover:bg-[#f5f5f4] transition-colors text-left min-w-0"
           >
             <PropertyLogo name={propertyName} logoUrl={property?.logoUrl} size={40} />
+            {!open && current && (
+              <span
+                data-testid="current-module"
+                className="w-9 h-9 rounded-full inline-flex items-center justify-center text-white shadow-sm flex-shrink-0"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+              >
+                <Icon d={current.iconPath} className="w-[18px] h-[18px]" />
+              </span>
+            )}
             {!open && (
-              <span className="hidden lg:block min-w-0 max-w-[180px]">
+              <span className="hidden xl:block min-w-0 max-w-[180px]">
                 <span className="block text-[13px] font-semibold text-[#1a1a1a] truncate leading-tight">{propertyName}</span>
                 <span className="block text-[11px] text-[#8a8580] truncate leading-tight">
                   {current ? current.label : property ? 'Propiedad horizontal' : 'Elige una propiedad'}
@@ -98,7 +133,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
             <Icon d={open ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} className="w-3.5 h-3.5 text-[#8a8580]" />
           </button>
 
-          {open && (
+          {open && items.length > 0 && (
             <nav id={modulesId} aria-label="Módulos" className="flex items-center gap-1 pl-1 border-l border-[#e4e2dd]">
               {items.map((item) => {
                 const active = isActive(item);
@@ -123,7 +158,12 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
           )}
         </div>
 
-        <div className="flex-1" />
+        {/* Botones del módulo actual (los pone `DsSectionHeader`). */}
+        {/* Por debajo de xl no caben junto a los módulos abiertos: se ocultan mientras tanto. */}
+        <div
+          ref={setActionsSlot}
+          className={`flex-1 min-w-0 flex items-center justify-end whitespace-nowrap transition-opacity ${open ? 'max-xl:invisible max-xl:opacity-0' : ''}`}
+        />
 
         {/* Usuario */}
         <div className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center gap-1 flex-shrink-0`}>
@@ -144,7 +184,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
                 {user.name.charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="hidden lg:block min-w-0 max-w-[170px]">
+            <span className="hidden xl:block min-w-0 max-w-[170px]">
               <span className="flex items-center gap-1.5">
                 <span className="block text-[13px] font-semibold text-[#1a1a1a] truncate leading-tight">{user.name}</span>
                 {user.is_super_admin && (

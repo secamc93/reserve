@@ -1,7 +1,7 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { setSubmenuSlot } from '../submenu-slot';
+import { setActionsSlot, setSubmenuSlot } from '../nav-slots';
 import { DsSectionHeader } from './layout';
 
 // next/font solo funciona compilado por Next.
@@ -44,7 +44,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  act(() => setSubmenuSlot(null));
+  act(() => {
+    setSubmenuSlot(null);
+    setActionsSlot(null);
+  });
   slot.remove();
   vi.unstubAllGlobals();
 });
@@ -67,6 +70,21 @@ describe('DsSectionHeader — submenús en el riel lateral', () => {
 
     await userEvent.setup().click(within(tablist).getByRole('tab', { name: /Asignaciones/ }));
     expect(onChange).toHaveBeenCalledWith('assignments');
+  });
+
+  it('con la barra superior, los botones suben a ella junto a las pestañas en el riel', () => {
+    mockMatchMedia(true);
+    const actionsSlot = document.createElement('div');
+    document.body.appendChild(actionsSlot);
+    act(() => {
+      setSubmenuSlot(slot);
+      setActionsSlot(actionsSlot);
+    });
+    const { container } = render(<Header />);
+    expect(within(actionsSlot).getByRole('button', { name: '+ Zona' })).toBeInTheDocument();
+    expect(within(container).queryByRole('button', { name: '+ Zona' })).toBeNull();
+    expect(within(slot).getByRole('tablist')).toBeInTheDocument();
+    actionsSlot.remove();
   });
 
   it('una pestaña sin icono propio (bloque, tipo de residente) muestra sus iniciales', () => {
