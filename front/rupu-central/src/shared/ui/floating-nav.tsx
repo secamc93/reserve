@@ -39,6 +39,8 @@ export interface FloatingNavProps {
 const ISLAND = 'bg-white border border-[#e4e2dd] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)]';
 /** Curva suave (sale rápido y frena al final); sin animación si el sistema pide menos movimiento. */
 const EASE = 'ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none';
+/** El despliegue tarda 500 ms; el retroceso, más pausado, 800 ms. */
+const DURATION = (open: boolean) => (open ? 'duration-500' : 'duration-[800ms]');
 const TOOLTIP =
   'pointer-events-none absolute left-1/2 top-[calc(100%+10px)] -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100';
 
@@ -123,7 +125,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
             <PropertyLogo name={propertyName} logoUrl={property?.logoUrl} size={40} />
             {/* Módulo actual y nombre: se recogen al abrir. */}
             <span
-              className={`flex items-center gap-2.5 overflow-hidden ${EASE} transition-[max-width,opacity,margin] duration-500 ${
+              className={`flex items-center gap-2.5 overflow-hidden ${EASE} transition-[max-width,opacity,margin] ${DURATION(open)} ${
                 open ? 'max-w-0 opacity-0 ml-0' : 'max-w-[300px] opacity-100 ml-2.5'
               }`}
             >
@@ -145,7 +147,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
             </span>
             <Icon
               d="M9 5l7 7-7 7"
-              className={`w-3.5 h-3.5 ml-2 text-[#8a8580] ${EASE} transition-transform duration-500 ${open ? 'rotate-180' : ''}`}
+              className={`w-3.5 h-3.5 ml-2 text-[#8a8580] ${EASE} transition-transform ${DURATION(open)} ${open ? 'rotate-180' : ''}`}
             />
           </button>
 
@@ -159,7 +161,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
                 if (open && e.target === e.currentTarget && e.propertyName === 'max-width') setSettled(true);
               }}
               // Mientras se despliega recorta; ya abierto deja ver los nombres (tooltips) debajo.
-              className={`flex items-center gap-1 ${EASE} transition-[max-width,opacity,padding,border-color] duration-500 border-l ${
+              className={`flex items-center gap-1 ${EASE} transition-[max-width,opacity,padding,border-color] ${DURATION(open)} border-l ${
                 open ? 'opacity-100 pl-1 border-[#e4e2dd]' : 'opacity-0 pl-0 border-transparent'
               } ${open && settled ? 'overflow-visible' : 'overflow-hidden'}`}
               // Ancho exacto (iconos de 40 px + 4 px de separación + borde): se abre a ritmo parejo.
@@ -170,9 +172,9 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
                 return (
                   <span
                     key={item.id}
-                    // Los iconos entran uno tras otro, deslizándose desde el logo.
+                    // Al abrir entran uno tras otro desde el logo; al cerrar salen en orden inverso.
                     className={`${EASE} transition-[opacity,transform] duration-500 ${open ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3'}`}
-                    style={{ transitionDelay: open ? `${120 + index * 45}ms` : '0ms' }}
+                    style={{ transitionDelay: `${open ? 120 + index * 45 : (items.length - 1 - index) * 40}ms` }}
                   >
                     <Link
                       href={item.href}
