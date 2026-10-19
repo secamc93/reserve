@@ -3,19 +3,16 @@
  *
  * Tres "islas" blancas sobre el fondo papel, fijas arriba al hacer scroll:
  * - Izquierda: logo y nombre de la propiedad activa ("Cambiar propiedad" está en `FloatingRail`).
- * - Centro: píldora con los módulos principales (ver `splitPillItems`); el activo se rellena con
- *   el color primario de la propiedad. El resto va al menú "Más", que muestra el nombre del
- *   módulo cuando el activo está ahí.
+ * - Centro: hueco para las pestañas del módulo actual (`DsSectionHeader` las lleva ahí con un
+ *   portal, ver `top-bar-slot`). Los módulos están en `FloatingRail`.
  * - Derecha: etiqueta de super admin, usuario (abre el perfil) y cerrar sesión.
  */
 
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { PropertyLogo } from './property-logo';
-import { isNavItemActive, splitPillItems, type ActiveProperty, type NavItem } from '../utils/navigation';
+import { setTopBarSlot } from './top-bar-slot';
+import type { ActiveProperty } from '../utils/navigation';
 
 export interface FloatingNavUser {
   name: string;
@@ -25,7 +22,6 @@ export interface FloatingNavUser {
 }
 
 export interface FloatingNavProps {
-  items: NavItem[];
   property: ActiveProperty | null;
   /** Nombre a mostrar si no hay propiedad activa (p. ej. en IAM del super admin). */
   fallbackName?: string;
@@ -44,39 +40,8 @@ function Icon({ d, className = 'w-4 h-4' }: { d: string; className?: string }) {
   );
 }
 
-export function FloatingNav({ items, property, fallbackName, user, onLogout, onOpenProfile }: FloatingNavProps) {
-  const pathname = usePathname() ?? '';
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
-  const moreMenuId = useId();
-
-  const { primary, overflow } = splitPillItems(items);
-  const allHrefs = items.map((i) => i.href);
-  const isActive = (item: NavItem) => isNavItemActive(item.href, pathname, allHrefs);
-  const activeOverflow = overflow.find(isActive);
+export function FloatingNav({ property, fallbackName, user, onLogout, onOpenProfile }: FloatingNavProps) {
   const propertyName = property?.name || fallbackName || 'Rupü';
-
-  // El menú "Más" se cierra al navegar, con Escape y al hacer clic fuera.
-  useEffect(() => setMoreOpen(false), [pathname]);
-  useEffect(() => {
-    if (!moreOpen) return;
-    const onPointer = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMoreOpen(false); };
-    document.addEventListener('mousedown', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [moreOpen]);
-
-  const pillClass = (active: boolean) =>
-    `h-9 px-4 rounded-full text-[13px] inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${
-      active ? 'text-white font-semibold shadow-sm' : 'text-[#4b4a46] font-medium hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
-    }`;
-  const activeStyle = { backgroundColor: 'var(--color-primary)' };
 
   return (
     <header className="hidden md:block sticky top-0 z-30 px-4 lg:px-6 pt-3 pb-2 bg-[#f5f5f4]/85 backdrop-blur-md">
@@ -90,72 +55,8 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
           </div>
         </div>
 
-        {/* Módulos */}
-        {/* Mientras cargan los permisos no hay módulos: no se muestra una píldora vacía. */}
-        <div className="flex-1 min-w-0 flex justify-center">
-          {items.length > 0 && (
-          <nav aria-label="Navegación principal" className={`${ISLAND} rounded-full h-[52px] p-[7px] flex items-center gap-0.5`}>
-            {primary.map((item) => {
-              const active = isActive(item);
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={pillClass(active)}
-                  style={active ? activeStyle : undefined}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-
-            {overflow.length > 0 && (
-              <div ref={moreRef} className="relative">
-                <button
-                  type="button"
-                  aria-haspopup="true"
-                  aria-expanded={moreOpen}
-                  aria-controls={moreMenuId}
-                  onClick={() => setMoreOpen((open) => !open)}
-                  className={pillClass(!!activeOverflow)}
-                  style={activeOverflow ? activeStyle : undefined}
-                >
-                  {activeOverflow ? activeOverflow.label : 'Más'}
-                  <Icon d="M19 9l-7 7-7-7" className={`w-3.5 h-3.5 transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {moreOpen && (
-                  <div
-                    id={moreMenuId}
-                    role="group"
-                    aria-label="Más módulos"
-                    className={`${ISLAND} absolute right-0 top-[calc(100%+12px)] w-56 rounded-2xl p-1.5`}
-                  >
-                    {overflow.map((item) => {
-                      const active = isActive(item);
-                      return (
-                        <Link
-                          key={item.id}
-                          href={item.href}
-                          aria-current={active ? 'page' : undefined}
-                          className={`flex items-center gap-3 px-3 h-10 rounded-xl text-[13px] transition-colors ${
-                            active ? 'font-semibold text-[#1a1a1a] bg-[#f5f5f4]' : 'text-[#4b4a46] hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
-                          }`}
-                        >
-                          <span style={active ? { color: 'var(--color-primary)' } : undefined}>
-                            <Icon d={item.iconPath} />
-                          </span>
-                          {item.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </nav>
-          )}
-        </div>
+        {/* Pestañas del módulo actual (las pone `DsSectionHeader`). */}
+        <div ref={setTopBarSlot} className="flex-1 min-w-0 flex justify-center" />
 
         {/* Usuario */}
         <div className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center gap-1 flex-shrink-0`}>

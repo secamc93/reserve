@@ -3,12 +3,16 @@
  *  - Patrón A · Lista: cabecera secundaria (pestañas en píldora + acciones), chips de filtro,
  *    buscador y tabla densa con encabezados en mono.
  *  - Patrón C · Detalle: panel con secciones rotuladas en mono.
- * La barra superior flotante (propiedad · módulos · usuario) la pone el layout de propiedad horizontal.
+ * La barra superior flotante (propiedad · pestañas del módulo · usuario) la pone el layout de
+ * propiedad horizontal; `DsSectionHeader` sube ahí sus pestañas en escritorio.
  */
 
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { useTopBarSlot } from '../top-bar-slot';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '../use-media-query';
 import { dsFontRoot, dsMono } from './fonts';
 import { DS } from './tokens';
 
@@ -40,6 +44,9 @@ export interface DsTab<T extends string = string> {
 /**
  * Cabecera secundaria (52 px, fondo #efedea): pestañas en píldora a la izquierda y acciones a
  * la derecha. Sin pestañas sirve como barra de título + acciones.
+ *
+ * En escritorio con la barra superior flotante, las pestañas (submenús del módulo) suben a la
+ * barra en una píldora y aquí quedan solo las acciones, alineadas a la derecha.
  */
 export function DsSectionHeader<T extends string>({
   tabs,
@@ -57,9 +64,49 @@ export function DsSectionHeader<T extends string>({
   actions?: ReactNode;
   ariaLabel?: string;
 }) {
+  const topBarSlot = useTopBarSlot();
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const hasTabs = !!tabs && tabs.length > 0;
+
+  if (tabs && hasTabs && topBarSlot && isDesktop) {
+    return (
+      <>
+        {createPortal(
+          <div
+            role="tablist"
+            aria-label={ariaLabel}
+            className={`${dsFontRoot} max-w-full h-[52px] p-[7px] rounded-full bg-white border border-[#e4e2dd] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] flex items-center gap-0.5 overflow-x-auto`}
+          >
+            {tabs.map((tab) => {
+              const on = tab.id === active;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => onChange?.(tab.id)}
+                  className={`h-9 px-4 rounded-full text-[13px] inline-flex items-center whitespace-nowrap transition-colors ${
+                    on ? 'text-white font-semibold shadow-sm' : 'text-[#4b4a46] font-medium hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
+                  }`}
+                  style={on ? { backgroundColor: 'var(--color-primary)' } : undefined}
+                >
+                  {tab.label}
+                  {tab.count !== undefined && tab.count !== null && tab.count !== '' && <span className="whitespace-pre">{` · ${tab.count}`}</span>}
+                </button>
+              );
+            })}
+          </div>,
+          topBarSlot,
+        )}
+        {actions && <div className="flex flex-wrap items-center justify-end gap-2 px-8 pt-4">{actions}</div>}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-[52px] bg-[#efedea] border-b border-[#e4e2dd] flex flex-wrap md:flex-nowrap items-center gap-1 px-4 md:px-6 py-2 md:py-0">
-      {tabs && tabs.length > 0 ? (
+      {hasTabs ? (
         <div role="tablist" aria-label={ariaLabel} className="flex items-center gap-1 overflow-x-auto max-w-full -mx-1 px-1">
           {tabs.map((tab) => {
             const on = tab.id === active;
@@ -87,6 +134,7 @@ export function DsSectionHeader<T extends string>({
     </div>
   );
 }
+
 
 // ===================== Filtros =====================
 

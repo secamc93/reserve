@@ -4,8 +4,9 @@
  * Con `mobileNav` (layouts de propiedad horizontal e IAM): en escritorio (>= md) es la barra
  * lateral de siempre; en teléfono (< md) se oculta y en su lugar se muestra `MobileNav` (barra
  * inferior con el logo de la propiedad y menú de módulos). Sin `mobileNav` se comporta como antes.
- * Con `variant="floating"` en escritorio se muestran `FloatingNav` (barra superior flotante) y
- * `FloatingRail` (riel lateral flotante); el contenido deja libre el riel con `md:pl-[84px]`.
+ * Con `variant="floating"` en escritorio se muestran `FloatingRail` (riel lateral flotante con los
+ * módulos) y `FloatingNav` (barra superior flotante: propiedad, pestañas del módulo y usuario); el
+ * contenido deja libre el riel con `md:pl-[84px]`.
  */
 
 'use client';
@@ -124,7 +125,6 @@ export function Sidebar({ user, mobileNav = false, variant = 'rail' }: SidebarPr
       {variant === 'floating' ? (
       <>
       <FloatingNav
-        items={navItems}
         property={activeProperty}
         fallbackName={activeTypeName || undefined}
         user={user}
