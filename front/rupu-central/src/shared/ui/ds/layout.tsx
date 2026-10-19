@@ -3,7 +3,7 @@
  *  - Patrón A · Lista: cabecera secundaria (pestañas en píldora + acciones), chips de filtro,
  *    buscador y tabla densa con encabezados en mono.
  *  - Patrón C · Detalle: panel con secciones rotuladas en mono.
- * La barra superior (miga de pan) la pone el layout de propiedad horizontal.
+ * La barra superior flotante (propiedad · módulos · usuario) la pone el layout de propiedad horizontal.
  */
 
 'use client';

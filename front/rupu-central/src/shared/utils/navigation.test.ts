@@ -10,6 +10,7 @@ import {
   pickBottomBarItems,
   resolveActiveProperty,
   resolveBusinessHref,
+  splitPillItems,
 } from './navigation';
 
 const SIDEBAR = BUSINESS_TYPE_CONFIG.horizontal_property.sidebarItems;
@@ -82,6 +83,28 @@ describe('pickBottomBarItems', () => {
 
   it('sin módulos: barra vacía', () => {
     expect(pickBottomBarItems([])).toEqual({ left: [], right: [] });
+  });
+});
+
+describe('splitPillItems', () => {
+  const all = buildNavItems({ sidebarItems: SIDEBAR, activeBusinessId: 7, canAccessIAM: true });
+
+  it('en la propiedad: Resumen, Unidades, Residentes y Votaciones en la píldora; el resto en "Más"', () => {
+    const { primary, overflow } = splitPillItems(all);
+    expect(primary.map((i) => i.id)).toEqual(['resumen', 'units', 'residents', 'voting-groups']);
+    expect(overflow.map((i) => i.id)).toEqual(['visits', 'packages', 'common-areas', 'parking', 'iam']);
+  });
+
+  it('si faltan preferidos, completa con los demás en el orden de la barra lateral', () => {
+    const noVoting = all.filter((i) => i.id !== 'voting-groups' && i.id !== 'units');
+    const { primary, overflow } = splitPillItems(noVoting);
+    expect(primary.map((i) => i.id)).toEqual(['resumen', 'residents', 'visits', 'packages']);
+    expect(overflow.map((i) => i.id)).toEqual(['common-areas', 'parking', 'iam']);
+  });
+
+  it('en IAM sin propiedad: solo IAM y "Más" vacío', () => {
+    const iam = buildNavItems({ sidebarItems: [], activeBusinessId: 0, canAccessIAM: true });
+    expect(splitPillItems(iam)).toEqual({ primary: iam, overflow: [] });
   });
 });
 

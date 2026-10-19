@@ -4,6 +4,8 @@
  * Con `mobileNav` (layouts de propiedad horizontal e IAM): en escritorio (>= md) es la barra
  * lateral de siempre; en teléfono (< md) se oculta y en su lugar se muestra `MobileNav` (barra
  * inferior con el logo de la propiedad y menú de módulos). Sin `mobileNav` se comporta como antes.
+ * Con `variant="floating"` en escritorio se muestran `FloatingNav` (barra superior flotante) y
+ * `FloatingRail` (riel lateral flotante); el contenido deja libre el riel con `md:pl-[84px]`.
  */
 
 'use client';
@@ -18,6 +20,8 @@ import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
 import type { SidebarItemConfig } from '@/shared/config/business-type-config';
 import { buildNavItems, filterSidebarItemsByResource, resolveBusinessHref } from '@/shared/utils/navigation';
 import { MobileNav } from './mobile-nav';
+import { FloatingNav } from './floating-nav';
+import { FloatingRail } from './floating-rail';
 import { useActiveProperty } from './use-active-property';
 import { PropertyLogo } from './property-logo';
 import { useAccessibleProperties } from './use-accessible-properties';
@@ -34,9 +38,11 @@ interface SidebarProps {
   } | null;
   /** Muestra la barra inferior en teléfono (< md) y oculta ahí la barra lateral. */
   mobileNav?: boolean;
+  /** `floating`: barra superior flotante en escritorio en lugar de la barra lateral. */
+  variant?: 'rail' | 'floating';
 }
 
-export function Sidebar({ user, mobileNav = false }: SidebarProps) {
+export function Sidebar({ user, mobileNav = false, variant = 'rail' }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -115,6 +121,19 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
 
   return (
     <>
+      {variant === 'floating' ? (
+      <>
+      <FloatingNav
+        items={navItems}
+        property={activeProperty}
+        fallbackName={activeTypeName || undefined}
+        user={user}
+        onLogout={handleLogout}
+        onOpenProfile={() => setShowUserModal(true)}
+      />
+      <FloatingRail items={navItems} onChangeProperty={showChangeProperty ? goToPropertyPicker : undefined} />
+      </>
+      ) : (
       <aside
         className={`fixed left-0 top-0 h-full transition-all duration-300 z-30${mobileNav ? ' hidden md:block' : ''}`}
         style={{
@@ -220,6 +239,7 @@ export function Sidebar({ user, mobileNav = false }: SidebarProps) {
           </div>
         </div>
       </aside>
+      )}
 
       {mobileNav && (
       <MobileNav

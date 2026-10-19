@@ -8,7 +8,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner, Alert, MobileTopBar, useActiveProperty } from '@shared/ui';
 import { HORIZONTAL_PROPERTY_TYPE, PROPERTY_PICKER_PATH, hasActiveProperty, mustPickProperty } from '@/shared/utils/properties';
-import { breadcrumbFor } from '@/shared/ui/ds/breadcrumb';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
 import { resolveAllowedPath, resolveBusinessHref } from '@/shared/utils/navigation';
@@ -20,7 +19,6 @@ export default function PropertyHorizontalLayout({ children }: { children: React
   const [loading, setLoading] = useState(true);
   const { error: permissionsError, permissions, hasResource } = usePermissions();
   const activeProperty = useActiveProperty();
-  const crumbs = breadcrumbFor(pathname, activeProperty?.name);
 
   useEffect(() => {
     const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken();
@@ -56,27 +54,14 @@ export default function PropertyHorizontalLayout({ children }: { children: React
   if (loading || (allowedPath !== null && allowedPath !== pathname)) return <div className="min-h-screen flex items-center justify-center"><Spinner size="xl" color="primary" text="Cargando..." /></div>;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Teléfono (< md): sin barra lateral; barra inferior + menú de módulos. La propiedad se cambia
-          con "Cambiar propiedad" (solo si el usuario tiene dos o más). */}
-      <Sidebar user={user} mobileNav />
-      <main
-        className="flex-1 min-w-0 min-h-screen bg-gray-50 transition-all duration-300 md:ml-20 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
-      >
+    <div className="min-h-screen bg-[#f5f5f4]">
+      {/* Escritorio: barra superior flotante (propiedad · módulos · usuario) y riel lateral flotante
+          con todos los módulos. Teléfono (< md): barra
+          inferior + menú de módulos; la propiedad se cambia con "Cambiar propiedad" (solo si el
+          usuario tiene dos o más). */}
+      <Sidebar user={user} mobileNav variant="floating" />
+      <main className="min-w-0 min-h-screen md:pl-[84px] lg:pl-[92px] pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
         <MobileTopBar property={activeProperty} />
-        {/* Barra superior (52 px): miga de pan "propiedad / módulo". */}
-        <div className="sticky top-0 z-20 h-[52px] bg-white border-b border-[#e4e2dd] px-6 hidden md:flex items-center justify-between">
-          <nav aria-label="Ubicación" className="flex items-center gap-2.5 text-[13px] min-w-0">
-            <span className="text-[#8a8580] truncate">{crumbs.parent}</span>
-            <span className="text-[#c9c6c0]" aria-hidden="true">/</span>
-            <span className="font-semibold text-[#1a1a1a] truncate">{crumbs.current}</span>
-          </nav>
-          {user?.is_super_admin && (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-600 text-white">
-              SUPER ADMIN
-            </span>
-          )}
-        </div>
         {permissionsError && <div className="p-4"><Alert type="error" onClose={() => {}}>{permissionsError}</Alert></div>}
         {allowedPath === null
           ? <div className="p-4"><Alert type="error" onClose={() => {}}>Tu rol no tiene acceso a ningún módulo de esta propiedad. Contacta al administrador.</Alert></div>

@@ -118,6 +118,36 @@ export function pickBottomBarItems(
   return { left: picked.slice(0, half), right: picked.slice(half) };
 }
 
+/**
+ * Módulos de la píldora central de la barra flotante de escritorio, en este orden de preferencia:
+ * Resumen, Unidades, Residentes y Votaciones (el núcleo del producto). El resto va al menú "Más".
+ * Si el usuario no tiene alguno, se completa con los demás en el orden de la barra lateral.
+ */
+export const PILL_PREFERRED_IDS = ['resumen', 'units', 'residents', 'voting-groups'] as const;
+export const PILL_MAX_ITEMS = 4;
+
+export function splitPillItems(
+  items: readonly NavItem[],
+  preferredIds: readonly string[] = PILL_PREFERRED_IDS,
+  max: number = PILL_MAX_ITEMS,
+): { primary: NavItem[]; overflow: NavItem[] } {
+  const chosen: NavItem[] = [];
+  for (const id of preferredIds) {
+    const item = items.find((i) => i.id === id);
+    if (item && !chosen.includes(item)) chosen.push(item);
+  }
+  for (const item of items) {
+    if (chosen.length >= max) break;
+    if (!chosen.includes(item)) chosen.push(item);
+  }
+  const picked = chosen.slice(0, max);
+  // Se muestran en el orden de la barra lateral, no en el de preferencia.
+  return {
+    primary: items.filter((i) => picked.includes(i)),
+    overflow: items.filter((i) => !picked.includes(i)),
+  };
+}
+
 /** Ruta activa: igual o hija. La raíz de la propiedad (`/properties/7`) solo cuenta si es exacta. */
 export function isNavItemActive(href: string, pathname: string, allHrefs: readonly string[] = []): boolean {
   if (pathname === href) return true;
