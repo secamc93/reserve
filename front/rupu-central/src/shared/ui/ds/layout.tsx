@@ -3,15 +3,17 @@
  *  - Patrón A · Lista: cabecera secundaria (pestañas en píldora + acciones), chips de filtro,
  *    buscador y tabla densa con encabezados en mono.
  *  - Patrón C · Detalle: panel con secciones rotuladas en mono.
- * La barra superior flotante (propiedad · pestañas del módulo · usuario) la pone el layout de
- * propiedad horizontal; `DsSectionHeader` sube ahí sus pestañas en escritorio.
+ * La barra superior y el riel lateral flotantes los pone el layout de propiedad horizontal;
+ * `DsSectionHeader` lleva sus pestañas al riel en escritorio.
  */
 
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useTopBarSlot } from '../top-bar-slot';
+import { useSubmenuSlot } from '../submenu-slot';
+import { getInitials } from '../../utils/navigation';
+import { tabIcon } from './tab-icons';
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '../use-media-query';
 import { dsFontRoot, dsMono } from './fonts';
 import { DS } from './tokens';
@@ -45,8 +47,9 @@ export interface DsTab<T extends string = string> {
  * Cabecera secundaria (52 px, fondo #efedea): pestañas en píldora a la izquierda y acciones a
  * la derecha. Sin pestañas sirve como barra de título + acciones.
  *
- * En escritorio con la barra superior flotante, las pestañas (submenús del módulo) suben a la
- * barra en una píldora y aquí quedan solo las acciones, alineadas a la derecha.
+ * En escritorio con el riel lateral flotante, las pestañas (submenús del módulo) pasan al riel
+ * como iconos verticales (nombre y conteo al pasar el mouse; ver `tab-icons`) y aquí quedan solo
+ * las acciones, alineadas a la derecha.
  */
 export function DsSectionHeader<T extends string>({
   tabs,
@@ -64,40 +67,45 @@ export function DsSectionHeader<T extends string>({
   actions?: ReactNode;
   ariaLabel?: string;
 }) {
-  const topBarSlot = useTopBarSlot();
+  const submenuSlot = useSubmenuSlot();
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
   const hasTabs = !!tabs && tabs.length > 0;
 
-  if (tabs && hasTabs && topBarSlot && isDesktop) {
+  if (tabs && hasTabs && submenuSlot && isDesktop) {
     return (
       <>
         {createPortal(
-          <div
-            role="tablist"
-            aria-label={ariaLabel}
-            className={`${dsFontRoot} max-w-full h-[52px] p-[7px] rounded-full bg-white border border-[#e4e2dd] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] flex items-center gap-0.5 overflow-x-auto`}
-          >
+          <div role="tablist" aria-label={ariaLabel} aria-orientation="vertical" className={`${dsFontRoot} flex flex-col items-center gap-1`}>
             {tabs.map((tab) => {
               const on = tab.id === active;
+              const Icon = tabIcon(tab.id);
+              const hasCount = tab.count !== undefined && tab.count !== null && tab.count !== '';
+              const name = hasCount ? `${tab.label} · ${tab.count}` : tab.label;
               return (
                 <button
                   key={tab.id}
                   type="button"
                   role="tab"
                   aria-selected={on}
+                  aria-label={name}
                   onClick={() => onChange?.(tab.id)}
-                  className={`h-9 px-4 rounded-full text-[13px] inline-flex items-center whitespace-nowrap transition-colors ${
-                    on ? 'text-white font-semibold shadow-sm' : 'text-[#4b4a46] font-medium hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
+                  className={`group relative w-10 h-10 rounded-full inline-flex items-center justify-center transition-colors ${
+                    on ? 'text-white shadow-sm' : 'text-[#6b6a66] hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
                   }`}
                   style={on ? { backgroundColor: 'var(--color-primary)' } : undefined}
                 >
-                  {tab.label}
-                  {tab.count !== undefined && tab.count !== null && tab.count !== '' && <span className="whitespace-pre">{` · ${tab.count}`}</span>}
+                  {Icon ? <Icon className="w-5 h-5" aria-hidden="true" /> : <span className="text-[11px] font-bold" aria-hidden="true">{getInitials(tab.label)}</span>}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                  >
+                    {name}
+                  </span>
                 </button>
               );
             })}
           </div>,
-          topBarSlot,
+          submenuSlot,
         )}
         {actions && <div className="flex flex-wrap items-center justify-end gap-2 px-8 pt-4">{actions}</div>}
       </>

@@ -55,8 +55,8 @@ export default function PropertyHorizontalLayout({ children }: { children: React
 
   return (
     <div className="min-h-screen bg-[#f5f5f4]">
-      {/* Escritorio: barra superior flotante (propiedad · módulos · usuario) y riel lateral flotante
-          con todos los módulos. Teléfono (< md): barra
+      {/* Escritorio: barra superior flotante (el logo despliega los módulos) y riel lateral flotante
+          con los submenús del módulo. Teléfono (< md): barra
           inferior + menú de módulos; la propiedad se cambia con "Cambiar propiedad" (solo si el
           usuario tiene dos o más). */}
       <Sidebar user={user} mobileNav variant="floating" />

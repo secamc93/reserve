@@ -1,7 +1,7 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { setTopBarSlot } from '../top-bar-slot';
+import { setSubmenuSlot } from '../submenu-slot';
 import { DsSectionHeader } from './layout';
 
 // next/font solo funciona compilado por Next.
@@ -44,21 +44,24 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  act(() => setTopBarSlot(null));
+  act(() => setSubmenuSlot(null));
   slot.remove();
   vi.unstubAllGlobals();
 });
 
-describe('DsSectionHeader — pestañas en la barra superior', () => {
-  it('en escritorio con barra flotante, las pestañas suben a la barra y las acciones se quedan en la página', async () => {
+describe('DsSectionHeader — submenús en el riel lateral', () => {
+  it('en escritorio con riel, las pestañas pasan al riel como iconos y las acciones se quedan en la página', async () => {
     mockMatchMedia(true);
-    act(() => setTopBarSlot(slot));
+    act(() => setSubmenuSlot(slot));
     const onChange = vi.fn();
     const { container } = render(<Header onChange={onChange} />);
 
     const tablist = within(slot).getByRole('tablist', { name: 'Parqueaderos' });
-    expect(within(tablist).getAllByRole('tab').map((t) => t.textContent)).toEqual(['Mapa de cupos', 'Asignaciones · 3']);
+    expect(tablist).toHaveAttribute('aria-orientation', 'vertical');
+    // Nombre (y conteo) accesible aunque solo se vea el icono.
+    expect(within(tablist).getAllByRole('tab').map((t) => t.getAttribute('aria-label'))).toEqual(['Mapa de cupos', 'Asignaciones · 3']);
     expect(within(tablist).getByRole('tab', { name: 'Mapa de cupos' })).toHaveAttribute('aria-selected', 'true');
+    expect(within(tablist).getByRole('tab', { name: 'Mapa de cupos' }).querySelector('svg')).not.toBeNull();
     expect(within(container).queryByRole('tablist')).toBeNull();
     expect(within(container).getByRole('button', { name: '+ Zona' })).toBeInTheDocument();
 
@@ -66,32 +69,41 @@ describe('DsSectionHeader — pestañas en la barra superior', () => {
     expect(onChange).toHaveBeenCalledWith('assignments');
   });
 
-  it('en teléfono las pestañas se quedan en la página aunque exista la barra', () => {
+  it('una pestaña sin icono propio (bloque, tipo de residente) muestra sus iniciales', () => {
+    mockMatchMedia(true);
+    act(() => setSubmenuSlot(slot));
+    render(<DsSectionHeader tabs={[{ id: 'bloque:Torre A', label: 'Torre A', count: 18 }]} active="bloque:Torre A" />);
+    const tab = within(slot).getByRole('tab', { name: 'Torre A · 18' });
+    expect(tab.querySelector('svg')).toBeNull();
+    expect(tab).toHaveTextContent('TA');
+  });
+
+  it('en teléfono las pestañas se quedan en la página aunque exista el riel', () => {
     mockMatchMedia(false);
-    act(() => setTopBarSlot(slot));
+    act(() => setSubmenuSlot(slot));
     const { container } = render(<Header />);
     expect(within(container).getByRole('tablist', { name: 'Parqueaderos' })).toBeInTheDocument();
     expect(slot).toBeEmptyDOMElement();
   });
 
-  it('sin barra flotante (otros layouts) las pestañas se quedan en la página', () => {
+  it('sin riel (otros layouts) las pestañas se quedan en la página', () => {
     mockMatchMedia(true);
     const { container } = render(<Header />);
     expect(within(container).getByRole('tablist', { name: 'Parqueaderos' })).toBeInTheDocument();
   });
 
-  it('si la barra aparece después, las pestañas se mueven a ella', () => {
+  it('si el riel aparece después, las pestañas se mueven a él', () => {
     mockMatchMedia(true);
     const { container } = render(<Header />);
     expect(within(container).getByRole('tablist')).toBeInTheDocument();
-    act(() => setTopBarSlot(slot));
+    act(() => setSubmenuSlot(slot));
     expect(within(slot).getByRole('tablist')).toBeInTheDocument();
     expect(within(container).queryByRole('tablist')).toBeNull();
   });
 
-  it('un encabezado solo con título no sube a la barra', () => {
+  it('un encabezado solo con título no pasa al riel', () => {
     mockMatchMedia(true);
-    act(() => setTopBarSlot(slot));
+    act(() => setSubmenuSlot(slot));
     render(<DsSectionHeader title="Asistencia" />);
     expect(screen.getByText('Asistencia')).toBeInTheDocument();
     expect(slot).toBeEmptyDOMElement();
