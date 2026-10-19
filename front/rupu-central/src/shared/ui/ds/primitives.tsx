@@ -18,17 +18,17 @@ export const vtDialogFooter = 'flex flex-wrap justify-end gap-2 pt-4 max-md:flex
 
 export const vtBtn = {
   primary:
-    'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-4 rounded-[7px] text-[13px] font-semibold text-white bg-[#1a1a1a] transition-colors hover:bg-[#c8603f] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a1a]',
+    'inline-flex items-center justify-center gap-1.5 h-10 max-md:h-11 max-md:text-sm px-5 rounded-full text-[13px] font-semibold text-white bg-[#1a1a1a] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] transition-colors duration-200 hover:bg-[var(--color-primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a1a]',
   secondary:
-    'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-3.5 rounded-[7px] text-[13px] font-medium bg-white text-[#1a1a1a] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-10 max-md:h-11 max-md:text-sm px-4 rounded-full text-[13px] font-medium bg-white text-[#1a1a1a] border border-[#e4e2dd] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] transition-colors duration-200 hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
   ghost:
-    'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-3.5 rounded-[7px] text-[13px] font-medium bg-white text-[#4b4a46] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-10 max-md:h-11 max-md:text-sm px-4 rounded-full text-[13px] font-medium bg-white text-[#4b4a46] border border-[#e4e2dd] transition-colors duration-200 hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
   accent:
-    'inline-flex items-center justify-center gap-1.5 h-8 max-md:h-11 px-3 rounded-md text-[13px] font-semibold bg-white text-[#c8603f] border border-[#c8603f] transition-colors hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 px-4 rounded-full text-[13px] font-semibold bg-white text-[#c8603f] border border-[#c8603f] transition-colors hover:bg-[#fbe9e4] disabled:opacity-50 disabled:cursor-not-allowed',
   icon:
-    'inline-flex items-center justify-center h-8 w-8 max-md:h-11 max-md:w-11 rounded-md bg-white text-[#4b4a46] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center h-8 w-8 max-md:h-11 max-md:w-11 rounded-full bg-white text-[#4b4a46] border border-[#e4e2dd] transition-colors duration-200 hover:bg-[#f5f5f4] hover:text-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed',
   small:
-    'inline-flex items-center justify-center gap-1.5 h-[30px] max-md:h-11 max-md:text-[13px] px-3 rounded-md text-xs font-medium bg-white text-[#1a1a1a] border border-[#d6d3cd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-1.5 h-[30px] max-md:h-11 max-md:text-[13px] px-3.5 rounded-full text-xs font-medium bg-white text-[#1a1a1a] border border-[#e4e2dd] transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed',
 } as const;
 
 export const vtInput =

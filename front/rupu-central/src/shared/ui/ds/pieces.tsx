@@ -19,7 +19,7 @@ import { VtDialog, VtIcon, VtNotice, vtBtn } from './primitives';
 
 /** Select compacto (30 px) para la barra de filtros. */
 export const dsSelect =
-  'h-[30px] max-md:h-11 rounded-md border border-[#d6d3cd] bg-white px-2 text-xs max-md:text-base text-[#1a1a1a] outline-none focus:border-[#1a1a1a]';
+  'h-9 max-md:h-11 rounded-full border border-[#e4e2dd] bg-white shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] pl-3.5 pr-2 text-xs max-md:text-base text-[#1a1a1a] outline-none transition-colors focus:border-[#1a1a1a]';
 
 // ===================== Panel lateral =====================
 
@@ -258,7 +258,7 @@ export function DsGroupedTable<T>({
   const align = (a?: 'left' | 'right' | 'center') => (a === 'right' ? 'text-right justify-end' : a === 'center' ? 'text-center justify-center' : '');
   const hasRows = groups.some((g) => g.rows.length > 0);
   return (
-    <div className="bg-white border border-[#e4e2dd] rounded-[10px] overflow-hidden flex flex-col">
+    <div className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
         <div role="table" aria-label={ariaLabel} style={{ minWidth }}>
           <div role="row" className={`${dsMono} grid gap-3.5 px-[18px] py-[9px] border-b border-[#efedea] text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`} style={{ gridTemplateColumns: template }}>

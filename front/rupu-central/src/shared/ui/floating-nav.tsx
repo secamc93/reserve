@@ -37,6 +37,8 @@ export interface FloatingNavProps {
 }
 
 const ISLAND = 'bg-white border border-[#e4e2dd] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)]';
+/** Curva suave (sale rápido y frena al final); sin animación si el sistema pide menos movimiento. */
+const EASE = 'ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none';
 const TOOLTIP =
   'pointer-events-none absolute left-1/2 top-[calc(100%+10px)] -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100';
 
@@ -51,12 +53,14 @@ function Icon({ d, className = 'w-4 h-4' }: { d: string; className?: string }) {
 export function FloatingNav({ items, property, fallbackName, user, onLogout, onOpenProfile }: FloatingNavProps) {
   const pathname = usePathname() ?? '';
   const [open, setOpen] = useState(false);
+  // Abierto y terminado de desplegar: ya no recorta (los nombres se ven debajo de los iconos).
+  const [settled, setSettled] = useState(false);
   const launcherRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const modulesId = useId();
 
-  // Con el cursor: abre al entrar y cierra al salir, con una pausa corta para que no parpadee al
-  // cruzar el borde entre el logo y los iconos.
+  // Con el cursor: abre al entrar y cierra al salir, con una pausa corta para que no se cierre al
+  // rozar el borde sin querer.
   const cancelClose = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = null;
@@ -67,7 +71,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
   };
   const closeOnLeave = () => {
     cancelClose();
-    closeTimer.current = setTimeout(() => setOpen(false), 150);
+    closeTimer.current = setTimeout(() => setOpen(false), 250);
   };
   useEffect(() => cancelClose, []);
 
@@ -75,6 +79,10 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
   const isActive = (item: NavItem) => isNavItemActive(item.href, pathname, allHrefs);
   const current = items.find(isActive);
   const propertyName = property?.name || fallbackName || 'Rupü';
+
+  useEffect(() => {
+    if (!open) setSettled(false);
+  }, [open]);
 
   // Se cierra al navegar (elegir un módulo), con Escape y al hacer clic fuera.
   useEffect(() => setOpen(false), [pathname]);
@@ -100,7 +108,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
           ref={launcherRef}
           onMouseEnter={openOnHover}
           onMouseLeave={closeOnLeave}
-          className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center gap-1 min-w-0 flex-shrink-0`}
+          className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center min-w-0 flex-shrink-0`}
         >
           <button
             type="button"
@@ -110,48 +118,76 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
             aria-controls={modulesId}
             aria-label={`Módulos de ${propertyName}`}
             title={propertyName}
-            className="flex items-center gap-2.5 rounded-full pr-2 hover:bg-[#f5f5f4] transition-colors text-left min-w-0"
+            className="flex items-center rounded-full pr-2 hover:bg-[#f5f5f4] transition-colors text-left min-w-0"
           >
             <PropertyLogo name={propertyName} logoUrl={property?.logoUrl} size={40} />
-            {!open && current && (
-              <span
-                data-testid="current-module"
-                className="w-9 h-9 rounded-full inline-flex items-center justify-center text-white shadow-sm flex-shrink-0"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-              >
-                <Icon d={current.iconPath} className="w-[18px] h-[18px]" />
-              </span>
-            )}
-            {!open && (
+            {/* Módulo actual y nombre: se recogen al abrir. */}
+            <span
+              className={`flex items-center gap-2.5 overflow-hidden ${EASE} transition-[max-width,opacity,margin] duration-500 ${
+                open ? 'max-w-0 opacity-0 ml-0' : 'max-w-[300px] opacity-100 ml-2.5'
+              }`}
+            >
+              {current && (
+                <span
+                  data-testid="current-module"
+                  className="w-9 h-9 rounded-full inline-flex items-center justify-center text-white shadow-sm flex-shrink-0"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                >
+                  <Icon d={current.iconPath} className="w-[18px] h-[18px]" />
+                </span>
+              )}
               <span className="hidden xl:block min-w-0 max-w-[180px]">
                 <span className="block text-[13px] font-semibold text-[#1a1a1a] truncate leading-tight">{propertyName}</span>
                 <span className="block text-[11px] text-[#8a8580] truncate leading-tight">
                   {current ? current.label : property ? 'Propiedad horizontal' : 'Elige una propiedad'}
                 </span>
               </span>
-            )}
-            <Icon d={open ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} className="w-3.5 h-3.5 text-[#8a8580]" />
+            </span>
+            <Icon
+              d="M9 5l7 7-7 7"
+              className={`w-3.5 h-3.5 ml-2 text-[#8a8580] ${EASE} transition-transform duration-500 ${open ? 'rotate-180' : ''}`}
+            />
           </button>
 
-          {open && items.length > 0 && (
-            <nav id={modulesId} aria-label="Módulos" className="flex items-center gap-1 pl-1 border-l border-[#e4e2dd]">
-              {items.map((item) => {
+          {items.length > 0 && (
+            <nav
+              id={modulesId}
+              aria-label="Módulos"
+              aria-hidden={!open}
+              inert={!open}
+              onTransitionEnd={(e) => {
+                if (open && e.target === e.currentTarget && e.propertyName === 'max-width') setSettled(true);
+              }}
+              // Mientras se despliega recorta; ya abierto deja ver los nombres (tooltips) debajo.
+              className={`flex items-center gap-1 ${EASE} transition-[max-width,opacity,padding,border-color] duration-500 border-l ${
+                open ? 'opacity-100 pl-1 border-[#e4e2dd]' : 'opacity-0 pl-0 border-transparent'
+              } ${open && settled ? 'overflow-visible' : 'overflow-hidden'}`}
+              // Ancho exacto (iconos de 40 px + 4 px de separación + borde): se abre a ritmo parejo.
+              style={{ maxWidth: open ? items.length * 44 + 1 : 0 }}
+            >
+              {items.map((item, index) => {
                 const active = isActive(item);
                 return (
-                  <Link
+                  <span
                     key={item.id}
-                    href={item.href}
-                    aria-label={item.label}
-                    aria-current={active ? 'page' : undefined}
-                    onClick={() => setOpen(false)}
-                    className={`group relative w-10 h-10 rounded-full inline-flex items-center justify-center transition-colors ${
-                      active ? 'text-white shadow-sm' : 'text-[#6b6a66] hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
-                    }`}
-                    style={active ? { backgroundColor: 'var(--color-primary)' } : undefined}
+                    // Los iconos entran uno tras otro, deslizándose desde el logo.
+                    className={`${EASE} transition-[opacity,transform] duration-500 ${open ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3'}`}
+                    style={{ transitionDelay: open ? `${120 + index * 45}ms` : '0ms' }}
                   >
-                    <Icon d={item.iconPath} className="w-5 h-5" />
-                    <span aria-hidden="true" className={TOOLTIP}>{item.label}</span>
-                  </Link>
+                    <Link
+                      href={item.href}
+                      aria-label={item.label}
+                      aria-current={active ? 'page' : undefined}
+                      onClick={() => setOpen(false)}
+                      className={`group relative w-10 h-10 rounded-full inline-flex items-center justify-center transition-colors duration-200 ${
+                        active ? 'text-white shadow-sm' : 'text-[#6b6a66] hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
+                      }`}
+                      style={active ? { backgroundColor: 'var(--color-primary)' } : undefined}
+                    >
+                      <Icon d={item.iconPath} className="w-5 h-5" />
+                      <span aria-hidden="true" className={TOOLTIP}>{item.label}</span>
+                    </Link>
+                  </span>
                 );
               })}
             </nav>
@@ -162,7 +198,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
         {/* Por debajo de xl no caben junto a los módulos abiertos: se ocultan mientras tanto. */}
         <div
           ref={setActionsSlot}
-          className={`flex-1 min-w-0 flex items-center justify-end whitespace-nowrap transition-opacity ${open ? 'max-xl:invisible max-xl:opacity-0' : ''}`}
+          className={`flex-1 min-w-0 flex items-center justify-end whitespace-nowrap transition-opacity duration-300 ${open ? 'max-xl:invisible max-xl:opacity-0' : ''}`}
         />
 
         {/* Usuario */}

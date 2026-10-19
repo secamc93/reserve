@@ -206,7 +206,7 @@ export function DsSearch({
   className?: string;
 }) {
   return (
-    <label className={`flex items-center gap-2 h-[30px] max-md:h-11 px-2.5 border border-[#d6d3cd] rounded-md bg-white text-[#8a8580] text-xs w-full md:w-60 focus-within:border-[#1a1a1a] ${className}`}>
+    <label className={`flex items-center gap-2 h-9 max-md:h-11 px-3.5 border border-[#e4e2dd] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] text-[#8a8580] text-xs w-full md:w-64 transition-colors focus-within:border-[#1a1a1a] ${className}`}>
       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
@@ -273,10 +273,10 @@ export function DsTable<T>({
   const template = columns.map((c) => c.width).join(' ');
   const align = (a?: 'left' | 'right' | 'center') => (a === 'right' ? 'text-right justify-end' : a === 'center' ? 'text-center justify-center' : '');
   return (
-    <div className="bg-white border border-[#e4e2dd] rounded-[10px] overflow-hidden flex flex-col">
+    <div className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
         <div role="table" aria-label={ariaLabel} style={{ minWidth }}>
-          <div role="row" className={`${dsMono} grid gap-3.5 px-[18px] py-[9px] border-b border-[#efedea] text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`} style={{ gridTemplateColumns: template }}>
+          <div role="row" className={`${dsMono} grid gap-3.5 px-[22px] py-3 border-b border-[#efedea] text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`} style={{ gridTemplateColumns: template }}>
             {columns.map((c) => (
               <span key={c.key} role="columnheader" className={`flex ${align(c.align)}`}>{c.label}</span>
             ))}
@@ -294,7 +294,7 @@ export function DsTable<T>({
                   key={key}
                   role="row"
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={`grid gap-3.5 px-[18px] py-2.5 items-center border-b border-[#efedea] last:border-b-0 text-[13px] ${
+                  className={`grid gap-3.5 px-[22px] py-3 items-center border-b border-[#efedea] last:border-b-0 text-[13px] transition-colors ${
                     onRowClick ? 'cursor-pointer hover:bg-[#faf9f7]' : ''
                   } ${selected ? 'bg-[#f5f5f4]' : ''}`}
                   style={{ gridTemplateColumns: template }}
@@ -308,7 +308,7 @@ export function DsTable<T>({
           )}
         </div>
       </div>
-      {footer && <div className="border-t border-[#efedea] px-[18px] py-2">{footer}</div>}
+      {footer && <div className="border-t border-[#efedea] px-[22px] py-2">{footer}</div>}
     </div>
   );
 }
@@ -349,7 +349,7 @@ export function DsTag({ children, strong = false }: { children: ReactNode; stron
 /** Tarjeta blanca del sistema. */
 export function DsCard({ children, className = '', style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
   return (
-    <div className={`bg-white border border-[#e4e2dd] rounded-[10px] ${className}`} style={style}>
+    <div className={`bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] ${className}`} style={style}>
       {children}
     </div>
   );

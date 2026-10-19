@@ -45,13 +45,13 @@ export interface PaginationControlsProps {
 }
 
 const btnBase =
-  'inline-flex h-8 min-w-8 items-center justify-center rounded-[6px] border px-2 text-sm transition-colors ' +
+  'inline-flex h-9 min-w-9 items-center justify-center rounded-full border px-2.5 text-sm transition-colors duration-200 ' +
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] focus-visible:ring-offset-1 ' +
   'disabled:cursor-not-allowed disabled:opacity-40';
-const btnIdle = 'border-[#d6d3cd] bg-white text-[#1a1a1a] hover:bg-[#f5f5f4] hover:border-[#8a8580]';
+const btnIdle = 'border-[#e4e2dd] bg-white text-[#1a1a1a] hover:bg-[#f5f5f4] hover:border-[#c9c6c0]';
 /** Primera/Última página: en teléfono (< md) se ocultan para que la barra quepa (quedan anterior/siguiente). */
 const btnEdge = btnBase.replace('inline-flex', 'hidden md:inline-flex');
-const btnCurrent = 'border-[#1a1a1a] bg-[#1a1a1a] text-white';
+const btnCurrent = 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white font-semibold shadow-sm';
 
 function Chevron({ dir, double = false }: { dir: 'left' | 'right'; double?: boolean }) {
   const d = dir === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6';
@@ -109,7 +109,7 @@ export function PaginationControls({
   return (
     <nav
       aria-label="Paginación"
-      className={`flex flex-wrap items-center justify-between gap-3 border-t border-[#e4e2dd] bg-[#f5f5f4] px-3 md:px-4 py-3 text-sm text-[#1a1a1a] ${className}`}
+      className={`flex flex-wrap items-center justify-between gap-3 border-t border-[#efedea] bg-white px-3 md:px-4 py-3 text-sm text-[#1a1a1a] ${className}`}
     >
       <div className="flex flex-wrap items-center gap-3">
         {onPageSizeChange && (
@@ -122,7 +122,7 @@ export function PaginationControls({
               value={size}
               disabled={disabled}
               onChange={(e) => onPageSizeChange(normalizePageSize(e.target.value))}
-              className="h-8 rounded-[6px] border border-[#d6d3cd] bg-white px-2 [font-family:var(--font-geist-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)] text-sm tabular-nums text-[#1a1a1a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] disabled:opacity-40"
+              className="h-9 rounded-full border border-[#e4e2dd] bg-white pl-3 pr-2 [font-family:var(--font-geist-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)] text-sm tabular-nums text-[#1a1a1a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] disabled:opacity-40"
             >
               {options.map((opt) => (
                 <option key={opt} value={opt}>
@@ -194,7 +194,7 @@ export function PaginationControls({
               }}
               aria-label="Ir a la página"
               aria-invalid={goError || undefined}
-              className={`h-8 w-16 rounded-[6px] border bg-white px-2 [font-family:var(--font-geist-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)] text-sm tabular-nums text-[#1a1a1a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] ${goError ? 'border-red-500' : 'border-[#d6d3cd]'}`}
+              className={`h-9 w-16 rounded-full border bg-white px-3 [font-family:var(--font-geist-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)] text-sm tabular-nums text-[#1a1a1a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] ${goError ? 'border-red-500' : 'border-[#e4e2dd]'}`}
             />
             <button type="submit" disabled={disabled} className={`${btnBase} ${btnIdle}`}>
               Ir

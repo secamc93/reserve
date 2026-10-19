@@ -71,7 +71,7 @@ describe('FloatingNav — desplegable de módulos', () => {
       expect(launcher()).toHaveAttribute('aria-expanded', 'true');
       expect(modules()).not.toBeNull();
       await user.unhover(launcher());
-      act(() => { vi.advanceTimersByTime(200); });
+      act(() => { vi.advanceTimersByTime(300); });
       expect(modules()).toBeNull();
     } finally {
       vi.useRealTimers();
@@ -84,7 +84,7 @@ describe('FloatingNav — desplegable de módulos', () => {
       const { user } = setup();
       await user.hover(launcher());
       await user.hover(within(modules()!).getByRole('link', { name: 'Residentes' }));
-      act(() => { vi.advanceTimersByTime(200); });
+      act(() => { vi.advanceTimersByTime(300); });
       expect(modules()).not.toBeNull();
     } finally {
       vi.useRealTimers();
