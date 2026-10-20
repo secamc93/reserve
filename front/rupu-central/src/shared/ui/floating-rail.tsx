@@ -3,7 +3,7 @@
  *
  * Isla blanca delgada fija a la izquierda, alineada con el logo de la barra superior, con los
  * submenús del módulo actual como iconos: los pone `DsSectionHeader` con un portal en el hueco que
- * registra `setSubmenuSlot`. Si el módulo no tiene submenús, la isla no se ve. Aparte, "Cambiar
+ * registra `setSubmenuSlot`, debajo de la marca Rupü (fija, no clickeable). Aparte, "Cambiar
  * propiedad" si el usuario tiene dos o más. El contenido deja libre el riel con `md:pl-[84px]`.
  */
 
@@ -20,11 +20,24 @@ const ISLAND = 'bg-white border border-[#e4e2dd] shadow-[0_1px_2px_rgba(0,0,0,.0
 export function FloatingRail({ onChangeProperty }: FloatingRailProps) {
   return (
     <aside className="hidden md:flex fixed left-4 lg:left-6 top-[84px] bottom-4 z-20 flex-col gap-3 pointer-events-none">
-      {/* Submenús del módulo actual: vacía (oculta) hasta que el módulo los ponga. */}
-      <div
-        ref={setSubmenuSlot}
-        className={`${ISLAND} pointer-events-auto rounded-full p-1.5 empty:hidden`}
-      />
+      <div className={`${ISLAND} pointer-events-auto rounded-full p-1.5 flex flex-col items-center`}>
+        {/* Marca Rupü: siempre primera, estática (no navega); solo un gesto al pasar el cursor. */}
+        <span className="group w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/logo_rupu.png"
+            alt="Rupü"
+            draggable={false}
+            // El PNG trae mucho margen: se amplía para que la marca llene el círculo.
+            className="w-10 h-10 scale-[1.65] select-none transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none group-hover:scale-[1.8] group-hover:-rotate-12"
+          />
+        </span>
+        {/* Submenús del módulo actual: vacío (oculto) hasta que el módulo los ponga. */}
+        <div
+          ref={setSubmenuSlot}
+          className="mt-1.5 pt-1.5 border-t border-[#efedea] empty:hidden"
+        />
+      </div>
 
       {onChangeProperty && (
         <div className={`${ISLAND} pointer-events-auto rounded-full p-1.5 flex flex-col items-center`}>

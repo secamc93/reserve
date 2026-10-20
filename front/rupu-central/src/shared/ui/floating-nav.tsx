@@ -105,18 +105,6 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
   return (
     <header className="hidden md:block sticky top-0 z-30 px-4 lg:px-6 pt-3 pb-2 bg-[#f5f5f4]/85 backdrop-blur-md">
       <div className="flex items-center gap-3">
-        {/* Marca Rupü: siempre primera, estática (no navega); solo un gesto al pasar el cursor. */}
-        <div className={`${ISLAND} group rounded-full w-[52px] h-[52px] flex items-center justify-center overflow-hidden flex-shrink-0`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/logo_rupu.png"
-            alt="Rupü"
-            draggable={false}
-            // El PNG trae mucho margen: se amplía para que la marca llene el círculo.
-            className={`w-[52px] h-[52px] scale-[1.65] select-none ${EASE} transition-transform duration-500 group-hover:scale-[1.8] group-hover:-rotate-12`}
-          />
-        </div>
-
         {/* Propiedad + desplegable de módulos */}
         <div
           ref={launcherRef}

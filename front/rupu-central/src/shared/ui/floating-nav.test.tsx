@@ -121,16 +121,6 @@ describe('FloatingNav — desplegable de módulos', () => {
   });
 });
 
-describe('FloatingNav — marca Rupü', () => {
-  it('va primero en la barra y no es clickeable', () => {
-    const { container } = setup();
-    const logo = screen.getByRole('img', { name: 'Rupü' });
-    const firstIsland = container.querySelector('header > div > div');
-    expect(firstIsland?.contains(logo)).toBe(true);
-    expect(logo.closest('a, button')).toBeNull();
-  });
-});
-
 describe('FloatingNav — botones del módulo', () => {
   it('registra el hueco de botones a la izquierda del usuario y lo libera al desmontarse', () => {
     let slot: HTMLElement | null = null;

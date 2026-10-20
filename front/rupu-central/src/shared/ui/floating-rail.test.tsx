@@ -20,6 +20,19 @@ describe('FloatingRail', () => {
     expect(slot).toBeNull();
   });
 
+  it('muestra la marca Rupü primero, antes de los submenús, y no es clickeable', () => {
+    let slot: HTMLElement | null = null;
+    function Probe() {
+      slot = useNavSlot('submenu');
+      return null;
+    }
+    render(<Probe />);
+    render(<FloatingRail />);
+    const logo = screen.getByRole('img', { name: 'Rupü' });
+    expect(logo.closest('a, button')).toBeNull();
+    expect(logo.compareDocumentPosition(slot!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('"Cambiar propiedad" solo aparece si viene la acción', async () => {
     const onChangeProperty = vi.fn();
     const { unmount } = render(<FloatingRail onChangeProperty={onChangeProperty} />);
