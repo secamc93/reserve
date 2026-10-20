@@ -89,7 +89,7 @@ export function TodayView({ summary, propertyName, basePath }: { summary: TodayS
                   <div className="text-[11px] text-[#8a8580]">{unitLabel(r.unitBlock, r.unitNumber)}</div>
                 </div>
                 <span
-                  className="px-[7px] py-0.5 rounded text-[10px] font-semibold"
+                  className="px-[7px] py-0.5 rounded-full text-[10px] font-semibold"
                   style={r.approved ? { background: '#e3f1e8', color: '#1f8a4c' } : { background: '#fbe9e4', color: '#c8603f' }}
                 >
                   {r.approved ? 'Aprobada' : 'Pendiente'}

@@ -546,7 +546,7 @@ export function BulkVoteModal({
                       </span>
                     </div>
                     {!hasAttendance && (
-                      <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+                      <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
                         Sin asistencia
                       </span>
                     )}

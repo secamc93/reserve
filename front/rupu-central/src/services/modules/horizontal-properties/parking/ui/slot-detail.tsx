@@ -49,7 +49,7 @@ export function SlotDetail({ slot, state, assignment, reservations, today, onAss
       <div className="px-5 pt-[18px] pb-3.5 border-b border-[#e4e2dd]">
         <div className="flex justify-between items-center">
           <DsEyebrow>Cupo · {slot.parkingZoneName}</DsEyebrow>
-          <DsStatus label={style.label} color={state === 'free' ? '#8a8580' : state === 'visitor' ? '#c8603f' : '#1a1a1a'} />
+          <DsStatus label={style.label} color={state === 'free' ? '#8a8580' : state === 'visitor' ? '#c8603f' : state === 'occupied' ? '#0F7F8A' : '#8a8580'} />
         </div>
         <div className={`${dsMono} text-[30px] font-semibold tracking-[-.03em] mt-1.5`}>{slot.slotNumber}</div>
         <div className="flex gap-1.5 mt-2 flex-wrap">

@@ -185,7 +185,7 @@ export function ReservationFormModal({ open, businessId, zones, defaultZoneId, d
                     <li key={u.id} role="option" aria-selected={false}>
                       <button
                         type="button"
-                        className="w-full text-left px-2 py-1.5 rounded text-[13px] hover:bg-[#f5f5f4]"
+                        className="w-full text-left px-2 py-1.5 rounded-xl text-[13px] hover:bg-[#f5f5f4]"
                         onClick={() => {
                           setUnit(u);
                           set('propertyUnitId', u.id);

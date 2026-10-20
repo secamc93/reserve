@@ -130,7 +130,7 @@ export function SlotMap({ data, today, onAssign, onEditAssignment, onRelease, on
                         aria-label={`Cupo ${slot.slotNumber}, ${st.label}`}
                         aria-pressed={on}
                         onClick={() => setSelectedId(slot.id)}
-                        className={`${dsMono} h-[34px] rounded flex items-center justify-center text-[10px] font-medium transition-transform hover:scale-105`}
+                        className={`${dsMono} h-[34px] rounded-lg flex items-center justify-center text-[10px] font-medium transition-transform hover:scale-105`}
                         style={{
                           background: st.bg,
                           border: `1px solid ${st.border}`,

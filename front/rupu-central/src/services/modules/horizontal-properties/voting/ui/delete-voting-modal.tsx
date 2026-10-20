@@ -130,13 +130,13 @@ export function DeleteVotingModal({
               </span>
             </div>
             <div className="flex items-center gap-4 mt-2">
-              <span className={`text-xs px-2 py-1 rounded ${voting.isSecret
+              <span className={`text-xs px-2 py-1 rounded-full ${voting.isSecret
                 ? 'bg-yellow-100 text-yellow-800'
                 : 'bg-gray-100 text-gray-800'
                 }`}>
                 {voting.isSecret ? '🔒 Secreta' : '👁️ Pública'}
               </span>
-              <span className={`text-xs px-2 py-1 rounded ${voting.allowAbstention
+              <span className={`text-xs px-2 py-1 rounded-full ${voting.allowAbstention
                 ? 'bg-blue-100 text-blue-800'
                 : 'bg-gray-100 text-gray-800'
                 }`}>

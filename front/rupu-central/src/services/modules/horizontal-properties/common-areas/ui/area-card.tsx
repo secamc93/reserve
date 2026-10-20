@@ -64,7 +64,7 @@ export function AreaCard({ area, today, days, cells, summary, onOpen, onEdit, on
 
           <ul aria-label={`Reglas de ${area.name}`} className="flex flex-wrap gap-1 list-none m-0 p-0">
             {ruleTags(area).map((tag) => (
-              <li key={tag} className={`${dsMono} px-1.5 py-[2px] border border-[#d6d3cd] rounded text-[10px] text-[#4b4a46]`}>
+              <li key={tag} className={`${dsMono} px-1.5 py-[2px] border border-[#d6d3cd] rounded-full text-[10px] text-[#4b4a46]`}>
                 {tag}
               </li>
             ))}
@@ -77,7 +77,7 @@ export function AreaCard({ area, today, days, cells, summary, onOpen, onEdit, on
             </div>
             <div className="flex gap-[3px]" role="img" aria-label={`Semana: ${days.map((d, i) => `${DAY_SHORT[parseISODate(d).getDay()]} ${DAY_CELL_LABEL[cells[i]]}`).join(', ')}`}>
               {cells.map((cell, i) => (
-                <span key={days[i]} className="w-1.5 h-1.5 rounded-[1px]" style={{ background: DAY_CELL_COLOR[cell] }} />
+                <span key={days[i]} className="w-1.5 h-1.5 rounded-full" style={{ background: DAY_CELL_COLOR[cell] }} />
               ))}
             </div>
           </div>

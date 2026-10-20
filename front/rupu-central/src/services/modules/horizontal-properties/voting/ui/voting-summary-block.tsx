@@ -97,7 +97,7 @@ export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps)
             <span className="text-lg" style={{ color: VT.muted }}>%</span>
           </div>
           <div
-            className="inline-flex items-center gap-1.5 mt-2 px-2 py-[3px] rounded text-[11px] font-semibold"
+            className="inline-flex items-center gap-1.5 mt-2 px-2 py-[3px] rounded-full text-[11px] font-semibold"
             style={{ background: status.bg, color: status.fg }}
           >
             {status.label}

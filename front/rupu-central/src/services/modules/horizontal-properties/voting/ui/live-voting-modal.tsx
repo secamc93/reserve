@@ -941,7 +941,7 @@ export function LiveVotingModal({
                   </span>
                 )
               ) : (
-                <span className={`${vtMono} text-[11px] font-medium tracking-[.06em] px-1.5 py-0.5 rounded`} style={{ color: VT.muted, border: `1px solid ${VT.borderStrong}` }}>
+                <span className={`${vtMono} text-[11px] font-medium tracking-[.06em] px-1.5 py-0.5 rounded-full`} style={{ color: VT.muted, border: `1px solid ${VT.borderStrong}` }}>
                   CERRADA
                 </span>
               )}

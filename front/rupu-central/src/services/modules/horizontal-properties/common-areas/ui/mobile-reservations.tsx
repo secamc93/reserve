@@ -69,7 +69,7 @@ export function MobileReservations({ pending, pendingTotal, week, today, zonesHr
                 <article aria-label={`Reserva de ${unit} en ${r.commonAreaName}`} className="bg-white border border-[#e4e2dd] rounded-xl p-4 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <span
-                      className={`${dsMono} px-2 py-[3px] rounded text-[10px] font-semibold tracking-[.06em] uppercase`}
+                      className={`${dsMono} px-2 py-[3px] rounded-full text-[10px] font-semibold tracking-[.06em] uppercase`}
                       style={isPending ? { background: '#fbe9e4', color: DS.accent } : { background: meta.bg, color: meta.fg }}
                     >
                       {isPending ? 'Pendiente' : meta.label}

@@ -69,7 +69,7 @@ function PayLine({ label, amount, paid, onToggle, busy, toggleLabel }: { label: 
           onClick={onToggle}
           disabled={busy}
           aria-label={toggleLabel}
-          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${paid ? 'border-[#1f8a4c] text-[#1f8a4c] bg-[#e3f1e8]' : 'border-[#d6d3cd] text-[#8a8580] bg-white hover:border-[#1a1a1a]'}`}
+          className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${paid ? 'border-[#1f8a4c] text-[#1f8a4c] bg-[#e3f1e8]' : 'border-[#d6d3cd] text-[#8a8580] bg-white hover:border-[#1a1a1a]'}`}
         >
           {paid ? 'pagado ✓' : 'marcar pagado'}
         </button>
@@ -226,7 +226,7 @@ export function ReservationPanel({ businessId, reservationId, getToken, onClose,
           {r ? (
             <>
               <div className="flex flex-wrap items-center gap-2 mt-3">
-                <span className={`${dsMono} px-2 py-[3px] rounded text-[10px] font-semibold tracking-[.06em] uppercase`} style={{ background: pill.bg, color: pill.fg }}>
+                <span className={`${dsMono} px-2 py-[3px] rounded-full text-[10px] font-semibold tracking-[.06em] uppercase`} style={{ background: pill.bg, color: pill.fg }}>
                   {pill.label}
                 </span>
                 {deposit > 0 && !r.depositPaid && <span className="text-xs text-[#8a8580]">requiere depósito</span>}

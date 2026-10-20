@@ -34,7 +34,7 @@ const Footer = ({ onCancel, submitLabel, busy, disabled }: { onCancel: () => voi
 
 const Check = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <label className="flex items-center gap-2 text-[13px] cursor-pointer">
-    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-4 h-4 accent-[#1a1a1a]" />
+    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-4 h-4 accent-[#0F7F8A]" />
     {label}
   </label>
 );

@@ -135,7 +135,7 @@ export function AttendanceLiveScreen({ groupName, summary, quorum, onRefresh, on
             <div className="h-full rounded-2xl bg-white overflow-hidden" style={{ border: `1px solid ${VT.borderStrong}` }}>
               <div
                 className="h-full transition-[width] duration-700"
-                style={{ width: `${Math.min(summary.presentCoefPct, 100)}%`, background: status.reached ? VT.yes : VT.ink }}
+                style={{ width: `${Math.min(summary.presentCoefPct, 100)}%`, background: status.reached ? VT.yes : VT.brand }}
               />
             </div>
             <div className="absolute w-1" style={{ top: -10, bottom: -10, left: `${quorum}%`, background: VT.accent }} />
