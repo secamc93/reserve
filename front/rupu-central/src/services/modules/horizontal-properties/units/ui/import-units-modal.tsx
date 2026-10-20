@@ -176,7 +176,7 @@ export function ImportUnitsModal({ isOpen, onClose, onSuccess, businessId }: Imp
               hint={coefStatus?.ok ? 'cuadra' : coefStatus?.label}
             />
           </div>
-          <div className="rounded-[10px] border border-[#e4e2dd] overflow-hidden">
+          <div className="rounded-2xl border border-[#e4e2dd] overflow-hidden">
             <div className="max-h-[320px] overflow-auto">
               <table className="w-full min-w-[620px] text-[13px]" aria-label="Filas del archivo">
                 <thead className="sticky top-0 bg-white">
@@ -220,7 +220,7 @@ export function ImportUnitsModal({ isOpen, onClose, onSuccess, businessId }: Imp
           {result.errors.length > 0 && (
             <div className="flex flex-col gap-1.5">
               <DsEyebrow>Filas omitidas · {result.errors.length}</DsEyebrow>
-              <ul className="max-h-40 overflow-y-auto rounded-lg border border-[#f1cfc4] bg-[#fbe9e4] px-3.5 py-2 text-xs text-[#9c3a22] flex flex-col gap-1">
+              <ul className="max-h-40 overflow-y-auto rounded-2xl border border-[#f1cfc4] bg-[#fbe9e4] px-3.5 py-2 text-xs text-[#9c3a22] flex flex-col gap-1">
                 {result.errors.map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}
@@ -235,7 +235,7 @@ export function ImportUnitsModal({ isOpen, onClose, onSuccess, businessId }: Imp
 
 function ReviewCard({ label, value, hint, color }: { label: string; value: React.ReactNode; hint?: React.ReactNode; color?: string }) {
   return (
-    <div className="rounded-lg border border-[#e4e2dd] px-3 py-2.5 min-w-0">
+    <div className="rounded-2xl border border-[#e4e2dd] px-3 py-2.5 min-w-0">
       <DsEyebrow>{label}</DsEyebrow>
       <div className={`${dsMono} text-xl font-semibold mt-0.5`} style={color ? { color } : undefined}>{value}</div>
       {hint && <div className="text-[11px] text-[#8a8580] mt-0.5">{hint}</div>}

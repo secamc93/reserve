@@ -169,8 +169,8 @@ export function UnitFormDialog({ businessId, unit, blocks = [], coefficientSum, 
                   role="radio"
                   aria-checked={on}
                   onClick={() => set('unitType', t.value)}
-                  className={`h-8 max-md:h-11 px-3 rounded-md text-xs font-medium border transition-colors ${
-                    on ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]' : 'bg-white text-[#4b4a46] border-[#d6d3cd] hover:bg-[#f5f5f4]'
+                  className={`h-8 max-md:h-11 px-3.5 rounded-full text-xs font-medium border transition-colors ${
+                    on ? 'bg-[#0F7F8A] text-white border-[#0F7F8A]' : 'bg-white text-[#4b4a46] border-[#e4e2dd] hover:bg-[#f5f5f4]'
                   }`}
                 >
                   {t.label}
@@ -198,7 +198,7 @@ export function UnitFormDialog({ businessId, unit, blocks = [], coefficientSum, 
           </div>
         </div>
 
-        <div className="rounded-lg bg-[#f5f5f4] border border-[#e4e2dd] px-4 py-3.5 flex flex-col gap-2.5">
+        <div className="rounded-2xl bg-[#f5f5f4] border border-[#e4e2dd] px-4 py-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between gap-3">
             <label htmlFor={ids.coefficient} className="text-[13px] font-semibold">Coeficiente de copropiedad</label>
             <div className="flex items-center gap-1.5">

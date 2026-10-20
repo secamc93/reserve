@@ -52,7 +52,7 @@ export function DenseTable<T>({
   const template = columns.map((c) => c.width).join(' ');
   const align = (a?: 'left' | 'right' | 'center') => (a === 'right' ? 'text-right justify-end' : a === 'center' ? 'text-center justify-center' : '');
   return (
-    <div className="bg-white border border-[#e4e2dd] rounded-[10px] overflow-hidden flex flex-col">
+    <div className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
         <div role="table" aria-label={ariaLabel} style={{ minWidth }}>
           <div role="row" className={`${dsMono} grid gap-3.5 px-[18px] py-[9px] border-b border-[#efedea] text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`} style={{ gridTemplateColumns: template }}>

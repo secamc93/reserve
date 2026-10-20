@@ -78,7 +78,7 @@ export function DeleteVotingModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Eliminar Votación" size="md">
       <div className="space-y-6">
         {/* Información de la votación */}
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
           <div className="flex items-center space-x-3">
             <div className="flex-shrink-0">
               <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +97,7 @@ export function DeleteVotingModal({
         </div>
 
         {/* Detalles de la votación a eliminar */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="bg-gray-50 rounded-2xl p-4">
           <h4 className="font-medium text-gray-900 mb-3">Votación a eliminar:</h4>
           <div className="space-y-2 text-sm">
             <div>
@@ -147,7 +147,7 @@ export function DeleteVotingModal({
         </div>
 
         {/* Advertencia */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -182,7 +182,7 @@ export function DeleteVotingModal({
             type="button"
             onClick={handleClose}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-2xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -190,7 +190,7 @@ export function DeleteVotingModal({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 flex items-center space-x-2"
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-2xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 flex items-center space-x-2"
           >
             {loading && <Spinner size="sm" />}
             <span>{loading ? 'Eliminando...' : 'Eliminar Votación'}</span>

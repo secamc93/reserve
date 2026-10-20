@@ -210,7 +210,7 @@ export function CommonAreasScreen({ businessId }: { businessId: number }) {
         )}
 
         {(total > pageSize || page > 1) && (
-          <div className="bg-white border border-[#e4e2dd] rounded-[10px] px-[18px] py-2">
+          <div className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] px-[18px] py-2">
             <Pagination total={total} totalPages={totalPages} disabled={loading} />
           </div>
         )}

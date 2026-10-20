@@ -176,7 +176,7 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
                 }}
                 placeholder={loadingUnits ? 'Cargando unidades…' : 'Ej. 126'}
                 disabled={loadingUnits}
-                className={`${vtMono} w-full h-[52px] rounded-[10px] bg-white px-3.5 pr-11 text-base font-medium outline-none`}
+                className={`${vtMono} w-full h-[52px] rounded-2xl bg-white px-3.5 pr-11 text-base font-medium outline-none`}
                 style={{ border: `1px solid ${term ? VT.ink : VT.borderStrong}` }}
                 role="combobox"
                 aria-expanded={matches.length > 0}
@@ -191,7 +191,7 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
                 id="r1-unit-list"
                 role="listbox"
                 aria-label="Unidades"
-                className="mt-1.5 rounded-[10px] bg-white overflow-hidden"
+                className="mt-1.5 rounded-2xl bg-white overflow-hidden"
                 style={{ border: `1px solid ${VT.border}` }}
               >
                 {matches.map((unit) => {
@@ -232,7 +232,7 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
               value={dni}
               onChange={(e) => setDni(e.target.value.replace(/[.\s]/g, ''))}
               placeholder="Número sin puntos"
-              className="w-full h-[52px] rounded-[10px] bg-white px-3.5 text-base outline-none focus:border-[#1a1a1a]"
+              className="w-full h-[52px] rounded-2xl bg-white px-3.5 text-base outline-none focus:border-[#1a1a1a]"
               style={{ border: `1px solid ${VT.borderStrong}` }}
               aria-required="true"
             />
@@ -252,7 +252,7 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
               onChange={(e) => setPassword(normalizePassword(e.target.value))}
               placeholder="La de tu credencial impresa"
               maxLength={20}
-              className={`${vtMono} w-full h-[52px] rounded-[10px] bg-white px-3.5 text-base tracking-[.2em] outline-none focus:border-[#1a1a1a]`}
+              className={`${vtMono} w-full h-[52px] rounded-2xl bg-white px-3.5 text-base tracking-[.2em] outline-none focus:border-[#1a1a1a]`}
               style={{ border: `1px solid ${VT.borderStrong}` }}
               aria-required="true"
             />
@@ -265,8 +265,8 @@ export function PublicVotingValidation({ publicToken, votingContext, onSuccess, 
           <button
             type="submit"
             disabled={submitting || loadingUnits}
-            className="h-[52px] rounded-[10px] text-white text-base font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
-            style={{ background: VT.ink }}
+            className="h-[52px] rounded-full text-white text-base font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ background: VT.brand }}
           >
             {submitting ? 'Validando…' : 'Continuar'}
           </button>

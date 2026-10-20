@@ -25,6 +25,7 @@ import {
   dsMono,
   vtBtn,
   vtInput,
+  dsSelect,
   vtLabel,
 } from '@/shared/ui/ds';
 import { Pagination, usePaginationParams } from '@shared/ui/pagination';
@@ -308,7 +309,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
             {insideNow} dentro · {expectedToday} esperadas
           </div>
         </div>
-        <div className="flex items-center h-11 rounded-lg border border-[#d6d3cd] bg-white pl-3 pr-1 gap-2 text-[#8a8580] focus-within:border-[#1a1a1a]">
+        <div className="flex items-center h-11 rounded-2xl border border-[#d6d3cd] bg-white pl-3 pr-1 gap-2 text-[#8a8580] focus-within:border-[#1a1a1a]">
           <VtIcon name="search" size={16} />
           <input
             type="search"
@@ -318,7 +319,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
             value={searchDraft}
             onChange={(e) => onSearch(e.target.value)}
           />
-          <button type="button" aria-label="Escanear código QR" onClick={() => setCodeOpen(true)} className="w-9 h-9 rounded-md bg-[#1a1a1a] text-white flex items-center justify-center">
+          <button type="button" aria-label="Escanear código QR" onClick={() => setCodeOpen(true)} className="w-9 h-9 shrink-0 rounded-full bg-[#0F7F8A] text-white flex items-center justify-center transition-colors hover:bg-[#0C6B76]">
             <VtIcon name="qr" size={16} />
           </button>
         </div>
@@ -351,7 +352,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
         <div className="hidden md:flex justify-end items-center gap-2">
           <select
             aria-label="Tipo de visita"
-            className={`${vtInput} h-[30px]! text-xs w-[170px]`}
+            className={`${dsSelect} w-[170px]`}
             value={filters.typeId ?? ''}
             onChange={(e) => navigate({ type: e.target.value || undefined })}
           >
@@ -400,7 +401,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
             ))
           )}
           {totalPages > 1 && (
-            <div className="rounded-[10px] overflow-hidden border border-[#e4e2dd]">
+            <div className="rounded-2xl overflow-hidden border border-[#e4e2dd]">
               <Pagination total={total} totalPages={totalPages} />
             </div>
           )}
@@ -409,7 +410,7 @@ export function VisitsTable({ businessId }: VisitsTableProps) {
 
       {/* Teléfono: visita no programada, fija abajo (sobre la barra de navegación) */}
       <div className="md:hidden fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] px-4 z-30">
-        <button type="button" className="w-full h-[52px] rounded-[10px] border-[1.5px] border-[#1a1a1a] bg-white text-[15px] font-semibold" onClick={() => openNew(true)}>
+        <button type="button" className="w-full h-[52px] rounded-2xl border-[1.5px] border-[#1a1a1a] bg-white text-[15px] font-semibold" onClick={() => openNew(true)}>
           + Visita no programada
         </button>
       </div>
@@ -508,7 +509,7 @@ function emptyText(tab: VisitsTab, q: string): string {
 
 function Kpi({ label, value, sub, subColor }: { label: string; value: number; sub: string; subColor?: string }) {
   return (
-    <section aria-label={label} className="bg-white border border-[#e4e2dd] rounded-[10px] px-[18px] py-3.5 flex items-center justify-between gap-3">
+    <section aria-label={label} className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] px-[18px] py-3.5 flex items-center justify-between gap-3">
       <div className="min-w-0">
         <DsEyebrow>{label}</DsEyebrow>
         <div className="text-xs mt-1 truncate" style={{ color: subColor ?? '#8a8580' }}>
@@ -559,7 +560,7 @@ function VisitCard({ v, busy, onOpen, onEnter, onExit }: { v: VisitListDTO; busy
   const s = visitStatusDisplay(v);
   const state = visitStateOf(v);
   return (
-    <article className="bg-white border border-[#e4e2dd] rounded-[10px] px-4 py-3 flex items-center gap-3" style={s.exceeds ? { background: '#fdf4f1' } : undefined}>
+    <article className="bg-white border border-[#e4e2dd] rounded-2xl px-4 py-3 flex items-center gap-3" style={s.exceeds ? { background: '#fdf4f1' } : undefined}>
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left" aria-label={`Ver visita de ${v.visitorName}`}>
         <div className="text-[15px] font-semibold truncate">{v.visitorName}</div>
         <div className="text-[13px] text-[#4b4a46] truncate">

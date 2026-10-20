@@ -206,7 +206,7 @@ export function AreaScheduleModal({ open, businessId, area, getToken, onClose, o
             ) : (
               <ul className="list-none m-0 p-0 mb-3 flex flex-col gap-1.5">
                 {restrictions.map((r) => (
-                  <li key={r.id} className="flex items-center gap-3 rounded-md border border-[#e4e2dd] px-3 py-2">
+                  <li key={r.id} className="flex items-center gap-3 rounded-xl border border-[#e4e2dd] px-3 py-2">
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-semibold">
                         {RESTRICTION_LABEL[r.restrictionType] ?? r.restrictionType}
@@ -225,7 +225,7 @@ export function AreaScheduleModal({ open, businessId, area, getToken, onClose, o
               </ul>
             )}
 
-            <div className="rounded-lg bg-[#f5f5f4] p-3 flex flex-col gap-2.5">
+            <div className="rounded-2xl bg-[#f5f5f4] p-3 flex flex-col gap-2.5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                 <div>
                   <label htmlFor="restriction-type" className={vtLabel}>

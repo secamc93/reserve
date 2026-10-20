@@ -151,7 +151,7 @@ export function AssignmentsTab({ businessId, today, summary, version, onEdit, on
       width: '140px',
       align: 'right',
       render: (u) => (
-        <button type="button" onClick={() => onAssignUnit(u)} className="h-7 px-3 rounded-md border border-[#d6d3cd] bg-white text-xs font-medium hover:bg-[#f5f5f4]">
+        <button type="button" onClick={() => onAssignUnit(u)} className="h-7 px-3 rounded-xl border border-[#d6d3cd] bg-white text-xs font-medium hover:bg-[#f5f5f4]">
           Asignar cupo
         </button>
       ),

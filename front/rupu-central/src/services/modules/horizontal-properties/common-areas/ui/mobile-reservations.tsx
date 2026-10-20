@@ -91,13 +91,13 @@ export function MobileReservations({ pending, pendingTotal, week, today, zonesHr
                   {isPending ? (
                     <div className="flex gap-2 pt-1">
                       {conflicts.length > 0 ? (
-                        <button type="button" className="flex-1 h-11 rounded-[7px] text-sm font-semibold bg-white text-[#c8603f] border border-[#c8603f]" onClick={() => onOpen(r.id)}>
+                        <button type="button" className="flex-1 h-11 rounded-xl text-sm font-semibold bg-white text-[#c8603f] border border-[#c8603f]" onClick={() => onOpen(r.id)}>
                           Ver conflicto
                         </button>
                       ) : (
                         <button
                           type="button"
-                          className="flex-1 h-11 rounded-[7px] text-sm font-semibold bg-[#1a1a1a] text-white disabled:opacity-50"
+                          className="flex-1 h-11 rounded-full text-sm font-semibold bg-[#0F7F8A] text-white disabled:opacity-50"
                           onClick={() => onApprove(r)}
                           disabled={approvingId === r.id}
                           aria-label={`Aprobar reserva de ${unit}`}
@@ -105,7 +105,7 @@ export function MobileReservations({ pending, pendingTotal, week, today, zonesHr
                           {approvingId === r.id ? 'Aprobando…' : 'Aprobar'}
                         </button>
                       )}
-                      <button type="button" className="h-11 px-4 rounded-[7px] text-sm font-semibold bg-white text-[#c8382d] border border-[#c8382d]" onClick={() => onOpen(r.id)} aria-label={`Rechazar reserva de ${unit}`}>
+                      <button type="button" className="h-11 px-4 rounded-xl text-sm font-semibold bg-white text-[#c8382d] border border-[#c8382d]" onClick={() => onOpen(r.id)} aria-label={`Rechazar reserva de ${unit}`}>
                         Rechazar
                       </button>
                     </div>

@@ -27,7 +27,7 @@ const ACTIVITY_ICON: Record<ResidentActivityKind, string> = {
 
 function ActivityIcon({ kind }: { kind: ResidentActivityKind }) {
   return (
-    <span className="w-7 h-7 rounded-md bg-[#f5f5f4] border border-[#e4e2dd] inline-flex items-center justify-center text-[#4b4a46] shrink-0" aria-hidden="true">
+    <span className="w-7 h-7 rounded-xl bg-[#f5f5f4] border border-[#e4e2dd] inline-flex items-center justify-center text-[#4b4a46] shrink-0" aria-hidden="true">
       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
         <path d={ACTIVITY_ICON[kind] ?? ACTIVITY_ICON.visit} />
       </svg>
@@ -37,7 +37,7 @@ function ActivityIcon({ kind }: { kind: ResidentActivityKind }) {
 
 function StatCard({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return (
-    <div className="rounded-lg border border-[#e4e2dd] px-2.5 py-2 min-w-0">
+    <div className="rounded-2xl border border-[#e4e2dd] px-2.5 py-2 min-w-0">
       <DsEyebrow className="text-[9px]!">{label}</DsEyebrow>
       <div className={`${dsMono} text-lg font-semibold mt-0.5`} style={color ? { color } : undefined}>{value}</div>
     </div>
@@ -121,14 +121,14 @@ export function ResidentDetailPanel({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-lg font-semibold tracking-[-.01em]">{r.name}</span>
-            {r.isMainResident && <span className="px-1.5 py-0.5 rounded bg-[#1a1a1a] text-white text-[9px] font-semibold tracking-[.06em]">PRINCIPAL</span>}
+            {r.isMainResident && <span className="px-2 py-0.5 rounded-full bg-[#E3F5F5] text-[#0C6B76] text-[9px] font-bold tracking-[.06em]">PRINCIPAL</span>}
           </div>
           <div className="text-xs text-[#8a8580] mt-0.5">{residentSubtitle(r)}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-lg border border-[#e4e2dd] px-3 py-2 min-w-0">
+        <div className="rounded-2xl border border-[#e4e2dd] px-3 py-2 min-w-0">
           <DsEyebrow>Correo</DsEyebrow>
           {r.email ? (
             <a href={`mailto:${r.email}`} className="block text-[13px] truncate hover:underline mt-0.5">{r.email}</a>
@@ -136,7 +136,7 @@ export function ResidentDetailPanel({
             <span className="block text-[13px] mt-0.5" style={{ color: DS.accent }}>sin correo</span>
           )}
         </div>
-        <div className="rounded-lg border border-[#e4e2dd] px-3 py-2 min-w-0">
+        <div className="rounded-2xl border border-[#e4e2dd] px-3 py-2 min-w-0">
           <DsEyebrow>Teléfono</DsEyebrow>
           {r.phone ? (
             <a href={`tel:${r.phone}`} className={`${dsMono} block text-[13px] truncate hover:underline mt-0.5`}>{r.phone}</a>

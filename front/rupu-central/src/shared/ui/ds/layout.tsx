@@ -129,7 +129,7 @@ export function DsSectionHeader<T extends string>({
                 role="tab"
                 aria-selected={on}
                 onClick={() => onChange?.(tab.id)}
-                className={`h-9 px-3.5 rounded-[7px] text-[13px] inline-flex items-center whitespace-nowrap transition-colors ${
+                className={`h-9 px-3.5 rounded-full text-[13px] inline-flex items-center whitespace-nowrap transition-colors ${
                   on ? 'bg-white text-[#1a1a1a] font-semibold shadow-[0_1px_2px_rgba(0,0,0,.08),0_2px_6px_rgba(0,0,0,.06)]' : 'text-[#6b6a66] font-medium hover:text-[#1a1a1a]'
                 }`}
               >
@@ -156,7 +156,7 @@ export interface DsChip<T extends string = string> {
   count?: string | number | null;
 }
 
-/** Chips de filtro: el activo en tinta, los demás en texto suave. */
+/** Chips de filtro en píldora: el activo en turquesa Rupü, los demás en texto suave. */
 export function DsChips<T extends string>({
   chips,
   active,
@@ -178,8 +178,10 @@ export function DsChips<T extends string>({
             type="button"
             aria-pressed={on}
             onClick={() => onChange(chip.id)}
-            className={`px-2.5 py-[5px] rounded-[5px] text-xs font-medium transition-colors ${
-              on ? 'bg-[#1a1a1a] text-white' : 'text-[#4b4a46] hover:bg-[#e9e7e2]'
+            className={`h-8 max-md:h-10 px-3.5 rounded-full text-xs font-medium inline-flex items-center whitespace-nowrap transition-colors ${
+              on
+                ? 'bg-[#0F7F8A] text-white shadow-[0_1px_2px_rgba(15,127,138,.18),0_4px_14px_rgba(15,127,138,.18)]'
+                : 'text-[#4b4a46] hover:bg-white hover:text-[#1a1a1a]'
             }`}
           >
             {chip.label}
@@ -339,10 +341,10 @@ export function DsStatus({ label, color, dot = true }: { label: ReactNode; color
   );
 }
 
-/** Etiqueta de atributo ("Carro", "Cubierto"); `strong` la pinta en tinta. */
+/** Etiqueta de atributo ("Carro", "Cubierto"); `strong` la resalta en turquesa Rupü. */
 export function DsTag({ children, strong = false }: { children: ReactNode; strong?: boolean }) {
   return (
-    <span className={`px-2 py-[3px] rounded text-[11px] ${strong ? 'bg-[#1a1a1a] text-white' : 'border border-[#d6d3cd]'}`}>{children}</span>
+    <span className={`px-2.5 py-[3px] rounded-full text-[11px] ${strong ? 'bg-[#E3F5F5] text-[#0C6B76] font-semibold' : 'border border-[#e4e2dd]'}`}>{children}</span>
   );
 }
 

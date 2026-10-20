@@ -69,7 +69,7 @@ export function DsSidePanel({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="absolute right-0 top-0 h-full w-full bg-white border-l border-[#e4e2dd] shadow-[0_12px_40px_rgba(0,0,0,.18)] flex flex-col outline-none"
+        className="absolute right-0 top-0 h-full w-full bg-white border-l border-[#e4e2dd] shadow-[0_12px_40px_rgba(0,0,0,.18)] flex flex-col outline-none overflow-hidden md:top-3 md:right-3 md:h-[calc(100%-24px)] md:rounded-[24px] md:border"
         style={{ maxWidth: width, color: DS.ink }}
       >
         <header className="flex items-start justify-between gap-3 px-6 pt-5 pb-4 border-b border-[#efedea]">
@@ -113,7 +113,7 @@ export function DsFileDrop({
   return (
     <label
       htmlFor={inputId}
-      className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-6 text-center transition-colors ${
+      className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed px-4 py-6 text-center transition-colors ${
         disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-[#1a1a1a] hover:bg-[#faf9f7]'
       } ${file ? 'border-[#1a1a1a] bg-[#faf9f7]' : 'border-[#c9c6c0]'}`}
     >

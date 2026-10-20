@@ -28,8 +28,8 @@ export function ZonesTab({ data, loading }: { data: ParkingData; loading: boolea
         const s = summaryOf(z);
         return (
           <div className="w-full flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-[#efedea] rounded-sm">
-              <div className="h-full bg-[#1a1a1a] rounded-sm" style={{ width: `${s.pct}%` }} />
+            <div className="flex-1 h-1.5 bg-[#efedea] rounded-full">
+              <div className="h-full bg-[#18A0AE] rounded-full" style={{ width: `${s.pct}%` }} />
             </div>
             <span className={`${dsMono} text-xs text-[#4b4a46] w-10 text-right`}>{s.pct}%</span>
           </div>

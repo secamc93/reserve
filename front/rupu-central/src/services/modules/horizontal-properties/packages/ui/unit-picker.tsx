@@ -118,7 +118,7 @@ export function UnitPicker({
         }}
       />
       {open && (
-        <div className="absolute z-[70] w-full mt-1 bg-white border border-[#e4e2dd] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,.12)] max-h-60 overflow-auto">
+        <div className="absolute z-[70] w-full mt-1 bg-white border border-[#e4e2dd] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,.12)] max-h-60 overflow-auto">
           {loading && units.length === 0 ? (
             <div className="p-3 text-center text-[13px] text-[#8a8580]">Cargando unidades…</div>
           ) : matches.length === 0 ? (

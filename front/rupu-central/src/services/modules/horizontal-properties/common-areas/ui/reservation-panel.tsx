@@ -255,7 +255,7 @@ export function ReservationPanel({ businessId, reservationId, getToken, onClose,
           {loading && !r && <div className="py-10 text-center text-sm text-[#8a8580]">Cargando…</div>}
           {r && (
             <>
-              <div className="mt-4 rounded-lg bg-[#f5f5f4] px-4 py-3">
+              <div className="mt-4 rounded-2xl bg-[#f5f5f4] px-4 py-3">
                 <div className={`${dsMono} text-base font-semibold`}>{unit}</div>
                 {r.residentName && <div className="text-[13px]">{r.residentName}</div>}
                 {previous !== null && (
@@ -355,7 +355,7 @@ export function ReservationPanel({ businessId, reservationId, getToken, onClose,
 
               {r.accessCode && (
                 <Section label="Acceso">
-                  <span className={`${dsMono} px-2.5 py-1 border-[1.5px] border-[#1a1a1a] rounded-md text-base font-semibold tracking-[.12em]`}>{r.accessCode}</span>
+                  <span className={`${dsMono} px-2.5 py-1 border-[1.5px] border-[#1a1a1a] rounded-xl text-base font-semibold tracking-[.12em]`}>{r.accessCode}</span>
                   <span className="ml-2 text-xs text-[#8a8580]">código para portería</span>
                 </Section>
               )}
@@ -384,7 +384,7 @@ export function ReservationPanel({ businessId, reservationId, getToken, onClose,
                 <button type="button" className={`${vtBtn.primary} !h-11 flex-1`} onClick={() => doAction('approve')} disabled={busy}>
                   {ACTION_LABEL.approve}
                 </button>
-                <button type="button" className="h-11 px-4 rounded-[7px] text-[13px] font-semibold bg-white text-[#c8382d] border border-[#c8382d] hover:bg-[#fbe9e4] disabled:opacity-50" onClick={() => doAction('reject')} disabled={busy}>
+                <button type="button" className="h-11 px-4 rounded-xl text-[13px] font-semibold bg-white text-[#c8382d] border border-[#c8382d] hover:bg-[#fbe9e4] disabled:opacity-50" onClick={() => doAction('reject')} disabled={busy}>
                   {ACTION_LABEL.reject}
                 </button>
               </>

@@ -158,13 +158,13 @@ function PublicVotePageContent() {
   if (error || step === 'error') {
     return (
       <div className={`min-h-screen flex items-center justify-center p-[22px] ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
-        <div className="max-w-[420px] w-full bg-white rounded-[10px] p-6 text-center" style={{ border: `1px solid ${VT.border}` }} role="alert">
+        <div className="max-w-[420px] w-full bg-white rounded-2xl p-6 text-center" style={{ border: `1px solid ${VT.border}` }} role="alert">
           <h1 className="m-0 text-xl font-semibold">No pudimos abrir la votación</h1>
           <p className="mt-2 mb-5 text-sm leading-normal" style={{ color: VT.inkSoft }}>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="h-11 px-5 rounded-lg text-white text-sm font-semibold"
-            style={{ background: VT.ink }}
+            className="h-11 px-5 rounded-full text-white text-sm font-semibold"
+            style={{ background: VT.brand }}
           >
             Reintentar
           </button>

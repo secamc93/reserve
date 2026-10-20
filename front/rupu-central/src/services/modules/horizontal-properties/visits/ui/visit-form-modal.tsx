@@ -285,7 +285,7 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit, unsch
         {!edit && (
           <div className="grid grid-cols-3 gap-1.5" aria-hidden="true">
             {[1, 2, 3].map((n) => (
-              <span key={n} className="h-[3px] rounded-full" style={{ background: n <= step ? DS.ink : DS.border }} />
+              <span key={n} className="h-[3px] rounded-full" style={{ background: n <= step ? DS.brand : DS.border }} />
             ))}
           </div>
         )}
@@ -401,7 +401,7 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit, unsch
                     type="button"
                     aria-pressed={form.propertyUnitId === u.id}
                     onClick={() => set('propertyUnitId', u.id)}
-                    className={`${dsMono} px-2.5 py-1 max-md:py-2 rounded-[5px] text-xs ${form.propertyUnitId === u.id ? 'bg-[#1a1a1a] text-white' : 'border border-[#d6d3cd] hover:bg-[#f5f5f4]'}`}
+                    className={`${dsMono} px-3 py-1 max-md:py-2 rounded-full text-xs ${form.propertyUnitId === u.id ? 'bg-[#0F7F8A] text-white' : 'border border-[#e4e2dd] hover:bg-[#f5f5f4]'}`}
                   >
                     {u.label}
                   </button>
@@ -424,7 +424,7 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit, unsch
                       role="radio"
                       aria-checked={on}
                       onClick={() => set('visitTypeId', t.id)}
-                      className={`h-[60px] rounded-lg px-3 text-left flex flex-col justify-center border transition-colors ${on ? 'border-[#1a1a1a] border-[1.5px] bg-white' : 'border-[#e4e2dd] hover:border-[#c9c6c0]'}`}
+                      className={`h-[60px] rounded-2xl px-3 text-left flex flex-col justify-center border transition-colors ${on ? 'border-[#1a1a1a] border-[1.5px] bg-white' : 'border-[#e4e2dd] hover:border-[#c9c6c0]'}`}
                     >
                       <span className="text-[13px] font-semibold truncate">{t.name}</span>
                       <span className="text-[11px] text-[#8a8580] truncate">{visitTypeRule(t)}</span>
@@ -451,7 +451,7 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit, unsch
                 <div className={vtLabel} id="visit-people-label">
                   Personas
                 </div>
-                <div className="flex items-center h-10 max-md:h-11 rounded-[7px] border border-[#d6d3cd]" role="group" aria-labelledby="visit-people-label">
+                <div className="flex items-center h-10 max-md:h-11 rounded-xl border border-[#d6d3cd]" role="group" aria-labelledby="visit-people-label">
                   <button type="button" aria-label="Menos personas" className="w-10 h-full text-lg" onClick={() => set('numberOfVisitors', Math.max(1, form.numberOfVisitors - 1))}>
                     −
                   </button>
@@ -509,8 +509,8 @@ export function VisitFormModal({ open, onClose, onSaved, businessId, edit, unsch
 
 function VisitorCard({ name, meta, blacklisted, onChange }: { name: string; meta: string[]; blacklisted?: boolean; onChange: () => void }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg bg-[#f5f5f4] px-3.5 py-3">
-      <div className={`${dsMono} w-9 h-9 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center text-xs font-semibold shrink-0`} aria-hidden="true">
+    <div className="flex items-center gap-3 rounded-2xl bg-[#f5f5f4] px-3.5 py-3">
+      <div className={`${dsMono} w-9 h-9 rounded-full bg-[#E3F5F5] text-[#0C6B76] flex items-center justify-center text-xs font-semibold shrink-0`} aria-hidden="true">
         {initials(name)}
       </div>
       <div className="min-w-0 flex-1">

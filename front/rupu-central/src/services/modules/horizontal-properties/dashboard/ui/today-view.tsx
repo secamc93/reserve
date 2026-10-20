@@ -35,7 +35,7 @@ export function TodayView({ summary, propertyName, basePath }: { summary: TodayS
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {kpis.map((k) => (
-          <Link key={k.label} href={k.href} className="bg-white border border-[#e4e2dd] rounded-[10px] px-[18px] py-4 flex flex-col gap-2 hover:border-[#c9c6c0] transition-colors">
+          <Link key={k.label} href={k.href} className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] px-[18px] py-4 flex flex-col gap-2 hover:border-[#c9c6c0] transition-colors">
             <div className="flex justify-between items-center gap-2">
               <span className={`${dsMono} text-[10px] tracking-[.06em] text-[#8a8580]`}>{k.label}</span>
               <span className="text-[11px] text-[#8a8580] hidden md:inline">{k.link} →</span>
@@ -101,7 +101,7 @@ export function TodayView({ summary, propertyName, basePath }: { summary: TodayS
 
         <div className="flex flex-col gap-3.5">
           {v ? (
-            <div className="bg-[#1a1a1a] text-white rounded-[10px] px-[18px] py-4 flex flex-col gap-3">
+            <div className="text-white rounded-[20px] px-[18px] py-4 flex flex-col gap-3 bg-[linear-gradient(135deg,#0F7F8A_0%,#0A5D66_100%)] shadow-[0_1px_2px_rgba(15,127,138,.18),0_8px_24px_rgba(15,127,138,.25)]">
               <div className="flex justify-between items-center">
                 <span className={`${dsMono} text-[10px] tracking-[.06em] text-white/55`}>VOTACIÓN ACTIVA</span>
                 <span className={`${dsMono} inline-flex items-center gap-1.5 text-[10px] text-[#f08a73] tracking-[.06em]`}>
@@ -111,8 +111,8 @@ export function TodayView({ summary, propertyName, basePath }: { summary: TodayS
               </div>
               <div className="text-[15px] font-semibold leading-tight">{v.title}</div>
               <div className="relative h-2.5">
-                <div className="h-full rounded-[3px] overflow-hidden bg-[#2a2927]">
-                  <div className="h-full bg-[#1f8a4c]" style={{ width: `${participation}%` }} />
+                <div className="h-full rounded-full overflow-hidden bg-white/20">
+                  <div className="h-full rounded-full bg-[#2CD8CC]" style={{ width: `${participation}%` }} />
                 </div>
                 {v.quorumPercentage !== null && (
                   <div className="absolute -top-1 -bottom-1 w-0.5 bg-[#f08a73]" style={{ left: `${Math.min(100, v.quorumPercentage)}%` }} aria-hidden="true" />
@@ -126,7 +126,7 @@ export function TodayView({ summary, propertyName, basePath }: { summary: TodayS
               </div>
               <Link
                 href={`${basePath}/voting-groups/${v.groupId}/votings/${v.votingId}/live`}
-                className="block text-center h-[34px] leading-[34px] rounded-md bg-white text-[#1a1a1a] text-[13px] font-semibold hover:bg-[#f5f5f4]"
+                className="block text-center h-9 leading-9 rounded-full bg-white text-[#0C6B76] text-[13px] font-semibold hover:bg-[#E3F5F5] transition-colors"
               >
                 Abrir panel en vivo
               </Link>
@@ -151,8 +151,8 @@ export function TodayView({ summary, propertyName, basePath }: { summary: TodayS
                   <span className="text-[#4b4a46]">{row.label}</span>
                   <span className={dsMono}>{row.part} / {row.total}</span>
                 </div>
-                <div className="h-1.5 bg-[#efedea] rounded-sm" aria-hidden="true">
-                  <div className="h-full bg-[#1a1a1a] rounded-sm" style={{ width: `${pct(row.part, row.total)}%` }} />
+                <div className="h-1.5 bg-[#efedea] rounded-full" aria-hidden="true">
+                  <div className="h-full bg-[#18A0AE] rounded-full" style={{ width: `${pct(row.part, row.total)}%` }} />
                 </div>
               </div>
             ))}

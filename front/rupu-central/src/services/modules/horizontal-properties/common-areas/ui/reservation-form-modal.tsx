@@ -162,7 +162,7 @@ export function ReservationFormModal({ open, businessId, zones, defaultZoneId, d
             Unidad
           </label>
           {unit ? (
-            <div className="flex items-center gap-2 h-10 px-3 rounded-[7px] border border-[#1a1a1a]">
+            <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-[#1a1a1a]">
               <span className="text-sm font-semibold flex-1">{unitLabel(unit.number, unit.block)}</span>
               <button
                 type="button"
@@ -179,7 +179,7 @@ export function ReservationFormModal({ open, businessId, zones, defaultZoneId, d
             <>
               <input id="reservation-unit" className={vtInput} value={unitQuery} onChange={(e) => setUnitQuery(e.target.value)} placeholder="Busca por número: 126" autoComplete="off" />
               {(units.length > 0 || searching) && (
-                <ul role="listbox" aria-label="Unidades encontradas" className="list-none m-0 mt-1 p-1 border border-[#e4e2dd] rounded-md max-h-44 overflow-y-auto">
+                <ul role="listbox" aria-label="Unidades encontradas" className="list-none m-0 mt-1 p-1 border border-[#e4e2dd] rounded-xl max-h-44 overflow-y-auto">
                   {searching && units.length === 0 && <li className="px-2 py-1.5 text-xs text-[#8a8580]">Buscando…</li>}
                   {units.map((u) => (
                     <li key={u.id} role="option" aria-selected={false}>
@@ -249,7 +249,7 @@ export function ReservationFormModal({ open, businessId, zones, defaultZoneId, d
         </div>
 
         {zone && (zone.hourlyRate || zone.requiresDeposit) && hours > 0 ? (
-          <div className="rounded-lg bg-[#f5f5f4] px-3.5 py-2.5 flex justify-between items-center">
+          <div className="rounded-2xl bg-[#f5f5f4] px-3.5 py-2.5 flex justify-between items-center">
             <DsEyebrow>Valor estimado</DsEyebrow>
             <span className={`${dsMono} text-sm font-semibold`}>
               {zone.hourlyRate ? formatMoney(zone.hourlyRate * hours) : 'Sin costo'}

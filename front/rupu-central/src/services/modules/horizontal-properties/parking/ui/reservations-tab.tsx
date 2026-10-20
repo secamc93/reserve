@@ -146,8 +146,8 @@ export function ReservationsTab({ businessId, today, version, visitorSlots, onCh
             type="button"
             disabled={busyId !== null}
             onClick={() => act(r, s.action!)}
-            className={`h-[30px] px-3 rounded-md text-xs font-semibold border disabled:opacity-50 ${
-              primary ? 'bg-[#1a1a1a] text-white border-[#1a1a1a] hover:bg-[#c8603f] hover:border-[#c8603f]' : 'bg-white text-[#1a1a1a] border-[#d6d3cd] hover:bg-[#f5f5f4]'
+            className={`h-[30px] px-3.5 rounded-full text-xs font-semibold border transition-colors disabled:opacity-50 ${
+              primary ? 'bg-[#0F7F8A] text-white border-[#0F7F8A] hover:bg-[#0C6B76] hover:border-[#0C6B76]' : 'bg-white text-[#1a1a1a] border-[#e4e2dd] hover:bg-[#f5f5f4]'
             }`}
           >
             {busyId === r.id ? '…' : primary ? 'Check-in' : 'Check-out'}
@@ -163,7 +163,7 @@ export function ReservationsTab({ businessId, today, version, visitorSlots, onCh
         left={
           <div className="flex flex-wrap items-center gap-2.5">
             {range !== 'history' && (
-              <div className="flex border border-[#d6d3cd] rounded-md overflow-hidden bg-white">
+              <div className="flex border border-[#d6d3cd] rounded-xl overflow-hidden bg-white">
                 <button type="button" aria-label="Día anterior" onClick={() => setDay((d) => addDays(d, range === 'week' ? -7 : -1))} className="px-2.5 py-[5px] border-r border-[#d6d3cd] text-[#8a8580] hover:text-[#1a1a1a]">‹</button>
                 <span className={`${dsMono} px-3 py-[5px] text-xs font-semibold`}>
                   {range === 'week' ? `${formatDay(toISODay(from)).slice(0, 6)} – ${formatDay(toISODay(to)).slice(0, 6)}` : dayNavLabel(day, today)}

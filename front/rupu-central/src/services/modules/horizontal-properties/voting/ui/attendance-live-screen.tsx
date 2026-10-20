@@ -100,7 +100,7 @@ export function AttendanceLiveScreen({ groupName, summary, quorum, onRefresh, on
             onClick={onClose}
             aria-label="Cerrar asistencia en vivo"
             title="Cerrar (Esc)"
-            className="inline-flex items-center justify-center w-11 h-11 rounded-md text-[18px] hover:bg-white"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-xl text-[18px] hover:bg-white"
             style={{ color: VT.inkSoft }}
           >
             ✕
@@ -132,7 +132,7 @@ export function AttendanceLiveScreen({ groupName, summary, quorum, onRefresh, on
             role="img"
             aria-label={`Presentes ${formatPct(summary.presentCoefPct)}% del coeficiente. Quórum ${quorum}%`}
           >
-            <div className="h-full rounded-lg bg-white overflow-hidden" style={{ border: `1px solid ${VT.borderStrong}` }}>
+            <div className="h-full rounded-2xl bg-white overflow-hidden" style={{ border: `1px solid ${VT.borderStrong}` }}>
               <div
                 className="h-full transition-[width] duration-700"
                 style={{ width: `${Math.min(summary.presentCoefPct, 100)}%`, background: status.reached ? VT.yes : VT.ink }}

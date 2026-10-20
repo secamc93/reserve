@@ -199,7 +199,7 @@ export function PropertyUnitsTable({ businessId }: { businessId: number }) {
             e.stopPropagation();
             setEditing(u);
           }}
-          className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md border border-[#d6d3cd] bg-white text-[#4b4a46] hover:bg-[#f5f5f4]"
+          className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-xl border border-[#d6d3cd] bg-white text-[#4b4a46] hover:bg-[#f5f5f4]"
           aria-label={`Editar ${formatUnitLabel(u.number, u.block)}`}
           title="Editar"
         >

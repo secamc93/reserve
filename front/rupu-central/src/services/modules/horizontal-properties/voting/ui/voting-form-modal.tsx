@@ -256,7 +256,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
             <div
               role="radiogroup"
               aria-labelledby="vf-type-label"
-              className="h-10 max-md:h-11 rounded-[7px] grid grid-cols-3 gap-[3px] p-[3px] text-[13px] max-md:text-sm"
+              className="h-10 max-md:h-11 rounded-full grid grid-cols-3 gap-[3px] p-[3px] text-[13px] max-md:text-sm"
               style={{ border: `1px solid ${VT.borderStrong}` }}
             >
               {VOTING_TYPE_OPTIONS.map((type) => {
@@ -269,8 +269,8 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
                     aria-checked={selected}
                     disabled={saving}
                     onClick={() => patch({ votingType: type.value })}
-                    className="rounded-[5px] flex items-center justify-center transition-colors"
-                    style={selected ? { background: VT.ink, color: '#fff', fontWeight: 600 } : { color: VT.inkSoft }}
+                    className="rounded-full flex items-center justify-center transition-colors"
+                    style={selected ? { background: VT.brand, color: '#fff', fontWeight: 600 } : { color: VT.inkSoft }}
                   >
                     {type.label}
                   </button>
@@ -323,7 +323,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
         </div>
 
         {/* Opciones */}
-        <fieldset className="rounded-lg overflow-hidden" style={{ border: `1px solid ${VT.border}` }}>
+        <fieldset className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${VT.border}` }}>
           <legend className="sr-only">Opciones</legend>
           <div
             className="px-3.5 py-2.5 flex justify-between items-center text-xs font-semibold"
@@ -358,7 +358,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
                     <span className="truncate" style={{ opacity: option.isActive === false ? 0.5 : 1 }}>{option.text}</span>
                   ) : (
                     <input
-                      className="h-8 max-md:h-10 max-md:text-base min-w-0 rounded-md px-2 text-[13px] outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent"
+                      className="h-8 max-md:h-10 max-md:text-base min-w-0 rounded-xl px-2 text-[13px] outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent"
                       value={option.text}
                       onChange={(e) => {
                         const text = e.target.value;
@@ -375,7 +375,7 @@ export function VotingFormModal({ isOpen, onClose, onSuccess, businessId, groupI
                     <span className={`${vtMono} text-xs font-medium`} style={{ color: VT.muted }}>{option.code}</span>
                   ) : (
                     <input
-                      className={`${vtMono} h-8 max-md:h-10 max-md:text-base min-w-0 rounded-md px-2 text-xs font-medium uppercase outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent`}
+                      className={`${vtMono} h-8 max-md:h-10 max-md:text-base min-w-0 rounded-xl px-2 text-xs font-medium uppercase outline-none border border-transparent focus:border-[#d6d3cd] bg-transparent`}
                       style={{ color: VT.muted }}
                       value={option.code}
                       onChange={(e) => patchOption(option.key, { code: e.target.value.toUpperCase() })}

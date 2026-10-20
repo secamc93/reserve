@@ -69,7 +69,7 @@ export function UnitPasswordCell({ unitLabel, load, revealMs = 15000, unlockMs =
         disabled={state === 'unlocking'}
         aria-label={shown ? `Ocultar contraseña de ${unitLabel}` : `Ver contraseña de ${unitLabel}`}
         title={state === 'error' ? 'No se pudo consultar. Clic para reintentar.' : shown ? 'Ocultar' : 'Desbloquear y ver'}
-        className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md transition-colors hover:bg-[#f5f5f4] disabled:cursor-wait"
+        className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-xl transition-colors hover:bg-[#f5f5f4] disabled:cursor-wait"
         style={{ color: state === 'error' ? VT.no : shown ? VT.yes : VT.inkSoft }}
       >
         <span className={state === 'unlocking' ? 'animate-pulse' : ''}>

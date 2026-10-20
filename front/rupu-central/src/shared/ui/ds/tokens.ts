@@ -22,4 +22,11 @@ export const DS = {
   reachedFg: '#1f8a4c',
   missingBg: '#fbe9e4',
   missingFg: '#c8603f',
+  // Turquesa Rupü (logo #2CD8CC → #18A0AE). Los rellenos con texto blanco usan el tono profundo,
+  // que pasa contraste AA (4,7:1); el del logo solo como acento.
+  brand: '#0F7F8A',
+  brandHover: '#0C6B76',
+  brandBright: '#18A0AE',
+  brandLight: '#2CD8CC',
+  brandSoft: '#E3F5F5',
 } as const;

@@ -23,7 +23,7 @@ import { VtIcon, vtBtn } from '@shared/ui/ds';
 
 /** "Contraseñas ya generadas": rojo para advertir que volver a generarlas invalida las impresas. */
 const GENERATED_BTN =
-  'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-3.5 rounded-[7px] text-[13px] font-semibold bg-[#fbe9e4] text-[#c8382d] border border-[#c8382d] transition-colors hover:bg-[#f6d5cc] disabled:opacity-50 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-1.5 h-9 max-md:h-11 max-md:text-sm px-3.5 rounded-xl text-[13px] font-semibold bg-[#fbe9e4] text-[#c8382d] border border-[#c8382d] transition-colors hover:bg-[#f6d5cc] disabled:opacity-50 disabled:cursor-not-allowed';
 
 /** El QR impreso se entrega antes de la asamblea: el enlace dura 30 días. */
 const QR_DURATION_HOURS = 24 * 30;

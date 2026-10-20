@@ -51,7 +51,7 @@ const btnBase =
 const btnIdle = 'border-[#e4e2dd] bg-white text-[#1a1a1a] hover:bg-[#f5f5f4] hover:border-[#c9c6c0]';
 /** Primera/Última página: en teléfono (< md) se ocultan para que la barra quepa (quedan anterior/siguiente). */
 const btnEdge = btnBase.replace('inline-flex', 'hidden md:inline-flex');
-const btnCurrent = 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white font-semibold shadow-sm';
+const btnCurrent = 'border-[#0F7F8A] bg-[#0F7F8A] text-white font-semibold shadow-sm';
 
 function Chevron({ dir, double = false }: { dir: 'left' | 'right'; double?: boolean }) {
   const d = dir === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6';

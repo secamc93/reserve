@@ -209,7 +209,7 @@ export function AreaFormModal({ open, businessId, areaId, getToken, onClose, onS
             </Field>
           </div>
 
-          <section aria-label="Reglas de reserva" className="rounded-lg bg-[#f5f5f4] p-3.5 flex flex-col gap-3">
+          <section aria-label="Reglas de reserva" className="rounded-2xl bg-[#f5f5f4] p-3.5 flex flex-col gap-3">
             <DsEyebrow>Reglas de reserva</DsEyebrow>
             <SwitchRow label="Requiere aprobación del administrador" checked={form.requiresApproval} onChange={(v) => set('requiresApproval', v)} />
             <SwitchRow label="Permite reservas recurrentes" checked={form.allowsRecurring} onChange={(v) => set('allowsRecurring', v)} />
@@ -248,7 +248,7 @@ export function AreaFormModal({ open, businessId, areaId, getToken, onClose, onS
                         aria-pressed={on}
                         aria-label={DAY_LONG[day]}
                         onClick={() => setForm((f) => toggleDay(f, day))}
-                        className={`${dsMono} w-9 h-10 max-md:h-11 rounded-md text-xs font-semibold border ${on ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]' : 'bg-white text-[#8a8580] border-[#d6d3cd]'}`}
+                        className={`${dsMono} w-10 h-10 max-md:w-11 max-md:h-11 rounded-full text-xs font-semibold border transition-colors ${on ? 'bg-[#0F7F8A] text-white border-[#0F7F8A]' : 'bg-white text-[#8a8580] border-[#e4e2dd] hover:bg-[#f5f5f4]'}`}
                       >
                         {DAY_LETTER[day]}
                       </button>

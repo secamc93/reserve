@@ -182,7 +182,7 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
           </div>
         </div>
 
-        <div className="rounded-lg p-3.5 flex flex-col gap-3" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
+        <div className="rounded-2xl p-3.5 flex flex-col gap-3" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
           <div className="flex justify-between items-center gap-4">
             <div>
               <div className="text-[13px] font-semibold">Requiere quórum</div>
@@ -223,7 +223,7 @@ export function VotingGroupFormModal({ isOpen, onClose, onSuccess, businessId, g
           )}
         </div>
 
-        <div className="rounded-lg p-3.5 flex justify-between items-center gap-4" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
+        <div className="rounded-2xl p-3.5 flex justify-between items-center gap-4" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
           <div>
             <div className="text-[13px] font-semibold">Exigir documento (cédula) para votar</div>
             <div className="text-xs" style={{ color: VT.muted }}>

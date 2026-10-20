@@ -50,14 +50,14 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
   if (error) {
     return (
       <div className={`min-h-screen flex items-center justify-center p-6 ${votingFontRoot}`} style={{ background: VT.paper }}>
-        <div className="bg-white rounded-[10px] p-8 text-center max-w-md w-full" style={{ border: `1px solid ${VT.border}` }}>
+        <div className="bg-white rounded-2xl p-8 text-center max-w-md w-full" style={{ border: `1px solid ${VT.border}` }}>
           <h2 className="text-xl font-semibold mb-3" style={{ color: VT.live }}>Error</h2>
           <p className="text-sm mb-6" style={{ color: VT.inkSoft }}>{error}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="h-10 max-md:h-11 px-5 rounded-lg text-sm font-semibold text-white"
-            style={{ background: VT.ink }}
+            className="h-10 max-md:h-11 px-5 rounded-full text-sm font-semibold text-white"
+            style={{ background: VT.brand }}
           >
             Reintentar
           </button>
@@ -105,7 +105,7 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
         {/* Fila de la votación */}
         <div className="flex flex-col gap-3">
           <div
-            className="bg-white rounded-[10px] px-4 sm:px-[22px] py-[18px] grid grid-cols-[32px_1fr_auto] md:grid-cols-[40px_1fr_minmax(200px,300px)_110px] gap-x-4 md:gap-x-[22px] gap-y-3 items-center"
+            className="bg-white rounded-2xl px-4 sm:px-[22px] py-[18px] grid grid-cols-[32px_1fr_auto] md:grid-cols-[40px_1fr_minmax(200px,300px)_110px] gap-x-4 md:gap-x-[22px] gap-y-3 items-center"
             style={{ border: `1px solid ${VT.border}` }}
           >
             <div className={`${vtMono} text-[13px] font-medium`} style={{ color: VT.muted }}>
@@ -150,7 +150,7 @@ export function PublicVotingProgress({ votingAuthToken }: PublicVotingProgressPr
         </div>
 
         {/* Estado por unidad (mismas fichas que el panel en vivo, sin acciones) */}
-        <div className="bg-white rounded-[10px] p-4 sm:p-6" style={{ border: `1px solid ${VT.border}` }}>
+        <div className="bg-white rounded-2xl p-4 sm:p-6" style={{ border: `1px solid ${VT.border}` }}>
           <VotesByUnitSection
             units={residentialUnits}
             title="Votos por unidad"
