@@ -69,7 +69,7 @@ export function MobileReservations({ pending, pendingTotal, week, today, zonesHr
                 <article aria-label={`Reserva de ${unit} en ${r.commonAreaName}`} className="bg-white border border-[#e4e2dd] rounded-xl p-4 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <span
-                      className={`${dsMono} px-2 py-[3px] rounded text-[10px] font-semibold tracking-[.06em] uppercase`}
+                      className={`${dsMono} px-2 py-[3px] rounded-full text-[10px] font-semibold tracking-[.06em] uppercase`}
                       style={isPending ? { background: '#fbe9e4', color: DS.accent } : { background: meta.bg, color: meta.fg }}
                     >
                       {isPending ? 'Pendiente' : meta.label}
@@ -91,13 +91,13 @@ export function MobileReservations({ pending, pendingTotal, week, today, zonesHr
                   {isPending ? (
                     <div className="flex gap-2 pt-1">
                       {conflicts.length > 0 ? (
-                        <button type="button" className="flex-1 h-11 rounded-[7px] text-sm font-semibold bg-white text-[#c8603f] border border-[#c8603f]" onClick={() => onOpen(r.id)}>
+                        <button type="button" className="flex-1 h-11 rounded-xl text-sm font-semibold bg-white text-[#c8603f] border border-[#c8603f]" onClick={() => onOpen(r.id)}>
                           Ver conflicto
                         </button>
                       ) : (
                         <button
                           type="button"
-                          className="flex-1 h-11 rounded-[7px] text-sm font-semibold bg-[#1a1a1a] text-white disabled:opacity-50"
+                          className="flex-1 h-11 rounded-full text-sm font-semibold bg-[#0F7F8A] text-white disabled:opacity-50"
                           onClick={() => onApprove(r)}
                           disabled={approvingId === r.id}
                           aria-label={`Aprobar reserva de ${unit}`}
@@ -105,7 +105,7 @@ export function MobileReservations({ pending, pendingTotal, week, today, zonesHr
                           {approvingId === r.id ? 'Aprobando…' : 'Aprobar'}
                         </button>
                       )}
-                      <button type="button" className="h-11 px-4 rounded-[7px] text-sm font-semibold bg-white text-[#c8382d] border border-[#c8382d]" onClick={() => onOpen(r.id)} aria-label={`Rechazar reserva de ${unit}`}>
+                      <button type="button" className="h-11 px-4 rounded-xl text-sm font-semibold bg-white text-[#c8382d] border border-[#c8382d]" onClick={() => onOpen(r.id)} aria-label={`Rechazar reserva de ${unit}`}>
                         Rechazar
                       </button>
                     </div>

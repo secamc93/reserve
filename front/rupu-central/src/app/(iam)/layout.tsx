@@ -156,14 +156,13 @@ export default function IamLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
-      {/* Sidebar */}
-      <Sidebar user={user ? { ...user, is_super_admin: user.is_super_admin } : null} mobileNav />
+    <div className="min-h-screen bg-[#f5f5f4]">
+      {/* Escritorio: barra superior y riel lateral flotantes; teléfono: barra inferior (MobileNav). */}
+      <Sidebar user={user ? { ...user, is_super_admin: user.is_super_admin } : null} mobileNav variant="floating" />
 
       {/* Contenido principal */}
-      {/* En teléfono (< md) la barra lateral se oculta y aparece la barra inferior (MobileNav). */}
       <main
-        className="flex-1 min-w-0 transition-all duration-300 w-full overflow-x-hidden md:ml-20 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
+        className="min-w-0 w-full overflow-x-hidden md:pl-[84px] lg:pl-[92px] pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
       >
         <MobileTopBar property={activeProperty} fallbackName="IAM" />
 

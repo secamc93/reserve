@@ -34,7 +34,7 @@ const Footer = ({ onCancel, submitLabel, busy, disabled }: { onCancel: () => voi
 
 const Check = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <label className="flex items-center gap-2 text-[13px] cursor-pointer">
-    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-4 h-4 accent-[#1a1a1a]" />
+    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-4 h-4 accent-[#0F7F8A]" />
     {label}
   </label>
 );
@@ -162,9 +162,9 @@ export function BulkSlotsDialog({
           </div>
           <div>
             <span className={vtLabel} id="bulk-type-label">Tipo</span>
-            <div role="radiogroup" aria-labelledby="bulk-type-label" className="h-10 border border-[#d6d3cd] rounded-[7px] grid p-[3px] gap-[3px] text-xs" style={{ gridTemplateColumns: `repeat(${Math.max(1, types.length)}, 1fr)` }}>
+            <div role="radiogroup" aria-labelledby="bulk-type-label" className="h-10 border border-[#d6d3cd] rounded-full grid p-[3px] gap-[3px] text-xs" style={{ gridTemplateColumns: `repeat(${Math.max(1, types.length)}, 1fr)` }}>
               {types.map((t) => (
-                <button key={t.id} type="button" role="radio" aria-checked={typeId === t.id} onClick={() => setTypeId(t.id)} className={`rounded-[5px] ${typeId === t.id ? 'bg-[#1a1a1a] text-white font-semibold' : 'text-[#4b4a46] hover:bg-[#f5f5f4]'}`}>
+                <button key={t.id} type="button" role="radio" aria-checked={typeId === t.id} onClick={() => setTypeId(t.id)} className={`rounded-full transition-colors ${typeId === t.id ? 'bg-[#0F7F8A] text-white font-semibold' : 'text-[#4b4a46] hover:bg-[#f5f5f4]'}`}>
                   {t.name}
                 </button>
               ))}
@@ -365,7 +365,7 @@ export function AssignSlotDialog({
               <>
                 <input id="asg-unit" className={`${vtInput} ${dsMono}`} value={unitQuery} onChange={(e) => setUnitQuery(e.target.value)} placeholder="Número, ej. 126" autoComplete="off" />
                 {unitOptions.length > 0 && (
-                  <ul role="listbox" aria-label="Unidades" className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#e4e2dd] rounded-[7px] shadow-md max-h-56 overflow-auto">
+                  <ul role="listbox" aria-label="Unidades" className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#e4e2dd] rounded-xl shadow-md max-h-56 overflow-auto">
                     {unitOptions.map((u) => (
                       <li key={u.id}>
                         <button type="button" role="option" aria-selected={false} onClick={() => setUnit(u)} className={`${dsMono} w-full text-left px-3 py-2 text-sm hover:bg-[#f5f5f4]`}>
@@ -388,7 +388,7 @@ export function AssignSlotDialog({
             </select>
           </div>
         )}
-        <div className="border border-[#e4e2dd] rounded-lg p-3.5 bg-[#faf9f7] flex flex-col gap-2.5">
+        <div className="border border-[#e4e2dd] rounded-2xl p-3.5 bg-[#faf9f7] flex flex-col gap-2.5">
           <DsEyebrow>Vehículo</DsEyebrow>
           <div className="grid grid-cols-2 md:grid-cols-[130px_1fr_1fr_100px] gap-2.5">
             <div>
@@ -552,7 +552,7 @@ export function VisitorReservationDialog({
             <>
               <input id="rsv-unit" className={`${vtInput} ${dsMono}`} value={unitQuery} onChange={(e) => setUnitQuery(e.target.value)} placeholder="Número, ej. 126" autoComplete="off" />
               {unitOptions.length > 0 && (
-                <ul role="listbox" aria-label="Unidades" className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#e4e2dd] rounded-[7px] shadow-md max-h-56 overflow-auto">
+                <ul role="listbox" aria-label="Unidades" className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#e4e2dd] rounded-xl shadow-md max-h-56 overflow-auto">
                   {unitOptions.map((u) => (
                     <li key={u.id}>
                       <button type="button" role="option" aria-selected={false} onClick={() => setUnit(u)} className={`${dsMono} w-full text-left px-3 py-2 text-sm hover:bg-[#f5f5f4]`}>

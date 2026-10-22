@@ -100,17 +100,17 @@ export function DashboardStats({ data }: DashboardStatsProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
       {allStats.map((stat, index) => (
-        <div key={index} className="bg-white rounded-lg shadow-sm p-3 border border-gray-200 min-w-0" title={stat.label}>
+        <div key={index} className="bg-white rounded-2xl shadow-sm p-3 border border-gray-200 min-w-0" title={stat.label}>
           {/* Teléfono: número grande arriba y etiqueta completa debajo (sin cortar) */}
           <div className="md:hidden">
             <div className="flex items-center justify-between gap-2">
               <p className="text-2xl font-bold text-gray-900 tabular-nums">{stat.value.toLocaleString()}</p>
-              <span aria-hidden="true" className={`${stat.color} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-gray-600 text-sm`}>{stat.icon}</span>
+              <span aria-hidden="true" className={`${stat.color} w-8 h-8 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 text-sm`}>{stat.icon}</span>
             </div>
             <h3 className="mt-1 text-gray-700 text-xs font-medium leading-snug break-words">{stat.label}</h3>
           </div>
           <div className="hidden md:flex items-center gap-2">
-            <div className={`${stat.color} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <div className={`${stat.color} w-8 h-8 rounded-2xl flex items-center justify-center flex-shrink-0`}>
               <span className="text-gray-600 text-sm">{stat.icon}</span>
             </div>
             <div className="flex-1 min-w-0">

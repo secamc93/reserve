@@ -140,8 +140,8 @@ export function VotesByUnitSection({
                                 role="tab"
                                 aria-selected={active}
                                 onClick={() => setFilter(f.key)}
-                                className="px-2.5 py-1 max-md:h-9 max-md:px-3 rounded-[5px] text-xs font-medium transition-colors"
-                                style={active ? { background: VT.ink, color: '#fff' } : { color: VT.inkSoft }}
+                                className="px-3 py-1 max-md:h-9 max-md:px-3.5 rounded-full text-xs font-medium transition-colors"
+                                style={active ? { background: VT.brand, color: '#fff' } : { color: VT.inkSoft }}
                             >
                                 {f.label} · {f.count}
                             </button>
@@ -149,7 +149,7 @@ export function VotesByUnitSection({
                     })}
                 </div>
                 <label
-                    className="flex items-center gap-2 h-[30px] max-md:h-11 px-2.5 rounded-md bg-white text-xs max-md:text-sm w-full sm:w-[220px] focus-within:ring-1 focus-within:ring-[#c8603f]"
+                    className="flex items-center gap-2 h-[30px] max-md:h-11 px-2.5 rounded-xl bg-white text-xs max-md:text-sm w-full sm:w-[220px] focus-within:ring-1 focus-within:ring-[#c8603f]"
                     style={{ border: `1px solid ${VT.borderStrong}`, color: VT.muted }}
                 >
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">

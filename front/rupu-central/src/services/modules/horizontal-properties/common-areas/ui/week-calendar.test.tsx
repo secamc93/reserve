@@ -59,7 +59,7 @@ describe('Calendario semanal (Z3)', () => {
     expect(block).toHaveTextContent('Casa 126 · Cumpleaños');
     expect(block.style.boxShadow).toContain('3.5px');
     const saturday = within(screen.getByRole('gridcell', { name: 'Reservas del 2026-10-17' })).getByRole('button', { name: 'Salón, Dúplex 7, 10:00 a 12:00, Aprobada' });
-    expect(saturday.style.background).toBe('rgb(26, 26, 26)');
+    expect(saturday.style.background).toBe('rgb(15, 127, 138)');
     expect(within(screen.getByRole('gridcell', { name: 'Reservas del 2026-10-13' })).getByRole('button', { name: /Pasada$/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Casa 300/ })).not.toBeInTheDocument();
 

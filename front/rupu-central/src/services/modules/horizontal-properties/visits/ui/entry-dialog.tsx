@@ -84,7 +84,7 @@ export function EntryDialog({
     >
       <div className="flex flex-col gap-4">
         {error && <VtNotice tone="error">{error}</VtNotice>}
-        <div className="rounded-lg bg-[#f5f5f4] px-4 py-3 flex items-center justify-between gap-3">
+        <div className="rounded-2xl bg-[#f5f5f4] px-4 py-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className={`${dsMono} text-base font-semibold`}>{unitLabel(row.propertyUnitBlock, row.propertyUnitNumber)}</div>
             <div className="text-xs text-[#8a8580] truncate">{who ? `Autorizó ${who}` : 'Sin residente que autorice'}</div>
@@ -98,7 +98,7 @@ export function EntryDialog({
           <div className={`${dsMono} text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580] mb-2`} id="entry-gate-label">
             Puerta
           </div>
-          <div role="radiogroup" aria-labelledby="entry-gate-label" className="grid grid-cols-3 gap-1 rounded-lg bg-[#efedea] p-1">
+          <div role="radiogroup" aria-labelledby="entry-gate-label" className="grid grid-cols-3 gap-1 rounded-full bg-[#efedea] p-1">
             {ENTRY_GATES.map((g) => (
               <button
                 key={g}
@@ -106,7 +106,7 @@ export function EntryDialog({
                 role="radio"
                 aria-checked={gate === g}
                 onClick={() => setGate(g)}
-                className={`h-10 max-md:h-11 rounded-md text-[13px] font-medium ${gate === g ? 'bg-white text-[#1a1a1a] shadow-[0_1px_2px_rgba(0,0,0,.08)] font-semibold' : 'text-[#6b6a66]'}`}
+                className={`h-10 max-md:h-11 rounded-full text-[13px] font-medium ${gate === g ? 'bg-white text-[#1a1a1a] shadow-[0_1px_2px_rgba(0,0,0,.08)] font-semibold' : 'text-[#6b6a66]'}`}
               >
                 {g}
               </button>

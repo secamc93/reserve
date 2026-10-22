@@ -24,7 +24,7 @@ interface VotingSummaryBlockProps {
 
 /** Cifra por opción: en línea en escritorio; en teléfono, celda de una grilla de 2 columnas. */
 const metricCell =
-  'flex items-baseline gap-2 min-w-0 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1.5 max-md:rounded-lg max-md:px-3 max-md:py-2.5 max-md:bg-[#faf9f7] max-md:border max-md:border-[#e4e2dd]';
+  'flex items-baseline gap-2 min-w-0 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1.5 max-md:rounded-2xl max-md:px-3 max-md:py-2.5 max-md:bg-[#faf9f7] max-md:border max-md:border-[#e4e2dd]';
 
 export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps) {
   if (!results) {
@@ -97,7 +97,7 @@ export function VotingSummaryBlock({ results, quorum }: VotingSummaryBlockProps)
             <span className="text-lg" style={{ color: VT.muted }}>%</span>
           </div>
           <div
-            className="inline-flex items-center gap-1.5 mt-2 px-2 py-[3px] rounded text-[11px] font-semibold"
+            className="inline-flex items-center gap-1.5 mt-2 px-2 py-[3px] rounded-full text-[11px] font-semibold"
             style={{ background: status.bg, color: status.fg }}
           >
             {status.label}

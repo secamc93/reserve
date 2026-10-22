@@ -106,8 +106,8 @@ export function SlotMap({ data, today, onAssign, onEditAssignment, onRelease, on
                   <br />
                   {summary.free} libres
                 </div>
-                <div className="h-1 bg-[#efedea] rounded-sm mt-2" aria-hidden="true">
-                  <div className="h-full bg-[#1a1a1a] rounded-sm" style={{ width: `${summary.pct}%` }} />
+                <div className="h-1 bg-[#efedea] rounded-full mt-2" aria-hidden="true">
+                  <div className="h-full bg-[#18A0AE] rounded-full" style={{ width: `${summary.pct}%` }} />
                 </div>
               </div>
               {slots.length === 0 ? (
@@ -130,7 +130,7 @@ export function SlotMap({ data, today, onAssign, onEditAssignment, onRelease, on
                         aria-label={`Cupo ${slot.slotNumber}, ${st.label}`}
                         aria-pressed={on}
                         onClick={() => setSelectedId(slot.id)}
-                        className={`${dsMono} h-[34px] rounded flex items-center justify-center text-[10px] font-medium transition-transform hover:scale-105`}
+                        className={`${dsMono} h-[34px] rounded-lg flex items-center justify-center text-[10px] font-medium transition-transform hover:scale-105`}
                         style={{
                           background: st.bg,
                           border: `1px solid ${st.border}`,

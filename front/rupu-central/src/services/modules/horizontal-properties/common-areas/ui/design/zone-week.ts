@@ -42,7 +42,7 @@ export function ruleTags(area: CommonAreaListDTO): string[] {
 export type DayCell = 'reserved' | 'pending' | 'closed' | 'free';
 
 export const DAY_CELL_COLOR: Record<DayCell, string> = {
-  reserved: DS.ink,
+  reserved: DS.brand,
   pending: DS.accent,
   closed: DS.pendingBorder,
   free: '#efedea',

@@ -35,7 +35,7 @@ export function PropertyNavigation({ businessId, propertyName }: PropertyNavigat
           {/* Botón Volver */}
           <button
             onClick={() => router.push('/properties')}
-            className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             title="Volver a Propiedades"
             aria-label="Volver a Propiedades"
           >
@@ -76,7 +76,7 @@ export function PropertyNavigation({ businessId, propertyName }: PropertyNavigat
               <button
                 key={link.href}
                 onClick={() => router.push(link.href)}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                   active
                     ? 'bg-blue-50 text-blue-700 border border-blue-200'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'

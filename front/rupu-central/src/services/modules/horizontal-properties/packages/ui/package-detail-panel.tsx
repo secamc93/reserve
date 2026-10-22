@@ -207,7 +207,7 @@ export function PackageDetailPanel({ businessId, row, mode = 'detail', onClose, 
 
         <div className="flex gap-3">
           <div
-            className="w-[120px] h-[96px] shrink-0 rounded-lg border-[1.5px] border-dashed border-[#c9c6c0] bg-[#faf9f7] flex items-center justify-center text-[11px] text-[#8a8580] text-center px-2"
+            className="w-[120px] h-[96px] shrink-0 rounded-2xl border-[1.5px] border-dashed border-[#c9c6c0] bg-[#faf9f7] flex items-center justify-center text-[11px] text-[#8a8580] text-center px-2"
             aria-label="Sin foto del paquete"
           >
             Sin foto
@@ -298,10 +298,10 @@ function RecipientCard({ checked, onSelect, title, sub }: { checked: boolean; on
       role="radio"
       aria-checked={checked}
       onClick={onSelect}
-      className={`w-full text-left rounded-lg px-3.5 py-2.5 min-h-11 flex items-center gap-3 border ${checked ? 'border-[#1a1a1a] border-[1.5px]' : 'border-[#e4e2dd] hover:border-[#c9c6c0]'}`}
+      className={`w-full text-left rounded-2xl px-3.5 py-2.5 min-h-11 flex items-center gap-3 border transition-colors ${checked ? 'border-[#0F7F8A] border-[1.5px] bg-[#E3F5F5]/40' : 'border-[#e4e2dd] hover:border-[#c9c6c0]'}`}
     >
-      <span className={`w-4 h-4 rounded-full border-[1.5px] shrink-0 flex items-center justify-center ${checked ? 'border-[#1a1a1a]' : 'border-[#c9c6c0]'}`} aria-hidden="true">
-        {checked && <span className="w-2 h-2 rounded-full bg-[#1a1a1a]" />}
+      <span className={`w-4 h-4 rounded-full border-[1.5px] shrink-0 flex items-center justify-center ${checked ? 'border-[#0F7F8A]' : 'border-[#c9c6c0]'}`} aria-hidden="true">
+        {checked && <span className="w-2 h-2 rounded-full bg-[#0F7F8A]" />}
       </span>
       <span className="min-w-0">
         <span className="block text-[13px] font-semibold truncate">{title}</span>

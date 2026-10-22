@@ -212,7 +212,7 @@ export function VoteModal({
     >
       {/* Unidad */}
       {unit ? (
-        <div className="flex items-center gap-3 px-3.5 py-3 rounded-lg" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
+        <div className="flex items-center gap-3 px-3.5 py-3 rounded-2xl" style={{ border: `1px solid ${VT.border}`, background: '#faf9f7' }}>
           <span className={`${vtMono} text-base font-semibold`}>{unit.number}</span>
           <div className="flex-1 min-w-0 leading-tight">
             <div className="text-[13px] font-semibold truncate">{unit.residentName || 'Sin residente'}</div>
@@ -253,7 +253,7 @@ export function VoteModal({
           <div
             role="listbox"
             aria-label="Unidades sin votar"
-            className="mt-1.5 max-h-56 overflow-y-auto rounded-lg bg-white"
+            className="mt-1.5 max-h-56 overflow-y-auto rounded-2xl bg-white"
             style={{ border: `1px solid ${VT.border}` }}
           >
             {loadingUnits ? (
@@ -300,7 +300,7 @@ export function VoteModal({
               aria-checked={selected}
               disabled={saving}
               onClick={() => setOptionId(option.id)}
-              className="h-[52px] rounded-lg flex items-center justify-between px-4 text-base font-semibold text-left transition-colors disabled:opacity-60"
+              className="h-[52px] rounded-2xl flex items-center justify-between px-4 text-base font-semibold text-left transition-colors disabled:opacity-60"
               style={
                 selected
                   ? { background: color, color: '#fff', border: `1.5px solid ${color}` }

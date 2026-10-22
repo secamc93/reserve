@@ -125,15 +125,15 @@ export function VotesDetailModal({
     <Modal isOpen={isOpen} onClose={onClose} title={`Votos: ${votingTitle}`} size="full">
       <div className="flex flex-col h-full max-h-[85vh]">
         {/* Resumen - Fijo arriba */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 md:p-6 mb-4">
+        <div className="flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-3 md:p-6 mb-4">
           <h3 className="font-bold text-blue-900 mb-3 md:mb-4 text-base md:text-lg">📊 Resumen de Votación</h3>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
-            <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-blue-100">
+            <div className="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-blue-100">
               <p className="text-sm text-blue-700 mb-1">Total de votos</p>
               <p className="text-3xl font-bold text-blue-900">{votes.length}</p>
             </div>
             {summary.map(({ option, count, percentage }) => (
-              <div key={option.id} className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-blue-100 min-w-0">
+              <div key={option.id} className="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-blue-100 min-w-0">
                 <p className="text-sm text-gray-600 mb-1 truncate" title={option.optionText}>{option.optionText}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold text-gray-900">{count}</span>
@@ -152,11 +152,11 @@ export function VotesDetailModal({
               <Spinner size="lg" />
             </div>
           ) : votes.length === 0 ? (
-            <div className="text-center py-20 bg-gray-50 rounded-lg">
+            <div className="text-center py-20 bg-gray-50 rounded-2xl">
               <p className="text-gray-500 text-lg">No hay votos registrados aún</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-auto bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex-1 overflow-auto bg-white rounded-2xl border border-gray-200 shadow-sm">
               <Table
                 columns={
                   isMobile
@@ -186,7 +186,7 @@ export function VotesDetailModal({
         <div className="flex-shrink-0 flex justify-end pt-4 mt-4 border-t">
           <button
             onClick={onClose}
-            className="px-6 py-2 max-md:w-full max-md:min-h-12 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-semibold"
+            className="px-6 py-2 max-md:w-full max-md:min-h-12 bg-gray-600 text-white hover:bg-gray-700 rounded-2xl transition-colors font-semibold"
           >
             Cerrar
           </button>

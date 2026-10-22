@@ -168,7 +168,7 @@ export function ResidentsTable({ businessId }: { businessId: number }) {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="font-medium truncate">{r.name}</span>
-              {r.isMainResident && <span className="px-1.5 py-0.5 rounded bg-[#1a1a1a] text-white text-[9px] font-semibold tracking-[.06em] shrink-0">PRINCIPAL</span>}
+              {r.isMainResident && <span className="px-2 py-0.5 rounded-full bg-[#E3F5F5] text-[#0C6B76] text-[9px] font-bold tracking-[.06em] shrink-0">PRINCIPAL</span>}
             </div>
             <div className={`${dsMono} text-[11px] text-[#8a8580] truncate`}>{r.dni || '—'}</div>
           </div>

@@ -174,7 +174,7 @@ export function CompanionsModal({
             {companions.length === 0 ? (
               <div className="py-4 text-center text-[13px] text-[#8a8580]">Sin acompañantes registrados</div>
             ) : (
-              <ul className="m-0 p-0 list-none flex flex-col divide-y divide-[#efedea] border border-[#e4e2dd] rounded-lg max-h-64 overflow-y-auto">
+              <ul className="m-0 p-0 list-none flex flex-col divide-y divide-[#efedea] border border-[#e4e2dd] rounded-2xl max-h-64 overflow-y-auto">
                 {companions.map((c) => (
                   <li key={c.id} className="flex items-center gap-3 px-3.5 py-2.5">
                     <div className="min-w-0 flex-1">
@@ -203,7 +203,7 @@ export function CompanionsModal({
             )}
 
             {showForm ? (
-              <div className="rounded-lg border border-[#e4e2dd] p-3.5 flex flex-col gap-3">
+              <div className="rounded-2xl border border-[#e4e2dd] p-3.5 flex flex-col gap-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {field('companionName', 'Nombre completo', true)}
                   {field('companionDni', 'Documento', true)}
