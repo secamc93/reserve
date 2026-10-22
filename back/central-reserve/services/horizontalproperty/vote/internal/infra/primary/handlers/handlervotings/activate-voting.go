@@ -1,11 +1,13 @@
 package handlervotings
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 
+	"central_reserve/services/horizontalproperty/vote/internal/domain"
 	"central_reserve/services/horizontalproperty/vote/internal/infra/primary/handlers/response"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +40,10 @@ func (h *VotingsHandler) ActivateVoting(c *gin.Context) {
 	if err := h.votingUseCase.ActivateVoting(c.Request.Context(), uint(id64)); err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlers/activate-voting.go - Error en handler: %v\n", err)
 		h.logger.Error().Err(err).Uint("voting_id", uint(id64)).Msg("Error activando votación")
+		if errors.Is(err, domain.ErrVotingDayNotPaid) {
+			c.JSON(http.StatusPaymentRequired, response.ErrorResponse{Success: false, Message: "Paga el día de votación de esta asamblea para abrir la votación", Error: err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Success: false, Message: "No se pudo activar", Error: err.Error()})
 		return
 	}

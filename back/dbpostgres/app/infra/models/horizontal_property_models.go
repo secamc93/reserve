@@ -1250,17 +1250,17 @@ type ParkingAssignment struct {
 	gorm.Model
 	BusinessID       uint       `gorm:"not null;index"`
 	ParkingSlotID    uint       `gorm:"not null;index;uniqueIndex:idx_slot_one_active_assignment,where:is_active = true AND deleted_at IS NULL"` // Espacio asignado (una sola asignación activa por cupo; las liberadas quedan como historial)
-	PropertyUnitID   *uint      `gorm:"index"`                                                 // Unidad propietaria (opcional)
-	ResidentID       *uint      `gorm:"index"`                                                 // Residente asignado (opcional)
-	VehiclePlate     string     `gorm:"size:20;not null;index"`                                // Placa del vehículo
-	VehicleBrand     string     `gorm:"size:50"`                                               // Marca del vehículo
-	VehicleModel     string     `gorm:"size:50"`                                               // Modelo del vehículo
-	VehicleColor     string     `gorm:"size:30"`                                               // Color del vehículo
-	StartDate        time.Time  `gorm:"not null"`                                              // Fecha de inicio de asignación
+	PropertyUnitID   *uint      `gorm:"index"`                                                                                                   // Unidad propietaria (opcional)
+	ResidentID       *uint      `gorm:"index"`                                                                                                   // Residente asignado (opcional)
+	VehiclePlate     string     `gorm:"size:20;not null;index"`                                                                                  // Placa del vehículo
+	VehicleBrand     string     `gorm:"size:50"`                                                                                                 // Marca del vehículo
+	VehicleModel     string     `gorm:"size:50"`                                                                                                 // Modelo del vehículo
+	VehicleColor     string     `gorm:"size:30"`                                                                                                 // Color del vehículo
+	StartDate        time.Time  `gorm:"not null"`                                                                                                // Fecha de inicio de asignación
 	EndDate          *time.Time // Fecha de fin (null si es permanente)
-	IsActive         bool       `gorm:"default:true"`                                        // false = liberada (historial)
-	Notes            string     `gorm:"size:1000"`                                           // Notas adicionales
-	AssignedByUserID *uint      `gorm:"index"`                                               // Usuario que realizó la asignación
+	IsActive         bool       `gorm:"default:true"` // false = liberada (historial)
+	Notes            string     `gorm:"size:1000"`    // Notas adicionales
+	AssignedByUserID *uint      `gorm:"index"`        // Usuario que realizó la asignación
 
 	// Relaciones
 	Business       Business      `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -1467,4 +1467,57 @@ type Package struct {
 // TableName especifica el nombre de tabla con esquema para Package
 func (Package) TableName() string {
 	return "horizontal_property.packages"
+}
+
+// ───────────────────────────────────────────
+//
+//	VOTING BILLING – Cobro por día de votación
+//
+// ───────────────────────────────────────────
+
+// VotingBillingSetting indica si a una propiedad se le cobra por usar las votaciones.
+// Sin fila se cobra. Las propiedades que ya existían al crear la tabla quedaron exentas.
+type VotingBillingSetting struct {
+	gorm.Model
+	BusinessID      uint  `gorm:"not null;uniqueIndex"`   // Propiedad horizontal
+	Exempt          bool  `gorm:"not null;default:false"` // true: no se le cobra
+	UpdatedByUserID *uint `gorm:"index"`                  // Super admin que hizo el último cambio
+
+	// Relaciones
+	Business  Business `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	UpdatedBy *User    `gorm:"foreignKey:UpdatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+// TableName especifica el nombre de tabla con esquema para VotingBillingSetting
+func (VotingBillingSetting) TableName() string {
+	return "horizontal_property.voting_billing_settings"
+}
+
+// VotingGroupPayment es un pago de días de votación de un grupo (asamblea).
+// Un grupo está pagado cuando la suma de Days de sus pagos APPROVED cubre sus días de votación.
+type VotingGroupPayment struct {
+	gorm.Model
+	BusinessID            uint       `gorm:"not null;index"`               // Propiedad horizontal
+	VotingGroupID         uint       `gorm:"not null;index"`               // Grupo de votación pagado
+	Reference             string     `gorm:"size:64;not null;uniqueIndex"` // Referencia enviada a la pasarela
+	Provider              string     `gorm:"size:20;not null"`             // wompi | manual
+	Days                  int        `gorm:"not null"`                     // Días de votación que cubre
+	AmountInCents         int64      `gorm:"not null"`                     // Monto en centavos
+	Currency              string     `gorm:"size:3;not null;default:COP"`
+	Status                string     `gorm:"size:20;not null;index"` // PENDING, APPROVED, DECLINED, VOIDED, ERROR
+	ProviderTransactionID string     `gorm:"size:64;index"`          // Id de la transacción en la pasarela
+	PaymentMethodType     string     `gorm:"size:40"`                // CARD, PSE, NEQUI, BANCOLOMBIA_TRANSFER…
+	PaidAt                *time.Time // Momento de la aprobación
+	CreatedByUserID       *uint      `gorm:"index"` // Usuario que inició el pago
+	Notes                 string     `gorm:"size:500"`
+
+	// Relaciones
+	Business    Business    `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	VotingGroup VotingGroup `gorm:"foreignKey:VotingGroupID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedBy   *User       `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+// TableName especifica el nombre de tabla con esquema para VotingGroupPayment
+func (VotingGroupPayment) TableName() string {
+	return "horizontal_property.voting_group_payments"
 }

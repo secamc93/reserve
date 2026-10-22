@@ -164,6 +164,13 @@ type Config struct {
 	SMTPUseSTARTTLS string `env:"SMTP_USE_STARTTLS"`
 	SMTPUseTLS      string `env:"SMTP_USE_TLS"`
 	UrlBaseDomainS3 string `env:"URL_BASE_DOMAIN_S3,required"`
+
+	// Cobro por día de votación (Wompi). Opcionales: sin llaves no se puede pagar en línea.
+	WompiPublicKey       string `env:"WOMPI_PUBLIC_KEY"`
+	WompiIntegritySecret string `env:"WOMPI_INTEGRITY_SECRET"`
+	WompiEventsSecret    string `env:"WOMPI_EVENTS_SECRET"`
+	WompiAPIURL          string `env:"WOMPI_API_URL"`
+	VotingDayPriceCOP    string `env:"VOTING_DAY_PRICE_COP"`
 }
 
 func splitTag(tag string) []string {

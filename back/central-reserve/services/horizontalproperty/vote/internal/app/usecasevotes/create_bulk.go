@@ -21,6 +21,11 @@ func (u *VotesUseCase) CreateBulkVotes(ctx context.Context, dto domain.CreateBul
 		return nil, fmt.Errorf("se requiere al menos una unidad para votación masiva")
 	}
 
+	// Cobro de Rupü: sin el día de votación pagado no entra ningún voto
+	if err := u.ensureVotingPaid(ctx, dto.VotingID); err != nil {
+		return nil, err
+	}
+
 	unitCount := len(dto.PropertyUnitIDs)
 
 	u.logger.Info(ctx).

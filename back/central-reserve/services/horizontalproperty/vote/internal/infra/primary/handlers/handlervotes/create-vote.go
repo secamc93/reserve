@@ -1,6 +1,7 @@
 package handlervotes
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -65,6 +66,10 @@ func (h *VotesHandler) CreateVote(c *gin.Context) {
 			uint(id64), req.PropertyUnitID, req.VotingOptionID, err)
 		fmt.Fprintf(os.Stderr, "[ERROR] handlers/create-vote.go - Error en handler: %v\n", err)
 		h.logger.Error().Err(err).Uint("voting_id", uint(id64)).Uint("property_unit_id", req.PropertyUnitID).Uint("option_id", req.VotingOptionID).Msg("Error registrando voto")
+		if errors.Is(err, domain.ErrVotingDayNotPaid) {
+			c.JSON(http.StatusPaymentRequired, response.ErrorResponse{Success: false, Message: "El día de votación de esta asamblea no está pagado", Error: err.Error()})
+			return
+		}
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Success: false, Message: "No se pudo registrar el voto", Error: err.Error()})
 		return
 	}

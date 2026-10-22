@@ -49,6 +49,7 @@ type MockVotingRepository struct {
 	GetUnvotedUnitsByVotingFn          func(ctx context.Context, votingID uint, unitNumberFilter string) ([]domain.UnvotedUnit, error)
 	GetResidentMainUnitIDFn            func(ctx context.Context, residentID uint) (uint, error)
 	CheckUnitAttendanceForVotingFn     func(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
+	IsVotingPaymentPendingFn           func(ctx context.Context, votingID uint) (bool, error)
 	MarkUnitAttendanceForVotingFn      func(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error
 	GetHorizontalPropertyBasicInfoFn   func(ctx context.Context, hpID uint) (*domain.HorizontalPropertyDTO, error)
 	ListPropertyUnitsFn                func(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error)
@@ -287,6 +288,13 @@ func (m *MockVotingRepository) GetResidentMainUnitID(ctx context.Context, reside
 func (m *MockVotingRepository) CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error) {
 	if m.CheckUnitAttendanceForVotingFn != nil {
 		return m.CheckUnitAttendanceForVotingFn(ctx, votingID, propertyUnitID)
+	}
+	return false, nil
+}
+
+func (m *MockVotingRepository) IsVotingPaymentPending(ctx context.Context, votingID uint) (bool, error) {
+	if m.IsVotingPaymentPendingFn != nil {
+		return m.IsVotingPaymentPendingFn(ctx, votingID)
 	}
 	return false, nil
 }

@@ -63,6 +63,10 @@ func NewHorizontalProperty(t *testing.T, database db.IDatabase, units []UnitSpec
 	}
 	t.Cleanup(func() { cleanupBusiness(t, database, business.ID) })
 
+	// Las pruebas de votaciones no tratan del cobro: la propiedad de prueba queda exenta. Las del
+	// cobro quitan la exención (SetVotingBillingExempt).
+	SetVotingBillingExempt(t, database, business.ID, true)
+
 	hp := &HorizontalProperty{
 		BusinessID:       business.ID,
 		Code:             business.Code,
@@ -169,6 +173,8 @@ func cleanupBusiness(t *testing.T, database db.IDatabase, businessID uint) {
 		where string
 		arg   any
 	}{
+		{"pagos de días de votación", &models.VotingGroupPayment{}, "business_id = ?", businessID},
+		{"configuración de cobro", &models.VotingBillingSetting{}, "business_id = ?", businessID},
 		{"votos", &models.Vote{}, "voting_id IN (?) OR voting_option_id IN (?) OR property_unit_id IN (?)", nil},
 		{"registros de asistencia", &models.AttendanceRecord{}, "attendance_list_id IN (?) OR property_unit_id IN (?)", nil},
 		{"listas de asistencia", &models.AttendanceList{}, "voting_group_id IN (?)", groupIDs},
@@ -194,5 +200,18 @@ func cleanupBusiness(t *testing.T, database db.IDatabase, businessID uint) {
 			t.Errorf("testkit: limpieza de %s del negocio %d: %v", s.name, businessID, err)
 			return
 		}
+	}
+}
+
+// SetVotingBillingExempt marca o desmarca la propiedad como exenta del cobro por día de votación.
+func SetVotingBillingExempt(t *testing.T, database db.IDatabase, businessID uint, exempt bool) {
+	t.Helper()
+	err := database.Conn(context.Background()).Exec(`
+		INSERT INTO horizontal_property.voting_billing_settings (business_id, exempt, created_at, updated_at)
+		VALUES (?, ?, NOW(), NOW())
+		ON CONFLICT (business_id) DO UPDATE SET exempt = EXCLUDED.exempt, updated_at = NOW(), deleted_at = NULL`,
+		businessID, exempt).Error
+	if err != nil {
+		t.Fatalf("testkit: configurando exención de cobro: %v", err)
 	}
 }

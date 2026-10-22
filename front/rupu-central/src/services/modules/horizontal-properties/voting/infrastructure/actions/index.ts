@@ -30,3 +30,4 @@ export * from './reset-voting.action';
 export * from './get-previous-voted-units.action';
 
 export * from './voting-credentials.action';
+export * from './voting-billing.action';

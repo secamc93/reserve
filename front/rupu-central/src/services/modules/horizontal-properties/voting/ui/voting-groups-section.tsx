@@ -18,6 +18,7 @@ import { VotingGroupFormModal } from './voting-group-form-modal';
 import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
 import { GroupQRModal } from './components/group-qr-modal';
+import { VotingBillingBanner } from './voting-billing-banner';
 import { useGroupQr, useVotingCapabilities, GROUP_QR_VALID_HOURS } from './hooks';
 import {
   VT,
@@ -270,6 +271,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
             {meta}
           </div>
           {qr.error && <div className="text-xs" style={{ color: VT.live }}>{qr.error}</div>}
+          {canManage && !closed && <VotingBillingBanner businessId={businessId} groupId={group.id} />}
         </div>
         <div className="flex gap-1.5 items-center flex-wrap max-md:flex-nowrap max-md:w-full max-md:[&>a]:flex-1 max-md:[&>a]:min-w-0 max-md:[&>button:not([aria-label])]:min-w-0 max-md:[&>button:not([aria-label])]:flex-1">
           {closed ? (
