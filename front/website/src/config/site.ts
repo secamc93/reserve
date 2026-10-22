@@ -24,8 +24,8 @@ export const SITE = {
   ],
   // Panel de administración (hoy vive en la raíz de rupü.com).
   appUrl: 'https://xn--rup-joa.com/login',
-  // PENDIENTE: número de WhatsApp comercial en formato internacional sin "+", p. ej. 573001234567.
-  whatsapp: '',
+  // WhatsApp comercial en formato internacional sin "+" (Colombia: 57 + celular).
+  whatsapp: '573026600431',
   // PENDIENTE: correo comercial.
   email: '',
 } as const;
@@ -40,6 +40,8 @@ export const PRICING = {
 } as const;
 
 const demoMessage = 'Hola, quiero conocer Rupü para las votaciones de la asamblea de mi conjunto.';
+
+export const whatsappDisplay = SITE.whatsapp ? `+57 ${SITE.whatsapp.slice(2, 5)} ${SITE.whatsapp.slice(5, 8)} ${SITE.whatsapp.slice(8)}` : '';
 
 /** Enlace del botón "Pide una demo": WhatsApp si hay número, si no correo, si no la sección de contacto. */
 export function demoHref(): string {

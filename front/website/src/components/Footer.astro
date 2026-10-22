@@ -1,6 +1,6 @@
 ---
 import Logo from './Logo.astro';
-import { SITE } from '../config/site';
+import { SITE, demoHref, whatsappDisplay } from '../config/site';
 const year = new Date().getFullYear();
 ---
 
@@ -16,6 +16,7 @@ const year = new Date().getFullYear();
       <a href="#simulador" class="hover:text-turq-700">Simulador</a>
       <a href="#preguntas" class="hover:text-turq-700">Preguntas</a>
       <a href={SITE.appUrl} class="hover:text-turq-700">Entrar al panel</a>
+      {SITE.whatsapp && <a href={demoHref()} class="hover:text-turq-700">WhatsApp {whatsappDisplay}</a>}
       {SITE.email && <a href={`mailto:${SITE.email}`} class="hover:text-turq-700">{SITE.email}</a>}
     </nav>
   </div>

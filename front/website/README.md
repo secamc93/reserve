@@ -34,8 +34,8 @@ terracota (`clay-*`) solo para "lo de antes" (controles, conteos a mano).
 
 ## Pendientes antes de publicar
 
-- [ ] `SITE.whatsapp` y/o `SITE.email` en `src/config/site.ts`: sin ellos, "Pide una demo" baja al cierre
-      de la página y el botón final lleva al panel.
+- [x] `SITE.whatsapp` en `src/config/site.ts` (2026-10-22: +57 302 660 0431). Todos los "Pide una demo"
+      abren WhatsApp con un mensaje listo. `SITE.email` sigue vacío (opcional).
 - [ ] Confirmar el precio ($50.000 COP por día de votación) y la referencia de controles ($8.000/unidad).
 - [ ] Decidir dónde vive: hoy `rupü.com/` es el panel (Next.js). Opciones: sitio en la raíz y panel en
       `app.rupü.com` (o en una ruta), y actualizar `SITE.appUrl`. Falta el servicio en
