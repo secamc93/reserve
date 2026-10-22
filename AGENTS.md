@@ -62,6 +62,8 @@ Producción: `https://rupü.com` (`xn--rup-joa.com`), EC2 temporal con auto-apag
 - **Nunca desactivar un test** (`t.Skip`, `it.skip`) para que pase el build, ni escribir un
   test que pase sin ejercitar la regla. Ver `.claude/rules/testing.md`.
 - **No salirse del alcance** del trabajo pedido: nada de refactors oportunistas.
+- **Producción solo por SSM**: la EC2 solo expone 80/443 (nginx). Servidor y BD se acceden con
+  `aws ssm start-session` (terminal o túnel de puertos); nunca abrir SSH ni otros puertos.
 - **Probar en local primero**; producción solo lectura salvo autorización. Ver
   `.claude/rules/entorno-local.md` y `.claude/rules/test-credentials.md`.
 
