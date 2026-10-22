@@ -43,4 +43,4 @@ for _ in $(seq 1 18); do
   sleep 10
 done
 INSTANCE_TAG_NAME=rupu-prod GITHUB_SHA=rupu-up bash "$(dirname "$0")/../../.github/scripts/ssm-deploy.sh" all
-echo "    SSH: ssh -i cam.pem ubuntu@$IP"
+echo "    Acceso (solo SSM): aws ssm start-session --target $INSTANCE_ID"

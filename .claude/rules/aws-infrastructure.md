@@ -19,7 +19,7 @@
 | IP | **dinámica, sin Elastic IP**: cambia en cada encendido |
 | Auto-apagado | cron en la instancia, 23:59 hora Bogotá (`/etc/cron.d/rupu-autostop`) |
 | Perfil IAM | `rupu-ec2-profile` (ECR pull, Parameter Store `/rupu/*`, SSM) |
-| Key pair | `cam` (`cam.pem` en la raíz del repo, ignorado; SSH como `ubuntu`) |
+| Acceso | **solo AWS Systems Manager (Session Manager)**: sin SSH ni puertos de administración abiertos (ver abajo). Key pair `cam` queda asociado pero el puerto 22 está cerrado |
 | Stack | `~/reserve/infra/compose-prod/`: `postgres_prod`, `central_reserve_prod`, `frontend_prod`, `nginx_prod` |
 | SSL | Let's Encrypt (certbot standalone) para `xn--rup-joa.com` y `www` |
 | Bootstrap | `infra/scripts/rupu-ec2-userdata.sh` |
@@ -66,37 +66,53 @@ aws scheduler create-schedule --name rupu-encender-AAAAMMDD \
 
 ## Security Group - Puertos Abiertos
 
+Desde 2026-10-22 el security group `sg-0511c666dfe873353` (solo lo usa `rupu-prod`) tiene
+**únicamente** los puertos de nginx abiertos:
+
 | Puerto | Protocolo | Acceso | Servicio |
 |--------|-----------|--------|----------|
-| 22 | TCP | 0.0.0.0/0 | SSH |
-| 80 | TCP | 0.0.0.0/0 | HTTP (Nginx) |
-| 443 | TCP | 0.0.0.0/0 | HTTPS (Nginx) |
-| 3050 | TCP | 0.0.0.0/0 | Backend API |
-| 5433 | TCP | IP del dev (restringido) | PostgreSQL |
-| 8080 | TCP | 0.0.0.0/0 | Frontend Next.js |
-| 8081 | TCP | 0.0.0.0/0 | Otros servicios |
+| 80 | TCP | 0.0.0.0/0 | HTTP (nginx; también lo usa certbot standalone) |
+| 443 | TCP | 0.0.0.0/0 | HTTPS (nginx) |
 
-## Problema Frecuente: DB no conecta desde local
+**Prohibido** volver a abrir 22 (SSH), 3050, 8080, 8081, 5432/5433 u otro puerto, ni siquiera
+para una IP: todo acceso de administración va por SSM. El front habla con la API por el dominio
+público (`API_BASE_URL=https://xn--rup-joa.com/api/v1`), así que no necesita el 3050.
 
-**Causa**: El puerto 5433 está restringido por IP. Si el ISP cambia la IP del desarrollador, hay que actualizarla.
+## Acceso al servidor y a la BD (solo SSM)
 
-**Solución**:
+Requiere AWS CLI con perfil `default` y el
+[Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html).
+
 ```bash
-# 1. Obtener IP actual
-curl -s ifconfig.me
+ID=$(aws ec2 describe-instances --filters Name=tag:Name,Values=rupu-prod \
+  Name=instance-state-name,Values=running --query 'Reservations[0].Instances[0].InstanceId' --output text)
 
-# 2. Agregar al security group
-aws ec2 authorize-security-group-ingress \
-  --group-id sg-0511c666dfe873353 \
-  --protocol tcp --port 5433 \
-  --cidr <TU_IP>/32
+# Terminal (usuario ssm-user; `sudo su - ubuntu` para el stack en ~/reserve/infra/compose-prod)
+aws ssm start-session --target $ID
 
-# 3. (Opcional) Remover IP vieja
-aws ec2 revoke-security-group-ingress \
-  --group-id sg-0511c666dfe873353 \
-  --protocol tcp --port 5433 \
-  --cidr <IP_VIEJA>/32
+# Un comando suelto, sin sesión interactiva
+aws ssm send-command --instance-ids $ID --document-name AWS-RunShellScript \
+  --parameters 'commands=["docker ps"]'
+
+# Túnel a la BD de producción (postgres_prod escucha en 5433 del host) → localhost:15433
+aws ssm start-session --target $ID --document-name AWS-StartPortForwardingSession \
+  --parameters '{"portNumber":["5433"],"localPortNumber":["15433"]}'
+# Usuario/BD: /rupu/DB_USER y /rupu/DB_NAME; clave: /rupu/DB_PASSWORD (--with-decryption)
 ```
+
+- **Migraciones de prod**: correr el migrador (`back/dbpostgres`) desde local contra el túnel
+  (`DB_HOST=127.0.0.1 DB_PORT=15433`), con `pg_dump -Fc` previo por el mismo túnel. Ya no hay `scp`.
+- **Copiar archivos** a la EC2: subirlos a S3 y bajarlos desde una sesión SSM (el instance role
+  lo permite si el bucket está en la política) o pasarlos por el túnel; nunca abrir SSH.
+- El auto-apagado, el encendido y los deploys de CI ya funcionaban por SSM: no cambian.
+
+## Usuarios IAM con acceso
+
+| Usuario | Persona | Política |
+|---------|---------|----------|
+| `santiago-admin` | Santiago Camacho (creado 2026-10-22) | `AdministratorAccess` |
+
+Las credenciales nunca se escriben en el repo; se entregan fuera de él.
 
 ## Contenedores en Producción (Docker)
 
@@ -129,4 +145,4 @@ real se mide vía métricas de CloudFront en CloudWatch (namespace `AWS/CloudFro
 
 ---
 
-**Última actualización:** 2026-10-14
+**Última actualización:** 2026-10-22
