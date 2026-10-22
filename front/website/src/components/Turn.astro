@@ -1,0 +1,21 @@
+---
+// Frase de transición: las palabras se encienden una a una con el scroll.
+const words = 'Con Rupü, cada votación dura lo que tarda la gente en'.split(' ');
+const highlight = 'sacar el celular.'.split(' ');
+---
+
+<section class="turn grain relative overflow-hidden bg-ink-900 text-white">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <div class="turn-glow absolute top-1/2 left-1/2 size-[50rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-turq-500/15 blur-[140px]"></div>
+  </div>
+  <div class="turn-pin relative mx-auto flex max-w-5xl items-center px-5 py-32 lg:min-h-[100svh] lg:py-0">
+    <p class="font-display text-[clamp(2.3rem,6vw,5.4rem)] leading-[1] font-extrabold">
+      {words.map((w) => <span class="turn-word">{w} </span>)}
+      {highlight.map((w) => <span class="turn-word text-gradient">{w} </span>)}
+    </p>
+  </div>
+</section>
+
+<style>
+  :global(.motion) .turn-word { opacity: 0.14; }
+</style>

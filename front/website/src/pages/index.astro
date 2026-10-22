@@ -1,17 +1,36 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0; url=/trattoria/inicio" />
-    <title>Redirigiendo a Trattoria La Bella...</title>
-  </head>
-  <body>
-    <p>
-      Si no eres redirigido automáticamente,
-      <a href="/trattoria/inicio">haz clic aquí para ir al inicio</a>.
-    </p>
-  </body>
-</html>
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import Marquee from '../components/Marquee.astro';
+import Problem from '../components/Problem.astro';
+import Turn from '../components/Turn.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Simulator from '../components/Simulator.astro';
+import Pricing from '../components/Pricing.astro';
+import Benefits from '../components/Benefits.astro';
+import Faq from '../components/Faq.astro';
+import FinalCta from '../components/FinalCta.astro';
+import Footer from '../components/Footer.astro';
+---
 
-|
+<Layout withFaqSchema>
+  <Nav />
+  <main id="contenido">
+    <Hero />
+    <Marquee />
+    <Problem />
+    <Turn />
+    <HowItWorks />
+    <Simulator />
+    <Pricing />
+    <Benefits />
+    <Faq />
+    <FinalCta />
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  import '../scripts/motion';
+</script>

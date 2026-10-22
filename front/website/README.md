@@ -1,48 +1,43 @@
-# Astro Starter Kit: Basics
+# Sitio público de Rupü
 
-```sh
-npm create astro@latest -- --template basics
+Landing de venta de Rupü: **software de votaciones para asambleas de propiedad horizontal**.
+Astro 5 estático + Tailwind 4 + GSAP/ScrollTrigger + Lenis. Una sola página larga con
+animaciones de scroll, simulador de votación y calculadora de ahorro frente a controles.
+
+```bash
+npm install
+npm run dev        # http://localhost:4321
+npm run check      # tipos (astro check)
+npm run build      # genera dist/
+npm run preview    # sirve dist/
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+## Estructura
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+| Ruta | Qué hay |
+|------|---------|
+| `src/config/site.ts` | Nombre, URL, textos SEO, precios, contacto (**editar aquí**) |
+| `src/config/faq.ts` | Preguntas frecuentes (página + JSON-LD `FAQPage`) |
+| `src/layouts/Layout.astro` | `<head>`: SEO, Open Graph, JSON-LD (`Organization`, `WebSite`, `SoftwareApplication`, `FAQPage`) |
+| `src/components/` | Una sección por archivo, en el orden de `src/pages/index.astro` |
+| `src/scripts/motion.ts` | Todas las animaciones de scroll (secciones ancladas, carrusel horizontal) |
+| `public/` | Favicons, `og.jpg` (1200×630), manifest |
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+Marca: degradado del logo `#2CD8CC → #25C5C0 → #18A0AE` (tokens `turq-*` en `src/styles/global.css`);
+terracota (`clay-*`) solo para "lo de antes" (controles, conteos a mano).
 
-## 🚀 Project Structure
+## Animaciones y accesibilidad
 
-Inside of your Astro project, you'll see the following folders and files:
+- Las animaciones solo corren si el visitante no pidió reducir movimiento (clase `.motion` en `<html>`).
+  Sin JS o con movimiento reducido, todo el contenido es visible.
+- Secciones ancladas y carrusel horizontal solo en escritorio (≥1024 px); en móvil se apilan.
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## Pendientes antes de publicar
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- [x] `SITE.whatsapp` en `src/config/site.ts` (2026-10-22: +57 302 660 0431). Todos los "Pide una demo"
+      abren WhatsApp con un mensaje listo. `SITE.email` sigue vacío (opcional).
+- [ ] Confirmar el precio ($50.000 COP por día de votación) y la referencia de controles ($8.000/unidad).
+- [ ] Decidir dónde vive: hoy `rupü.com/` es el panel (Next.js). Opciones: sitio en la raíz y panel en
+      `app.rupü.com` (o en una ruta), y actualizar `SITE.appUrl`. Falta el servicio en
+      `infra/compose-prod`, la ruta en `infra/nginx/nginx.conf` y el workflow de CI.
+- [ ] Alta en Google Search Console y envío de `sitemap-index.xml`.

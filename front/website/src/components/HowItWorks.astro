@@ -1,0 +1,185 @@
+---
+// Cinco pasos en carrusel horizontal anclado al scroll (escritorio) o apilados (móvil).
+const steps = [
+  {
+    n: '01',
+    title: 'Registra la asistencia',
+    text: 'Cada unidad entra con su código. Rupü suma los coeficientes y el quórum aparece solo, en pantalla, mientras la gente llega.',
+    ui: 'quorum',
+  },
+  {
+    n: '02',
+    title: 'Apoderados sin enredos',
+    text: 'Registra los poderes antes o durante la asamblea. El apoderado vota por cada unidad que representa y su voto pesa lo que pesan todas.',
+    ui: 'proxy',
+  },
+  {
+    n: '03',
+    title: 'Proyecta el QR',
+    text: 'Los propietarios escanean, ponen la contraseña de voto de su unidad y votan desde el navegador del celular. Nada que instalar.',
+    ui: 'qr',
+  },
+  {
+    n: '04',
+    title: 'Resultados en vivo',
+    text: 'Cada voto mueve la barra, ponderado por coeficiente. Cierras el punto y el resultado ya está, a la vista de todos.',
+    ui: 'live',
+  },
+  {
+    n: '05',
+    title: 'Informe listo para el acta',
+    text: 'Descarga el PDF con el detalle de cada votación: quién votó, qué opción y con qué coeficiente.',
+    ui: 'pdf',
+  },
+];
+
+// QR decorativo de 15×15: tres patrones de posición y relleno pseudoaleatorio estable.
+const Q = 15;
+const finder = (x: number, y: number) => {
+  for (const [bx, by] of [[0, 0], [Q - 5, 0], [0, Q - 5]]) {
+    const dx = x - bx, dy = y - by;
+    if (dx >= 0 && dx < 5 && dy >= 0 && dy < 5) return dx === 0 || dy === 0 || dx === 4 || dy === 4 || (dx === 2 && dy === 2) ? 1 : 0;
+    if (dx >= -1 && dx <= 5 && dy >= -1 && dy <= 5) return 0;
+  }
+  return -1;
+};
+const qr = Array.from({ length: Q * Q }, (_, i) => {
+  const f = finder(i % Q, Math.floor(i / Q));
+  return f >= 0 ? f : (Math.imul(i + 11, 2654435761) >>> 0) % 100 < 48 ? 1 : 0;
+});
+---
+
+<section id="como-funciona" class="how relative bg-ink-900 text-white">
+  <div class="how-pin relative overflow-hidden lg:h-[100svh]">
+    <div class="how-track flex flex-col gap-6 px-5 py-24 lg:h-full lg:w-max lg:flex-row lg:items-center lg:gap-8 lg:py-0 lg:pr-[10vw] lg:pl-[max(1.25rem,calc((100vw-72rem)/2+1.25rem))]">
+      <div class="shrink-0 lg:w-[30rem]">
+        <p class="eyebrow text-turq-300" data-reveal><i class="diamond" style="--size:7px"></i> Cómo funciona</p>
+        <h2 class="font-display mt-5 text-[clamp(2.4rem,5vw,4.4rem)] leading-[0.95] font-extrabold" data-reveal>
+          Cinco pasos.<br /><span class="text-gradient">Cero conteos.</span>
+        </h2>
+        <p class="mt-6 max-w-sm text-lg text-white/65" data-reveal>
+          Todo lo que hoy se hace con planillas, controles y Excel, en una sola pantalla que el administrador maneja desde el computador.
+        </p>
+        <div class="mt-10 hidden items-center gap-3 font-mono text-xs text-white/55 lg:flex">
+          <span class="h-px w-10 bg-white/25"></span> sigue bajando
+        </div>
+      </div>
+
+      {
+        steps.map((s) => (
+          <article class="how-card group relative flex shrink-0 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-b from-ink-800 to-ink-900 p-7 lg:h-[34rem] lg:w-[26rem]">
+            <div class="flex items-start justify-between">
+              <span class="font-display text-6xl font-extrabold text-white/10 transition-colors duration-500 group-hover:text-turq-400/40">{s.n}</span>
+              <i class="diamond mt-3" style="--size:10px" />
+            </div>
+
+            <div class="relative my-6 grid min-h-[12rem] flex-1 place-items-center rounded-3xl border border-white/5 bg-ink-950/50 p-5" aria-hidden="true">
+              {s.ui === 'quorum' && (
+                <div class="w-full max-w-[15rem]">
+                  <div class="flex items-end justify-between">
+                    <p class="text-xs font-semibold tracking-wider text-white/50 uppercase">Quórum</p>
+                    <p class="font-mono text-3xl font-bold"><span class="count" data-to="63.4" data-decimals="1">63,4</span>%</p>
+                  </div>
+                  <div class="relative mt-3 h-4 rounded-full bg-white/10">
+                    <div class="bar-fill bg-brand h-full rounded-full" style="width:63.4%" />
+                    <div class="absolute top-[-6px] bottom-[-6px] left-1/2 w-0.5 bg-white/60" />
+                  </div>
+                  <p class="mt-2 text-right font-mono text-[10px] text-white/55">mínimo 50%</p>
+                  <div class="mt-4 grid grid-cols-8 gap-1">
+                    {Array.from({ length: 32 }, (_, i) => (
+                      <span class:list={['aspect-square rounded-[4px]', i % 5 === 3 || i % 7 === 6 ? 'bg-white/10' : 'bg-turq-500/80']} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {s.ui === 'proxy' && (
+                <div class="flex w-full max-w-[16rem] flex-col items-center gap-4">
+                  <div class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3">
+                    <span class="bg-brand grid size-10 place-items-center rounded-full font-bold text-ink-950">MR</span>
+                    <div>
+                      <p class="text-sm font-semibold">Marta R.</p>
+                      <p class="text-xs text-white/50">Apoderada de 3 unidades</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap justify-center gap-2">
+                    {['T1-302 · 0,58%', 'T1-305 · 0,61%', 'T3-1104 · 0,74%'].map((u) => (
+                      <span class="rounded-full border border-turq-400/40 bg-turq-400/10 px-3 py-1 font-mono text-[11px] text-turq-200">{u}</span>
+                    ))}
+                  </div>
+                  <p class="font-mono text-xs text-white/50">
+                    Su voto pesa <span class="font-bold text-turq-300">1,93%</span>
+                  </p>
+                </div>
+              )}
+              {s.ui === 'qr' && (
+                <div class="flex items-center gap-5">
+                  <div class="qr grid grid-cols-[repeat(15,1fr)] gap-[2px] rounded-2xl bg-white p-3">
+                    {qr.map((c) => (
+                      <span class:list={['size-[7px] rounded-[1.5px]', c ? 'bg-ink-900' : 'bg-transparent']} />
+                    ))}
+                  </div>
+                  <div class="space-y-2">
+                    <p class="text-xs text-white/50">Contraseña</p>
+                    <p class="font-mono text-lg font-bold tracking-[0.3em]">K7·R2</p>
+                    <p class="rounded-full bg-turq-400/15 px-2 py-1 text-center text-[10px] font-semibold text-turq-300">T2-804</p>
+                  </div>
+                </div>
+              )}
+              {s.ui === 'live' && (
+                <div class="flex w-full max-w-[16rem] items-center gap-5">
+                  <svg viewBox="0 0 42 42" class="size-28 shrink-0 -rotate-90">
+                    <circle cx="21" cy="21" r="15.9" fill="none" stroke="rgb(255 255 255 / .08)" stroke-width="6" />
+                    <circle class="donut-seg" cx="21" cy="21" r="15.9" fill="none" stroke="#2CD8CC" stroke-width="6" pathLength="100" stroke-dasharray="68 32" stroke-dashoffset="0" />
+                    <circle class="donut-seg" cx="21" cy="21" r="15.9" fill="none" stroke="#E0603F" stroke-width="6" pathLength="100" stroke-dasharray="24 76" stroke-dashoffset="-68" />
+                    <circle class="donut-seg" cx="21" cy="21" r="15.9" fill="none" stroke="rgb(255 255 255 / .45)" stroke-width="6" pathLength="100" stroke-dasharray="8 92" stroke-dashoffset="-92" />
+                  </svg>
+                  <ul class="space-y-2 text-sm">
+                    <li class="flex items-center gap-2"><span class="size-2.5 rounded-full bg-turq-400" /> Sí <b class="ml-auto font-mono">68%</b></li>
+                    <li class="flex items-center gap-2"><span class="size-2.5 rounded-full bg-clay-500" /> No <b class="ml-auto font-mono">24%</b></li>
+                    <li class="flex items-center gap-2"><span class="size-2.5 rounded-full bg-white/45" /> Abst. <b class="ml-auto font-mono">8%</b></li>
+                    <li class="pt-1 font-mono text-[10px] text-turq-300">Aprobado ✓</li>
+                  </ul>
+                </div>
+              )}
+              {s.ui === 'pdf' && (
+                <div class="relative">
+                  <div class="absolute top-3 left-4 h-44 w-36 rotate-6 rounded-xl bg-white/10" />
+                  <div class="relative h-44 w-36 -rotate-3 rounded-xl bg-white p-3 text-ink-900 shadow-2xl">
+                    <div class="flex items-center justify-between">
+                      <span class="h-2 w-12 rounded bg-ink-900" />
+                      <span class="rounded bg-clay-500 px-1 text-[8px] font-bold text-white">PDF</span>
+                    </div>
+                    <div class="mt-3 space-y-1.5">
+                      <span class="block h-1.5 w-full rounded bg-ink-900/15" />
+                      <span class="block h-1.5 w-4/5 rounded bg-ink-900/15" />
+                    </div>
+                    <div class="mt-3 flex h-2 overflow-hidden rounded-full">
+                      <span class="w-[68%] bg-turq-500" />
+                      <span class="w-[24%] bg-clay-500" />
+                      <span class="w-[8%] bg-ink-900/30" />
+                    </div>
+                    <div class="mt-3 space-y-1">
+                      {Array.from({ length: 6 }, () => (
+                        <span class="flex gap-1">
+                          <span class="h-1.5 w-1/4 rounded bg-ink-900/10" />
+                          <span class="h-1.5 w-1/2 rounded bg-ink-900/10" />
+                          <span class="h-1.5 w-1/4 rounded bg-turq-500/40" />
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <h3 class="font-display text-2xl font-bold">{s.title}</h3>
+            <p class="mt-2 text-white/65">{s.text}</p>
+          </article>
+        ))
+      }
+    </div>
+    <div class="how-progress pointer-events-none absolute bottom-8 left-1/2 hidden h-1 w-48 -translate-x-1/2 overflow-hidden rounded-full bg-white/10 lg:block" aria-hidden="true">
+      <span class="how-progress-bar bg-brand block h-full w-full origin-left scale-x-0"></span>
+    </div>
+  </div>
+</section>

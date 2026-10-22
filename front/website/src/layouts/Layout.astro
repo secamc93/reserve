@@ -1,46 +1,133 @@
 ---
-import { ViewTransitions } from "astro:transitions";
-import "../styles/global.css";
-import Navbar from "../components/layout/Navbar.astro";
-import Footer from "../components/layout/Footer.astro";
+import '../styles/global.css';
+import { SITE, PRICING } from '../config/site';
+import { FAQ } from '../config/faq';
+import displayFont from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url';
 
 interface Props {
   title?: string;
+  description?: string;
+  noindex?: boolean;
+  withFaqSchema?: boolean;
 }
 
-const { title = "Trattoria La Bella" } = Astro.props;
+const { title = SITE.title, description = SITE.description, noindex = false, withFaqSchema = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname === '/' ? '/' : Astro.url.pathname, SITE.url).href;
+const ogImage = new URL('/og.jpg', SITE.url).href;
+
+const schema: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${SITE.url}/#org`,
+    name: SITE.name,
+    url: SITE.url,
+    logo: new URL('/icon-512.png', SITE.url).href,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${SITE.url}/#website`,
+    name: SITE.name,
+    url: SITE.url,
+    inLanguage: SITE.lang,
+    publisher: { '@id': `${SITE.url}/#org` },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Rupü — votaciones para asambleas',
+    applicationCategory: 'BusinessApplication',
+    applicationSubCategory: 'Votación electrónica para asambleas de propiedad horizontal',
+    operatingSystem: 'Web, Android, iOS',
+    url: SITE.url,
+    inLanguage: SITE.lang,
+    description: SITE.description,
+    featureList: [
+      'Quórum en tiempo real por coeficiente',
+      'Votación por coeficiente desde el celular',
+      'Ingreso con código QR y contraseña por unidad',
+      'Registro de apoderados',
+      'Resultados en vivo para proyectar',
+      'Informe PDF de cada votación',
+    ],
+    offers: {
+      '@type': 'Offer',
+      price: PRICING.rupuPerAssembly,
+      priceCurrency: PRICING.currency,
+      description: 'Precio por día de votación',
+      areaServed: 'CO',
+    },
+    publisher: { '@id': `${SITE.url}/#org` },
+  },
+];
+
+if (withFaqSchema) {
+  schema.push({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQ.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  });
+}
 ---
 
-<html lang="es">
+<!doctype html>
+<html lang={SITE.lang}>
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <!-- ✅ Google Fonts: Cinzel con pesos delgados -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@200;300;400&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Font Awesome CDN -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
+    <meta name="description" content={description} />
+    <meta name="keywords" content={SITE.keywords.join(', ')} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="es-CO" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+    <meta name="theme-color" content="#04201f" />
+    <meta name="application-name" content={SITE.name} />
+    <meta name="geo.region" content="CO" />
 
-    <!-- Si ya tienes Dancing Script también -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap"
-      rel="stylesheet"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <ViewTransitions />
+    <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content={SITE.locale} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Rupü: votaciones de asamblea en minutos, no en horas" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+    <!-- Activa las animaciones solo si el visitante no pidió reducir movimiento. -->
+    <script is:inline>
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('motion');
+        // Si el JS de animaciones no carga, mostrar todo igual.
+        setTimeout(function () { if (!window.__motionReady) document.documentElement.classList.remove('motion'); }, 4000);
+      }
+    </script>
   </head>
-  <body class="bg-white text-gray-900 font-serif antialiased">
-    <Navbar />
-    <main>
-      <slot />
-    </main>
-    <Footer />
+  <body>
+    <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-ink-900">
+      Saltar al contenido
+    </a>
+    <slot />
   </body>
 </html>

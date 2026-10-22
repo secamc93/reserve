@@ -1,0 +1,65 @@
+---
+// Una asamblea típica contada como línea de tiempo. Al hacer scroll el reloj avanza
+// y se ilumina cada momento (la animación vive en scripts/motion.ts).
+const moments = [
+  { time: '19:00', minutes: 0, title: 'Se llama a lista', text: 'Unidad por unidad, en voz alta. Alguien anota en una planilla.' },
+  { time: '19:50', minutes: 50, title: '¿Hay quórum?', text: 'Nadie está seguro. Toca sumar coeficientes a mano antes de empezar.' },
+  { time: '20:40', minutes: 100, title: 'Mano alzada', text: '«Yo voté sí». «Pero usted no es el propietario». «Tengo el poder». Se repite.' },
+  { time: '21:30', minutes: 150, title: 'Excel al rescate', text: 'El conteo por coeficiente no cuadra. Se vuelve a votar el mismo punto.' },
+  { time: '22:40', minutes: 220, title: 'La mitad ya se fue', text: 'Quedan puntos por votar y el quórum se cae. Hay que convocar otra vez.' },
+  { time: '23:15', minutes: 255, title: 'Y el acta…', text: 'Llegará en dos semanas, con resultados que nadie puede verificar.' },
+];
+---
+
+<section id="problema" class="problem relative bg-paper text-ink-900">
+  <div class="problem-pin mx-auto grid max-w-6xl gap-12 px-5 py-24 lg:min-h-[100svh] lg:grid-cols-2 lg:items-center lg:gap-20 lg:py-0">
+    <div>
+      <p class="eyebrow text-clay-600" data-reveal><span class="diamond" style="--size:7px;background:var(--color-clay-500)"></span> Así se vota hoy</p>
+      <h2 class="font-display mt-5 text-[clamp(2.4rem,5vw,4.2rem)] leading-[0.95] font-extrabold" data-reveal>
+        Una asamblea de <span class="text-clay-500">4 horas</span> que debió durar una.
+      </h2>
+      <p class="mt-6 max-w-md text-lg text-ink-900/65" data-reveal>
+        Las votaciones son lo que más tiempo se come. Y en cada una alguien termina dudando del resultado.
+      </p>
+
+      <!-- Reloj -->
+      <div class="mt-10 flex items-center gap-6" data-reveal aria-hidden="true">
+        <div class="relative size-36 shrink-0 sm:size-44">
+          <svg viewBox="0 0 120 120" class="size-full -rotate-90">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="8" class="text-ink-900/8" />
+            <circle class="clock-arc" cx="60" cy="60" r="54" fill="none" stroke="var(--color-clay-500)" stroke-width="8" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0" />
+          </svg>
+          <svg viewBox="0 0 120 120" class="absolute inset-0 size-full">
+            <g class="clock-hand" style="transform-origin:60px 60px; transform: rotate(1530deg)">
+              <line x1="60" y1="60" x2="60" y2="22" stroke="var(--color-ink-900)" stroke-width="4" stroke-linecap="round" />
+            </g>
+            <circle cx="60" cy="60" r="5" fill="var(--color-ink-900)" />
+          </svg>
+        </div>
+        <div>
+          <p class="font-mono text-5xl font-bold tabular-nums sm:text-6xl"><span class="clock-time">23:15</span></p>
+          <p class="mt-1 font-mono text-sm text-ink-900/65">duración: <span class="clock-elapsed text-clay-600">4 h 15 min</span></p>
+        </div>
+      </div>
+    </div>
+
+    <ol class="relative space-y-2 border-l-2 border-ink-900/10 pl-6 sm:pl-8">
+      {
+        moments.map((m) => (
+          <li class="moment relative rounded-3xl px-5 py-4 transition-all duration-500" data-minutes={m.minutes} data-reveal>
+            <span class="moment-dot absolute top-6 -left-[33px] size-4 sm:-left-[41px] rounded-full border-4 border-paper bg-ink-900/20 transition-colors duration-500" />
+            <p class="font-mono text-sm font-semibold text-clay-600">{m.time}</p>
+            <h3 class="font-display mt-0.5 text-xl font-bold sm:text-2xl">{m.title}</h3>
+            <p class="mt-1 text-[15px] leading-snug text-ink-900/65">{m.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  :global(.motion) .problem.is-pinned .moment { opacity: 0.28 !important; }
+  :global(.motion) .problem.is-pinned .moment[data-on] { opacity: 1 !important; background: white; box-shadow: 0 20px 50px -25px rgb(4 32 31 / 0.35); }
+  :global(.motion) .problem.is-pinned .moment[data-on] .moment-dot { background: var(--color-clay-500); }
+</style>

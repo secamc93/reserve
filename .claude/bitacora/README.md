@@ -12,4 +12,6 @@ Un archivo por caso. Reglas: `.claude/rules/bitacora.md`.
 | 2026-10-15 | [Apoderados en asistencia, contraseñas de voto y carga real de Tayazal](2026-10-15-apoderados-contrasenas-y-carga-tayazal.md) | back / front / votaciones |
 | 2026-10-15 | [Rediseño de parqueaderos: esquema, catálogos y propiedad del super admin](2026-10-15-rediseno-parqueaderos-y-esquema.md) | back / migrador |
 | 2026-10-15 | [Unidades que no se podían desactivar y filtro por documento ignorado](2026-10-15-unidades-no-se-desactivaban-y-filtro-dni.md) | back / unidades / residentes |
+| 2026-10-19 | [Serie de videos cortos de Rupü sobre votaciones de asamblea](2026-10-19-serie-videos-votaciones-asamblea.md) | marketing / videos |
 | 2026-10-22 | [Cobro por día de votación con Wompi](2026-10-22-cobro-por-dia-de-votacion-wompi.md) | back / migrador / front / pagos |
+| 2026-10-22 | [Web pública, front local en el 3005 y prospección de administradoras en Facebook](2026-10-22-web-publica-y-prospeccion-facebook.md) | website / entorno local / marketing |
