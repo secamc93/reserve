@@ -36,8 +36,11 @@ terracota (`clay-*`) solo para "lo de antes" (controles, conteos a mano).
 
 - [x] `SITE.whatsapp` en `src/config/site.ts` (2026-10-22: +57 302 660 0431). Todos los "Pide una demo"
       abren WhatsApp con un mensaje listo. `SITE.email` sigue vacío (opcional).
-- [ ] Confirmar el precio ($50.000 COP por día de votación) y la referencia de controles ($8.000/unidad).
-- [ ] Decidir dónde vive: hoy `rupü.com/` es el panel (Next.js). Opciones: sitio en la raíz y panel en
-      `app.rupü.com` (o en una ruta), y actualizar `SITE.appUrl`. Falta el servicio en
-      `infra/compose-prod`, la ruta en `infra/nginx/nginx.conf` y el workflow de CI.
+- [x] Precio confirmado por el usuario (2026-10-22): $50.000 COP por día de votación.
+- [ ] Confirmar la referencia de controles ($8.000/unidad).
+- [x] Dónde vive (2026-10-22): **dentro de la imagen del nginx de producción** (`infra/nginx/Dockerfile`
+      la compila con `--build-context website=../../front/website`). nginx sirve `/`, `/_astro/`, el OG,
+      robots, sitemap, manifest e íconos; el resto de rutas sigue siendo el panel. Sale con el workflow
+      `nginx-ci-cd.yml` (también se dispara con cambios en `front/website/**`). Se apaga con la EC2 a las
+      23:59; para tenerla 24/7 habría que pasarla a S3 + CloudFront.
 - [ ] Alta en Google Search Console y envío de `sitemap-index.xml`.

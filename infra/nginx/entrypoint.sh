@@ -115,6 +115,22 @@ http {
         listen 80;
         server_name ${DOMAIN};
         
+        # Web pública (front/website, compilada dentro de esta imagen): la portada y sus archivos.
+        # Todo lo demás (/login, /properties, /public/vote…) sigue siendo el panel.
+        location = / {
+            root /usr/share/nginx/website;
+            try_files /index.html =404;
+            add_header Cache-Control "no-cache";
+        }
+        location /_astro/ {
+            root /usr/share/nginx/website;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+        location ~ ^/(og\.jpg|robots\.txt|sitemap-index\.xml|sitemap-0\.xml|site\.webmanifest|icon-192\.png|icon-512\.png|apple-touch-icon\.png|favicon-32\.png)$ {
+            root /usr/share/nginx/website;
+        }
+
         # Proxy al frontend
         location / {
             proxy_pass http://frontend:3000;

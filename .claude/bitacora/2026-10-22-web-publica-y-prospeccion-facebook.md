@@ -20,7 +20,14 @@ web, por qué el front local cambió de puerto y cómo se sacaron los prospectos
 - Marco del celular: el PNG que dio el usuario traía el damero de "transparencia" **pintado**; se le
   quitó con ImageMagick (opacidad según oscuridad del píxel) y se recortó a `src/assets/phone-frame.png`
   (501×1030, pantalla con insets ~4% / 1,7% y radio 14%/6,6%).
-- **Pendiente para publicar:** confirmar precio ($50.000 por día de votación y referencia de
+- **Publicación (2026-10-22, decisión del usuario):** la web se compila dentro de la imagen
+  `rupu-nginx` y nginx sirve la raíz de `rupü.com` (portada, `/_astro/`, OG, robots, sitemap, manifest e
+  íconos); el panel conserva sus rutas. Probado en local con la imagen ARM64 y la configuración HTTPS de
+  producción. Ojo: `entrypoint.sh` no exporta `SSL_CERT_PATH`/`SSL_KEY_PATH`; en producción llegan por el
+  `.env` que arma `deploy.sh`. Para probar la imagen en local hay que pasarlas con `-e` (si no, `envsubst`
+  deja vacío `ssl_certificate` y nginx no arranca). Wompi bloquea (403 de CloudFront) cualquier
+  `redirect-url` con `localhost` o `127.0.0.1`; para probar pagos en local usar `http://rupu.localhost:3005`.
+- **Pendiente previo (ya resuelto en parte):** confirmar precio ($50.000 por día de votación y referencia de
   $8.000/unidad en alquiler de controles) y decidir dónde vive (propuesta: web en la raíz de
   `rupü.com`, panel en `app.rupü.com`; toca nginx, compose-prod y CI). Detalle en `front/website/README.md`.
 
