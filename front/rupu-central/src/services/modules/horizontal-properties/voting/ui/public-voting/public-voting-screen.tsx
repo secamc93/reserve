@@ -240,7 +240,7 @@ export function PublicVotingScreen({
           </div>
 
           {hasVoted && (
-          <div className="mt-[18px] px-4 py-3.5 rounded-[10px] text-white flex items-center gap-3" style={{ background: voteColor }} role="status">
+          <div className="mt-[18px] px-4 py-3.5 rounded-2xl text-white flex items-center gap-3" style={{ background: voteColor }} role="status">
             <VtIcon name="check" size={22} strokeWidth={2.5} />
             <div className="leading-tight min-w-0">
               <div className="text-[15px] font-semibold">
@@ -280,11 +280,11 @@ export function PublicVotingScreen({
           </div>
 
           <div className="mt-[22px] grid grid-cols-2 gap-2.5">
-            <div className="bg-white rounded-lg px-3.5 py-3" style={{ border: `1px solid ${VT.border}` }}>
+            <div className="bg-white rounded-2xl px-3.5 py-3" style={{ border: `1px solid ${VT.border}` }}>
               <div className={`${vtMono} text-[10px] tracking-[.06em]`} style={{ color: VT.muted }}>PARTICIPACIÓN</div>
               <div className={`${vtMono} text-2xl leading-tight font-semibold tracking-[-.03em] mt-1`}>{formatPct(participation)}%</div>
             </div>
-            <div className="bg-white rounded-lg px-3.5 py-3" style={{ border: `1px solid ${VT.border}` }}>
+            <div className="bg-white rounded-2xl px-3.5 py-3" style={{ border: `1px solid ${VT.border}` }}>
               <div className={`${vtMono} text-[10px] tracking-[.06em]`} style={{ color: VT.muted }}>QUÓRUM</div>
               <div className={`${vtMono} text-2xl leading-tight font-semibold tracking-[-.03em] mt-1`} style={{ color: status.fg }}>
                 {status.short}
@@ -303,14 +303,14 @@ export function PublicVotingScreen({
               <button
                 type="button"
                 onClick={onSuccess}
-                className="h-10 max-md:h-11 px-4 rounded-lg bg-white text-[13px] font-medium"
+                className="h-10 max-md:h-11 px-4 rounded-2xl bg-white text-[13px] font-medium"
                 style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
               >
                 Ver detalle por unidad
               </button>
             )}
             {isGroupToken && onBack && !isOpen && (
-              <button type="button" onClick={onBack} className="h-10 max-md:h-11 px-4 rounded-lg text-white text-[13px] font-semibold" style={{ background: VT.ink }}>
+              <button type="button" onClick={onBack} className="h-10 max-md:h-11 px-4 rounded-full text-white text-[13px] font-semibold" style={{ background: VT.brand }}>
                 Volver a los puntos
               </button>
             )}
@@ -356,7 +356,7 @@ export function PublicVotingScreen({
                   aria-checked={selected}
                   disabled={submitting || !isOpen}
                   onClick={() => setSelectedOptionId(option.id)}
-                  className="min-h-[68px] rounded-[10px] flex items-center justify-between px-5 py-3 text-xl font-semibold text-left transition-[box-shadow,background-color] duration-150 disabled:opacity-60"
+                  className="min-h-[68px] rounded-2xl flex items-center justify-between px-5 py-3 text-xl font-semibold text-left transition-[box-shadow,background-color] duration-150 disabled:opacity-60"
                   style={
                     selected
                       ? { background: color, color: '#fff', border: `1.5px solid ${color}`, boxShadow: `0 0 0 3px ${VT.paper}, 0 0 0 5px ${color}` }
@@ -376,8 +376,8 @@ export function PublicVotingScreen({
             type="button"
             onClick={handleVote}
             disabled={!selectedOptionId || submitting || !isOpen}
-            className="h-[52px] rounded-[10px] text-white text-base font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: VT.ink }}
+            className="h-[52px] rounded-full text-white text-base font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: VT.brand }}
           >
             {submitting ? 'Registrando voto…' : selectedOption ? `Confirmar voto: ${selectedOption.option_text}` : 'Selecciona una opción'}
           </button>

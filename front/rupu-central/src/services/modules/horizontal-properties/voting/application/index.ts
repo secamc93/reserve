@@ -24,3 +24,4 @@ export * from './get-voting-by-id.use-case';
 export * from './update-voting.use-case';
 export * from './get-unvoted-units.use-case';
 
+export * from './voting-billing.use-cases';

@@ -805,7 +805,7 @@ export function LiveVotingModal({
     : formatOrder(voting.displayOrder);
 
   const secondaryButton =
-    'h-8 px-3 rounded-md bg-white text-[13px] font-medium transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed';
+    'h-8 px-3 rounded-xl bg-white text-[13px] font-medium transition-colors hover:bg-[#f5f5f4] disabled:opacity-50 disabled:cursor-not-allowed';
 
   /** Menú "más acciones": en el encabezado (escritorio) o en la barra inferior (teléfono, abre hacia arriba). */
   const renderMoreMenu = (mobile: boolean) => (
@@ -813,7 +813,7 @@ export function LiveVotingModal({
                 <button
                   type="button"
                   onClick={() => setShowMoreMenu(v => !v)}
-                  className={`${mobile ? 'h-11 w-11' : 'h-8 w-8'} rounded-md bg-white flex items-center justify-center hover:bg-[#f5f5f4]`}
+                  className={`${mobile ? 'h-11 w-11' : 'h-8 w-8'} rounded-xl bg-white flex items-center justify-center hover:bg-[#f5f5f4]`}
                   style={{ border: `1px solid ${VT.borderStrong}`, color: VT.inkSoft }}
                   aria-haspopup="menu"
                   aria-expanded={showMoreMenu}
@@ -827,7 +827,7 @@ export function LiveVotingModal({
                     <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} aria-hidden="true" />
                     <div
                       role="menu"
-                      className={`absolute right-0 ${mobile ? 'bottom-full mb-2' : 'top-10'} z-20 w-56 rounded-lg bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,.12)]`}
+                      className={`absolute right-0 ${mobile ? 'bottom-full mb-2' : 'top-10'} z-20 w-56 rounded-2xl bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,.12)]`}
                       style={{ border: `1px solid ${VT.border}` }}
                     >
                       {mobile && isActive && (
@@ -941,7 +941,7 @@ export function LiveVotingModal({
                   </span>
                 )
               ) : (
-                <span className={`${vtMono} text-[11px] font-medium tracking-[.06em] px-1.5 py-0.5 rounded`} style={{ color: VT.muted, border: `1px solid ${VT.borderStrong}` }}>
+                <span className={`${vtMono} text-[11px] font-medium tracking-[.06em] px-1.5 py-0.5 rounded-full`} style={{ color: VT.muted, border: `1px solid ${VT.borderStrong}` }}>
                   CERRADA
                 </span>
               )}
@@ -982,8 +982,8 @@ export function LiveVotingModal({
               <button
                 type="button"
                 onClick={handleVote}
-                className="h-8 px-3.5 rounded-md text-[13px] font-semibold text-white transition-colors hover:bg-[#c8603f] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a1a]"
-                style={{ background: VT.ink }}
+                className="h-8 px-4 rounded-full text-[13px] font-semibold text-white transition-[filter] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100"
+                style={{ background: VT.brand }}
                 disabled={!isActive}
               >
                 Registrar voto
@@ -1016,7 +1016,7 @@ export function LiveVotingModal({
                   <img
                     src={qr.data.qrDataUrl}
                     alt={`Código QR para votar en ${qr.data.groupName}`}
-                    className="w-[104px] h-[104px] rounded-lg"
+                    className="w-[104px] h-[104px] rounded-2xl"
                     style={{ border: `1px solid ${VT.border}` }}
                   />
                   <div className="flex flex-col gap-1.5 min-w-0 flex-1">
@@ -1069,8 +1069,8 @@ export function LiveVotingModal({
                     <button
                       type="button"
                       onClick={loadVotingDetails}
-                      className="h-8 px-3.5 rounded-md text-[13px] font-semibold text-white"
-                      style={{ background: VT.ink }}
+                      className="h-8 px-4 rounded-full text-[13px] font-semibold text-white"
+                      style={{ background: VT.brand }}
                     >
                       Reintentar
                     </button>
@@ -1078,7 +1078,7 @@ export function LiveVotingModal({
                 </div>
               ) : colorConfigError ? (
                 <div className="flex items-center justify-center h-full">
-                  <div className="max-w-2xl mx-auto p-6 rounded-lg bg-white" style={{ border: `1px solid ${VT.border}` }}>
+                  <div className="max-w-2xl mx-auto p-6 rounded-2xl bg-white" style={{ border: `1px solid ${VT.border}` }}>
                     <p className="font-semibold mb-3" style={{ color: VT.live }}>Error de configuración de colores</p>
                     <p className="text-sm leading-relaxed" style={{ color: VT.inkSoft }}>{colorConfigError}</p>
                   </div>
@@ -1272,7 +1272,7 @@ export function LiveVotingModal({
         size="md"
       >
         <div className="space-y-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1290,7 +1290,7 @@ export function LiveVotingModal({
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-gray-50 rounded-2xl p-4">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Votación:</span>
@@ -1344,7 +1344,7 @@ export function LiveVotingModal({
         >
           <div className="space-y-6">
             {/* Advertencia */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
                   <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1363,7 +1363,7 @@ export function LiveVotingModal({
             </div>
 
             {/* Detalles del voto a eliminar */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-2xl p-4">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600 font-medium">Unidad:</span>

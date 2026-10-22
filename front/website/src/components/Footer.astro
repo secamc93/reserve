@@ -1,0 +1,27 @@
+---
+import Logo from './Logo.astro';
+import { SITE, demoHref, whatsappDisplay } from '../config/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-paper px-5 pt-16 pb-10 text-ink-900">
+  <div class="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:items-start md:justify-between">
+    <div class="max-w-sm">
+      <Logo tone="dark" size="md" />
+      <p class="mt-4 text-ink-900/70">Software de votaciones para asambleas de propiedad horizontal. Quórum, voto por coeficiente y resultados en vivo.</p>
+    </div>
+    <nav aria-label="Pie de página" class="grid grid-cols-2 gap-x-14 gap-y-3 text-sm font-semibold">
+      <a href="#como-funciona" class="hover:text-turq-700">Cómo funciona</a>
+      <a href="#precios" class="hover:text-turq-700">Precios</a>
+      <a href="#simulador" class="hover:text-turq-700">Simulador</a>
+      <a href="#preguntas" class="hover:text-turq-700">Preguntas</a>
+      <a href={SITE.appUrl} class="hover:text-turq-700">Entrar al panel</a>
+      {SITE.whatsapp && <a href={demoHref()} class="hover:text-turq-700">WhatsApp {whatsappDisplay}</a>}
+      {SITE.email && <a href={`mailto:${SITE.email}`} class="hover:text-turq-700">{SITE.email}</a>}
+    </nav>
+  </div>
+  <div class="mx-auto mt-14 flex max-w-6xl flex-col gap-2 border-t border-ink-900/10 pt-6 text-xs text-ink-900/65 sm:flex-row sm:justify-between">
+    <p>© {year} Rupü · {SITE.displayUrl}</p>
+    <p>Hecho para asambleas que terminan a tiempo.</p>
+  </div>
+</footer>

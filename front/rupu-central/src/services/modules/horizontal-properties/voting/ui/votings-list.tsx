@@ -165,7 +165,7 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload,
       {error && <VtNotice>{error}</VtNotice>}
 
       {votings.length === 0 ? (
-        <div className="rounded-lg py-8 text-center text-[13px] bg-white" style={{ border: `1px dashed ${VT.borderStrong}`, color: VT.muted }}>
+        <div className="rounded-2xl py-8 text-center text-[13px] bg-white" style={{ border: `1px dashed ${VT.borderStrong}`, color: VT.muted }}>
           Aún no hay votaciones en este grupo.
         </div>
       ) : (
@@ -200,7 +200,7 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload,
               <li
                 key={voting.id}
                 aria-label={voting.title}
-                className="bg-white rounded-lg px-3.5 sm:px-[18px] py-3.5 grid grid-cols-[26px_minmax(0,1fr)] md:grid-cols-[32px_1fr_auto] lg:grid-cols-[32px_minmax(0,1fr)_minmax(180px,300px)_90px_auto] gap-x-3 md:gap-x-[18px] gap-y-3 items-center"
+                className="bg-white rounded-2xl px-3.5 sm:px-[18px] py-3.5 grid grid-cols-[26px_minmax(0,1fr)] md:grid-cols-[32px_1fr_auto] lg:grid-cols-[32px_minmax(0,1fr)_minmax(180px,300px)_90px_auto] gap-x-3 md:gap-x-[18px] gap-y-3 items-center"
                 style={{ border: `1px solid ${VT.border}` }}
               >
                 <div className={`${vtMono} text-[13px] font-medium`} style={{ color: VT.muted }}>
@@ -236,11 +236,11 @@ export function VotingsList({ businessId, groupId, groupName, votings, onReload,
                     type="button"
                     disabled={busyId === voting.id}
                     onClick={() => handlePrimary(voting, status.key)}
-                    className="h-[30px] max-md:h-11 max-md:flex-1 max-md:text-sm justify-center px-3 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors disabled:opacity-60"
+                    className="h-[30px] max-md:h-11 max-md:flex-1 max-md:text-sm justify-center px-3.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap transition-[filter,background-color] hover:brightness-95 disabled:opacity-60"
                     style={
                       status.primary
-                        ? { background: VT.ink, color: '#fff', border: `1px solid ${VT.ink}` }
-                        : { background: '#fff', color: VT.ink, border: `1px solid ${VT.borderStrong}` }
+                        ? { background: VT.brand, color: '#fff', border: `1px solid ${VT.brand}` }
+                        : { background: '#fff', color: VT.ink, border: `1px solid ${VT.border}` }
                     }
                     aria-label={`${status.action}: ${voting.title}`}
                   >

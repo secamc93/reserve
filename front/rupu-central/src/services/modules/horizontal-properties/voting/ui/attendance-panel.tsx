@@ -336,7 +336,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                 href={`/properties/${businessId}/voting-groups`}
                 aria-label="Volver a los grupos de votación"
                 title={group?.name ?? 'Grupos de votación'}
-                className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
+                className="inline-flex items-center justify-center w-7 h-7 max-md:w-11 max-md:h-11 rounded-xl text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
               >
                 <VtIcon name="back" size={14} />
               </Link>
@@ -378,7 +378,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                 onClick={onClose}
                 aria-label="Cerrar asistencia"
                 title="Cerrar (Esc)"
-                className="inline-flex items-center justify-center w-9 h-9 max-md:w-11 max-md:h-11 rounded-md text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
+                className="inline-flex items-center justify-center w-9 h-9 max-md:w-11 max-md:h-11 rounded-xl text-[#6b6a66] hover:text-[#1a1a1a] hover:bg-white"
               >
                 ✕
               </button>
@@ -400,7 +400,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
             <Spinner size="md" text="Cargando asistencia..." />
           </div>
         ) : !listId && !anyVoting ? (
-          <div className="bg-white rounded-[10px] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
+          <div className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
             <h2 className="m-0 text-[17px] font-semibold">Este grupo aún no tiene lista de asistencia</h2>
             {caps.canManage ? (
               <>
@@ -421,7 +421,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
           <>
             {/* Resumen por coeficiente */}
             <div
-              className="bg-white rounded-[10px] px-4 sm:px-[22px] py-[18px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-10 items-center"
+              className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] px-4 sm:px-[22px] py-[18px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5 md:gap-10 items-center"
               style={{ border: `1px solid ${VT.border}` }}
             >
               <div>
@@ -433,8 +433,8 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                   </span>
                 </div>
                 <div className="relative h-3.5" role="img" aria-label={`Presentes ${formatPct(summary.presentCoefPct)}% del coeficiente. Quórum ${quorum}%`}>
-                  <div className="h-full rounded bg-white overflow-hidden" style={{ border: `1px solid ${VT.borderStrong}` }}>
-                    <div className="h-full transition-[width] duration-500" style={{ width: `${Math.min(summary.presentCoefPct, 100)}%`, background: VT.ink }} />
+                  <div className="h-full rounded-full bg-white overflow-hidden" style={{ border: `1px solid ${VT.borderStrong}` }}>
+                    <div className="h-full transition-[width] duration-500" style={{ width: `${Math.min(summary.presentCoefPct, 100)}%`, background: VT.brand }} />
                   </div>
                   <div className="absolute w-0.5" style={{ top: -5, bottom: -5, left: `${quorum}%`, background: VT.accent }} />
                 </div>
@@ -444,7 +444,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                 </div>
               </div>
               <div
-                className="inline-flex justify-self-start md:justify-self-auto items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold"
+                className="inline-flex justify-self-start md:justify-self-auto items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-semibold"
                 style={{ background: status.bg, color: status.fg }}
                 role="status"
               >
@@ -453,7 +453,7 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
             </div>
 
             {/* Tabla */}
-            <div className="bg-white rounded-[10px] flex flex-col overflow-hidden" style={{ border: `1px solid ${VT.border}` }}>
+            <div className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] flex flex-col overflow-hidden" style={{ border: `1px solid ${VT.border}` }}>
               <div className="px-4 sm:px-[18px] py-3 flex flex-wrap justify-between items-center gap-3" style={{ borderBottom: `1px solid ${VT.border}` }}>
                 <div className="flex flex-wrap gap-1" role="tablist" aria-label="Filtrar unidades">
                   {tabs.map((t) => (
@@ -463,15 +463,15 @@ export function AttendancePanel({ businessId, groupId, onClose }: AttendancePane
                       role="tab"
                       aria-selected={filter === t.key}
                       onClick={() => changeFilter(t.key)}
-                      className="px-2.5 py-1 max-md:h-9 max-md:px-3 rounded-[5px] text-xs font-medium"
-                      style={filter === t.key ? { background: VT.ink, color: '#fff' } : { color: VT.inkSoft }}
+                      className="px-3 py-1 max-md:h-9 max-md:px-3.5 rounded-full text-xs font-medium"
+                      style={filter === t.key ? { background: VT.brand, color: '#fff' } : { color: VT.inkSoft }}
                     >
                       {t.label} · {t.count}
                     </button>
                   ))}
                 </div>
                 <label
-                  className="flex items-center gap-2 h-[30px] max-md:h-11 max-md:text-base px-2.5 rounded-md text-xs w-full sm:w-[240px] focus-within:ring-1 focus-within:ring-[#c8603f]"
+                  className="flex items-center gap-2 h-[30px] max-md:h-11 max-md:text-base px-2.5 rounded-xl text-xs w-full sm:w-[240px] focus-within:ring-1 focus-within:ring-[#c8603f]"
                   style={{ border: `1px solid ${VT.borderStrong}`, color: VT.muted }}
                 >
                   <VtIcon name="search" size={14} />

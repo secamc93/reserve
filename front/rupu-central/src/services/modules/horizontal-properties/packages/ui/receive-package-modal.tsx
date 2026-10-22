@@ -197,7 +197,7 @@ export function ReceivePackageModal({ isOpen, onClose, onSuccess, businessId }: 
                 type="button"
                 aria-pressed={form.carrierChip === c}
                 onClick={() => set('carrierChip', c)}
-                className={`px-3 py-1.5 max-md:py-2.5 rounded-[6px] text-[13px] font-medium ${form.carrierChip === c ? 'bg-[#1a1a1a] text-white' : 'border border-[#d6d3cd] text-[#4b4a46] hover:bg-[#f5f5f4]'}`}
+                className={`px-3.5 py-1.5 max-md:py-2.5 rounded-full text-[13px] font-medium ${form.carrierChip === c ? 'bg-[#0F7F8A] text-white' : 'border border-[#e4e2dd] text-[#4b4a46] hover:bg-[#f5f5f4]'}`}
               >
                 {c}
               </button>
@@ -224,7 +224,7 @@ export function ReceivePackageModal({ isOpen, onClose, onSuccess, businessId }: 
               disabled
               title="Sin lector de códigos conectado: escribe la guía"
               aria-label="Escanear guía (sin lector conectado)"
-              className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md flex items-center justify-center text-[#8a8580] disabled:opacity-60"
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center text-[#8a8580] disabled:opacity-60"
             >
               <VtIcon name="qr" size={16} />
             </button>
@@ -236,7 +236,7 @@ export function ReceivePackageModal({ isOpen, onClose, onSuccess, businessId }: 
             type="button"
             disabled
             title="La foto del paquete estará disponible cuando se habilite la subida de archivos"
-            className="w-[120px] h-[96px] shrink-0 rounded-lg border-[1.5px] border-dashed border-[#c9c6c0] bg-[#faf9f7] text-[11px] text-[#8a8580] flex flex-col items-center justify-center gap-1 cursor-not-allowed"
+            className="w-[120px] h-[96px] shrink-0 rounded-2xl border-[1.5px] border-dashed border-[#c9c6c0] bg-[#faf9f7] text-[11px] text-[#8a8580] flex flex-col items-center justify-center gap-1 cursor-not-allowed"
           >
             <span className="text-lg leading-none" aria-hidden="true">
               +

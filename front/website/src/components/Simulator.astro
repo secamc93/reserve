@@ -1,0 +1,214 @@
+---
+// Simulador interactivo: 60 unidades votan en vivo y el resultado se calcula por coeficiente.
+// El visitante es la unidad T2-304 y puede votar. Todo es local, no hay red.
+const towers = ['T1', 'T2', 'T3'];
+const units = towers.flatMap((t) => [1, 2, 3, 4, 5].flatMap((floor) => [1, 2, 3, 4].map((apt) => `${t}-${floor}0${apt}`)));
+---
+
+<section id="simulador" class="relative overflow-hidden bg-paper py-24 text-ink-900 sm:py-32">
+  <div class="mx-auto max-w-6xl px-5">
+    <div class="max-w-2xl">
+      <p class="eyebrow text-turq-700" data-reveal><i class="diamond" style="--size:7px"></i> Pruébalo ahora</p>
+      <h2 class="font-display mt-5 text-[clamp(2.4rem,5vw,4.2rem)] leading-[0.95] font-extrabold" data-reveal>
+        Simula una votación de <span class="text-gradient">60 unidades.</span>
+      </h2>
+      <p class="mt-6 text-lg text-ink-900/65" data-reveal>
+        Abre el punto y mira cómo llegan los votos, cada uno con el peso de su coeficiente. Tú eres la unidad <b class="font-mono text-ink-900">T2-304</b>: vota también.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-6 lg:grid-cols-[1.25fr_1fr]" data-reveal>
+      <!-- Edificio -->
+      <div class="rounded-[2rem] border border-ink-900/8 bg-white p-5 shadow-[0_30px_80px_-40px_rgb(4_32_31/0.35)] sm:p-7">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="font-display text-lg font-bold">Punto 3 · ¿Se aprueba pintar las fachadas?</p>
+          <p class="rounded-full bg-ink-900/5 px-3 py-1 font-mono text-xs font-semibold" id="sim-status">Cerrada</p>
+        </div>
+        <div class="mt-6 grid grid-cols-3 gap-3 sm:gap-5">
+          {
+            towers.map((t) => (
+              <div>
+                <p class="mb-2 text-center font-mono text-xs font-semibold text-ink-900/65">Torre {t.slice(1)}</p>
+                <div class="grid grid-cols-4 gap-1 rounded-2xl bg-ink-900/[0.03] p-1.5 sm:gap-2 sm:p-3" role="list" aria-label={`Unidades de la torre ${t.slice(1)}`}>
+                  {units
+                    .filter((u) => u.startsWith(t))
+                    .reverse()
+                    .map((u) => (
+                      <span
+                        role="listitem"
+                        class:list={['sim-cell grid aspect-square place-items-center rounded-lg font-mono text-[8px] font-semibold text-ink-900/80 transition-all duration-300 sm:text-[9px]', u === 'T2-304' && 'sim-me']}
+                        data-unit={u}
+                        title={u}
+                      >
+                        {u.slice(3)}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            ))
+          }
+        </div>
+        <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-ink-900/70">
+          <span class="flex items-center gap-1.5"><i class="size-3 rounded bg-turq-400"></i> Sí</span>
+          <span class="flex items-center gap-1.5"><i class="size-3 rounded bg-clay-500"></i> No</span>
+          <span class="flex items-center gap-1.5"><i class="size-3 rounded bg-ink-900/35"></i> Abstención</span>
+          <span class="flex items-center gap-1.5"><i class="size-3 rounded bg-ink-900/8"></i> Sin votar</span>
+          <span class="flex items-center gap-1.5"><i class="size-3 rounded ring-2 ring-ink-900"></i> Tu unidad</span>
+        </div>
+      </div>
+
+      <!-- Panel -->
+      <div class="flex flex-col gap-6 rounded-[2rem] bg-ink-900 p-6 text-white sm:p-8">
+        <div class="flex items-center justify-between">
+          <p class="eyebrow text-[11px] text-white/55">Resultado por coeficiente</p>
+          <p class="font-mono text-sm text-white/60">⏱ <span id="sim-timer" class="text-white">00:00</span></p>
+        </div>
+
+        <div>
+          <div class="flex h-5 overflow-hidden rounded-full bg-white/10">
+            <span id="sim-bar-yes" class="h-full w-0 bg-turq-400 transition-[width] duration-300"></span>
+            <span id="sim-bar-no" class="h-full w-0 bg-clay-500 transition-[width] duration-300"></span>
+            <span id="sim-bar-abs" class="h-full w-0 bg-white/40 transition-[width] duration-300"></span>
+          </div>
+          <div class="mt-4 grid grid-cols-3 gap-3">
+            <div><p class="font-mono text-3xl font-bold text-turq-300" id="sim-yes">0,0%</p><p class="text-xs text-white/50">Sí</p></div>
+            <div><p class="font-mono text-3xl font-bold text-clay-400" id="sim-no">0,0%</p><p class="text-xs text-white/50">No</p></div>
+            <div><p class="font-mono text-3xl font-bold text-white/75" id="sim-abs">0,0%</p><p class="text-xs text-white/50">Abst.</p></div>
+          </div>
+          <p class="mt-4 font-mono text-xs text-white/50"><span id="sim-count">0</span> de 60 unidades · <span id="sim-coef">0,0</span>% del coeficiente votó</p>
+        </div>
+
+        <div class="rounded-2xl bg-white/5 p-4" id="sim-me-box">
+          <p class="text-sm font-semibold">Tu voto (T2-304)</p>
+          <div class="mt-3 grid grid-cols-3 gap-2" role="group" aria-label="Tu voto">
+            <button type="button" class="sim-vote rounded-xl border border-white/15 py-2.5 text-sm font-bold transition hover:bg-white/10 disabled:opacity-35" data-vote="yes" disabled>Sí</button>
+            <button type="button" class="sim-vote rounded-xl border border-white/15 py-2.5 text-sm font-bold transition hover:bg-white/10 disabled:opacity-35" data-vote="no" disabled>No</button>
+            <button type="button" class="sim-vote rounded-xl border border-white/15 py-2.5 text-sm font-bold transition hover:bg-white/10 disabled:opacity-35" data-vote="abs" disabled>Abst.</button>
+          </div>
+        </div>
+
+        <p id="sim-result" class="font-display min-h-[2.5rem] text-2xl font-bold" aria-live="polite">Abre el punto para empezar.</p>
+
+        <button type="button" id="sim-start" class="btn btn-primary mt-auto w-full text-base">Abrir votación</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .sim-cell { background: rgb(4 32 31 / 0.08); }
+  .sim-cell[data-v='yes'] { background: var(--color-turq-400); color: var(--color-ink-950); transform: scale(1.06); }
+  .sim-cell[data-v='no'] { background: var(--color-clay-500); color: white; transform: scale(1.06); }
+  .sim-cell[data-v='abs'] { background: rgb(4 32 31 / 0.35); color: white; transform: scale(1.06); }
+  .sim-me { box-shadow: 0 0 0 2px var(--color-ink-900); color: var(--color-ink-900); }
+  .sim-vote[aria-pressed='true'] { background: var(--color-turq-400); border-color: var(--color-turq-400); color: var(--color-ink-950); }
+</style>
+
+<script>
+  type Vote = 'yes' | 'no' | 'abs';
+  const cells = [...document.querySelectorAll<HTMLElement>('.sim-cell')];
+  const $ = (id: string) => document.getElementById(id)!;
+  const startBtn = $('sim-start') as HTMLButtonElement;
+  const voteBtns = [...document.querySelectorAll<HTMLButtonElement>('.sim-vote')];
+  const fmt = (n: number) => n.toFixed(1).replace('.', ',');
+  const ME = 'T2-304';
+
+  // Coeficientes estables (pseudoaleatorios) normalizados a 100%.
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const raw = cells.map(() => 1.1 + rand() * 1.1);
+  const total = raw.reduce((a, b) => a + b, 0);
+  const coef = new Map(cells.map((c, i) => [c.dataset.unit!, (raw[i] / total) * 100]));
+  cells.forEach((c) => (c.title = `${c.dataset.unit} · coef. ${coef.get(c.dataset.unit!)!.toFixed(2).replace('.', ',')}%`));
+
+  const votes = new Map<string, Vote>();
+  let timer = 0, startedAt = 0, running = false, finished = false;
+  const pending: number[] = [];
+
+  const paint = () => {
+    const sum = { yes: 0, no: 0, abs: 0 };
+    votes.forEach((v, u) => (sum[v] += coef.get(u)!));
+    const voted = sum.yes + sum.no + sum.abs;
+    $('sim-bar-yes').style.width = sum.yes + '%';
+    $('sim-bar-no').style.width = sum.no + '%';
+    $('sim-bar-abs').style.width = sum.abs + '%';
+    $('sim-yes').textContent = fmt(voted ? (sum.yes / voted) * 100 : 0) + '%';
+    $('sim-no').textContent = fmt(voted ? (sum.no / voted) * 100 : 0) + '%';
+    $('sim-abs').textContent = fmt(voted ? (sum.abs / voted) * 100 : 0) + '%';
+    $('sim-count').textContent = String(votes.size);
+    $('sim-coef').textContent = fmt(voted);
+    return { sum, voted };
+  };
+
+  const setCell = (unit: string, v: Vote) => {
+    votes.set(unit, v);
+    cells.find((c) => c.dataset.unit === unit)!.dataset.v = v;
+    paint();
+  };
+
+  const clock = () => {
+    const s = Math.floor((performance.now() - startedAt) / 1000);
+    $('sim-timer').textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  };
+
+  const finish = () => {
+    running = false;
+    finished = true;
+    clearInterval(timer);
+    clock();
+    voteBtns.forEach((b) => (b.disabled = true));
+    const { sum, voted } = paint();
+    const yesPct = voted ? (sum.yes / voted) * 100 : 0;
+    $('sim-status').textContent = 'Cerrada';
+    $('sim-result').innerHTML =
+      yesPct > 50
+        ? `<span class="text-turq-300">Aprobado</span> con ${fmt(yesPct)}% del coeficiente que votó. Listo en ${$('sim-timer').textContent}.`
+        : `<span class="text-clay-400">No aprobado</span>: el sí llegó a ${fmt(yesPct)}%. Listo en ${$('sim-timer').textContent}.`;
+    startBtn.textContent = 'Repetir simulación';
+    startBtn.disabled = false;
+  };
+
+  const reset = () => {
+    pending.forEach(clearTimeout);
+    pending.length = 0;
+    votes.clear();
+    cells.forEach((c) => delete c.dataset.v);
+    voteBtns.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+    $('sim-timer').textContent = '00:00';
+    paint();
+  };
+
+  const start = () => {
+    reset();
+    running = true;
+    finished = false;
+    startedAt = performance.now();
+    timer = window.setInterval(clock, 250);
+    $('sim-status').textContent = '● Abierta';
+    $('sim-result').textContent = 'Los vecinos están votando…';
+    startBtn.textContent = 'Votación en curso…';
+    startBtn.disabled = true;
+    voteBtns.forEach((b) => (b.disabled = false));
+
+    // ~90% de las unidades votan en unos 12 segundos, más rápido al comienzo.
+    const others = cells.map((c) => c.dataset.unit!).filter((u) => u !== ME).filter(() => Math.random() < 0.9);
+    others.sort(() => Math.random() - 0.5);
+    others.forEach((u, i) => {
+      const t = 400 + Math.pow(i / others.length, 1.6) * 11000 + Math.random() * 300;
+      const r = Math.random();
+      const v: Vote = r < 0.62 ? 'yes' : r < 0.88 ? 'no' : 'abs';
+      pending.push(window.setTimeout(() => running && setCell(u, v), t));
+    });
+    pending.push(window.setTimeout(() => running && finish(), 12600));
+  };
+
+  startBtn.addEventListener('click', start);
+  voteBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      if (!running || finished) return;
+      voteBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      setCell(ME, b.dataset.vote as Vote);
+    }),
+  );
+  paint();
+</script>

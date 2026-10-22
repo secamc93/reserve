@@ -15,13 +15,13 @@ import { DAY_SHORT, calendarTone, closedBands, groupByDay, hourRange, isInactive
 const HOUR_PX = 48;
 
 const TONE_STYLE: Record<CalendarTone, { background: string; color: string; boxShadow?: string }> = {
-  approved: { background: DS.ink, color: '#fff' },
+  approved: { background: DS.brand, color: '#fff' },
   pending: { background: DS.accent, color: '#fff', boxShadow: `0 0 0 2px #fff, 0 0 0 3.5px ${DS.accent}` },
   past: { background: DS.pendingBorder, color: DS.inkSoft },
 };
 
 export const CALENDAR_LEGEND = [
-  { label: 'Aprobada', swatch: { background: DS.ink } },
+  { label: 'Aprobada', swatch: { background: DS.brand } },
   { label: 'Pendiente', swatch: { background: DS.accent } },
   { label: 'Pasada', swatch: { background: DS.pendingBorder } },
 ];
@@ -47,7 +47,7 @@ export function WeekCalendar({ days, reservations, schedules, today, now, select
   const shadeClosed = schedules.length > 0;
 
   return (
-    <div className="bg-white border border-[#e4e2dd] rounded-[10px] overflow-hidden">
+    <div className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] overflow-hidden">
       <div className="overflow-x-auto">
         <div style={{ minWidth: 840 }} role="grid" aria-label="Calendario semanal de reservas">
           <div role="row" className="grid border-b border-[#efedea]" style={{ gridTemplateColumns: template }}>

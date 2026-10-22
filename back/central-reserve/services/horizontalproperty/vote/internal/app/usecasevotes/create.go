@@ -26,6 +26,11 @@ func (u *VotesUseCase) CreateVote(ctx context.Context, dto domain.CreateVoteDTO)
 		return nil, err
 	}
 
+	// Cobro de Rupü: sin el día de votación pagado no entra ningún voto
+	if err := u.ensureVotingPaid(ctx, dto.VotingID); err != nil {
+		return nil, err
+	}
+
 	// Verificar que la unidad tenga asistencia marcada para esta votación
 	hasAttendance, err := u.repo.CheckUnitAttendanceForVoting(ctx, dto.VotingID, dto.PropertyUnitID)
 	if err != nil {

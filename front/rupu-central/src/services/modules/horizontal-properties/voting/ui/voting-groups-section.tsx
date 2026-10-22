@@ -18,6 +18,7 @@ import { VotingGroupFormModal } from './voting-group-form-modal';
 import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
 import { GroupQRModal } from './components/group-qr-modal';
+import { VotingBillingBanner } from './voting-billing-banner';
 import { useGroupQr, useVotingCapabilities, GROUP_QR_VALID_HOURS } from './hooks';
 import {
   VT,
@@ -122,7 +123,7 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
             <Spinner size="md" text="Cargando grupos de votación..." />
           </div>
         ) : groups.length === 0 ? (
-          <div className="bg-white rounded-[10px] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
+          <div className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
             <h2 className="m-0 text-[17px] font-semibold">Aún no hay grupos de votación</h2>
             {caps.canManage && (
               <>
@@ -254,7 +255,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
   return (
     <section
       aria-label={`Grupo ${group.name}`}
-      className="bg-white rounded-[10px] overflow-hidden"
+      className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] overflow-hidden"
       style={{ border: `1px solid ${VT.border}`, opacity: closed && !expanded ? 0.85 : 1, color: closed && !expanded ? VT.inkSoft : undefined }}
     >
       <div
@@ -270,6 +271,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
             {meta}
           </div>
           {qr.error && <div className="text-xs" style={{ color: VT.live }}>{qr.error}</div>}
+          {canManage && !closed && <VotingBillingBanner businessId={businessId} groupId={group.id} />}
         </div>
         <div className="flex gap-1.5 items-center flex-wrap max-md:flex-nowrap max-md:w-full max-md:[&>a]:flex-1 max-md:[&>a]:min-w-0 max-md:[&>button:not([aria-label])]:min-w-0 max-md:[&>button:not([aria-label])]:flex-1">
           {closed ? (
@@ -329,7 +331,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
           <button
             type="button"
             onClick={onToggle}
-            className="inline-flex items-center justify-center h-8 w-8 max-md:h-11 max-md:w-11 rounded-md transition-colors hover:bg-[#e4e2dd]"
+            className="inline-flex items-center justify-center h-8 w-8 max-md:h-11 max-md:w-11 rounded-xl transition-colors hover:bg-[#e4e2dd]"
             style={{ background: '#efedea', color: VT.ink }}
             aria-expanded={expanded}
             aria-label={expanded ? `Contraer grupo ${group.name}` : `Expandir grupo ${group.name}`}

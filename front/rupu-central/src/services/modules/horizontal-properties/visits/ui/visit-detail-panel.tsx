@@ -156,7 +156,7 @@ export function VisitDetailPanel({ businessId, row, onClose, onChanged, onEdit, 
         busy={busy}
         eyebrow={`Visita #${row.id}${code ? ` · Cód. aut. ${code}` : ''}`}
         avatar={
-          <div className={`${dsMono} w-11 h-11 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center text-sm font-semibold shrink-0`} aria-hidden="true">
+          <div className={`${dsMono} w-11 h-11 rounded-full bg-[#E3F5F5] text-[#0C6B76] flex items-center justify-center text-sm font-semibold shrink-0`} aria-hidden="true">
             {initials(row.visitorName)}
           </div>
         }
@@ -201,12 +201,12 @@ export function VisitDetailPanel({ businessId, row, onClose, onChanged, onEdit, 
         </PanelSection>
 
         <div className="grid grid-cols-2 gap-2.5">
-          <section aria-label="Autorizó" className="rounded-[10px] border border-[#e4e2dd] px-3.5 py-3 min-w-0">
+          <section aria-label="Autorizó" className="rounded-2xl border border-[#e4e2dd] px-3.5 py-3 min-w-0">
             <DsEyebrow className="mb-1.5">Autorizó</DsEyebrow>
             <div className="text-[13px] font-semibold truncate">{authorizer || 'Sin registro'}</div>
             <div className="text-[11px] text-[#8a8580] truncate">{authorizer ? `Residente · ${unit}` : `${formatWallDay(row.scheduledDate)} ${formatWallTime(row.scheduledStartTime)}`}</div>
           </section>
-          <section aria-label="Activos declarados" className="rounded-[10px] border border-[#e4e2dd] px-3.5 py-3 min-w-0">
+          <section aria-label="Activos declarados" className="rounded-2xl border border-[#e4e2dd] px-3.5 py-3 min-w-0">
             <DsEyebrow className="mb-1.5">Activos declarados</DsEyebrow>
             {assets && assets.length > 0 ? (
               <ul className="m-0 p-0 list-none text-[13px]">

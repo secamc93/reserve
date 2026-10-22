@@ -7,3 +7,4 @@ export * from './voting.entity';
 export * from './voting-option.entity';
 export * from './vote.entity';
 
+export * from './voting-billing.entity';

@@ -73,7 +73,7 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
           <span>{residentData.unitNumber}</span>
         </div>
 
-        <div className="mt-3.5 flex items-center gap-2.5 px-3 py-2.5 bg-white rounded-lg text-[13px]" style={{ border: `1px solid ${VT.border}` }}>
+        <div className="mt-3.5 flex items-center gap-2.5 px-3 py-2.5 bg-white rounded-2xl text-[13px]" style={{ border: `1px solid ${VT.border}` }}>
           <span className={`${vtMono} w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold flex-shrink-0`} style={{ background: '#efedea' }}>
             {initialsOf(residentData.name)}
           </span>
@@ -90,7 +90,7 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
 
         <ul className="mt-3 mb-0 p-0 list-none flex flex-col gap-2" aria-label="Puntos a votar">
           {ordered.length === 0 && (
-            <li className="bg-white rounded-[10px] px-4 py-6 text-center text-sm" style={{ border: `1px solid ${VT.border}`, color: VT.muted }}>
+            <li className="bg-white rounded-2xl px-4 py-6 text-center text-sm" style={{ border: `1px solid ${VT.border}`, color: VT.muted }}>
               Aún no hay puntos para votar.
             </li>
           )}
@@ -101,7 +101,7 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
               <button
                 type="button"
                 onClick={() => onSelectVoting(voting.id, voting, total)}
-                className="inline-flex items-center justify-center w-8 h-8 max-md:w-11 max-md:h-11 max-md:-mr-2 rounded-md flex-shrink-0 transition-colors hover:bg-[#efedea]"
+                className="inline-flex items-center justify-center w-8 h-8 max-md:w-11 max-md:h-11 max-md:-mr-2 rounded-xl flex-shrink-0 transition-colors hover:bg-[#efedea]"
                 style={{ color: VT.inkSoft }}
                 aria-label={`Ver resultado de ${voting.title}`}
                 title="Ver resultado"
@@ -115,7 +115,7 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
                 <li
                   key={voting.id}
                   aria-label={voting.title}
-                  className="bg-white rounded-[10px] px-4 py-3.5 flex flex-col gap-2.5"
+                  className="bg-white rounded-2xl px-4 py-3.5 flex flex-col gap-2.5"
                   style={{ border: `1.5px solid ${VT.yes}`, boxShadow: '0 0 0 4px rgba(31,138,76,.10)' }}
                 >
                   <div className="flex justify-between items-center">
@@ -126,8 +126,8 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
                   <button
                     type="button"
                     onClick={() => onSelectVoting(voting.id, voting, total)}
-                    className="h-11 rounded-lg text-white text-sm font-semibold"
-                    style={{ background: VT.ink }}
+                    className="h-11 rounded-full text-white text-sm font-semibold"
+                    style={{ background: VT.brand }}
                   >
                     Votar ahora
                   </button>
@@ -140,7 +140,7 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
                 <li
                   key={voting.id}
                   aria-label={voting.title}
-                  className="bg-white rounded-[10px] px-4 py-3 flex gap-3 items-center"
+                  className="bg-white rounded-2xl px-4 py-3 flex gap-3 items-center"
                   style={{ border: `1px solid ${voting.is_active ? VT.yes : VT.border}` }}
                 >
                   <span className={`${vtMono} text-[11px] font-medium`} style={{ color: VT.muted }}>{formatOrder(voting.display_order)}</span>
@@ -160,7 +160,7 @@ export function PublicVotingsList({ votingAuthToken, residentData, onSelectVotin
               <li
                 key={voting.id}
                 aria-label={voting.title}
-                className="rounded-[10px] px-4 py-3 flex gap-3 items-center"
+                className="rounded-2xl px-4 py-3 flex gap-3 items-center"
                 style={{ background: '#ecebe8', border: `1px solid ${VT.border}`, color: VT.muted }}
               >
                 <span className={`${vtMono} text-[11px] font-medium`}>{formatOrder(voting.display_order)}</span>

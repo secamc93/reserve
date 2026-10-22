@@ -214,6 +214,10 @@ func (h *PublicHandler) CreatePublicVote(c *gin.Context) {
 		fmt.Fprintf(os.Stderr, "[ERROR] handlers/create-public-vote.go - Error creando voto: %v\n", err)
 		h.logger.Error().Err(err).Uint("voting_id", votingID).Uint("resident_id", residentID).Msg("Error creando voto público")
 		// Reglas de negocio: no son errores del servidor.
+		if errors.Is(err, domain.ErrVotingDayNotPaid) {
+			c.JSON(http.StatusPaymentRequired, response.ErrorResponse{Success: false, Message: "La votación de esta asamblea todavía no está habilitada. Avísale al administrador.", Error: err.Error()})
+			return
+		}
 		if errors.Is(err, domain.ErrUnitWithoutAttendance) {
 			c.JSON(http.StatusForbidden, response.ErrorResponse{Success: false, Message: "Tu unidad no tiene asistencia registrada para esta votación", Error: err.Error()})
 			return

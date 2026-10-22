@@ -112,7 +112,14 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		&models.ParkingReservationStatus{},
 		&models.ParkingReservation{},
 		&models.ParkingOccupancy{},
+		// Cobro por día de votación
+		&models.VotingBillingSetting{},
+		&models.VotingGroupPayment{},
 	); err != nil {
+		return err
+	}
+
+	if err := uc.exemptExistingPropertiesOnce(); err != nil {
 		return err
 	}
 
@@ -344,6 +351,39 @@ func (uc *MigrationUseCase) createHorizontalPropertySchema() error {
 
 	uc.logger.Info().Msg("✅ Esquema horizontal_property creado correctamente")
 	return nil
+}
+
+// billingExemptionsMarker es el comentario de la tabla de configuración de cobro que indica que
+// las exenciones iniciales ya se aplicaron en esta base.
+const billingExemptionsMarker = "exenciones iniciales aplicadas"
+
+// exemptExistingPropertiesOnce marca como exentas del cobro de votaciones a todas las propiedades
+// que existen la primera vez que se migra con el cobro; las que se creen después pagan. Corre una
+// sola vez por base: al terminar deja billingExemptionsMarker como comentario de la tabla (en la
+// misma transacción, así que si falla se reintenta en la siguiente migración).
+func (uc *MigrationUseCase) exemptExistingPropertiesOnce() error {
+	var applied bool
+	if err := uc.db.Raw(`SELECT COALESCE(obj_description('horizontal_property.voting_billing_settings'::regclass, 'pg_class'), '') = ?`,
+		billingExemptionsMarker).Scan(&applied).Error; err != nil {
+		return err
+	}
+	if applied {
+		return nil
+	}
+	return uc.db.Transaction(func(tx *gorm.DB) error {
+		res := tx.Exec(`
+			INSERT INTO horizontal_property.voting_billing_settings (business_id, exempt, created_at, updated_at)
+			SELECT id, true, NOW(), NOW() FROM business WHERE deleted_at IS NULL
+			ON CONFLICT (business_id) DO NOTHING`)
+		if res.Error != nil {
+			return res.Error
+		}
+		if err := tx.Exec(`COMMENT ON TABLE horizontal_property.voting_billing_settings IS '` + billingExemptionsMarker + `'`).Error; err != nil {
+			return err
+		}
+		uc.logger.Info().Int64("propiedades", res.RowsAffected).Msg("Propiedades existentes exentas del cobro por día de votación")
+		return nil
+	})
 }
 
 func intPtr(n int) *int { return &n }

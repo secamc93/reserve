@@ -159,7 +159,7 @@ export function ResultsView({
                     : `RESULTADOS · VOTACIÓN ${order}`}
                 </span>
                 {closed && (
-                  <span className="px-[9px] py-[3px] rounded text-[11px] font-semibold text-white" style={{ background: verdict.color }}>
+                  <span className="px-[9px] py-[3px] rounded-full text-[11px] font-semibold text-white" style={{ background: verdict.color }}>
                     {verdict.label}
                   </span>
                 )}

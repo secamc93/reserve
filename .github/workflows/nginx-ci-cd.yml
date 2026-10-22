@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'infra/nginx/**'
+      - 'front/website/**'
       - '.github/workflows/nginx-ci-cd.yml'
       - '.github/scripts/ssm-deploy.sh'
   pull_request:
@@ -13,6 +14,7 @@ on:
       - main
     paths:
       - 'infra/nginx/**'
+      - 'front/website/**'
   workflow_dispatch:
 
 permissions:
@@ -55,7 +57,9 @@ jobs:
         run: |
           BUILD_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
           echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP" >> $GITHUB_ENV
+          # La web pública se compila dentro de la imagen (ver infra/nginx/Dockerfile)
           docker build \
+            --build-context website=../../front/website \
             -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$BUILD_TIMESTAMP \
             .

@@ -3,12 +3,18 @@
  *  - Patrón A · Lista: cabecera secundaria (pestañas en píldora + acciones), chips de filtro,
  *    buscador y tabla densa con encabezados en mono.
  *  - Patrón C · Detalle: panel con secciones rotuladas en mono.
- * La barra superior (miga de pan) la pone el layout de propiedad horizontal.
+ * La barra superior y el riel lateral flotantes los pone el layout de propiedad horizontal;
+ * `DsSectionHeader` lleva sus pestañas al riel en escritorio.
  */
 
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { useNavSlot } from '../nav-slots';
+import { getInitials } from '../../utils/navigation';
+import { tabIcon } from './tab-icons';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '../use-media-query';
 import { dsFontRoot, dsMono } from './fonts';
 import { DS } from './tokens';
 
@@ -40,6 +46,10 @@ export interface DsTab<T extends string = string> {
 /**
  * Cabecera secundaria (52 px, fondo #efedea): pestañas en píldora a la izquierda y acciones a
  * la derecha. Sin pestañas sirve como barra de título + acciones.
+ *
+ * En escritorio con la navegación flotante, las pestañas (submenús del módulo) pasan al riel
+ * lateral como iconos verticales (nombre y conteo al pasar el mouse; ver `tab-icons`) y las
+ * acciones a la barra superior, junto al usuario. Un encabezado solo con título se queda aquí.
  */
 export function DsSectionHeader<T extends string>({
   tabs,
@@ -57,9 +67,58 @@ export function DsSectionHeader<T extends string>({
   actions?: ReactNode;
   ariaLabel?: string;
 }) {
+  const submenuSlot = useNavSlot('submenu');
+  const actionsSlot = useNavSlot('actions');
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const hasTabs = !!tabs && tabs.length > 0;
+
+  if (tabs && hasTabs && submenuSlot && isDesktop) {
+    return (
+      <>
+        {createPortal(
+          <div role="tablist" aria-label={ariaLabel} aria-orientation="vertical" className={`${dsFontRoot} flex flex-col items-center gap-1`}>
+            {tabs.map((tab) => {
+              const on = tab.id === active;
+              const Icon = tabIcon(tab.id);
+              const hasCount = tab.count !== undefined && tab.count !== null && tab.count !== '';
+              const name = hasCount ? `${tab.label} · ${tab.count}` : tab.label;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  aria-label={name}
+                  onClick={() => onChange?.(tab.id)}
+                  className={`group relative w-10 h-10 rounded-full inline-flex items-center justify-center transition-colors ${
+                    on ? 'text-white shadow-sm' : 'text-[#6b6a66] hover:bg-[#f5f5f4] hover:text-[#1a1a1a]'
+                  }`}
+                  style={on ? { backgroundColor: 'var(--color-primary)' } : undefined}
+                >
+                  {Icon ? <Icon className="w-5 h-5" aria-hidden="true" /> : <span className="text-[11px] font-bold" aria-hidden="true">{getInitials(tab.label)}</span>}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                  >
+                    {name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>,
+          submenuSlot,
+        )}
+        {actions &&
+          (actionsSlot
+            ? createPortal(<div className={`${dsFontRoot} flex items-center gap-2`}>{actions}</div>, actionsSlot)
+            : <div className="flex flex-wrap items-center justify-end gap-2 px-8 pt-4">{actions}</div>)}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-[52px] bg-[#efedea] border-b border-[#e4e2dd] flex flex-wrap md:flex-nowrap items-center gap-1 px-4 md:px-6 py-2 md:py-0">
-      {tabs && tabs.length > 0 ? (
+      {hasTabs ? (
         <div role="tablist" aria-label={ariaLabel} className="flex items-center gap-1 overflow-x-auto max-w-full -mx-1 px-1">
           {tabs.map((tab) => {
             const on = tab.id === active;
@@ -70,7 +129,7 @@ export function DsSectionHeader<T extends string>({
                 role="tab"
                 aria-selected={on}
                 onClick={() => onChange?.(tab.id)}
-                className={`h-9 px-3.5 rounded-[7px] text-[13px] inline-flex items-center whitespace-nowrap transition-colors ${
+                className={`h-9 px-3.5 rounded-full text-[13px] inline-flex items-center whitespace-nowrap transition-colors ${
                   on ? 'bg-white text-[#1a1a1a] font-semibold shadow-[0_1px_2px_rgba(0,0,0,.08),0_2px_6px_rgba(0,0,0,.06)]' : 'text-[#6b6a66] font-medium hover:text-[#1a1a1a]'
                 }`}
               >
@@ -88,6 +147,7 @@ export function DsSectionHeader<T extends string>({
   );
 }
 
+
 // ===================== Filtros =====================
 
 export interface DsChip<T extends string = string> {
@@ -96,7 +156,7 @@ export interface DsChip<T extends string = string> {
   count?: string | number | null;
 }
 
-/** Chips de filtro: el activo en tinta, los demás en texto suave. */
+/** Chips de filtro en píldora: el activo en turquesa Rupü, los demás en texto suave. */
 export function DsChips<T extends string>({
   chips,
   active,
@@ -118,8 +178,10 @@ export function DsChips<T extends string>({
             type="button"
             aria-pressed={on}
             onClick={() => onChange(chip.id)}
-            className={`px-2.5 py-[5px] rounded-[5px] text-xs font-medium transition-colors ${
-              on ? 'bg-[#1a1a1a] text-white' : 'text-[#4b4a46] hover:bg-[#e9e7e2]'
+            className={`h-8 max-md:h-10 px-3.5 rounded-full text-xs font-medium inline-flex items-center whitespace-nowrap transition-colors ${
+              on
+                ? 'bg-[#0F7F8A] text-white shadow-[0_1px_2px_rgba(15,127,138,.18),0_4px_14px_rgba(15,127,138,.18)]'
+                : 'text-[#4b4a46] hover:bg-white hover:text-[#1a1a1a]'
             }`}
           >
             {chip.label}
@@ -146,7 +208,7 @@ export function DsSearch({
   className?: string;
 }) {
   return (
-    <label className={`flex items-center gap-2 h-[30px] max-md:h-11 px-2.5 border border-[#d6d3cd] rounded-md bg-white text-[#8a8580] text-xs w-full md:w-60 focus-within:border-[#1a1a1a] ${className}`}>
+    <label className={`flex items-center gap-2 h-9 max-md:h-11 px-3.5 border border-[#e4e2dd] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] text-[#8a8580] text-xs w-full md:w-64 transition-colors focus-within:border-[#1a1a1a] ${className}`}>
       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
@@ -213,10 +275,10 @@ export function DsTable<T>({
   const template = columns.map((c) => c.width).join(' ');
   const align = (a?: 'left' | 'right' | 'center') => (a === 'right' ? 'text-right justify-end' : a === 'center' ? 'text-center justify-center' : '');
   return (
-    <div className="bg-white border border-[#e4e2dd] rounded-[10px] overflow-hidden flex flex-col">
+    <div className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
         <div role="table" aria-label={ariaLabel} style={{ minWidth }}>
-          <div role="row" className={`${dsMono} grid gap-3.5 px-[18px] py-[9px] border-b border-[#efedea] text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`} style={{ gridTemplateColumns: template }}>
+          <div role="row" className={`${dsMono} grid gap-3.5 px-[22px] py-3 border-b border-[#efedea] text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`} style={{ gridTemplateColumns: template }}>
             {columns.map((c) => (
               <span key={c.key} role="columnheader" className={`flex ${align(c.align)}`}>{c.label}</span>
             ))}
@@ -234,7 +296,7 @@ export function DsTable<T>({
                   key={key}
                   role="row"
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={`grid gap-3.5 px-[18px] py-2.5 items-center border-b border-[#efedea] last:border-b-0 text-[13px] ${
+                  className={`grid gap-3.5 px-[22px] py-3 items-center border-b border-[#efedea] last:border-b-0 text-[13px] transition-colors ${
                     onRowClick ? 'cursor-pointer hover:bg-[#faf9f7]' : ''
                   } ${selected ? 'bg-[#f5f5f4]' : ''}`}
                   style={{ gridTemplateColumns: template }}
@@ -248,7 +310,7 @@ export function DsTable<T>({
           )}
         </div>
       </div>
-      {footer && <div className="border-t border-[#efedea] px-[18px] py-2">{footer}</div>}
+      {footer && <div className="border-t border-[#efedea] px-[22px] py-2">{footer}</div>}
     </div>
   );
 }
@@ -279,17 +341,17 @@ export function DsStatus({ label, color, dot = true }: { label: ReactNode; color
   );
 }
 
-/** Etiqueta de atributo ("Carro", "Cubierto"); `strong` la pinta en tinta. */
+/** Etiqueta de atributo ("Carro", "Cubierto"); `strong` la resalta en turquesa Rupü. */
 export function DsTag({ children, strong = false }: { children: ReactNode; strong?: boolean }) {
   return (
-    <span className={`px-2 py-[3px] rounded text-[11px] ${strong ? 'bg-[#1a1a1a] text-white' : 'border border-[#d6d3cd]'}`}>{children}</span>
+    <span className={`px-2.5 py-[3px] rounded-full text-[11px] ${strong ? 'bg-[#E3F5F5] text-[#0C6B76] font-semibold' : 'border border-[#e4e2dd]'}`}>{children}</span>
   );
 }
 
 /** Tarjeta blanca del sistema. */
 export function DsCard({ children, className = '', style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
   return (
-    <div className={`bg-white border border-[#e4e2dd] rounded-[10px] ${className}`} style={style}>
+    <div className={`bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] ${className}`} style={style}>
       {children}
     </div>
   );

@@ -127,7 +127,7 @@ export function UnitPicker({
           id={listId}
           role="listbox"
           aria-label="Unidades"
-          className="absolute z-10 left-0 right-0 mt-1 max-h-56 overflow-y-auto rounded-lg bg-white border border-[#e4e2dd] shadow-[0_8px_24px_rgba(0,0,0,.12)] py-1"
+          className="absolute z-10 left-0 right-0 mt-1 max-h-56 overflow-y-auto rounded-2xl bg-white border border-[#e4e2dd] shadow-[0_8px_24px_rgba(0,0,0,.12)] py-1"
         >
           {loading && <li className="px-3 py-2 text-xs text-[#8a8580]">Buscando…</li>}
           {!loading && options.length === 0 && <li className="px-3 py-2 text-xs text-[#8a8580]">Sin coincidencias</li>}

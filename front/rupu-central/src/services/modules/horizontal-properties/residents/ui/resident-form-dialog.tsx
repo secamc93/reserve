@@ -159,7 +159,7 @@ export function ResidentFormDialog({ businessId, resident, types, onClose, onSuc
             />
             <div>
               <span id={ids.typeLabel} className={vtLabel}>Tipo *</span>
-              <div role="radiogroup" aria-labelledby={ids.typeLabel} className="inline-flex flex-wrap rounded-[7px] border border-[#d6d3cd] p-0.5 bg-white">
+              <div role="radiogroup" aria-labelledby={ids.typeLabel} className="inline-flex flex-wrap rounded-full border border-[#d6d3cd] p-0.5 bg-white">
                 {types.map((t) => {
                   const on = t.id === values.residentTypeId;
                   return (
@@ -169,7 +169,7 @@ export function ResidentFormDialog({ businessId, resident, types, onClose, onSuc
                       role="radio"
                       aria-checked={on}
                       onClick={() => set('residentTypeId', t.id)}
-                      className={`h-[34px] max-md:h-10 px-3 rounded-[5px] text-xs font-medium transition-colors ${on ? 'bg-[#1a1a1a] text-white' : 'text-[#4b4a46] hover:bg-[#f5f5f4]'}`}
+                      className={`h-[34px] max-md:h-10 px-3.5 rounded-full text-xs font-medium transition-colors ${on ? 'bg-[#0F7F8A] text-white' : 'text-[#4b4a46] hover:bg-[#f5f5f4]'}`}
                     >
                       {t.name}
                     </button>
@@ -213,7 +213,7 @@ export function ResidentFormDialog({ businessId, resident, types, onClose, onSuc
           </div>
 
           {tenant && (
-            <div className="rounded-lg bg-[#f5f5f4] border border-[#e4e2dd] px-4 py-3.5 flex flex-col gap-3" aria-label="Contrato de arrendamiento" role="group">
+            <div className="rounded-2xl bg-[#f5f5f4] border border-[#e4e2dd] px-4 py-3.5 flex flex-col gap-3" aria-label="Contrato de arrendamiento" role="group">
               <DsEyebrow>Contrato de arrendamiento</DsEyebrow>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
@@ -235,7 +235,7 @@ export function ResidentFormDialog({ businessId, resident, types, onClose, onSuc
           )}
 
           {editing && (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-[#e4e2dd] px-3.5 py-2.5">
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#e4e2dd] px-3.5 py-2.5">
               <div>
                 <div className="text-[13px] font-semibold">Residente activo</div>
                 <div className="text-xs text-[#8a8580]">Desactívalo cuando ya no viva en la copropiedad.</div>

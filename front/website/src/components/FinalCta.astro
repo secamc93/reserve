@@ -1,0 +1,27 @@
+---
+import { SITE, demoHref } from '../config/site';
+const hasChannel = Boolean(SITE.whatsapp || SITE.email);
+---
+
+<section id="contacto" class="relative overflow-hidden bg-paper px-4 pb-4">
+  <div class="cta bg-brand relative mx-auto max-w-[90rem] overflow-hidden rounded-[2.5rem] px-6 py-24 text-center text-ink-950 sm:py-32">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+      <svg class="absolute inset-0 h-full w-full opacity-30" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" fill="none">
+        <path class="cta-river" d="M1300 -20 C 900 40, 640 120, 700 260 S 1100 420, 820 560 S 300 640, -100 600" stroke="white" stroke-width="90" stroke-linecap="round" opacity=".35" />
+      </svg>
+      <i class="diamond absolute top-[18%] left-[12%] animate-float" style="--size:34px;background:white;opacity:.5"></i>
+      <i class="diamond absolute right-[14%] bottom-[20%] animate-float [animation-delay:-3s]" style="--size:22px;background:var(--color-ink-900);opacity:.6"></i>
+    </div>
+
+    <div class="relative mx-auto max-w-3xl">
+      <h2 class="font-display text-[clamp(2.6rem,7vw,6rem)] leading-[0.92] font-extrabold" data-reveal>Tu próxima asamblea puede terminar temprano.</h2>
+      <p class="mx-auto mt-6 max-w-xl text-lg font-medium text-ink-950/75 sm:text-xl" data-reveal>
+        Te mostramos Rupü con los datos de tu conjunto y lo dejas listo para la próxima votación.
+      </p>
+      <div class="mt-10 flex flex-wrap justify-center gap-3" data-reveal>
+        <a href={hasChannel ? demoHref() : SITE.appUrl} class="btn btn-dark text-base">{hasChannel ? 'Pide una demo' : 'Entrar a Rupü'}</a>
+        <a href="#simulador" class="btn border border-ink-950/25 text-base hover:bg-white/30">Simular otra votación</a>
+      </div>
+    </div>
+  </div>
+</section>

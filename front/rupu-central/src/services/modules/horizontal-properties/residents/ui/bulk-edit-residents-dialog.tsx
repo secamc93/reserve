@@ -116,7 +116,7 @@ export function BulkEditResidentsDialog({ businessId, blocks, initialBlock, onCl
         aria-invalid={invalid || undefined}
         value={r[field]}
         onChange={(e) => edit(r.id, field, e.target.value)}
-        className={`w-full h-8 max-md:h-10 rounded-md border bg-white px-2 text-xs outline-none ${mono ? dsMono : ''} ${
+        className={`w-full h-8 max-md:h-10 rounded-xl border bg-white px-2 text-xs outline-none ${mono ? dsMono : ''} ${
           invalid ? 'border-[#c8382d] text-[#c8382d]' : changed ? 'border-[#1a1a1a]' : 'border-[#e4e2dd] focus:border-[#1a1a1a]'
         }`}
       />
@@ -163,7 +163,7 @@ export function BulkEditResidentsDialog({ businessId, blocks, initialBlock, onCl
         <VtNotice tone="info">Se muestran los primeros {rows.length} de {total}. Elige una torre para editar el resto.</VtNotice>
       )}
 
-      <div className="rounded-[10px] border border-[#e4e2dd] overflow-hidden">
+      <div className="rounded-2xl border border-[#e4e2dd] overflow-hidden">
         <div className="max-h-[420px] overflow-auto">
           <table className="w-full min-w-[760px] text-[13px]" aria-label="Residentes a editar">
             <thead className="sticky top-0 bg-white z-[1]">

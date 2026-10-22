@@ -125,9 +125,9 @@ export function ConsolidatedDashboard({
           {allStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="bg-white rounded-lg shadow-sm p-3 border border-gray-200 min-w-0 md:flex-1 md:min-w-[140px]">
+              <div key={index} className="bg-white rounded-2xl shadow-sm p-3 border border-gray-200 min-w-0 md:flex-1 md:min-w-[140px]">
                 <div className="flex items-center gap-2">
-                  <div className={`${stat.color} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
+                  <div className={`${stat.color} w-8 h-8 rounded-2xl flex items-center justify-center flex-shrink-0`}>
                     <Icon className="w-4 h-4 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -159,7 +159,7 @@ export function ConsolidatedDashboard({
                 actions={
                   <button
                     onClick={() => openProperty(business)}
-                    className="w-full rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium"
+                    className="w-full rounded-2xl bg-[var(--color-primary)] text-white text-sm font-medium"
                   >
                     Ver detalle
                   </button>
@@ -177,7 +177,7 @@ export function ConsolidatedDashboard({
                         <img
                           src={business.logo_url}
                           alt={`Logo de ${business.business_name}`}
-                          className="w-12 h-12 rounded-lg object-cover border border-gray-200"
+                          className="w-12 h-12 rounded-2xl object-cover border border-gray-200"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             const fallback = e.currentTarget.nextElementSibling as HTMLElement;
@@ -185,14 +185,14 @@ export function ConsolidatedDashboard({
                           }}
                         />
                         <div
-                          className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-lg border border-gray-200"
+                          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-lg border border-gray-200"
                           style={{ display: 'none' }}
                         >
                           {business.business_name.charAt(0).toUpperCase()}
                         </div>
                       </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-lg border border-gray-200 flex-shrink-0">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-lg border border-gray-200 flex-shrink-0">
                         {business.business_name.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -281,9 +281,9 @@ export function ConsolidatedDashboard({
       {/* Secciones Futuras - Placeholders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Quejas - Pendiente */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gray-100 rounded-lg p-2">
+            <div className="bg-gray-100 rounded-2xl p-2">
               <ExclamationTriangleIcon className="w-6 h-6 text-gray-600" />
             </div>
             <div>
@@ -291,16 +291,16 @@ export function ConsolidatedDashboard({
               <p className="text-sm text-gray-500">Sistema de gestión de quejas</p>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
+          <div className="bg-gray-50 rounded-2xl p-4 text-center">
             <p className="text-sm text-gray-500 italic">Funcionalidad pendiente de implementar</p>
             <p className="text-xs text-gray-400 mt-2">Aquí se mostrarán las quejas y reclamos de las propiedades</p>
           </div>
         </div>
 
         {/* Reuniones y Asambleas - Pendiente */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gray-100 rounded-lg p-2">
+            <div className="bg-gray-100 rounded-2xl p-2">
               <CalendarIcon className="w-6 h-6 text-gray-600" />
             </div>
             <div>
@@ -308,16 +308,16 @@ export function ConsolidatedDashboard({
               <p className="text-sm text-gray-500">Calendario de eventos</p>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
+          <div className="bg-gray-50 rounded-2xl p-4 text-center">
             <p className="text-sm text-gray-500 italic">Funcionalidad pendiente de implementar</p>
             <p className="text-xs text-gray-400 mt-2">Aquí se mostrarán las reuniones, asambleas y fechas importantes</p>
           </div>
         </div>
 
         {/* Comunicaciones - Pendiente */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gray-100 rounded-lg p-2">
+            <div className="bg-gray-100 rounded-2xl p-2">
               <ChatBubbleLeftRightIcon className="w-6 h-6 text-gray-600" />
             </div>
             <div>
@@ -325,7 +325,7 @@ export function ConsolidatedDashboard({
               <p className="text-sm text-gray-500">Mensajes y anuncios</p>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
+          <div className="bg-gray-50 rounded-2xl p-4 text-center">
             <p className="text-sm text-gray-500 italic">Funcionalidad pendiente de implementar</p>
             <p className="text-xs text-gray-400 mt-2">Aquí se mostrarán los comunicados y anuncios importantes</p>
           </div>

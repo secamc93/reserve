@@ -134,7 +134,7 @@ export function RegisterAssetsModal({
         {error && <VtNotice tone="error">{error}</VtNotice>}
         <div className="flex flex-col gap-3 max-h-[50dvh] overflow-y-auto">
           {assets.map((_, index) => (
-            <div key={index} className="rounded-lg border border-[#e4e2dd] p-3.5 flex flex-col gap-3">
+            <div key={index} className="rounded-2xl border border-[#e4e2dd] p-3.5 flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <span className={`${dsMono} text-[10px] font-medium tracking-[.06em] uppercase text-[#8a8580]`}>Equipo {index + 1}</span>
                 {assets.length > 1 && (

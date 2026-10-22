@@ -34,7 +34,7 @@ interface SlotDetailProps {
 export function SlotDetail({ slot, state, assignment, reservations, today, onAssign, onEditAssignment, onRelease }: SlotDetailProps) {
   if (!slot || !state) {
     return (
-      <aside className="bg-white border border-[#e4e2dd] rounded-[10px] p-6 text-center text-sm text-[#8a8580] lg:sticky lg:top-[68px]">
+      <aside className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] p-6 text-center text-sm text-[#8a8580] lg:sticky lg:top-[68px]">
         Elige un cupo del mapa para ver su asignación, vehículo y movimientos.
       </aside>
     );
@@ -45,11 +45,11 @@ export function SlotDetail({ slot, state, assignment, reservations, today, onAss
   const daysLeft = assignment?.endDate ? daysBetween(today, parseDay(assignment.endDate)) : null;
 
   return (
-    <aside aria-label={`Cupo ${slot.slotNumber}`} className="bg-white border border-[#e4e2dd] rounded-[10px] flex flex-col overflow-hidden lg:sticky lg:top-[68px]">
+    <aside aria-label={`Cupo ${slot.slotNumber}`} className="bg-white border border-[#e4e2dd] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] flex flex-col overflow-hidden lg:sticky lg:top-[68px]">
       <div className="px-5 pt-[18px] pb-3.5 border-b border-[#e4e2dd]">
         <div className="flex justify-between items-center">
           <DsEyebrow>Cupo · {slot.parkingZoneName}</DsEyebrow>
-          <DsStatus label={style.label} color={state === 'free' ? '#8a8580' : state === 'visitor' ? '#c8603f' : '#1a1a1a'} />
+          <DsStatus label={style.label} color={state === 'free' ? '#8a8580' : state === 'visitor' ? '#c8603f' : state === 'occupied' ? '#0F7F8A' : '#8a8580'} />
         </div>
         <div className={`${dsMono} text-[30px] font-semibold tracking-[-.03em] mt-1.5`}>{slot.slotNumber}</div>
         <div className="flex gap-1.5 mt-2 flex-wrap">
@@ -64,7 +64,7 @@ export function SlotDetail({ slot, state, assignment, reservations, today, onAss
         <div>
           <DsEyebrow className="mb-2">Asignado a</DsEyebrow>
           {assignment ? (
-            <div className="flex items-center gap-2.5 px-3 py-2.5 border border-[#e4e2dd] rounded-lg">
+            <div className="flex items-center gap-2.5 px-3 py-2.5 border border-[#e4e2dd] rounded-2xl">
               <span className={`${dsMono} text-[15px] font-semibold`}>{unitLabel(assignment.propertyUnitBlock, assignment.propertyUnitNumber)}</span>
               <div className="flex-1 min-w-0 text-[13px]">
                 <div className="font-semibold truncate">{assignment.residentName || 'Sin residente'}</div>

@@ -26,6 +26,8 @@ export type { TableColumn, PaginationProps, TableFiltersProps, TableUrlPaginatio
 // Shell en teléfono (< md)
 export * from './bottom-sheet';
 export * from './mobile-nav';
+export * from './floating-nav';
+export * from './floating-rail';
 export * from './mobile-top-bar';
 export * from './property-logo';
 export * from './use-active-property';

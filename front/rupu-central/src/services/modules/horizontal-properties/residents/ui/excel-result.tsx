@@ -9,7 +9,7 @@ export function ExcelResultStats({ stats }: { stats: Array<{ label: string; valu
   return (
     <div className="grid grid-cols-3 gap-2">
       {stats.map((s) => (
-        <div key={s.label} className="rounded-lg border border-[#e4e2dd] px-3 py-2.5">
+        <div key={s.label} className="rounded-2xl border border-[#e4e2dd] px-3 py-2.5">
           <DsEyebrow>{s.label}</DsEyebrow>
           <div className={`${dsMono} text-xl font-semibold mt-0.5`}>{s.value}</div>
         </div>
@@ -22,7 +22,7 @@ export function ExcelErrorList({ title, children }: { title: string; children: R
   return (
     <div className="flex flex-col gap-1.5">
       <DsEyebrow>{title}</DsEyebrow>
-      <div className="max-h-44 overflow-y-auto rounded-lg border border-[#f1cfc4] bg-[#fbe9e4] px-3.5 py-2 text-xs text-[#9c3a22]">{children}</div>
+      <div className="max-h-44 overflow-y-auto rounded-2xl border border-[#f1cfc4] bg-[#fbe9e4] px-3.5 py-2 text-xs text-[#9c3a22]">{children}</div>
     </div>
   );
 }
@@ -31,7 +31,7 @@ export function ExcelErrorList({ title, children }: { title: string; children: R
 export function ExcelFormatExample({ headers, rows }: { headers: string[]; rows: string[][] }) {
   const template = { gridTemplateColumns: `repeat(${headers.length}, minmax(0,1fr))` };
   return (
-    <div className="rounded-lg border border-[#e4e2dd] overflow-x-auto" aria-label="Ejemplo del archivo">
+    <div className="rounded-2xl border border-[#e4e2dd] overflow-x-auto" aria-label="Ejemplo del archivo">
       <div className={`${dsMono} grid gap-3 px-3.5 py-2 bg-[#f5f5f4] text-[10px] uppercase tracking-[.06em] text-[#8a8580] min-w-[420px]`} style={template}>
         {headers.map((h) => (
           <span key={h}>{h}</span>

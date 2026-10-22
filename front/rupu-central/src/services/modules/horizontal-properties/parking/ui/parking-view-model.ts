@@ -13,7 +13,7 @@ export type SlotState = 'free' | 'assigned' | 'occupied' | 'visitor';
 export const SLOT_STYLE: Record<SlotState, { bg: string; border: string; fg: string; label: string }> = {
   free: { bg: '#ffffff', border: '#c9c6c0', fg: '#8a8580', label: 'Libre' },
   assigned: { bg: '#8a8580', border: '#8a8580', fg: '#ffffff', label: 'Asignado · vacío' },
-  occupied: { bg: '#1a1a1a', border: '#1a1a1a', fg: 'rgba(255,255,255,.85)', label: 'Ocupado' },
+  occupied: { bg: '#0F7F8A', border: '#0F7F8A', fg: '#ffffff', label: 'Ocupado' },
   visitor: { bg: '#c8603f', border: '#c8603f', fg: '#ffffff', label: 'Visitante' },
 };
 

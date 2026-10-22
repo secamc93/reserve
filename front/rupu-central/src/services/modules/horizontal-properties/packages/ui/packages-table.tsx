@@ -211,7 +211,7 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
           aria-label="Buscar paquete por unidad"
           placeholder="126"
           inputMode="search"
-          className={`${dsMono} h-12 w-full rounded-lg border-[1.5px] border-[#1a1a1a] bg-white px-3.5 text-lg outline-none`}
+          className={`${dsMono} h-12 w-full rounded-2xl border-[1.5px] border-[#1a1a1a] bg-white px-3.5 text-lg outline-none`}
           value={searchDraft}
           onChange={(e) => onSearch(e.target.value)}
         />
@@ -253,7 +253,7 @@ export function PackagesTable({ businessId }: PackagesTableProps) {
             packages.map((p) => <PackageCard key={p.id} p={p} onOpen={() => setSelected({ row: p, mode: 'detail' })} onDeliver={() => setSelected({ row: p, mode: 'deliver' })} />)
           )}
           {totalPages > 1 && (
-            <div className="rounded-[10px] overflow-hidden border border-[#e4e2dd]">
+            <div className="rounded-2xl overflow-hidden border border-[#e4e2dd]">
               <Pagination total={total} totalPages={totalPages} />
             </div>
           )}
@@ -309,7 +309,7 @@ function PackageCard({ p, onOpen, onDeliver }: { p: PackageListDTO; onOpen: () =
   const days = packageDays(p);
   const pending = packageGroupOf(p) === 'pending';
   return (
-    <article className="bg-white border border-[#e4e2dd] rounded-[10px] px-4 py-3 flex items-center gap-3">
+    <article className="bg-white border border-[#e4e2dd] rounded-2xl px-4 py-3 flex items-center gap-3">
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left" aria-label={`Ver paquete de ${unit}`}>
         <div className={`${dsMono} text-base font-semibold`}>{unit}</div>
         <div className="text-[13px] text-[#4b4a46] truncate">{p.residentName || 'Cualquier residente'}</div>

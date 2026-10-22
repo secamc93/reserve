@@ -11,6 +11,7 @@ import (
 	"central_reserve/services/horizontalproperty/unit"
 	"central_reserve/services/horizontalproperty/visit"
 	"central_reserve/services/horizontalproperty/vote"
+	"central_reserve/services/horizontalproperty/votingbilling"
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
@@ -35,6 +36,9 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 
 	// Initialize Vote Module (completamente autocontenido - no depende de otros módulos)
 	vote.New(db, jwtSecret, serviceLogger, v1Group)
+
+	// Cobro por día de votación (Wompi): el módulo de votaciones solo lee si el grupo está pagado
+	votingbilling.New(db, envConfig, serviceLogger, v1Group)
 
 	// Initialize Resident Module
 	resident.New(db, serviceLogger, v1Group)

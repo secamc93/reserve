@@ -49,7 +49,7 @@ export function ManualCopyField({ value }: { value: string }) {
         value={value}
         aria-label="Enlace de votación"
         onFocus={(e) => e.currentTarget.select()}
-        className={`${vtMono} w-full h-9 max-md:h-11 rounded-md bg-white px-2.5 text-[12px] outline-none`}
+        className={`${vtMono} w-full h-9 max-md:h-11 rounded-xl bg-white px-2.5 text-[12px] outline-none`}
         style={{ border: `1px solid ${VT.ink}` }}
       />
       <span className="text-[11px]" style={{ color: VT.muted }} role="status">

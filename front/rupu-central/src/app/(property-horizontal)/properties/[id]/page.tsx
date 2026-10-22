@@ -134,14 +134,14 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               ].map(([label, value, mono]) => (
                 <div key={label as string}>
                   <div className="text-xs font-semibold mb-1.5">{label}</div>
-                  <div className={`min-h-[38px] border border-[#d6d3cd] rounded-[7px] px-3 py-2 text-sm bg-[#faf9f7] ${mono ? dsMono : ''}`}>{value || '—'}</div>
+                  <div className={`min-h-[38px] border border-[#d6d3cd] rounded-xl px-3 py-2 text-sm bg-[#faf9f7] ${mono ? dsMono : ''}`}>{value || '—'}</div>
                 </div>
               ))}
               <div>
                 <div className="text-xs font-semibold mb-1.5">Amenidades</div>
                 <div className="flex flex-wrap gap-1.5">
                   {amenities.map(([label, on]) => (
-                    <span key={label} className={`px-2.5 py-[5px] rounded-[5px] text-xs font-medium ${on ? 'bg-[#1a1a1a] text-white' : 'border border-[#d6d3cd] text-[#4b4a46]'}`}>
+                    <span key={label} className={`px-3 py-[5px] rounded-full text-xs font-medium ${on ? 'bg-[#E3F5F5] text-[#0C6B76]' : 'border border-[#e4e2dd] text-[#8a8580]'}`}>
                       {label}
                     </span>
                   ))}
@@ -166,8 +166,8 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                   <div className="flex flex-col gap-2">
                     <span className="text-xs font-semibold">Color de marca</span>
                     <div className="flex items-center gap-2">
-                      <span className="w-[34px] h-[34px] rounded-lg" style={{ background: property.primaryColor || '#1a1a1a' }} />
-                      <span className={`${dsMono} h-[34px] px-2.5 border border-[#d6d3cd] rounded-[7px] flex items-center text-xs`}>{(property.primaryColor || '#1A1A1A').toUpperCase()}</span>
+                      <span className="w-[34px] h-[34px] rounded-2xl" style={{ background: property.primaryColor || '#1a1a1a' }} />
+                      <span className={`${dsMono} h-[34px] px-2.5 border border-[#d6d3cd] rounded-xl flex items-center text-xs`}>{(property.primaryColor || '#1A1A1A').toUpperCase()}</span>
                     </div>
                     <span className="text-[11px] text-[#8a8580]">Los colores de voto (Sí / No / Abstención) no cambian.</span>
                   </div>
@@ -175,7 +175,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               </DsCard>
               <DsCard className="px-[22px] py-5 flex flex-col gap-2.5">
                 <span className="text-[13px] font-semibold">Dominio público</span>
-                <div className={`${dsMono} min-h-[38px] border border-[#d6d3cd] rounded-[7px] px-3 py-2 text-[13px] bg-[#faf9f7]`}>{property.customDomain || '—'}</div>
+                <div className={`${dsMono} min-h-[38px] border border-[#d6d3cd] rounded-xl px-3 py-2 text-[13px] bg-[#faf9f7]`}>{property.customDomain || '—'}</div>
                 <span className="text-[11px] text-[#8a8580]">Usado en los enlaces de votación y reservas que reciben los residentes.</span>
               </DsCard>
               <p className="text-xs text-[#8a8580]">Para editar estos datos: IAM → Negocios.</p>
