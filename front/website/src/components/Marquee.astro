@@ -1,0 +1,29 @@
+---
+const items = [
+  'Quórum en tiempo real',
+  'Voto por coeficiente',
+  'Ingreso con QR',
+  'Contraseña por unidad',
+  'Apoderados',
+  'Resultados en vivo',
+  'Informe PDF',
+  'Asambleas presenciales, virtuales o mixtas',
+];
+---
+
+<div class="bg-brand relative z-10 -my-px overflow-hidden py-5 text-ink-950" aria-label="Lo que incluye Rupü">
+  <div class="animate-marquee flex w-max hover:[animation-play-state:paused]">
+    {
+      [0, 1].map((copy) => (
+        <ul class="flex shrink-0 items-center" aria-hidden={copy === 1 ? 'true' : undefined}>
+          {items.map((item) => (
+            <li class="font-display flex items-center gap-8 pr-8 text-2xl font-bold whitespace-nowrap sm:text-3xl">
+              {item}
+              <i class="diamond" style="--size:12px;background:var(--color-ink-900)" />
+            </li>
+          ))}
+        </ul>
+      ))
+    }
+  </div>
+</div>

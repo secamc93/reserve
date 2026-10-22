@@ -1,0 +1,29 @@
+---
+import { FAQ } from '../config/faq';
+---
+
+<section id="preguntas" class="bg-paper pb-24 text-ink-900 sm:pb-32">
+  <div class="mx-auto grid max-w-6xl gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr]">
+    <div>
+      <p class="eyebrow text-turq-700" data-reveal><i class="diamond" style="--size:7px"></i> Preguntas frecuentes</p>
+      <h2 class="font-display mt-5 text-[clamp(2.4rem,5vw,4rem)] leading-[0.95] font-extrabold" data-reveal>Lo que preguntan los consejos.</h2>
+      <p class="mt-6 text-lg text-ink-900/65" data-reveal>Si te queda alguna duda, escríbenos y te mostramos Rupü con los datos de tu conjunto.</p>
+    </div>
+
+    <div class="divide-y divide-ink-900/10 border-y border-ink-900/10">
+      {
+        FAQ.map((f, i) => (
+          <details class="faq group py-2" open={i === 0} data-reveal>
+            <summary class="flex items-center justify-between gap-6 py-4 text-lg font-bold sm:text-xl">
+              <h3>{f.q}</h3>
+              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-ink-900/5 transition-transform duration-300 group-open:rotate-45" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+              </span>
+            </summary>
+            <p class="pb-5 pr-12 text-ink-900/70">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

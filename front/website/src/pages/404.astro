@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Logo from '../components/Logo.astro';
+---
+
+<Layout title="Página no encontrada · Rupü" noindex>
+  <main id="contenido" class="grain relative grid min-h-[100svh] place-items-center overflow-hidden bg-ink-900 px-5 text-center text-white">
+    <div>
+      <a href="/"><Logo size="lg" /></a>
+      <p class="font-display mt-12 text-[clamp(5rem,18vw,12rem)] leading-none font-extrabold text-gradient">404</p>
+      <h1 class="font-display mt-4 text-3xl font-bold">Este punto no está en el orden del día.</h1>
+      <p class="mt-3 text-white/60">La página que buscas no existe o cambió de dirección.</p>
+      <a href="/" class="btn btn-primary mt-10">Volver al inicio</a>
+    </div>
+  </main>
+</Layout>

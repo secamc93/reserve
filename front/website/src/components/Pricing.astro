@@ -1,0 +1,115 @@
+---
+import { PRICING, demoHref, formatCOP } from '../config/site';
+
+const defaultUnits = 120;
+const includes = [
+  'Registro de asistencia y quórum en tiempo real',
+  'Votación por coeficiente desde el celular',
+  'Código QR y contraseña de voto por unidad',
+  'Registro de apoderados',
+  'Resultados en vivo para proyectar en la sala',
+  'Informe PDF de cada votación',
+];
+---
+
+<section id="precios" class="grain relative overflow-hidden bg-ink-950 py-24 text-white sm:py-32">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <div class="absolute top-0 right-0 size-[40rem] translate-x-1/3 -translate-y-1/3 rounded-full bg-turq-500/15 blur-[130px]"></div>
+  </div>
+
+  <div class="relative mx-auto max-w-6xl px-5">
+    <div class="max-w-3xl">
+      <p class="eyebrow text-turq-300" data-reveal><i class="diamond" style="--size:7px"></i> Precio</p>
+      <h2 class="font-display mt-5 text-[clamp(2.4rem,5vw,4.4rem)] leading-[0.95] font-extrabold" data-reveal>
+        Deja de alquilar <span class="text-clay-400">controles.</span><br />Paga por la asamblea, <span class="text-gradient">no por unidad.</span>
+      </h2>
+    </div>
+
+    <div class="mt-14 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <!-- Calculadora -->
+      <div class="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur sm:p-9" data-reveal>
+        <label for="units" class="flex items-end justify-between gap-4">
+          <span class="text-lg font-semibold">¿Cuántas unidades tiene tu conjunto?</span>
+          <output id="units-out" for="units" class="font-mono text-4xl font-bold text-turq-300">{defaultUnits}</output>
+        </label>
+        <input id="units" type="range" min="20" max="600" step="10" value={defaultUnits} class="range mt-6 w-full" />
+        <div class="mt-1 flex justify-between font-mono text-xs text-white/55"><span>20</span><span>600</span></div>
+
+        <div class="mt-10 space-y-5">
+          <div>
+            <div class="mb-2 flex items-baseline justify-between gap-4">
+              <span class="text-sm text-white/70">Alquiler de controles</span>
+              <span class="font-mono text-xl font-bold text-clay-400" id="remotes-cost">{formatCOP(defaultUnits * PRICING.remotesPerUnit)}</span>
+            </div>
+            <div class="h-4 rounded-full bg-white/5"><div id="remotes-bar" class="h-full rounded-full bg-clay-500 transition-[width] duration-500" style="width:100%"></div></div>
+          </div>
+          <div>
+            <div class="mb-2 flex items-baseline justify-between gap-4">
+              <span class="text-sm text-white/70">Rupü</span>
+              <span class="font-mono text-xl font-bold text-turq-300">{formatCOP(PRICING.rupuPerAssembly)}</span>
+            </div>
+            <div class="h-4 rounded-full bg-white/5"><div id="rupu-bar" class="bg-brand h-full rounded-full transition-[width] duration-500" style={`width:${(PRICING.rupuPerAssembly / (defaultUnits * PRICING.remotesPerUnit)) * 100}%`}></div></div>
+          </div>
+        </div>
+
+        <div class="mt-10 rounded-3xl bg-turq-400/10 p-6 ring-1 ring-turq-400/25">
+          <p class="text-sm font-semibold text-turq-200">Te ahorras en cada asamblea</p>
+          <p class="font-display mt-1 text-[clamp(2.6rem,6vw,4rem)] leading-none font-extrabold" id="savings">
+            {formatCOP(defaultUnits * PRICING.remotesPerUnit - PRICING.rupuPerAssembly)}
+          </p>
+        </div>
+        <p class="mt-5 text-xs leading-relaxed text-white/55">
+          Referencia: tarifas publicadas de alquiler de controles de votación en Bogotá (2026), desde {formatCOP(PRICING.remotesPerUnit)} por unidad por
+          5 horas; la hora extra se cobra aparte. Precios en pesos colombianos.
+        </p>
+      </div>
+
+      <!-- Tarjeta de precio -->
+      <div class="bg-brand relative flex flex-col overflow-hidden rounded-[2rem] p-8 text-ink-950 sm:p-10" data-reveal>
+        <i aria-hidden="true" class="diamond absolute -top-10 -right-10 opacity-25" style="--size:12rem;background:white"></i>
+        <p class="font-mono text-xs font-bold tracking-widest uppercase">Asamblea</p>
+        <p class="mt-4 flex items-baseline gap-2">
+          <span class="font-display text-7xl font-extrabold tracking-tight">{formatCOP(PRICING.rupuPerAssembly)}</span>
+        </p>
+        <p class="mt-1 font-semibold text-ink-950/70">COP por día de votación</p>
+        <ul class="mt-8 space-y-3">
+          {
+            includes.map((i) => (
+              <li class="flex gap-3 font-medium">
+                <svg class="mt-0.5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12.5l4.5 4.5L19 7.5" />
+                </svg>
+                {i}
+              </li>
+            ))
+          }
+        </ul>
+        <a href={demoHref()} class="btn btn-dark mt-10 w-full text-base">Quiero usar Rupü</a>
+        <p class="mt-3 text-center text-sm font-medium text-ink-950/65">Sin controles, sin equipos, sin hora extra.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .range { appearance: none; height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--color-turq-400) var(--p, 17%), rgb(255 255 255 / 0.12) var(--p, 17%)); cursor: pointer; }
+  .range::-webkit-slider-thumb { appearance: none; width: 28px; height: 28px; border-radius: 50%; background: white; border: 6px solid var(--color-turq-500); box-shadow: 0 6px 20px rgb(0 0 0 / 0.4); transition: transform 0.2s; }
+  .range::-webkit-slider-thumb:hover { transform: scale(1.12); }
+  .range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: white; border: 6px solid var(--color-turq-500); }
+</style>
+
+<script define:vars={{ perUnit: PRICING.remotesPerUnit, rupu: PRICING.rupuPerAssembly }}>
+  const input = document.getElementById('units');
+  const cop = (v) => '$' + Math.round(v).toLocaleString('es-CO');
+  const update = () => {
+    const n = Number(input.value);
+    const remotes = n * perUnit;
+    document.getElementById('units-out').textContent = String(n);
+    document.getElementById('remotes-cost').textContent = cop(remotes);
+    document.getElementById('savings').textContent = cop(Math.max(0, remotes - rupu));
+    document.getElementById('rupu-bar').style.width = Math.min(100, (rupu / remotes) * 100) + '%';
+    input.style.setProperty('--p', ((n - input.min) / (input.max - input.min)) * 100 + '%');
+  };
+  input.addEventListener('input', update);
+  update();
+</script>

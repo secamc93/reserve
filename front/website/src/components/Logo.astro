@@ -1,0 +1,23 @@
+---
+// Marca: el símbolo del logo y la palabra "rupü" con los puntos de la ü como rombos.
+import { Image } from 'astro:assets';
+import mark from '../assets/rupu-mark.png';
+
+interface Props {
+  tone?: 'light' | 'dark';
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
+}
+
+const { tone = 'light', size = 'md', class: className = '' } = Astro.props;
+const markHeight = { sm: 26, md: 34, lg: 56 }[size];
+const text = { sm: 'text-xl', md: 'text-2xl', lg: 'text-5xl' }[size];
+---
+
+<span class:list={['inline-flex items-center gap-2', className]}>
+  <Image src={mark} alt="" height={markHeight * 3} style={`height:${markHeight}px;width:auto`} loading="eager" />
+  <span aria-hidden="true" class:list={['font-display font-extrabold leading-none', text, tone === 'light' ? 'text-white' : 'text-ink-900']}>
+    rup<span class="relative inline-block">u<span aria-hidden="true" class="absolute top-[0.02em] left-1/2 flex -translate-x-1/2 gap-[0.12em]"><i class="diamond" style="--size:0.2em"></i><i class="diamond" style="--size:0.2em"></i></span></span>
+  </span>
+  <span class="sr-only">Rupü</span>
+</span>
