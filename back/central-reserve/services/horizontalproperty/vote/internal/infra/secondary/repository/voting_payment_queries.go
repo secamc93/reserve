@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"dbpostgres/app/infra/models"
@@ -38,6 +39,10 @@ func (r *Repository) IsVotingPaymentPending(ctx context.Context, votingID uint) 
 
 	var setting models.VotingBillingSetting
 	if err := conn.Where("business_id = ?", group.BusinessID).Limit(1).Find(&setting).Error; err != nil {
+		if isMissingTable(err) {
+			r.logger.Warn().Err(err).Uint("voting_id", votingID).Msg("Tablas del cobro sin migrar: el voto no se bloquea por pago")
+			return false, nil
+		}
 		return false, fmt.Errorf("error leyendo exención de cobro: %w", err)
 	}
 	if setting.ID != 0 && setting.Exempt {
@@ -48,6 +53,10 @@ func (r *Repository) IsVotingPaymentPending(ctx context.Context, votingID uint) 
 	if err := conn.Model(&models.VotingGroupPayment{}).
 		Where("voting_group_id = ? AND status = ?", group.ID, "APPROVED").
 		Select("COALESCE(SUM(days), 0)").Scan(&paidDays).Error; err != nil {
+		if isMissingTable(err) {
+			r.logger.Warn().Err(err).Uint("voting_id", votingID).Msg("Tablas del cobro sin migrar: el voto no se bloquea por pago")
+			return false, nil
+		}
 		return false, fmt.Errorf("error sumando días pagados: %w", err)
 	}
 	return votingDays(group.VotingStartDate, group.VotingEndDate) > paidDays, nil
@@ -62,4 +71,11 @@ func votingDays(start, end time.Time) int {
 		return days
 	}
 	return 1
+}
+
+// isMissingTable reconoce el error de Postgres "la tabla no existe" (SQLSTATE 42P01). Producción no
+// corre el migrador en el deploy: si el código del cobro llega antes que sus tablas, las votaciones
+// no pueden quedar bloqueadas por eso (pasó el 2026-10-22).
+func isMissingTable(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "SQLSTATE 42P01")
 }

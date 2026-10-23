@@ -61,3 +61,25 @@
 - Cargar las llaves en Parameter Store `/rupu/WOMPI_*` (SecureString) y configurar en Wompi la URL
   de eventos `https://xn--rup-joa.com/api/v1/payments/wompi/events`.
 - La migración en producción deja exentas a las propiedades que existan ese día.
+
+## Prueba de punta a punta con Wompi sandbox (2026-10-22, noche)
+
+Contra el back local con las llaves `pub_test_`/`test_integrity_`/`test_events_` de la cuenta real
+(comercio "Rupu Votaciones", en revisión → modo Sandbox):
+
+| Caso | Resultado |
+|------|-----------|
+| Checkout del back → transacción por API de Wompi (tarjeta 4242…) | Wompi `APPROVED`; `/payments/sync` → grupo pagado, 2 días, `CARD` |
+| Tarjeta 4111… | Wompi `DECLINED`; el grupo sigue debiendo |
+| Repetir el sync de un pago aprobado | Sin duplicados (1 aprobado, 2 días) |
+| Webhook con firma falsa | 401, no cambia nada |
+| Webhook firmado con el secreto de eventos | 200, pago `APPROVED` (`PSE`) |
+| Abrir el checkout con `redirect-url` a `localhost` | 403 de CloudFront de Wompi; con `rupu.localhost` funciona |
+
+**Producción:** las llaves sandbox quedaron en `/rupu/WOMPI_*` (públicas como String, secretos como
+SecureString) y el `.env` del servidor ya las tiene, pero **el contenedor del back no las recibe**: el
+`docker-compose.yaml` de producción le pasa una lista fija en `environment:` (no `env_file`). El
+arreglo está en el repo (commit `34d22b9d`, rama `fix/votos-sin-tablas-de-cobro`); falta copiarlo a
+`/home/ubuntu/reserve/infra/compose-prod/` (allá **no es un repo git**: los archivos se copiaron a
+mano; hoy son idénticos al repo) y redesplegar el back. Falta también la URL de eventos en Wompi:
+`https://xn--rup-joa.com/api/v1/payments/wompi/events`.

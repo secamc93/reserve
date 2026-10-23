@@ -68,6 +68,12 @@ services:
       S3_KEY:              "${S3_KEY}"
       S3_SECRET:           "${S3_SECRET}"
       URL_BASE_DOMAIN_S3:  "${URL_BASE_DOMAIN_S3}"
+      # Cobro por día de votación (Wompi). Vienen de /rupu/WOMPI_* en Parameter Store.
+      WOMPI_PUBLIC_KEY:       "${WOMPI_PUBLIC_KEY:-}"
+      WOMPI_INTEGRITY_SECRET: "${WOMPI_INTEGRITY_SECRET:-}"
+      WOMPI_EVENTS_SECRET:    "${WOMPI_EVENTS_SECRET:-}"
+      WOMPI_API_URL:          "${WOMPI_API_URL:-}"
+      VOTING_DAY_PRICE_COP:   "${VOTING_DAY_PRICE_COP:-50000}"
     volumes:
       # Permitir acceso al socket de Docker para leer logs de contenedores
       - /var/run/docker.sock:/var/run/docker.sock:ro
