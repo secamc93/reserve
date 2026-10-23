@@ -2,19 +2,21 @@ package usecasevotes
 
 import (
 	"context"
+	"time"
 
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
 )
 
-// ensureVotingPaid devuelve ErrVotingDayNotPaid si el grupo de la votación debe días de votación.
+// ensureVotingPaid devuelve ErrVotingDayNotPaid si hoy no está cubierto para la propiedad de la
+// votación (ver domain.VotingCoverage).
 func (u *VotesUseCase) ensureVotingPaid(ctx context.Context, votingID uint) error {
-	pending, err := u.repo.IsVotingPaymentPending(ctx, votingID)
+	cov, err := u.repo.GetVotingCoverage(ctx, votingID, time.Now())
 	if err != nil {
-		u.logger.Error(ctx).Err(err).Uint("voting_id", votingID).Msg("Error verificando el pago del día de votación")
+		u.logger.Error(ctx).Err(err).Uint("voting_id", votingID).Msg("Error verificando el día de votación")
 		return err
 	}
-	if pending {
-		u.logger.Warn(ctx).Uint("voting_id", votingID).Msg("Voto rechazado: día de votación sin pagar")
+	if !cov.Covered() {
+		u.logger.Warn(ctx).Uint("voting_id", votingID).Msg("Voto rechazado: día de votación sin cubrir")
 		return domain.ErrVotingDayNotPaid
 	}
 	return nil

@@ -1,21 +1,31 @@
 package request
 
-// CheckoutRequest inicia el pago de los días pendientes de un grupo.
-type CheckoutRequest struct {
-	RedirectURL string `json:"redirect_url" binding:"required"`
+// DaysCheckoutRequest pide pagar fechas de votación.
+type DaysCheckoutRequest struct {
+	Dates       []string `json:"dates" binding:"required,min=1,max=31"`
+	RedirectURL string   `json:"redirect_url" binding:"required"`
 }
 
-// SyncRequest pide confirmar una transacción de la pasarela al volver del pago.
+// SyncRequest confirma una transacción al volver del pago.
 type SyncRequest struct {
 	TransactionID string `json:"transaction_id" binding:"required"`
 }
 
-// ManualPaymentRequest registra un pago recibido por fuera de la pasarela.
-type ManualPaymentRequest struct {
-	Notes string `json:"notes" binding:"max=500"`
+// GrantDaysRequest otorga fechas pagadas por fuera (manual) o regaladas (cortesia).
+type GrantDaysRequest struct {
+	Dates  []string `json:"dates" binding:"required,min=1,max=31"`
+	Source string   `json:"source" binding:"required,oneof=manual cortesia"`
+	Notes  string   `json:"notes" binding:"max=500"`
 }
 
-// ExemptionRequest marca o desmarca la propiedad como exenta del cobro.
+// ExemptionRequest exenta o no a la propiedad.
 type ExemptionRequest struct {
 	Exempt *bool `json:"exempt" binding:"required"`
+}
+
+// AdminExemptionRequest exenta o no a un administrador (todas sus propiedades).
+type AdminExemptionRequest struct {
+	UserID uint   `json:"user_id" binding:"required"`
+	Exempt *bool  `json:"exempt" binding:"required"`
+	Notes  string `json:"notes" binding:"max=500"`
 }

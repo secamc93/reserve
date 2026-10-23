@@ -12,64 +12,87 @@ import (
 	"dbpostgres/app/infra/models"
 )
 
-func TestRepository_PagosYExencionContraLaBase(t *testing.T) {
+func TestRepository_CoberturaContraLaBase(t *testing.T) {
 	ctx := testkit.Ctx(t)
 	database := testkit.DB(t)
+	conn := database.Conn(ctx)
 	repo := repository.New(database, testkit.Logger(t))
-	hp := testkit.NewHorizontalProperty(t, database, []testkit.UnitSpec{{Number: "R-101", Coefficient: 100}})
+	hp := testkit.NewHorizontalProperty(t, database, []testkit.UnitSpec{{Number: "C-101", Coefficient: 100}})
+	testkit.SetVotingBillingExempt(t, database, hp.BusinessID, false)
 
-	group := models.VotingGroup{BusinessID: hp.BusinessID, Name: "Cobro repo " + hp.Code, VotingStartDate: time.Now(), VotingEndDate: time.Now().Add(time.Hour)}
-	if err := database.Conn(ctx).Create(&group).Error; err != nil {
-		t.Fatalf("creando grupo: %v", err)
+	// Administrador vinculado a la propiedad.
+	user := models.User{Name: "Admin IT " + hp.Code, Email: "admin-" + hp.Code + "@example.com", Password: "x"}
+	if err := conn.Create(&user).Error; err != nil {
+		t.Fatalf("creando usuario: %v", err)
+	}
+	t.Cleanup(func() { conn.Unscoped().Delete(&models.User{}, user.ID) })
+	bid := hp.BusinessID
+	if err := conn.Create(&models.BusinessStaff{UserID: user.ID, BusinessID: &bid}).Error; err != nil {
+		t.Fatalf("vinculando administrador: %v", err)
+	}
+	t.Cleanup(func() {
+		conn.Unscoped().Where("user_id = ?", user.ID).Delete(&models.BusinessStaff{})
+		conn.Unscoped().Where("user_id = ?", user.ID).Delete(&models.VotingBillingUserExemption{})
+	})
+
+	if ex, _ := repo.IsAdminExempt(ctx, bid); ex {
+		t.Fatal("sin exención el administrador no debe estar exento")
+	}
+	if n, _ := repo.CountManagedProperties(ctx, user.ID); n != 1 {
+		t.Fatalf("propiedades administradas = %d, se esperaba 1", n)
+	}
+	if err := repo.SetUserExempt(ctx, user.ID, true, "aliado", nil); err != nil {
+		t.Fatalf("SetUserExempt: %v", err)
+	}
+	if ex, _ := repo.IsAdminExempt(ctx, bid); !ex {
+		t.Fatal("con el administrador exento la propiedad debe quedar cubierta")
+	}
+	admins, err := repo.ListPropertyAdmins(ctx, bid)
+	if err != nil || len(admins) != 1 || !admins[0].Exempt {
+		t.Fatalf("ListPropertyAdmins = %+v, %v", admins, err)
 	}
 
-	// Exención: la propiedad de prueba nace exenta; SetExempt la cambia (upsert sobre business_id).
-	if exempt, err := repo.IsExempt(ctx, hp.BusinessID); err != nil || !exempt {
-		t.Fatalf("IsExempt inicial = %v, %v; se esperaba true", exempt, err)
-	}
-	if err := repo.SetExempt(ctx, hp.BusinessID, false, nil); err != nil {
-		t.Fatalf("SetExempt: %v", err)
-	}
-	if exempt, _ := repo.IsExempt(ctx, hp.BusinessID); exempt {
-		t.Fatal("después de SetExempt(false) sigue exenta")
-	}
-
-	g, err := repo.GetVotingGroup(ctx, group.ID)
-	if err != nil || g == nil || g.BusinessID != hp.BusinessID {
-		t.Fatalf("GetVotingGroup = %+v, %v", g, err)
-	}
-
-	p, err := repo.CreatePayment(ctx, &entities.Payment{BusinessID: hp.BusinessID, VotingGroupID: group.ID, Reference: "RUPU-IT-" + hp.Code,
-		Provider: entities.ProviderWompi, Days: 1, AmountInCents: 5000000, Currency: "COP", Status: entities.StatusPending})
-	if err != nil || p.ID == 0 {
-		t.Fatalf("CreatePayment = %+v, %v", p, err)
-	}
-	if days, _ := repo.SumApprovedDays(ctx, group.ID); days != 0 {
-		t.Fatalf("días aprobados con el pago pendiente = %d, se esperaba 0", days)
-	}
-
+	// Membresía vigente que incluye la propiedad.
 	now := time.Now()
-	approved := entities.Transaction{ID: "tx-it", Reference: p.Reference, Status: entities.StatusApproved, AmountInCents: 5000000, Currency: "COP", PaymentMethodType: "PSE"}
-	if err := repo.UpdatePaymentFromTransaction(ctx, p.ID, approved, &now); err != nil {
-		t.Fatalf("UpdatePaymentFromTransaction: %v", err)
+	start, end := now.Add(-time.Hour), now.Add(48*time.Hour)
+	m := models.Membership{PlanCode: "MONTH_1", MaxProperties: 1, Status: "ACTIVE", Source: "cortesia", StartsAt: &start, EndsAt: &end}
+	if err := conn.Create(&m).Error; err != nil {
+		t.Fatalf("creando membresía: %v", err)
 	}
-	if days, _ := repo.SumApprovedDays(ctx, group.ID); days != 1 {
-		t.Fatalf("días aprobados = %d, se esperaba 1", days)
+	if err := conn.Create(&models.MembershipProperty{MembershipID: m.ID, BusinessID: bid}).Error; err != nil {
+		t.Fatalf("vinculando membresía: %v", err)
 	}
-
-	// Un evento tardío no puede bajar un pago aprobado (la condición está en la consulta).
-	late := approved
-	late.Status = entities.StatusDeclined
-	if err := repo.UpdatePaymentFromTransaction(ctx, p.ID, late, nil); err != nil {
-		t.Fatalf("UpdatePaymentFromTransaction tardío: %v", err)
+	am, err := repo.ActiveMembership(ctx, bid, now)
+	if err != nil || am == nil || am.PlanCode != "MONTH_1" {
+		t.Fatalf("ActiveMembership = %+v, %v", am, err)
 	}
-	got, err := repo.GetPaymentByReference(ctx, p.Reference)
-	if err != nil || got == nil || got.Status != entities.StatusApproved || got.PaidAt == nil || got.PaymentMethodType != "PSE" {
-		t.Fatalf("pago después del evento tardío = %+v, %v", got, err)
+	if am2, _ := repo.ActiveMembership(ctx, bid, end.Add(time.Minute)); am2 != nil {
+		t.Fatal("después de vencer no debe haber membresía vigente")
 	}
 
-	list, err := repo.ListPaymentsByGroup(ctx, group.ID)
-	if err != nil || len(list) != 1 {
-		t.Fatalf("ListPaymentsByGroup = %d pagos, %v", len(list), err)
+	// Compra aprobada dos veces: las fechas se crean una sola vez.
+	p, err := repo.CreateDayPayment(ctx, &entities.DayPayment{BusinessID: bid, Reference: "DIA-IT-" + hp.Code, Source: "wompi",
+		Dates: []string{"2099-01-02", "2099-01-03"}, AmountInCents: 10000000, Currency: "COP", Status: entities.StatusPending})
+	if err != nil {
+		t.Fatalf("CreateDayPayment: %v", err)
+	}
+	tx := entities.Transaction{ID: "tx-it", Reference: p.Reference, Status: entities.StatusApproved, AmountInCents: 10000000, Currency: "COP", PaymentMethodType: "PSE"}
+	for i := 0; i < 2; i++ {
+		if err := repo.ApproveDayPayment(ctx, p.ID, tx, now); err != nil {
+			t.Fatalf("ApproveDayPayment #%d: %v", i+1, err)
+		}
+	}
+	dates, err := repo.PurchasedDates(ctx, bid, "2099-01-01")
+	if err != nil || len(dates) != 2 || dates[0] != "2099-01-02" || dates[1] != "2099-01-03" {
+		t.Fatalf("PurchasedDates = %v, %v", dates, err)
+	}
+
+	// Cortesía con una fecha ya comprada: no falla y no duplica.
+	if _, err := repo.CreateGrantedDays(ctx, &entities.DayPayment{BusinessID: bid, Reference: "CORTESIA-IT-" + hp.Code, Source: "cortesia",
+		Dates: []string{"2099-01-03", "2099-01-04"}, Currency: "COP", Status: entities.StatusApproved}); err != nil {
+		t.Fatalf("CreateGrantedDays: %v", err)
+	}
+	if dates, _ = repo.PurchasedDates(ctx, bid, "2099-01-01"); len(dates) != 3 {
+		t.Fatalf("PurchasedDates tras la cortesía = %v, se esperaban 3", dates)
 	}
 }

@@ -7,15 +7,15 @@ import (
 )
 
 func (h *handler) RegisterRoutes(router *gin.RouterGroup) {
-	group := router.Group("/horizontal-properties/voting-groups/:group_id")
+	billing := router.Group("/horizontal-properties/voting-billing", middleware.JWT())
 	{
-		group.GET("/payment", middleware.JWT(), h.GetStatus)
-		group.POST("/payments/checkout", middleware.JWT(), h.CreateCheckout)
-		group.POST("/payments/sync", middleware.JWT(), h.SyncTransaction)
-		group.POST("/payments/manual", middleware.JWT(), h.RegisterManualPayment) // solo super admin
+		billing.GET("/coverage", h.GetCoverage)
+		billing.POST("/days/checkout", h.CreateDaysCheckout)
+		billing.POST("/days/sync", h.SyncTransaction)
+		// Solo super admin
+		billing.POST("/days/grant", h.GrantDays)
+		billing.PUT("/exemption", h.SetPropertyExemption)
+		billing.GET("/admins", h.ListPropertyAdmins)
+		billing.PUT("/admin-exemption", h.SetAdminExemption)
 	}
-	router.PUT("/horizontal-properties/voting-billing/exemption", middleware.JWT(), h.SetExemption) // solo super admin
-
-	// Webhook de Wompi: público, se autentica con la firma del evento.
-	router.POST("/payments/wompi/events", h.WompiEvents)
 }

@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // VotingRepository - Puerto para repositorio de votaciones y grupos
 type VotingRepository interface {
@@ -41,8 +44,9 @@ type VotingRepository interface {
 	GetUnvotedUnitsByVoting(ctx context.Context, votingID uint, unitNumberFilter string) ([]UnvotedUnit, error)
 	GetResidentMainUnitID(ctx context.Context, residentID uint) (uint, error)
 	CheckUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
-	// IsVotingPaymentPending: el grupo de la votación debe días de votación (cobro de Rupü)
-	IsVotingPaymentPending(ctx context.Context, votingID uint) (bool, error)
+	// GetVotingCoverage trae los hechos de cobro (exención, membresía, día comprado) de la
+	// propiedad de la votación en el instante at; la decisión es VotingCoverage.Covered().
+	GetVotingCoverage(ctx context.Context, votingID uint, at time.Time) (VotingCoverage, error)
 	MarkUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error // ✅ NUEVO
 	GetHorizontalPropertyBasicInfo(ctx context.Context, hpID uint) (*HorizontalPropertyDTO, error)
 	ListPropertyUnits(ctx context.Context, filters PropertyUnitFiltersDTO) (*PaginatedPropertyUnitsDTO, error)

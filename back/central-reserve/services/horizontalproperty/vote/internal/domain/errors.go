@@ -21,5 +21,5 @@ var (
 	ErrPasswordRequired        = errors.New("contraseña de votación requerida")
 	ErrInvalidPassword         = errors.New("contraseña de votación incorrecta")
 	ErrNoUnitsForCredentials   = errors.New("la propiedad no tiene unidades activas para generar contraseñas")
-	ErrVotingDayNotPaid        = errors.New("el día de votación de esta asamblea no está pagado")
+	ErrVotingDayNotPaid        = errors.New("hoy no está cubierto: falta comprar el día de votación o una membresía")
 )

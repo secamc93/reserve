@@ -7,14 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// IHandler expone los endpoints del cobro por día de votación.
+// IHandler expone los endpoints del cobro por días de votación.
 type IHandler interface {
-	GetStatus(c *gin.Context)
-	CreateCheckout(c *gin.Context)
+	GetCoverage(c *gin.Context)
+	CreateDaysCheckout(c *gin.Context)
 	SyncTransaction(c *gin.Context)
-	RegisterManualPayment(c *gin.Context)
-	SetExemption(c *gin.Context)
-	WompiEvents(c *gin.Context)
+	GrantDays(c *gin.Context)
+	SetPropertyExemption(c *gin.Context)
+	ListPropertyAdmins(c *gin.Context)
+	SetAdminExemption(c *gin.Context)
 	RegisterRoutes(router *gin.RouterGroup)
 }
 
@@ -23,7 +24,7 @@ type handler struct {
 	logger  log.ILogger
 }
 
-// New crea el handler del cobro por día de votación.
+// New crea el handler del cobro por días de votación.
 func New(useCase ports.IUseCase, logger log.ILogger) IHandler {
 	return &handler{useCase: useCase, logger: logger}
 }

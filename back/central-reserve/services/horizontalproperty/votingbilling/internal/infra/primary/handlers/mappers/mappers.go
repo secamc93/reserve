@@ -6,46 +6,51 @@ import (
 	"central_reserve/services/horizontalproperty/votingbilling/internal/infra/primary/handlers/response"
 )
 
-// ToPayment convierte un pago del dominio a la respuesta HTTP.
-func ToPayment(p entities.Payment) response.Payment {
-	return response.Payment{
-		ID:                    p.ID,
-		Reference:             p.Reference,
-		Provider:              p.Provider,
-		Days:                  p.Days,
-		AmountInCents:         p.AmountInCents,
-		Currency:              p.Currency,
-		Status:                p.Status,
-		ProviderTransactionID: p.ProviderTransactionID,
-		PaymentMethodType:     p.PaymentMethodType,
-		PaidAt:                p.PaidAt,
-		Notes:                 p.Notes,
-		CreatedAt:             p.CreatedAt,
+// ToDayPayment convierte una compra de días a la respuesta HTTP.
+func ToDayPayment(p entities.DayPayment) response.DayPayment {
+	dates := p.Dates
+	if dates == nil {
+		dates = []string{}
+	}
+	return response.DayPayment{
+		ID: p.ID, Reference: p.Reference, Source: p.Source, Dates: dates, AmountInCents: p.AmountInCents,
+		Currency: p.Currency, Status: p.Status, PaymentMethodType: p.PaymentMethodType, PaidAt: p.PaidAt,
+		Notes: p.Notes, CreatedAt: p.CreatedAt,
 	}
 }
 
-// ToBillingStatus convierte el estado de cobro a la respuesta HTTP.
-func ToBillingStatus(s *dtos.BillingStatus) response.BillingStatus {
-	payments := make([]response.Payment, len(s.Payments))
-	for i, p := range s.Payments {
-		payments[i] = ToPayment(p)
+// ToCoverage convierte la cobertura a la respuesta HTTP.
+func ToCoverage(c *dtos.Coverage) response.Coverage {
+	out := response.Coverage{
+		BusinessID: c.BusinessID, Today: c.Today, TodayCovered: c.TodayCovered,
+		PropertyExempt: c.PropertyExempt, AdminExempt: c.AdminExempt,
+		PurchasedDates: nonNil(c.PurchasedDates), PricePerDayCOP: c.PricePerDayCOP, GatewayEnabled: c.GatewayEnabled,
+		Assemblies: make([]response.Assembly, len(c.Assemblies)), RecentPurchases: make([]response.DayPayment, len(c.RecentPurchases)),
 	}
-	return response.BillingStatus{
-		VotingGroupID:    s.VotingGroupID,
-		BusinessID:       s.BusinessID,
-		RequiredDays:     s.RequiredDays,
-		PaidDays:         s.PaidDays,
-		DueDays:          s.DueDays,
-		PricePerDayCOP:   s.PricePerDayCOP,
-		AmountDueInCents: s.AmountDueInCents,
-		Exempt:           s.Exempt,
-		Paid:             s.Paid,
-		GatewayEnabled:   s.GatewayEnabled,
-		Payments:         payments,
+	if c.Membership != nil {
+		out.Membership = &response.Membership{PlanCode: c.Membership.PlanCode, EndsAt: c.Membership.EndsAt}
 	}
+	for i, a := range c.Assemblies {
+		out.Assemblies[i] = response.Assembly{GroupID: a.GroupID, Name: a.Name, Dates: nonNil(a.Dates), UncoveredDates: nonNil(a.UncoveredDates)}
+	}
+	for i, p := range c.RecentPurchases {
+		out.RecentPurchases[i] = ToDayPayment(p)
+	}
+	return out
 }
 
-// ToCheckout convierte el checkout a la respuesta HTTP.
-func ToCheckout(c *dtos.Checkout) response.Checkout {
-	return response.Checkout{Payment: ToPayment(c.Payment), CheckoutURL: c.CheckoutURL}
+// ToPropertyAdmins convierte los administradores a la respuesta HTTP.
+func ToPropertyAdmins(admins []entities.PropertyAdmin) []response.PropertyAdmin {
+	out := make([]response.PropertyAdmin, len(admins))
+	for i, a := range admins {
+		out[i] = response.PropertyAdmin{UserID: a.UserID, Name: a.Name, Email: a.Email, Exempt: a.Exempt}
+	}
+	return out
+}
+
+func nonNil(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }

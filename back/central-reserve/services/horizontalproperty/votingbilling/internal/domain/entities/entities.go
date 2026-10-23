@@ -2,7 +2,7 @@ package entities
 
 import "time"
 
-// Estados de un pago. Son los de Wompi; los pagos manuales nacen APPROVED.
+// Estados de un pago (los de Wompi). Los manuales y las cortesías nacen APPROVED.
 const (
 	StatusPending  = "PENDING"
 	StatusApproved = "APPROVED"
@@ -11,29 +11,20 @@ const (
 	StatusError    = "ERROR"
 )
 
-// Proveedores de pago.
+// Origen de los días de votación.
 const (
-	ProviderWompi  = "wompi"
-	ProviderManual = "manual"
+	SourceWompi    = "wompi"
+	SourceManual   = "manual"
+	SourceCourtesy = "cortesia"
 )
 
-// VotingGroup es lo que el cobro necesita saber de un grupo de votación (asamblea).
-type VotingGroup struct {
-	ID              uint
-	BusinessID      uint
-	Name            string
-	VotingStartDate time.Time
-	VotingEndDate   time.Time
-}
-
-// Payment es un pago de días de votación de un grupo.
-type Payment struct {
+// DayPayment es la compra de una o varias fechas de votación de una propiedad.
+type DayPayment struct {
 	ID                    uint
 	BusinessID            uint
-	VotingGroupID         uint
 	Reference             string
-	Provider              string
-	Days                  int
+	Source                string
+	Dates                 []string // "2006-01-02", hora de Colombia
 	AmountInCents         int64
 	Currency              string
 	Status                string
@@ -53,4 +44,26 @@ type Transaction struct {
 	AmountInCents     int64
 	Currency          string
 	PaymentMethodType string
+}
+
+// ActiveMembership es la membresía vigente que cubre una propiedad.
+type ActiveMembership struct {
+	PlanCode string
+	EndsAt   time.Time
+}
+
+// UpcomingAssembly es un grupo de votación (asamblea) que todavía no termina.
+type UpcomingAssembly struct {
+	GroupID uint
+	Name    string
+	Start   time.Time
+	End     time.Time
+}
+
+// PropertyAdmin es un usuario que administra la propiedad (business_staff).
+type PropertyAdmin struct {
+	UserID uint
+	Name   string
+	Email  string
+	Exempt bool
 }

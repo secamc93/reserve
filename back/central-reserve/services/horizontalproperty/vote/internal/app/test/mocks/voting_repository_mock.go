@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"time"
 
 	"central_reserve/services/horizontalproperty/vote/internal/domain"
 )
@@ -49,7 +50,7 @@ type MockVotingRepository struct {
 	GetUnvotedUnitsByVotingFn          func(ctx context.Context, votingID uint, unitNumberFilter string) ([]domain.UnvotedUnit, error)
 	GetResidentMainUnitIDFn            func(ctx context.Context, residentID uint) (uint, error)
 	CheckUnitAttendanceForVotingFn     func(ctx context.Context, votingID, propertyUnitID uint) (bool, error)
-	IsVotingPaymentPendingFn           func(ctx context.Context, votingID uint) (bool, error)
+	GetVotingCoverageFn                func(ctx context.Context, votingID uint, at time.Time) (domain.VotingCoverage, error)
 	MarkUnitAttendanceForVotingFn      func(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error
 	GetHorizontalPropertyBasicInfoFn   func(ctx context.Context, hpID uint) (*domain.HorizontalPropertyDTO, error)
 	ListPropertyUnitsFn                func(ctx context.Context, filters domain.PropertyUnitFiltersDTO) (*domain.PaginatedPropertyUnitsDTO, error)
@@ -292,11 +293,11 @@ func (m *MockVotingRepository) CheckUnitAttendanceForVoting(ctx context.Context,
 	return false, nil
 }
 
-func (m *MockVotingRepository) IsVotingPaymentPending(ctx context.Context, votingID uint) (bool, error) {
-	if m.IsVotingPaymentPendingFn != nil {
-		return m.IsVotingPaymentPendingFn(ctx, votingID)
+func (m *MockVotingRepository) GetVotingCoverage(ctx context.Context, votingID uint, at time.Time) (domain.VotingCoverage, error) {
+	if m.GetVotingCoverageFn != nil {
+		return m.GetVotingCoverageFn(ctx, votingID, at)
 	}
-	return false, nil
+	return domain.VotingCoverage{}, nil
 }
 
 func (m *MockVotingRepository) MarkUnitAttendanceForVoting(ctx context.Context, votingID, propertyUnitID uint, markAttendance bool) error {

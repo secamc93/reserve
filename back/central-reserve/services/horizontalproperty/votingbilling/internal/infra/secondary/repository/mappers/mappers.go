@@ -1,18 +1,20 @@
 package mappers
 
 import (
+	"strings"
+
 	"central_reserve/services/horizontalproperty/votingbilling/internal/domain/entities"
 	"dbpostgres/app/infra/models"
 )
 
-// PaymentToModel convierte un pago del dominio al modelo de base de datos.
-func PaymentToModel(p *entities.Payment) *models.VotingGroupPayment {
-	return &models.VotingGroupPayment{
+// ToModel convierte una compra de días del dominio al modelo.
+func ToModel(p *entities.DayPayment) *models.VotingDayPayment {
+	return &models.VotingDayPayment{
 		BusinessID:            p.BusinessID,
-		VotingGroupID:         p.VotingGroupID,
 		Reference:             p.Reference,
-		Provider:              p.Provider,
-		Days:                  p.Days,
+		Source:                p.Source,
+		Dates:                 strings.Join(p.Dates, ","),
+		Days:                  len(p.Dates),
 		AmountInCents:         p.AmountInCents,
 		Currency:              p.Currency,
 		Status:                p.Status,
@@ -24,15 +26,14 @@ func PaymentToModel(p *entities.Payment) *models.VotingGroupPayment {
 	}
 }
 
-// PaymentToDomain convierte el modelo de base de datos a un pago del dominio.
-func PaymentToDomain(m *models.VotingGroupPayment) entities.Payment {
-	return entities.Payment{
+// ToDomain convierte el modelo a una compra de días del dominio.
+func ToDomain(m *models.VotingDayPayment) entities.DayPayment {
+	return entities.DayPayment{
 		ID:                    m.ID,
 		BusinessID:            m.BusinessID,
-		VotingGroupID:         m.VotingGroupID,
 		Reference:             m.Reference,
-		Provider:              m.Provider,
-		Days:                  m.Days,
+		Source:                m.Source,
+		Dates:                 SplitDates(m.Dates),
 		AmountInCents:         m.AmountInCents,
 		Currency:              m.Currency,
 		Status:                m.Status,
@@ -45,11 +46,10 @@ func PaymentToDomain(m *models.VotingGroupPayment) entities.Payment {
 	}
 }
 
-// PaymentsToDomain convierte una lista de modelos.
-func PaymentsToDomain(rows []models.VotingGroupPayment) []entities.Payment {
-	out := make([]entities.Payment, len(rows))
-	for i := range rows {
-		out[i] = PaymentToDomain(&rows[i])
+// SplitDates separa "2026-10-24,2026-10-25".
+func SplitDates(s string) []string {
+	if s == "" {
+		return nil
 	}
-	return out
+	return strings.Split(s, ",")
 }

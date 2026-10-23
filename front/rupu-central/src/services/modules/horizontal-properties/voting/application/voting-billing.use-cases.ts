@@ -1,58 +1,94 @@
 /**
- * Use Cases: cobro por día de votación
+ * Use Cases: cobro de votaciones (días comprados, exenciones) y membresías.
  */
 
-import type { VotingBillingStatus, VotingGroupPayment } from '../domain/entities';
-import type { IVotingBillingRepository, VotingBillingScope, VotingCheckout } from '../domain/ports/voting-billing.repository';
+import type { BillingScope, IMembershipRepository, IVotingBillingRepository } from '../domain/ports/voting-billing.repository';
 
-function assertScope(scope: VotingBillingScope) {
-  if (!scope.groupId || scope.groupId <= 0) throw new Error('ID del grupo de votación inválido');
-  if (!scope.businessId || scope.businessId <= 0) throw new Error('ID de la propiedad inválido');
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function assertScope(p: BillingScope) {
+  if (!p.businessId || p.businessId <= 0) throw new Error('ID de la propiedad inválido');
 }
 
-export class GetVotingBillingStatusUseCase {
-  constructor(private repository: IVotingBillingRepository) {}
-
-  execute(scope: VotingBillingScope): Promise<VotingBillingStatus> {
-    assertScope(scope);
-    return this.repository.getStatus(scope);
+function assertDates(dates: string[]) {
+  if (dates.length === 0 || dates.length > 31 || dates.some((d) => !DATE.test(d))) {
+    throw new Error('Elige entre 1 y 31 fechas válidas');
   }
 }
 
-export class CreateVotingCheckoutUseCase {
-  constructor(private repository: IVotingBillingRepository) {}
+function assertRedirect(url: string) {
+  if (!/^https?:\/\//.test(url)) throw new Error('URL de retorno inválida');
+}
 
-  execute(input: VotingBillingScope & { redirectUrl: string }): Promise<VotingCheckout> {
-    assertScope(input);
-    if (!/^https?:\/\//.test(input.redirectUrl)) throw new Error('URL de retorno inválida');
-    return this.repository.createCheckout(input);
+export class VotingBillingUseCases {
+  constructor(private repo: IVotingBillingRepository) {}
+
+  getCoverage(p: BillingScope) {
+    assertScope(p);
+    return this.repo.getCoverage(p);
+  }
+
+  createDaysCheckout(p: BillingScope & { dates: string[]; redirectUrl: string }) {
+    assertScope(p);
+    assertDates(p.dates);
+    assertRedirect(p.redirectUrl);
+    return this.repo.createDaysCheckout(p);
+  }
+
+  syncDays(p: BillingScope & { transactionId: string }) {
+    assertScope(p);
+    if (!p.transactionId) throw new Error('Transacción inválida');
+    return this.repo.syncDays(p);
+  }
+
+  grantDays(p: BillingScope & { dates: string[]; source: 'manual' | 'cortesia'; notes?: string }) {
+    assertScope(p);
+    assertDates(p.dates);
+    return this.repo.grantDays(p);
+  }
+
+  setPropertyExemption(p: BillingScope & { exempt: boolean }) {
+    assertScope(p);
+    return this.repo.setPropertyExemption(p);
+  }
+
+  listAdmins(p: BillingScope) {
+    assertScope(p);
+    return this.repo.listAdmins(p);
+  }
+
+  setAdminExemption(p: { token: string; userId: number; exempt: boolean; notes?: string }) {
+    if (!p.userId || p.userId <= 0) throw new Error('Usuario inválido');
+    return this.repo.setAdminExemption(p);
   }
 }
 
-export class SyncVotingPaymentUseCase {
-  constructor(private repository: IVotingBillingRepository) {}
+export class MembershipUseCases {
+  constructor(private repo: IMembershipRepository) {}
 
-  execute(input: VotingBillingScope & { transactionId: string }): Promise<VotingBillingStatus> {
-    assertScope(input);
-    if (!input.transactionId) throw new Error('Transacción inválida');
-    return this.repository.syncTransaction(input);
+  listPlans(p: { token: string }) {
+    return this.repo.listPlans(p);
   }
-}
 
-export class RegisterManualVotingPaymentUseCase {
-  constructor(private repository: IVotingBillingRepository) {}
-
-  execute(input: VotingBillingScope & { notes?: string }): Promise<VotingGroupPayment> {
-    assertScope(input);
-    return this.repository.registerManualPayment(input);
+  listForBusiness(p: BillingScope) {
+    assertScope(p);
+    return this.repo.listForBusiness(p);
   }
-}
 
-export class SetVotingBillingExemptionUseCase {
-  constructor(private repository: IVotingBillingRepository) {}
+  createCheckout(p: { token: string; planCode: string; businessIds: number[]; redirectUrl: string }) {
+    if (!p.planCode) throw new Error('Elige un plan');
+    if (p.businessIds.length === 0) throw new Error('Elige al menos un conjunto');
+    assertRedirect(p.redirectUrl);
+    return this.repo.createCheckout(p);
+  }
 
-  execute(input: { token: string; businessId: number; exempt: boolean }): Promise<void> {
-    if (!input.businessId || input.businessId <= 0) throw new Error('ID de la propiedad inválido');
-    return this.repository.setExemption(input);
+  sync(p: { token: string; transactionId: string }) {
+    if (!p.transactionId) throw new Error('Transacción inválida');
+    return this.repo.sync(p);
+  }
+
+  grant(p: { token: string; planCode: string; maxProperties?: number; businessIds: number[]; source: 'manual' | 'cortesia'; notes?: string }) {
+    if (p.businessIds.length === 0) throw new Error('Elige al menos un conjunto');
+    return this.repo.grant(p);
   }
 }
