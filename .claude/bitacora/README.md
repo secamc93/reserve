@@ -15,3 +15,4 @@ Un archivo por caso. Reglas: `.claude/rules/bitacora.md`.
 | 2026-10-19 | [Serie de videos cortos de Rupü sobre votaciones de asamblea](2026-10-19-serie-videos-votaciones-asamblea.md) | marketing / videos |
 | 2026-10-22 | [Cobro por día de votación con Wompi](2026-10-22-cobro-por-dia-de-votacion-wompi.md) | back / migrador / front / pagos |
 | 2026-10-22 | [Web pública, front local en el 3005 y prospección de administradoras en Facebook](2026-10-22-web-publica-y-prospeccion-facebook.md) | website / entorno local / marketing |
+| 2026-10-23 | [Días comprados, membresías y plan de administradora](2026-10-23-dias-membresias-y-plan-administradora.md) | back / migrador / front / pagos |

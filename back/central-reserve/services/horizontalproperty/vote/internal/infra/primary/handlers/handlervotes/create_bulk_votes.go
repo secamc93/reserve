@@ -59,7 +59,7 @@ func (h *VotesHandler) CreateBulkVotes(c *gin.Context) {
 	result, err := h.votingUseCase.CreateBulkVotes(c.Request.Context(), dto)
 	if err != nil {
 		if errors.Is(err, domain.ErrVotingDayNotPaid) {
-			c.JSON(http.StatusPaymentRequired, response.ErrorResponse{Success: false, Message: "El día de votación de esta asamblea no está pagado", Error: err.Error()})
+			c.JSON(http.StatusPaymentRequired, response.ErrorResponse{Success: false, Message: "Hoy no hay día de votación comprado ni membresía activa para esta propiedad", Error: err.Error()})
 			return
 		}
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{

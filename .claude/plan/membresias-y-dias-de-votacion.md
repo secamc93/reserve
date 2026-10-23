@@ -1,6 +1,6 @@
 # Plan — Días de votación, membresías y plan de administradora
 
-**Estado:** diseño propuesto (2026-10-23), esperando "GO" del usuario. Rama `feat/membresias-y-dias`.
+**Estado:** implementado y verificado en local (2026-10-23); falta producción. Rama `feat/membresias-y-dias`.
 
 ## Decisiones del usuario (2026-10-23)
 
@@ -100,8 +100,8 @@ hay conteo de rangos).
 
 ## Pendientes
 
-- [ ] GO del usuario a este diseño.
-- [ ] Implementación back + migración + pruebas.
-- [ ] Implementación front + pruebas.
-- [ ] Prueba punta a punta sandbox en local.
+- [x] GO del usuario (2026-10-23).
+- [x] Back + migración + pruebas (unitarias e integración).
+- [x] Front + pruebas (634) + build.
+- [x] Prueba punta a punta sandbox en local (ver bitácora 2026-10-23).
 - [ ] PR, migración en producción y deploy (con autorización).
