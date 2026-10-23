@@ -18,16 +18,23 @@ for dir in ${TUTORIALS_SRC:-tutorials/.output}/votaciones.tutorial.ts-votaciones
   narration="$dir/narration.json"
   if [[ -f "$narration" ]]; then
     # Voz: cada audio entra en el momento en que apareció su subtítulo (ver studio.ts).
+    # La carga inicial de la página (trimMs) se recorta y la voz se corre lo mismo.
+    trim=$(node -e 'console.log((require(require("path").resolve(process.argv[1])).trimMs || 0) / 1000)' "$narration")
     args=(); filters=""; n=0
     while IFS=$'\t' read -r at file; do
       args+=(-i "$file"); n=$((n + 1))
       filters+="[$n:a]adelay=${at}|${at}[a$n];"
-    done < <(node -e 'for (const c of require(require("path").resolve(process.argv[1]))) console.log(`${c.at}\t${c.file}`)' "$narration")
-    mix=""; for i in $(seq 1 "$n"); do mix+="[a$i]"; done
-    ffmpeg -loglevel error -y -i "$video" "${args[@]}" \
-      -filter_complex "${filters}${mix}amix=inputs=$n:normalize=0,apad[aout]" \
-      -map 0:v -map "[aout]" -shortest -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p -vf "scale=1280:-2" \
-      -c:a aac -b:a 96k -movflags +faststart "$out/$slug.mp4"
+    done < <(node -e 'const n=require(require("path").resolve(process.argv[1])); for (const c of n.clips) console.log(`${Math.max(0, c.at - (n.trimMs || 0))}\t${c.file}`)' "$narration")
+    if [[ $n == 0 ]]; then
+      ffmpeg -loglevel error -y -ss "$trim" -i "$video" -an -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p \
+        -vf "scale=1280:-2" -movflags +faststart "$out/$slug.mp4"
+    else
+      mix=""; for i in $(seq 1 "$n"); do mix+="[a$i]"; done
+      ffmpeg -loglevel error -y -ss "$trim" -i "$video" "${args[@]}" \
+        -filter_complex "${filters}${mix}amix=inputs=$n:normalize=0,apad[aout]" \
+        -map 0:v -map "[aout]" -shortest -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p -vf "scale=1280:-2" \
+        -c:a aac -b:a 96k -movflags +faststart "$out/$slug.mp4"
+    fi
   else
     ffmpeg -loglevel error -y -i "$video" -an -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p \
       -vf "scale=1280:-2" -movflags +faststart "$out/$slug.mp4"

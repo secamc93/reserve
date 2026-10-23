@@ -15,7 +15,7 @@ import type { VotingGroup } from '../../domain/entities';
 import { VT, getGroupStatus, vtBtn } from '../design';
 import { guideSteps, nextStep, type GuideFacts, type GuideStep } from './guide-steps';
 import { TutorialVideoDialog } from './tutorial-video-dialog';
-import type { TutorialSlug } from './tutorials';
+import { TUTORIALS, type TutorialSlug } from './tutorials';
 
 interface VotingGuideProps {
   businessId: number;
@@ -183,6 +183,11 @@ export function VotingGuide({ businessId, groups, onCreateGroup, onOpenGroup }: 
                 <button type="button" className="text-[12px] font-semibold underline" onClick={() => setVideo(step.video)} aria-label={`Ver video: ${step.title}`}>
                   ▶ Ver video
                 </button>
+                {step.extra && (
+                  <button type="button" className="text-[12px] font-semibold underline" onClick={() => setVideo(step.extra!.video)} aria-label={`Ver video: ${TUTORIALS[step.extra.video].title}`}>
+                    ▶ {step.extra.label}
+                  </button>
+                )}
               </div>
               {current && <div>{action(step)}</div>}
             </li>

@@ -3,7 +3,13 @@
  * demostración con datos ficticios y publicados en public/tutoriales).
  */
 
-export type TutorialSlug = 'crear-asamblea' | 'agregar-votaciones' | 'asistencia-y-qr' | 'dias-de-votacion' | 'votacion-en-vivo';
+export type TutorialSlug =
+  | 'crear-asamblea'
+  | 'agregar-votaciones'
+  | 'asistencia-y-qr'
+  | 'credenciales-qr'
+  | 'dias-de-votacion'
+  | 'votacion-en-vivo';
 
 export interface Tutorial {
   slug: TutorialSlug;
@@ -26,6 +32,11 @@ export const TUTORIALS: Record<TutorialSlug, Tutorial> = {
     slug: 'asistencia-y-qr',
     title: 'Asistencia y código QR',
     points: ['Proyecta o comparte el QR: se vota desde el celular, sin apps.', 'Marca quién llegó; el quórum se calcula solo.', 'Registra apoderados de quienes no asisten.'],
+  },
+  'credenciales-qr': {
+    slug: 'credenciales-qr',
+    title: 'Contraseñas y PDF con los QR',
+    points: ['En Asistencia, genera una contraseña por unidad.', 'Descarga el PDF: una tarjeta por unidad con QR, propietario y contraseña.', 'Entrégalas en la mesa de asistencia; cada propietario vota con la suya.'],
   },
   'dias-de-votacion': {
     slug: 'dias-de-votacion',

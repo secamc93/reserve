@@ -68,6 +68,13 @@ describe('VotingGuide', () => {
     expect(dialog.querySelector('video')?.getAttribute('src')).toBe('/tutoriales/agregar-votaciones.mp4');
   });
 
+  it('el paso de asistencia tiene también el video del PDF con los QR', async () => {
+    render(<VotingGuide businessId={1} groups={[]} onCreateGroup={vi.fn()} onOpenGroup={vi.fn()} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Ver video: Contraseñas y PDF con los QR' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.querySelector('video')?.getAttribute('src')).toBe('/tutoriales/credenciales-qr.mp4');
+  });
+
   it('se puede ocultar y lo recuerda por propiedad', async () => {
     const { unmount } = render(<VotingGuide businessId={1} groups={[]} onCreateGroup={vi.fn()} onOpenGroup={vi.fn()} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Ocultar guía' }));

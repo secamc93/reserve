@@ -16,7 +16,7 @@ export default defineConfig({
     storageState: "tutorials/.output/state.json",
     viewport: { width: 1280, height: 720 },
     video: { mode: "on", size: { width: 1280, height: 720 } },
-    launchOptions: { slowMo: 120 },
+    launchOptions: { slowMo: 70 },
     locale: "es-CO",
     timezoneId: "America/Bogota",
   },
