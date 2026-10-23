@@ -20,17 +20,11 @@ type useCase struct {
 	now            func() time.Time
 }
 
-// New crea los casos de uso del cobro por día de votación. pricePerDayCOP <= 0 usa el precio por
+// New crea los casos de uso del cobro por días de votación. pricePerDayCOP <= 0 usa el precio por
 // defecto.
 func New(repo ports.IRepository, gateway ports.IPaymentGateway, pricePerDayCOP int64, logger log.ILogger) ports.IUseCase {
 	if pricePerDayCOP <= 0 {
 		pricePerDayCOP = DefaultPricePerDayCOP
 	}
-	return &useCase{
-		repo:           repo,
-		gateway:        gateway,
-		pricePerDayCOP: pricePerDayCOP,
-		logger:         logger,
-		now:            time.Now,
-	}
+	return &useCase{repo: repo, gateway: gateway, pricePerDayCOP: pricePerDayCOP, logger: logger, now: time.Now}
 }

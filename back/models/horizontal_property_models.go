@@ -1521,3 +1521,137 @@ type VotingGroupPayment struct {
 func (VotingGroupPayment) TableName() string {
 	return "horizontal_property.voting_group_payments"
 }
+
+// VotingBillingUserExemption exenta del cobro a todas las propiedades que administra un usuario
+// (vinculadas en business_staff), también las que agregue después. Solo la cambia el super admin.
+type VotingBillingUserExemption struct {
+	gorm.Model
+	UserID          uint   `gorm:"not null;uniqueIndex"`
+	Exempt          bool   `gorm:"not null;default:true"`
+	Notes           string `gorm:"size:500"`
+	UpdatedByUserID *uint  `gorm:"index"`
+
+	// Relaciones
+	User      User  `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	UpdatedBy *User `gorm:"foreignKey:UpdatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+// TableName especifica el nombre de tabla con esquema para VotingBillingUserExemption
+func (VotingBillingUserExemption) TableName() string {
+	return "horizontal_property.voting_billing_user_exemptions"
+}
+
+// VotingDayPayment es la compra de una o varias fechas de votación de una propiedad (Wompi, pago
+// manual o cortesía). Al aprobarse se crean las filas de VotingDay.
+type VotingDayPayment struct {
+	gorm.Model
+	BusinessID            uint   `gorm:"not null;index"`
+	Reference             string `gorm:"size:64;not null;uniqueIndex"` // DIA-… (Wompi) o MANUAL-/CORTESIA-…
+	Source                string `gorm:"size:20;not null"`             // wompi | manual | cortesia
+	Dates                 string `gorm:"size:400;not null"`            // "2026-10-24,2026-10-25"
+	Days                  int    `gorm:"not null"`
+	AmountInCents         int64  `gorm:"not null"`
+	Currency              string `gorm:"size:3;not null;default:COP"`
+	Status                string `gorm:"size:20;not null;index"` // PENDING, APPROVED, DECLINED, VOIDED, ERROR
+	ProviderTransactionID string `gorm:"size:64;index"`
+	PaymentMethodType     string `gorm:"size:40"`
+	PaidAt                *time.Time
+	CreatedByUserID       *uint  `gorm:"index"`
+	Notes                 string `gorm:"size:500"`
+
+	// Relaciones
+	Business  Business `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedBy *User    `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+// TableName especifica el nombre de tabla con esquema para VotingDayPayment
+func (VotingDayPayment) TableName() string {
+	return "horizontal_property.voting_day_payments"
+}
+
+// VotingDay es una fecha de votación cubierta para una propiedad (comprada, manual o cortesía).
+type VotingDay struct {
+	gorm.Model
+	BusinessID uint      `gorm:"not null;uniqueIndex:idx_voting_day_business_date,priority:1"`
+	VotingDate time.Time `gorm:"type:date;not null;uniqueIndex:idx_voting_day_business_date,priority:2"`
+	PaymentID  uint      `gorm:"not null;index"`
+
+	// Relaciones
+	Business Business         `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Payment  VotingDayPayment `gorm:"foreignKey:PaymentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+// TableName especifica el nombre de tabla con esquema para VotingDay
+func (VotingDay) TableName() string {
+	return "horizontal_property.voting_days"
+}
+
+// ───────────────────────────────────────────
+//
+//	MEMBERSHIPS – Planes de votaciones ilimitadas por 30 días
+//
+// ───────────────────────────────────────────
+
+// Membership da votaciones ilimitadas en sus propiedades entre StartsAt y EndsAt. Nace PENDING al
+// pedir el pago y pasa a ACTIVE cuando se aprueba (o directo, si es manual o cortesía).
+type Membership struct {
+	gorm.Model
+	PlanCode        string     `gorm:"size:30;not null"` // MONTH_1, ADMIN_3, ADMIN_5, ADMIN_10, ADMIN_20, CUSTOM
+	MaxProperties   int        `gorm:"not null"`
+	OwnerUserID     *uint      `gorm:"index"`                  // quien la compra (administrador o administradora)
+	Status          string     `gorm:"size:20;not null;index"` // PENDING, ACTIVE, CANCELLED
+	Source          string     `gorm:"size:20;not null"`       // wompi | manual | cortesia
+	StartsAt        *time.Time `gorm:"index"`
+	EndsAt          *time.Time `gorm:"index"`
+	Notes           string     `gorm:"size:500"`
+	CreatedByUserID *uint      `gorm:"index"`
+
+	// Relaciones
+	Owner      *User                `gorm:"foreignKey:OwnerUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	CreatedBy  *User                `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Properties []MembershipProperty `gorm:"foreignKey:MembershipID"`
+}
+
+// TableName especifica el nombre de tabla con esquema para Membership
+func (Membership) TableName() string {
+	return "horizontal_property.memberships"
+}
+
+// MembershipProperty es una propiedad cubierta por una membresía.
+type MembershipProperty struct {
+	gorm.Model
+	MembershipID uint `gorm:"not null;uniqueIndex:idx_membership_property,priority:1"`
+	BusinessID   uint `gorm:"not null;index;uniqueIndex:idx_membership_property,priority:2"`
+
+	// Relaciones
+	Membership Membership `gorm:"foreignKey:MembershipID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Business   Business   `gorm:"foreignKey:BusinessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+// TableName especifica el nombre de tabla con esquema para MembershipProperty
+func (MembershipProperty) TableName() string {
+	return "horizontal_property.membership_properties"
+}
+
+// MembershipPayment es el pago de una membresía por Wompi (referencia MEMB-…).
+type MembershipPayment struct {
+	gorm.Model
+	MembershipID          uint   `gorm:"not null;index"`
+	Reference             string `gorm:"size:64;not null;uniqueIndex"`
+	AmountInCents         int64  `gorm:"not null"`
+	Currency              string `gorm:"size:3;not null;default:COP"`
+	Status                string `gorm:"size:20;not null;index"`
+	ProviderTransactionID string `gorm:"size:64;index"`
+	PaymentMethodType     string `gorm:"size:40"`
+	PaidAt                *time.Time
+	CreatedByUserID       *uint `gorm:"index"`
+
+	// Relaciones
+	Membership Membership `gorm:"foreignKey:MembershipID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedBy  *User      `gorm:"foreignKey:CreatedByUserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+// TableName especifica el nombre de tabla con esquema para MembershipPayment
+func (MembershipPayment) TableName() string {
+	return "horizontal_property.membership_payments"
+}

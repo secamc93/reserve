@@ -1,12 +1,17 @@
 package horizontalproperty
 
 import (
+	"strconv"
+
 	"central_reserve/services/horizontalproperty/attendance"
 	"central_reserve/services/horizontalproperty/commonarea"
 	"central_reserve/services/horizontalproperty/dashboard"
 	"central_reserve/services/horizontalproperty/horizontalpropertiy"
+	"central_reserve/services/horizontalproperty/membership"
 	"central_reserve/services/horizontalproperty/packages"
 	"central_reserve/services/horizontalproperty/parking"
+	"central_reserve/services/horizontalproperty/paymentevents"
+	"central_reserve/services/horizontalproperty/paymentevents/contract"
 	"central_reserve/services/horizontalproperty/resident"
 	"central_reserve/services/horizontalproperty/unit"
 	"central_reserve/services/horizontalproperty/visit"
@@ -15,6 +20,7 @@ import (
 	"central_reserve/shared/db"
 	"central_reserve/shared/env"
 	"central_reserve/shared/log"
+	"central_reserve/shared/payments/wompi"
 	"central_reserve/shared/storage"
 
 	"github.com/gin-gonic/gin"
@@ -37,8 +43,23 @@ func New(db db.IDatabase, logger log.ILogger, s3 storage.IS3Service, envConfig e
 	// Initialize Vote Module (completamente autocontenido - no depende de otros módulos)
 	vote.New(db, jwtSecret, serviceLogger, v1Group)
 
-	// Cobro por día de votación (Wompi): el módulo de votaciones solo lee si el grupo está pagado
-	votingbilling.New(db, envConfig, serviceLogger, v1Group)
+	// Cobro de votaciones con Wompi: días sueltos (votingbilling) y membresías (membership). Un solo
+	// cliente de Wompi y un solo webhook que despacha por prefijo de referencia. El módulo de
+	// votaciones solo lee la cobertura con consultas propias.
+	wompiClient := wompi.New(wompi.Config{
+		PublicKey:       envConfig.Get("WOMPI_PUBLIC_KEY"),
+		IntegritySecret: envConfig.Get("WOMPI_INTEGRITY_SECRET"),
+		EventsSecret:    envConfig.Get("WOMPI_EVENTS_SECRET"),
+		APIURL:          envConfig.Get("WOMPI_API_URL"),
+	})
+	if !wompiClient.Enabled() {
+		serviceLogger.Warn().Msg("Wompi sin configurar: se puede consultar y exentar, pero no pagar en línea")
+	}
+	pricePerDay, _ := strconv.ParseInt(envConfig.Get("VOTING_DAY_PRICE_COP"), 10, 64)
+	paymentevents.New(wompiClient, map[string]contract.Applier{
+		"DIA-":  votingbilling.New(db, wompiClient, pricePerDay, serviceLogger, v1Group),
+		"MEMB-": membership.New(db, wompiClient, serviceLogger, v1Group),
+	}, serviceLogger, v1Group)
 
 	// Initialize Resident Module
 	resident.New(db, serviceLogger, v1Group)

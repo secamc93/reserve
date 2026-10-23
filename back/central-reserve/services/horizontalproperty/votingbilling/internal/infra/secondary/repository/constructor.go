@@ -11,7 +11,7 @@ type repository struct {
 	logger log.ILogger
 }
 
-// New crea el repositorio del cobro por día de votación.
+// New crea el repositorio del cobro por días de votación.
 func New(database db.IDatabase, logger log.ILogger) ports.IRepository {
 	return &repository{db: database, logger: logger}
 }

@@ -1,55 +1,70 @@
 package dtos
 
-import "central_reserve/services/horizontalproperty/votingbilling/internal/domain/entities"
+import (
+	"time"
 
-// BillingStatus es el estado de cobro de un grupo de votación.
-type BillingStatus struct {
-	VotingGroupID    uint
-	BusinessID       uint
-	RequiredDays     int
-	PaidDays         int
-	DueDays          int
-	PricePerDayCOP   int64
-	AmountDueInCents int64
-	Exempt           bool
-	Paid             bool
-	GatewayEnabled   bool
-	Payments         []entities.Payment
+	"central_reserve/services/horizontalproperty/votingbilling/internal/domain/entities"
+)
+
+// AssemblyCoverage dice qué fechas de una asamblea próxima están cubiertas.
+type AssemblyCoverage struct {
+	GroupID        uint
+	Name           string
+	Dates          []string
+	UncoveredDates []string
 }
 
-// CheckoutRequest pide iniciar el pago de los días pendientes de un grupo.
-type CheckoutRequest struct {
-	BusinessID    uint
-	VotingGroupID uint
-	UserID        *uint
-	RedirectURL   string
+// Coverage es la cobertura de días de votación de una propiedad.
+type Coverage struct {
+	BusinessID      uint
+	Today           string
+	TodayCovered    bool
+	PropertyExempt  bool
+	AdminExempt     bool
+	Membership      *entities.ActiveMembership
+	PurchasedDates  []string // desde hoy
+	Assemblies      []AssemblyCoverage
+	PricePerDayCOP  int64
+	GatewayEnabled  bool
+	RecentPurchases []entities.DayPayment
 }
 
-// Checkout es el pago creado y la URL de la pasarela donde se completa.
+// DaysCheckoutRequest pide pagar fechas de votación por la pasarela.
+type DaysCheckoutRequest struct {
+	BusinessID  uint
+	Dates       []string
+	UserID      *uint
+	RedirectURL string
+	Now         time.Time
+}
+
+// Checkout es el pago creado y la URL de la pasarela.
 type Checkout struct {
-	Payment     entities.Payment
+	Payment     entities.DayPayment
 	CheckoutURL string
 }
 
-// CheckoutParams es lo que la pasarela necesita para armar el enlace de pago.
-type CheckoutParams struct {
-	Reference     string
-	AmountInCents int64
-	Currency      string
-	RedirectURL   string
+// GrantDaysRequest registra fechas pagadas por fuera (manual) o regaladas (cortesía). Super admin.
+type GrantDaysRequest struct {
+	BusinessID uint
+	Dates      []string
+	Source     string
+	Notes      string
+	UserID     *uint
+	Now        time.Time
 }
 
-// ManualPaymentRequest registra un pago recibido por fuera de la pasarela (super admin).
-type ManualPaymentRequest struct {
-	BusinessID    uint
-	VotingGroupID uint
-	UserID        *uint
-	Notes         string
-}
-
-// ExemptionRequest marca o desmarca una propiedad como exenta del cobro (super admin).
-type ExemptionRequest struct {
+// PropertyExemptionRequest exenta o no a una propiedad. Super admin.
+type PropertyExemptionRequest struct {
 	BusinessID uint
 	Exempt     bool
 	UserID     *uint
+}
+
+// AdminExemptionRequest exenta o no a un administrador (todas sus propiedades). Super admin.
+type AdminExemptionRequest struct {
+	TargetUserID uint
+	Exempt       bool
+	Notes        string
+	ByUserID     *uint
 }

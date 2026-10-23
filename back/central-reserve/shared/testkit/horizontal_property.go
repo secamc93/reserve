@@ -166,6 +166,9 @@ func cleanupBusiness(t *testing.T, database db.IDatabase, businessID uint) {
 	listIDs := conn.Model(&models.AttendanceList{}).Select("id").Where("voting_group_id IN (?)", groupIDs)
 	optionIDs := conn.Model(&models.VotingOption{}).Select("id").Where("voting_id IN (?)", votingIDs)
 	unitIDs := conn.Model(&models.PropertyUnit{}).Select("id").Where("business_id = ?", businessID)
+	// Las membresías se resuelven antes de borrar sus propiedades (la relación no borra en cascada).
+	var membershipIDs []uint
+	conn.Model(&models.MembershipProperty{}).Where("business_id = ?", businessID).Pluck("membership_id", &membershipIDs)
 
 	steps := []struct {
 		name  string
@@ -173,6 +176,11 @@ func cleanupBusiness(t *testing.T, database db.IDatabase, businessID uint) {
 		where string
 		arg   any
 	}{
+		{"pagos de membresías", &models.MembershipPayment{}, "membership_id IN (?)", membershipIDs},
+		{"propiedades de membresías", &models.MembershipProperty{}, "membership_id IN (?)", membershipIDs},
+		{"membresías", &models.Membership{}, "id IN (?)", membershipIDs},
+		{"días de votación", &models.VotingDay{}, "business_id = ?", businessID},
+		{"compras de días", &models.VotingDayPayment{}, "business_id = ?", businessID},
 		{"pagos de días de votación", &models.VotingGroupPayment{}, "business_id = ?", businessID},
 		{"configuración de cobro", &models.VotingBillingSetting{}, "business_id = ?", businessID},
 		{"votos", &models.Vote{}, "voting_id IN (?) OR voting_option_id IN (?) OR property_unit_id IN (?)", nil},

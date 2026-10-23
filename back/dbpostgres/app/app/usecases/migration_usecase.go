@@ -114,7 +114,14 @@ func (uc *MigrationUseCase) MigrateDB() error {
 		&models.ParkingOccupancy{},
 		// Cobro por día de votación
 		&models.VotingBillingSetting{},
-		&models.VotingGroupPayment{},
+		&models.VotingGroupPayment{}, // en desuso desde 2026-10-23: se cobra por días comprados
+		&models.VotingBillingUserExemption{},
+		&models.VotingDayPayment{},
+		&models.VotingDay{},
+		// Membresías (votaciones ilimitadas por 30 días)
+		&models.Membership{},
+		&models.MembershipProperty{},
+		&models.MembershipPayment{},
 	); err != nil {
 		return err
 	}

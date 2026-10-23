@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"central_reserve/services/horizontalproperty/vote/internal/app/test/mocks"
 	"central_reserve/services/horizontalproperty/vote/internal/app/usecasevotes"
@@ -14,7 +15,9 @@ import (
 // grupo debe el día de votación. Cuenta los votos guardados.
 func repoReadyToVote(pending bool, saved *int) *mocks.MockVotingRepository {
 	repo := mocks.NewMockVotingRepository()
-	repo.IsVotingPaymentPendingFn = func(context.Context, uint) (bool, error) { return pending, nil }
+	repo.GetVotingCoverageFn = func(context.Context, uint, time.Time) (domain.VotingCoverage, error) {
+		return domain.VotingCoverage{Found: true, HasDay: !pending}, nil
+	}
 	repo.CheckUnitAttendanceForVotingFn = func(context.Context, uint, uint) (bool, error) { return true, nil }
 	repo.HasUnitVotedFn = func(context.Context, uint, uint) (bool, error) { return false, nil }
 	repo.CreateVoteFn = func(_ context.Context, v domain.Vote) (*domain.Vote, error) {
