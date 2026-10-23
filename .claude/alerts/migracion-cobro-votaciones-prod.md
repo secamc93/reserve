@@ -24,12 +24,11 @@ timestamptz (lógica existente de `fixTimeColumns`).
 - [x] 2026-10-23: compose con `WOMPI_*` copiado a producción (copia previa
       `docker-compose.yaml.bak-20261023-154503`) y back redesplegado. Pago sandbox de punta a punta en
       producción (grupo 4 "ola" de Tayazal): Wompi `APPROVED` → Rupü pagado; webhook con firma falsa 401.
-- [ ] Importante: configurar en Wompi la URL de eventos `https://xn--rup-joa.com/api/v1/payments/wompi/events`.
-- [ ] Importante: hacer merge de `fix/votos-sin-tablas-de-cobro` (lleva el compose ya aplicado a mano).
+- [x] 2026-10-23: comercio aprobado por Wompi; llaves de producción en `/rupu/WOMPI_*` y URL de eventos `https://xn--rup-joa.com/api/v1/payments/wompi/events` configurada en el modo producción.
+- [x] 2026-10-23: `fix/votos-sin-tablas-de-cobro` fusionado (PR #89).
 - [ ] Importante: Tayazal de Suba quedó **sin exención** en producción (alguien le dio "Cobrarle"
       para probar). Mientras siga así, sus asambleas reales no reciben votos sin pagar.
-- [ ] Deseable: desplegar el parche `fix/votos-sin-tablas-de-cobro` (si faltan las tablas del cobro,
-      el voto no se bloquea; SQLSTATE 42P01) para que un deploy sin migrar no vuelva a tumbar votos.
+- [x] 2026-10-23: parche de tablas sin migrar desplegado (PR #89; sigue en `GetVotingCoverage`).
 - [ ] Importante: que `deploy.sh` corra el migrador en cada deploy del back, para que no se repita.
 
 ## Cierre
