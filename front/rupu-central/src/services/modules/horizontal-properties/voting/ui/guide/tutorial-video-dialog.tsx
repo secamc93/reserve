@@ -31,7 +31,6 @@ export function TutorialVideoDialog({ slug, onClose }: { slug: TutorialSlug | nu
               poster={tutorialPoster(tutorial.slug)}
               controls
               autoPlay
-              muted
               playsInline
               aria-label={`Video: ${tutorial.title}`}
               className="w-full rounded-lg bg-black aspect-video"

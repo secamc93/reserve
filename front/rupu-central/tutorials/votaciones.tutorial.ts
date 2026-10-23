@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { caption, hideCaption, prepare, tap, write } from "./studio";
+import { caption, hideCaption, prepare, saveNarration, tap, write } from "./studio";
 
 // Videos tutoriales del módulo de votaciones, en el orden real de una asamblea. Se graban sobre la
 // propiedad de demostración (datos ficticios): pnpm tutorials -g votaciones
@@ -32,6 +32,8 @@ async function groupCard(page: Page) {
 }
 
 test.describe.serial("votaciones", () => {
+  test.afterEach(async ({ page }, info) => saveNarration(page, info));
+
   test.beforeAll(async ({ request }) => {
     if (process.env.TUTORIAL_KEEP_DATA === "1") return; // re-grabar escenas sueltas sin borrar la asamblea
     const token = await apiToken(request);

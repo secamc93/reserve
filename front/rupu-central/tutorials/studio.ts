@@ -1,4 +1,7 @@
-import type { Locator, Page } from "@playwright/test";
+import { writeFileSync } from "node:fs";
+import path from "node:path";
+import type { Locator, Page, TestInfo } from "@playwright/test";
+import { narrate, speakable, voiceEnabled } from "./voice";
 
 // Utilidades para grabar tutoriales: subtítulo en pantalla, resaltado del elemento antes de
 // cada acción y ocultar lo que no debe salir en un video (indicador de desarrollo de Next,
@@ -6,7 +9,11 @@ import type { Locator, Page } from "@playwright/test";
 
 const DEMO_USER = { name: "Administración", email: "admin@losalmendros.co" };
 
+// Momento en que se muestra cada narración, relativo al inicio de la grabación de la página.
+const narration = new WeakMap<Page, { start: number; clips: { at: number; file: string }[] }>();
+
 export async function prepare(page: Page) {
+  narration.set(page, { start: Date.now(), clips: [] });
   await page.addInitScript(({ name, email, demoProperty }) => {
     const css = `
       nextjs-portal, [data-nextjs-toast], #__next-build-watcher, section[aria-label="Otorgar plan"] { display: none !important; }
@@ -53,8 +60,9 @@ export async function prepare(page: Page) {
   }, { ...DEMO_USER, demoProperty: process.env.DEMO_PROPERTY ?? "Conjunto Los Almendros" });
 }
 
-/** Muestra un subtítulo (admite <b>…</b>) y espera para que se alcance a leer. */
+/** Muestra un subtítulo (admite <b>…</b>) y espera para que se alcance a leer (o a que termine la voz). */
 export async function caption(page: Page, html: string, ms = 2200) {
+  const voice = voiceEnabled ? await narrate(speakable(html)) : null;
   await page.evaluate((h) => {
     let el = document.getElementById("tuto-caption");
     if (!el) {
@@ -65,7 +73,16 @@ export async function caption(page: Page, html: string, ms = 2200) {
     el.innerHTML = h;
     el.style.opacity = "1";
   }, html);
-  await page.waitForTimeout(ms);
+  const track = narration.get(page);
+  if (voice && track) track.clips.push({ at: Date.now() - track.start, file: voice.file });
+  await page.waitForTimeout(voice ? Math.max(ms, voice.ms + 450) : ms);
+}
+
+/** Guarda junto al video los audios y en qué momento suenan (los mezcla build-videos.sh). */
+export function saveNarration(page: Page, info: TestInfo) {
+  const track = narration.get(page);
+  if (!track?.clips.length) return;
+  writeFileSync(path.join(info.outputDir, "narration.json"), JSON.stringify(track.clips, null, 2));
 }
 
 export async function hideCaption(page: Page) {
