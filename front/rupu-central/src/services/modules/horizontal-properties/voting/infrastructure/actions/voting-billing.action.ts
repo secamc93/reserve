@@ -1,32 +1,20 @@
 /**
- * Server Actions: cobro por día de votación (Wompi)
+ * Server Actions: cobro de votaciones (días comprados, exenciones) y membresías.
  */
 
 'use server';
 
-import {
-  CreateVotingCheckoutUseCase,
-  GetVotingBillingStatusUseCase,
-  RegisterManualVotingPaymentUseCase,
-  SetVotingBillingExemptionUseCase,
-  SyncVotingPaymentUseCase,
-} from '../../application';
-import type { VotingBillingStatus } from '../../domain';
-import { VotingBillingRepository } from '../repositories';
+import { MembershipUseCases, VotingBillingUseCases } from '../../application';
+import type { DayPurchase, Membership, MembershipPlan, PropertyAdmin, VotingCoverage } from '../../domain';
+import { MembershipRepository, VotingBillingRepository } from '../repositories';
 
-export interface VotingBillingInput {
-  token: string;
-  businessId: number;
-  groupId: number;
-}
-
-export interface VotingBillingResult<T> {
+export interface BillingResult<T> {
   success: boolean;
   data?: T;
   error?: string;
 }
 
-async function run<T>(name: string, fn: () => Promise<T>): Promise<VotingBillingResult<T>> {
+async function run<T>(name: string, fn: () => Promise<T>): Promise<BillingResult<T>> {
   try {
     return { success: true, data: await fn() };
   } catch (error) {
@@ -35,31 +23,55 @@ async function run<T>(name: string, fn: () => Promise<T>): Promise<VotingBilling
   }
 }
 
-export async function getVotingBillingStatusAction(input: VotingBillingInput): Promise<VotingBillingResult<VotingBillingStatus>> {
-  return run('getVotingBillingStatusAction', () => new GetVotingBillingStatusUseCase(new VotingBillingRepository()).execute(input));
+const billing = () => new VotingBillingUseCases(new VotingBillingRepository());
+const memberships = () => new MembershipUseCases(new MembershipRepository());
+
+type Scope = { token: string; businessId: number };
+
+export async function getVotingCoverageAction(p: Scope): Promise<BillingResult<VotingCoverage>> {
+  return run('getVotingCoverageAction', () => billing().getCoverage(p));
 }
 
-export async function createVotingCheckoutAction(input: VotingBillingInput & { redirectUrl: string }): Promise<VotingBillingResult<{ checkoutUrl: string }>> {
-  return run('createVotingCheckoutAction', async () => {
-    const checkout = await new CreateVotingCheckoutUseCase(new VotingBillingRepository()).execute(input);
-    return { checkoutUrl: checkout.checkoutUrl };
-  });
+export async function createDaysCheckoutAction(p: Scope & { dates: string[]; redirectUrl: string }): Promise<BillingResult<{ checkoutUrl: string }>> {
+  return run('createDaysCheckoutAction', () => billing().createDaysCheckout(p));
 }
 
-export async function syncVotingPaymentAction(input: VotingBillingInput & { transactionId: string }): Promise<VotingBillingResult<VotingBillingStatus>> {
-  return run('syncVotingPaymentAction', () => new SyncVotingPaymentUseCase(new VotingBillingRepository()).execute(input));
+export async function syncDaysAction(p: Scope & { transactionId: string }): Promise<BillingResult<VotingCoverage>> {
+  return run('syncDaysAction', () => billing().syncDays(p));
 }
 
-export async function registerManualVotingPaymentAction(input: VotingBillingInput & { notes?: string }): Promise<VotingBillingResult<{ days: number }>> {
-  return run('registerManualVotingPaymentAction', async () => {
-    const payment = await new RegisterManualVotingPaymentUseCase(new VotingBillingRepository()).execute(input);
-    return { days: payment.days };
-  });
+export async function grantDaysAction(p: Scope & { dates: string[]; source: 'manual' | 'cortesia'; notes?: string }): Promise<BillingResult<DayPurchase>> {
+  return run('grantDaysAction', () => billing().grantDays(p));
 }
 
-export async function setVotingBillingExemptionAction(input: { token: string; businessId: number; exempt: boolean }): Promise<VotingBillingResult<null>> {
-  return run('setVotingBillingExemptionAction', async () => {
-    await new SetVotingBillingExemptionUseCase(new VotingBillingRepository()).execute(input);
-    return null;
-  });
+export async function setPropertyExemptionAction(p: Scope & { exempt: boolean }): Promise<BillingResult<null>> {
+  return run('setPropertyExemptionAction', async () => { await billing().setPropertyExemption(p); return null; });
+}
+
+export async function listPropertyAdminsAction(p: Scope): Promise<BillingResult<PropertyAdmin[]>> {
+  return run('listPropertyAdminsAction', () => billing().listAdmins(p));
+}
+
+export async function setAdminExemptionAction(p: { token: string; userId: number; exempt: boolean; notes?: string }): Promise<BillingResult<null>> {
+  return run('setAdminExemptionAction', async () => { await billing().setAdminExemption(p); return null; });
+}
+
+export async function listMembershipPlansAction(p: { token: string }): Promise<BillingResult<MembershipPlan[]>> {
+  return run('listMembershipPlansAction', () => memberships().listPlans(p));
+}
+
+export async function listPropertyMembershipsAction(p: Scope): Promise<BillingResult<Membership[]>> {
+  return run('listPropertyMembershipsAction', () => memberships().listForBusiness(p));
+}
+
+export async function createMembershipCheckoutAction(p: { token: string; planCode: string; businessIds: number[]; redirectUrl: string }): Promise<BillingResult<{ checkoutUrl: string }>> {
+  return run('createMembershipCheckoutAction', () => memberships().createCheckout(p));
+}
+
+export async function syncMembershipAction(p: { token: string; transactionId: string }): Promise<BillingResult<Membership>> {
+  return run('syncMembershipAction', () => memberships().sync(p));
+}
+
+export async function grantMembershipAction(p: { token: string; planCode: string; maxProperties?: number; businessIds: number[]; source: 'manual' | 'cortesia'; notes?: string }): Promise<BillingResult<Membership>> {
+  return run('grantMembershipAction', () => memberships().grant(p));
 }

@@ -1,24 +1,28 @@
 /**
- * Puerto del cobro por día de votación.
+ * Puertos del cobro de votaciones: días comprados, exenciones y membresías.
  */
 
-import type { VotingBillingStatus, VotingGroupPayment } from '../entities';
+import type { DayPurchase, Membership, MembershipPlan, PropertyAdmin, VotingCoverage } from '../entities';
 
-export interface VotingBillingScope {
+export interface BillingScope {
   token: string;
   businessId: number;
-  groupId: number;
-}
-
-export interface VotingCheckout {
-  payment: VotingGroupPayment;
-  checkoutUrl: string;
 }
 
 export interface IVotingBillingRepository {
-  getStatus(params: VotingBillingScope): Promise<VotingBillingStatus>;
-  createCheckout(params: VotingBillingScope & { redirectUrl: string }): Promise<VotingCheckout>;
-  syncTransaction(params: VotingBillingScope & { transactionId: string }): Promise<VotingBillingStatus>;
-  registerManualPayment(params: VotingBillingScope & { notes?: string }): Promise<VotingGroupPayment>;
-  setExemption(params: { token: string; businessId: number; exempt: boolean }): Promise<void>;
+  getCoverage(p: BillingScope): Promise<VotingCoverage>;
+  createDaysCheckout(p: BillingScope & { dates: string[]; redirectUrl: string }): Promise<{ checkoutUrl: string }>;
+  syncDays(p: BillingScope & { transactionId: string }): Promise<VotingCoverage>;
+  grantDays(p: BillingScope & { dates: string[]; source: 'manual' | 'cortesia'; notes?: string }): Promise<DayPurchase>;
+  setPropertyExemption(p: BillingScope & { exempt: boolean }): Promise<void>;
+  listAdmins(p: BillingScope): Promise<PropertyAdmin[]>;
+  setAdminExemption(p: { token: string; userId: number; exempt: boolean; notes?: string }): Promise<void>;
+}
+
+export interface IMembershipRepository {
+  listPlans(p: { token: string }): Promise<MembershipPlan[]>;
+  listForBusiness(p: BillingScope): Promise<Membership[]>;
+  createCheckout(p: { token: string; planCode: string; businessIds: number[]; redirectUrl: string }): Promise<{ checkoutUrl: string }>;
+  sync(p: { token: string; transactionId: string }): Promise<Membership>;
+  grant(p: { token: string; planCode: string; maxProperties?: number; businessIds: number[]; source: 'manual' | 'cortesia'; notes?: string }): Promise<Membership>;
 }
