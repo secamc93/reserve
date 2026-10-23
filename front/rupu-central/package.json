@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "tutorials": "playwright test -c tutorials/playwright.tutorials.config.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
