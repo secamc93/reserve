@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Locator, Page, TestInfo } from "@playwright/test";
 import { narrate, speakable, voiceEnabled } from "./voice";
@@ -82,6 +82,7 @@ export async function caption(page: Page, html: string, ms = 2200) {
 export function saveNarration(page: Page, info: TestInfo) {
   const track = narration.get(page);
   if (!track?.clips.length) return;
+  mkdirSync(info.outputDir, { recursive: true });
   writeFileSync(path.join(info.outputDir, "narration.json"), JSON.stringify(track.clips, null, 2));
 }
 

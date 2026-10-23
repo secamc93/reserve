@@ -8,8 +8,8 @@ import path from "node:path";
 // Los audios quedan en caché por texto en tutorials/.output/voice.
 
 const PROJECT = process.env.GCP_PROJECT ?? "rupu-votaciones";
-const VOICE = process.env.TUTORIAL_VOICE_NAME ?? "es-US-Neural2-A";
-const RATE = Number(process.env.TUTORIAL_VOICE_RATE ?? 1.05);
+const VOICE = process.env.TUTORIAL_VOICE_NAME ?? "es-US-Chirp3-HD-Kore";
+const RATE = Number(process.env.TUTORIAL_VOICE_RATE ?? 1.15);
 const CACHE = path.join(__dirname, ".output", "voice");
 
 export const voiceEnabled = process.env.TUTORIAL_VOICE === "1";
