@@ -21,11 +21,11 @@ timestamptz (lógica existente de `fixTimeColumns`).
 
 - [x] 2026-10-22: migrador corrido contra producción (ver arriba).
 - [x] 2026-10-22: acceso a AWS en este PC (perfil `rupu`, usuario `santiago-admin`).
-- [ ] **Importante**: el back de producción no recibe las variables `WOMPI_*` (el compose usa una
-      lista fija `environment:`). Copiar `infra/compose-prod/docker-compose.yaml` de la rama
-      `fix/votos-sin-tablas-de-cobro` a `/home/ubuntu/reserve/infra/compose-prod/` (guardar copia del
-      anterior) y `deploy.sh backend`. Luego configurar en Wompi la URL de eventos
-      `https://xn--rup-joa.com/api/v1/payments/wompi/events`.
+- [x] 2026-10-23: compose con `WOMPI_*` copiado a producción (copia previa
+      `docker-compose.yaml.bak-20261023-154503`) y back redesplegado. Pago sandbox de punta a punta en
+      producción (grupo 4 "ola" de Tayazal): Wompi `APPROVED` → Rupü pagado; webhook con firma falsa 401.
+- [ ] Importante: configurar en Wompi la URL de eventos `https://xn--rup-joa.com/api/v1/payments/wompi/events`.
+- [ ] Importante: hacer merge de `fix/votos-sin-tablas-de-cobro` (lleva el compose ya aplicado a mano).
 - [ ] Importante: Tayazal de Suba quedó **sin exención** en producción (alguien le dio "Cobrarle"
       para probar). Mientras siga así, sus asambleas reales no reciben votos sin pagar.
 - [ ] Deseable: desplegar el parche `fix/votos-sin-tablas-de-cobro` (si faltan las tablas del cobro,
