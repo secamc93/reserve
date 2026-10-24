@@ -1,14 +1,13 @@
 'use client';
 
-import { PermissionsTable } from '@/services/auth/permissions/ui';
+import { PermissionsAdminPage } from '@/services/auth/permissions/ui';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RupuLoader } from '@/shared/ui/rupu-loader';
-import { IamPage, IamPageHeader } from '@/shared/ui/iam-navigation';
 
 export default function IAMPermissionsPage() {
-  const { isAuthenticated, loading, token } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -24,10 +23,6 @@ export default function IAMPermissionsPage() {
       </div>
     );
   }
-  return (
-    <IamPage>
-      <IamPageHeader title="Permisos" description="Cada permiso es una acción sobre un recurso. Los roles los agrupan en Roles y permisos." />
-      <PermissionsTable token={token || ''} />
-    </IamPage>
-  );
+
+  return <PermissionsAdminPage />;
 }

@@ -1,14 +1,13 @@
 'use client';
 
-import { BusinessesTable } from '@/services/auth/businesses/ui';
+import { PropertiesAdminPage } from '@/services/auth/businesses/ui';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RupuLoader } from '@/shared/ui/rupu-loader';
-import { IamPage, IamPageHeader } from '@/shared/ui/iam-navigation';
 
 export default function IAMBusinessesPage() {
-  const { isAuthenticated, loading, token } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -25,11 +24,5 @@ export default function IAMBusinessesPage() {
     );
   }
 
-  return (
-    <IamPage>
-      <IamPageHeader title="Propiedades" description="Los conjuntos que administra Rupü y sus módulos activos." />
-      <BusinessesTable token={token || ''} />
-    </IamPage>
-  );
+  return <PropertiesAdminPage />;
 }
-
