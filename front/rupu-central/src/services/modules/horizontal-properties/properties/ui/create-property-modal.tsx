@@ -90,7 +90,7 @@ export function CreatePropertyModal({ isOpen, onClose, onSuccess }: CreateProper
           </h3>
 
           <Input
-            label="Nombre *"
+            label="Nombre"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ej: Conjunto Residencial Los Pinos"
@@ -99,7 +99,7 @@ export function CreatePropertyModal({ isOpen, onClose, onSuccess }: CreateProper
           />
 
           <Input
-            label="Dirección *"
+            label="Dirección"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="Ej: Carrera 15 #45-67, Bogotá"
