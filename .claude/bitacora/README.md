@@ -17,3 +17,7 @@ Un archivo por caso. Reglas: `.claude/rules/bitacora.md`.
 | 2026-10-22 | [Web pública, front local en el 3005 y prospección de administradoras en Facebook](2026-10-22-web-publica-y-prospeccion-facebook.md) | website / entorno local / marketing |
 | 2026-10-23 | [Días comprados, membresías y plan de administradora](2026-10-23-dias-membresias-y-plan-administradora.md) | back / migrador / front / pagos |
 | 2026-10-23 | [Filtros de usuarios por rol y propiedad siempre vacíos](2026-10-23-filtros-usuarios-por-rol-y-propiedad.md) | back / usuarios / IAM |
+| 2026-10-23 | [Tutoriales en video con voz, guía, recorrido guiado y navegación](2026-10-23-tutoriales-en-video-y-voz.md) | front / videos / UX |
+| 2026-10-23 | [Crear unidad como super admin: error genérico de Server Components](2026-10-23-crear-unidad-super-admin.md) | front / unidades |
+| 2026-10-23 | [Importar residentes fallaba si la persona ya estaba en otro conjunto](2026-10-23-importar-residentes-correo-duplicado.md) | back / residentes |
+| 2026-10-23 | [No se podía crear un conjunto con el nombre de uno borrado](2026-10-23-dominio-de-conjuntos-borrados.md) | back / propiedades |

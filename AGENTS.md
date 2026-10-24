@@ -114,6 +114,7 @@ Worktrees: puertos desplazados +10, +20… (los imprime `worktree.sh new`).
 | `rules/aws-infrastructure.md` | EC2, ECR, SSM, DNS, CI/CD |
 | `rules/alerts.md` | Cómo usar y crear alertas |
 | `rules/bitacora.md` | Cómo usar y escribir la bitácora |
+| `rules/tutoriales.md` | Videos de Tutoriales: la voz de Rupü y cómo grabarlos |
 
 ## Al terminar un trabajo relevante
 
