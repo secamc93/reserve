@@ -163,3 +163,20 @@ describe('votación en vivo', () => {
     expect(resolveAllowedPath(live, items, (r) => r === 'Votaciones' || r === 'Votación en vivo')).toBe(live);
   });
 });
+
+describe('moduleTutorialsHref', () => {
+  it('lleva a los tutoriales del módulo actual, desde cualquier pantalla del módulo', async () => {
+    const { moduleTutorialsHref } = await import('./navigation');
+    expect(moduleTutorialsHref('/properties/7/voting-groups', 7)).toBe('/properties/7/voting-groups/tutorials');
+    expect(moduleTutorialsHref('/properties/7/voting-groups/12/attendance', 7)).toBe('/properties/7/voting-groups/tutorials');
+    expect(moduleTutorialsHref('/properties/7/voting-groups/tutorials', 7)).toBe('/properties/7/voting-groups/tutorials');
+  });
+
+  it('sin tutoriales en el módulo (o fuera de una propiedad) no hay acceso', async () => {
+    const { moduleTutorialsHref } = await import('./navigation');
+    expect(moduleTutorialsHref('/properties/7/units', 7)).toBeUndefined();
+    expect(moduleTutorialsHref('/properties/7', 7)).toBeUndefined();
+    expect(moduleTutorialsHref('/iam/users', 7)).toBeUndefined();
+    expect(moduleTutorialsHref('/properties/7/voting-groups', null)).toBeUndefined();
+  });
+});

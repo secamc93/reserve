@@ -47,3 +47,13 @@ describe('buildBreadcrumbs', () => {
     ]);
   });
 });
+
+describe('ruta de los tutoriales de un módulo', () => {
+  it('Votaciones › Tutoriales', () => {
+    expect(buildBreadcrumbs('/properties/7/voting-groups/tutorials', { propertyName: 'T', modules })).toEqual([
+      { label: 'T', href: '/properties/7' },
+      { label: 'Votaciones', href: '/properties/7/voting-groups' },
+      { label: 'Tutoriales' },
+    ]);
+  });
+});

@@ -24,6 +24,13 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+
+  // Los tutoriales viven dentro de cada módulo; la dirección vieja lleva a los de Votaciones.
+  async redirects() {
+    return [
+      { source: '/properties/:id/tutorials', destination: '/properties/:id/voting-groups/tutorials', permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

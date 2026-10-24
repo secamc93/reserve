@@ -21,10 +21,10 @@ export function TutorialsLibrary({ businessId }: { businessId: number }) {
   const router = useRouter();
   const [failed, setFailed] = useState<Set<TutorialSlug>>(new Set());
 
-  // Vuelve a la pantalla de donde vino; si entró directo (sin historial), al resumen de la propiedad.
+  // Vuelve a la pantalla de donde vino; si entró directo (sin historial), a Votaciones.
   const goBack = () => {
     if (window.history.length > 1) router.back();
-    else router.push(`/properties/${businessId}`);
+    else router.push(`/properties/${businessId}/voting-groups`);
   };
 
   // Un video a la vez: al darle play a uno se pausan los demás.
@@ -41,7 +41,7 @@ export function TutorialsLibrary({ businessId }: { businessId: number }) {
           <button type="button" onClick={goBack} className={`${vtMono} text-[11px] uppercase tracking-[.06em] hover:underline`} style={{ color: VT.muted }}>
             ← Volver
           </button>
-          <h1 className="m-0 mt-1.5 text-xl md:text-2xl font-semibold tracking-[-.02em]">Tutoriales</h1>
+          <h1 className="m-0 mt-1.5 text-xl md:text-2xl font-semibold tracking-[-.02em]">Tutoriales de Votaciones</h1>
           <p className="m-0 mt-1 text-[14px] max-w-2xl" style={{ color: VT.inkSoft }}>
             Aprende a hacer una asamblea completa en Rupü: seis videos cortos, con voz, en el orden en que se hace.
           </p>

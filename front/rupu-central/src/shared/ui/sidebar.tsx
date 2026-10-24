@@ -19,7 +19,7 @@ import { UserInfoModal } from '@/services/auth';
 import { usePermissions } from '@/services/auth/permissions/ui/hooks';
 import { BUSINESS_TYPE_CONFIG } from '@/shared/config/business-type-config';
 import type { SidebarItemConfig } from '@/shared/config/business-type-config';
-import { buildNavItems, filterSidebarItemsByResource, resolveBusinessHref } from '@/shared/utils/navigation';
+import { buildNavItems, filterSidebarItemsByResource, moduleTutorialsHref, resolveBusinessHref } from '@/shared/utils/navigation';
 import { MobileNav } from './mobile-nav';
 import { FloatingNav } from './floating-nav';
 import { FloatingRail } from './floating-rail';
@@ -80,7 +80,8 @@ export function Sidebar({ user, mobileNav = false, variant = 'rail' }: SidebarPr
     href: resolveBusinessHref(item.href, activeBizId),
   }));
 
-  const tutorialsHref = hasActiveProperty(activeBizId) ? `/properties/${activeBizId}/tutorials` : undefined;
+  // Tutoriales del módulo actual (solo en los módulos que ya tienen).
+  const tutorialsHref = hasActiveProperty(activeBizId) ? moduleTutorialsHref(pathname ?? "", activeBizId) : undefined;
 
   // Permisos IAM
   const canAccessIAM = hasResource('Usuarios') || hasResource('Roles') || hasResource('Permisos') || hasResource('Recursos') || hasResource('Tipos de Negocio') || hasResource('Negocios');

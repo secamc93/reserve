@@ -165,3 +165,18 @@ export function resolveActiveProperty(list: readonly PropertyLike[] | null | und
     primaryColor: found.primary_color || undefined,
   };
 }
+
+/** Módulos (segmento de la URL) que ya tienen página de tutoriales en `<módulo>/tutorials`. */
+export const MODULES_WITH_TUTORIALS = ['voting-groups'] as const;
+
+/**
+ * Tutoriales del módulo donde está el usuario: `/properties/:id/<módulo>/tutorials`, o undefined si
+ * ese módulo aún no tiene (entonces no se muestra el acceso).
+ */
+export function moduleTutorialsHref(pathname: string, activeBusinessId: number | null): string | undefined {
+  if (!activeBusinessId) return undefined;
+  const base = `/properties/${activeBusinessId}/`;
+  if (!pathname.startsWith(base)) return undefined;
+  const moduleSegment = pathname.slice(base.length).split('/')[0];
+  return (MODULES_WITH_TUTORIALS as readonly string[]).includes(moduleSegment) ? `${base}${moduleSegment}/tutorials` : undefined;
+}
