@@ -30,13 +30,21 @@ export const TUTORIALS: Record<TutorialSlug, Tutorial> = {
   },
   'asistencia-y-qr': {
     slug: 'asistencia-y-qr',
-    title: 'Asistencia y código QR',
-    points: ['Proyecta o comparte el QR: se vota desde el celular, sin apps.', 'Marca quién llegó; el quórum se calcula solo.', 'Registra apoderados de quienes no asisten.'],
+    title: 'Asistencia y voto manual',
+    points: [
+      'Marca quién llegó: solo vota la unidad con asistencia (con QR o a mano).',
+      'El quórum se calcula solo con el coeficiente de cada unidad.',
+      'Registra apoderados; si alguien no vota con QR, registras su voto a mano en el panel en vivo.',
+    ],
   },
   'credenciales-qr': {
     slug: 'credenciales-qr',
-    title: 'Contraseñas y PDF con los QR',
-    points: ['En Asistencia, genera una contraseña por unidad.', 'Descarga el PDF: una tarjeta por unidad con QR, propietario y contraseña.', 'Entrégalas en la mesa de asistencia; cada propietario vota con la suya.'],
+    title: 'Votar con QR desde el celular',
+    points: [
+      'Proyecta o comparte el QR de la asamblea.',
+      'En Asistencia, genera las contraseñas y descarga el PDF: una tarjeta por unidad.',
+      'Cada propietario escanea, elige su unidad, escribe su contraseña y vota (su unidad debe estar presente).',
+    ],
   },
   'dias-de-votacion': {
     slug: 'dias-de-votacion',
