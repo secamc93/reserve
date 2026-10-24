@@ -16,9 +16,9 @@ import { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PropertyLogo } from './property-logo';
-import { setActionsSlot } from './nav-slots';
+import { setActionsSlot, useCurrentTab } from './nav-slots';
 import { isNavItemActive, type ActiveProperty, type NavItem } from '../utils/navigation';
-import { buildBreadcrumbs } from '../utils/breadcrumbs';
+import { buildBreadcrumbs, type Crumb } from '../utils/breadcrumbs';
 
 export interface FloatingNavUser {
   name: string;
@@ -53,6 +53,13 @@ function Icon({ d, className = 'w-4 h-4' }: { d: string; className?: string }) {
   );
 }
 
+/** Suma la pestaña activa del módulo al final de la ruta (el módulo pasa a ser enlace). */
+function withTab(crumbs: Crumb[], tab: string | null, pathname: string): Crumb[] {
+  if (!tab || crumbs.length === 0 || crumbs[crumbs.length - 1].label === tab) return crumbs;
+  const last = crumbs[crumbs.length - 1];
+  return [...crumbs.slice(0, -1), { label: last.label, href: pathname }, { label: tab }];
+}
+
 export function FloatingNav({ items, property, fallbackName, user, onLogout, onOpenProfile }: FloatingNavProps) {
   const pathname = usePathname() ?? '';
   const [open, setOpen] = useState(false);
@@ -82,7 +89,8 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
   const isActive = (item: NavItem) => isNavItemActive(item.href, pathname, allHrefs);
   const current = items.find(isActive);
   const propertyName = property?.name || fallbackName || 'Rupü';
-  const crumbs = buildBreadcrumbs(pathname, { propertyName: property?.name, modules: items });
+  const currentTab = useCurrentTab();
+  const crumbs = withTab(buildBreadcrumbs(pathname, { propertyName: property?.name, modules: items }), currentTab, pathname);
 
   useEffect(() => {
     if (!open) setSettled(false);

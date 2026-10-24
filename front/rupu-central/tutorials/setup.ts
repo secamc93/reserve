@@ -18,7 +18,7 @@ export default async function setup(config: FullConfig) {
   // Deja abierta la propiedad de demostración (datos ficticios) para que los videos entren directo.
   await page.goto("/properties");
   const demo = process.env.DEMO_PROPERTY ?? "Conjunto Los Almendros";
-  await page.getByRole("button", { name: new RegExp(`^${demo}`) }).click();
+  await page.getByRole("button", { name: `Abrir ${demo}` }).click();
   await page.waitForURL(/\/properties\/\d+$/, { timeout: 30_000 });
   await page.context().storageState({ path: "tutorials/.output/state.json" });
   await browser.close();

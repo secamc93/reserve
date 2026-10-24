@@ -9,13 +9,15 @@ vi.mock('next/font/google', () => ({
 const hook = vi.hoisted(() => ({ reload: vi.fn(), select: vi.fn(), properties: [] as { id: number; name: string }[] }));
 vi.mock('@shared/ui', () => ({
   Spinner: () => null,
-  PropertyPicker: ({ properties }: { properties: { name: string }[] }) => <ul>{properties.map((p) => <li key={p.name}>{p.name}</li>)}</ul>,
   useAccessibleProperties: () => ({ properties: hook.properties, loading: false, error: null, reload: hook.reload }),
   selectProperty: hook.select,
 }));
 const user = vi.hoisted(() => ({ is_super_admin: true }));
 vi.mock('@shared/config', () => ({ TokenStorage: { getUser: () => ({ id: 1, ...user }), getActiveBusiness: () => null } }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn() }) }));
+vi.mock('@/services/modules/horizontal-properties/properties/ui/property-cards', () => ({
+  PropertyCards: ({ properties }: { properties: { name: string }[] }) => <ul>{properties.map((p) => <li key={p.name}>{p.name}</li>)}</ul>,
+}));
 const create = vi.hoisted(() => ({ onSuccess: null as null | (() => void), open: false }));
 vi.mock('@/services/modules/horizontal-properties/properties/ui/create-property-modal', () => ({
   CreatePropertyModal: ({ isOpen, onSuccess }: { isOpen: boolean; onSuccess: () => void }) => {

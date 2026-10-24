@@ -6,3 +6,4 @@ export * from './horizontal-property.entity';
 export * from './unit.entity';
 export * from './fee.entity';
 
+export * from './property-overview.entity';

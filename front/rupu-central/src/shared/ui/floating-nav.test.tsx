@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BUSINESS_TYPE_CONFIG } from '../config/business-type-config';
 import { buildNavItems } from '../utils/navigation';
-import { useNavSlot } from './nav-slots';
+import { setCurrentTab, useNavSlot } from './nav-slots';
 import { FloatingNav, type FloatingNavProps } from './floating-nav';
 
 let pathname = '/properties/7/units';
@@ -173,5 +173,14 @@ describe('FloatingNav — usuario', () => {
     ]);
     expect(within(ruta).getByText('Asistencia')).toHaveAttribute('aria-current', 'page');
     pathname = '/properties/7/units';
+  });
+
+  it('la pestaña activa del módulo se suma al final de la ruta', () => {
+    act(() => setCurrentTab('Torre 1'));
+    setup();
+    const ruta = screen.getByRole('navigation', { name: 'Ruta' });
+    expect(within(ruta).getByRole('link', { name: 'Unidades' })).toHaveAttribute('href', '/properties/7/units');
+    expect(within(ruta).getByText('Torre 1')).toHaveAttribute('aria-current', 'page');
+    act(() => setCurrentTab(null));
   });
 });
