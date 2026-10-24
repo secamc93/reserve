@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import type { Locator, Page, TestInfo } from "@playwright/test";
+import { execFileSync } from "node:child_process";
+import type { Browser, Locator, Page, TestInfo } from "@playwright/test";
 import { narrate, voiceEnabled } from "./voice";
 
 // Utilidades para grabar tutoriales: subtítulo en pantalla, resaltado del elemento antes de
@@ -181,4 +182,33 @@ export async function write(locator: Locator, text: string) {
   await locator.fill("");
   await locator.pressSequentially(text, { delay: 25 });
   await locator.evaluate((el) => el.classList.remove("tuto-focus"));
+}
+
+/**
+ * Imagen (data URL) de la primera hoja de un .xlsx con aspecto de hoja de cálculo (letras de
+ * columna, números de fila, encabezado), para mostrar en el video cómo luce el Excel descargado.
+ */
+export async function spreadsheetImage(browser: Browser, file: string, title: string): Promise<string> {
+  const json = execFileSync("python3", [
+    "-c",
+    "import json,sys,openpyxl; ws=openpyxl.load_workbook(sys.argv[1]).worksheets[0]; print(json.dumps([[('' if c is None else str(c)) for c in r] for r in ws.iter_rows(values_only=True)]))",
+    file,
+  ], { encoding: "utf8" });
+  const rows = JSON.parse(json) as string[][];
+  const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const letters = rows[0].map((_, i) => String.fromCharCode(65 + i));
+  const html = `<html><body style="margin:0;font:14px Arial,sans-serif;background:#fff">
+    <div style="padding:10px 14px;background:#1d6f42;color:#fff;font-weight:600">${esc(title)}</div>
+    <table style="border-collapse:collapse;margin:0">
+      <tr><td style="background:#f3f3f3;border:1px solid #d4d4d4;width:34px"></td>${letters.map((l) => `<td style="background:#f3f3f3;border:1px solid #d4d4d4;text-align:center;color:#555;padding:3px 0">${l}</td>`).join("")}</tr>
+      ${rows.map((r, i) => `<tr><td style="background:#f3f3f3;border:1px solid #d4d4d4;text-align:center;color:#555">${i + 1}</td>${r.map((v) => `<td style="border:1px solid #d4d4d4;padding:6px 14px;min-width:90px;${i === 0 ? "background:#0F7F8A;color:#fff;font-weight:700" : ""}">${esc(v)}</td>`).join("")}</tr>`).join("")}
+    </table></body></html>`;
+  const page = await browser.newPage({ viewport: { width: 900, height: 600 }, deviceScaleFactor: 2 });
+  try {
+    await page.setContent(html);
+    const png = await page.locator("body").screenshot();
+    return `data:image/png;base64,${png.toString("base64")}`;
+  } finally {
+    await page.close();
+  }
 }

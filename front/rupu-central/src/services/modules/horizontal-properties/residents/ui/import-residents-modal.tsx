@@ -129,6 +129,9 @@ export function ImportResidentsModal({ isOpen, onClose, onSuccess, businessId }:
                 ['127', 'María García', '87654321'],
               ]}
             />
+            <a href="/plantillas/plantilla-residentes.xlsx" download className={`${vtBtn.secondary} self-start`}>
+              <span aria-hidden>⬇</span> Descargar Excel de ejemplo
+            </a>
           </div>
           <DsFileDrop file={file} onFile={pickFile} disabled={loading} />
         </>

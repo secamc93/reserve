@@ -177,4 +177,13 @@ describe('R1 · Residentes', () => {
     expect(actions.updateResidentAction).toHaveBeenCalledWith({ businessId: 1, residentId: 5, token: 'T', data: { isMainResident: false } });
     expect(actions.updateResidentAction).toHaveBeenCalledWith({ businessId: 1, residentId: 6, token: 'T', data: { email: 'luis@correo.co', isMainResident: true } });
   });
+
+  it('importar Excel ofrece descargar la plantilla de ejemplo', async () => {
+    render(<ResidentsTable businessId={1} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Importar Excel' }));
+    const dialog = screen.getByRole('dialog', { name: 'Importar residentes desde Excel' });
+    const link = within(dialog).getByRole('link', { name: /Descargar Excel de ejemplo/ });
+    expect(link).toHaveAttribute('href', '/plantillas/plantilla-residentes.xlsx');
+    expect(link).toHaveAttribute('download');
+  });
 });

@@ -15,7 +15,7 @@ export function residentsTutorialItems(businessId: number): TutorialItem[] {
       title: 'Importar residentes desde Excel',
       points: [
         'Primero carga las unidades: cada residente se empareja con su unidad por el número exacto.',
-        'Columnas: número de unidad, nombre completo y documento.',
+        'Descarga el Excel de ejemplo desde Importar Excel: unidad, nombre completo y documento.',
         'Las filas con una unidad que no existe se muestran como error: corrige el número y vuelve a importar.',
       ],
       video: '/tutoriales/residentes-importar.mp4',

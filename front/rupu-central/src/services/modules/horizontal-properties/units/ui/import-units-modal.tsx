@@ -158,6 +158,9 @@ export function ImportUnitsModal({ isOpen, onClose, onSuccess, businessId }: Imp
               Excel (.xlsx) con una fila de encabezados: <span className={dsMono}>Número, Torre, Piso, Tipo, Coeficiente</span>. Número y
               coeficiente son obligatorios; sin encabezados reconocibles se toma la columna 1 como número y la 2 como coeficiente.
             </p>
+            <a href="/plantillas/plantilla-unidades.xlsx" download className={`${vtBtn.secondary} self-start`}>
+              <span aria-hidden>⬇</span> Descargar Excel de ejemplo
+            </a>
           </div>
           <DsFileDrop file={file} onFile={pickFile} disabled={loading} />
         </>

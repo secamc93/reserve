@@ -1,12 +1,13 @@
 import path from "node:path";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { caption, finish, markReady, prepare, saveNarration, say, tap, write } from "./studio";
+import { caption, finish, hideImage, markReady, prepare, saveNarration, say, showImage, spreadsheetImage, tap, write } from "./studio";
 
 // Tutoriales de Unidades y Residentes sobre una propiedad de demostración que se crea vacía en cada
 // grabación (datos ficticios): pnpm tutorials -g modulos
 const API = process.env.E2E_API_URL ?? "http://localhost:3060/api/v1";
 const PROP = "Conjunto Los Pinos (demo)";
 const FIXTURES = path.join(__dirname, "fixtures");
+const TEMPLATES = path.join(__dirname, "..", "public", "plantillas");
 let propId = 0;
 
 async function apiToken(request: APIRequestContext) {
@@ -49,7 +50,9 @@ test.describe.serial("modulos", () => {
     expect(propId, JSON.stringify(body)).toBeGreaterThan(0);
   });
 
-  test("1-unidades-importar", async ({ page }) => {
+  test("1-unidades-importar", async ({ page, browser }, info) => {
+    // La imagen del Excel de ejemplo se arma antes: así aparece apenas se pulsa el botón.
+    const sampleUnidades = await spreadsheetImage(browser, path.join(TEMPLATES, "plantilla-unidades.xlsx"), "plantilla-unidades.xlsx");
     await openModule(page, "units");
     await caption(page, "Las <b>unidades</b> son la base de toda asamblea", 1400,
       "Las unidades son la base de toda asamblea. Cada apartamento tiene un coeficiente, que es el peso de su voto y lo que cuenta para el quórum. La forma más rápida de cargarlas es con un Excel.");
@@ -58,6 +61,13 @@ test.describe.serial("modulos", () => {
     await expect(dialog).toBeVisible();
     await caption(page, "El Excel lleva <b>Número, Torre, Piso, Tipo y Coeficiente</b>", 1600,
       "El archivo lleva una fila de encabezados con número, torre, piso, tipo y coeficiente. El número y el coeficiente son obligatorios; usa el mismo número que tienen los apartamentos en el conjunto.");
+    const download = page.waitForEvent("download");
+    await tap(dialog.getByRole("link", { name: /Descargar Excel de ejemplo/ }));
+    await (await download).saveAs(path.join(info.outputDir, "plantilla-unidades.xlsx"));
+    await showImage(page, sampleUnidades);
+    await caption(page, "¿No sabes cómo armarlo? Descarga el <b>Excel de ejemplo</b>", 2200,
+      "Si no sabes cómo armarlo, descarga el Excel de ejemplo. Trae las columnas en el orden correcto, unas filas de muestra y una hoja con instrucciones. Solo reemplazas las filas con las unidades de tu conjunto.");
+    await hideImage(page);
     await dialog.locator('input[type="file"]').setInputFiles(path.join(FIXTURES, "unidades-demo.xlsx"));
     await page.waitForTimeout(700);
     await tap(dialog.getByRole("button", { name: "Revisar archivo" }));
@@ -95,7 +105,8 @@ test.describe.serial("modulos", () => {
     await finish(page);
   });
 
-  test("3-residentes-importar", async ({ page }) => {
+  test("3-residentes-importar", async ({ page, browser }, info) => {
+    const sampleResidentes = await spreadsheetImage(browser, path.join(TEMPLATES, "plantilla-residentes.xlsx"), "plantilla-residentes.xlsx");
     await openModule(page, "residents");
     await caption(page, "Los <b>residentes</b> le ponen nombre a cada unidad", 1400,
       "Con las unidades listas, cargas a los residentes. Ellos le ponen nombre a cada unidad: aparecen en las credenciales de votación, en la asistencia y en el acta.");
@@ -104,6 +115,13 @@ test.describe.serial("modulos", () => {
     await expect(dialog).toBeVisible();
     await caption(page, "Cada fila se empareja con su unidad por el <b>número exacto</b>", 1800,
       "El Excel lleva el número de la unidad, el nombre completo y el documento. Lo más importante: el número tiene que ser exactamente igual al de la unidad en Rupü, por ejemplo T uno guion ciento uno. Así cada persona queda emparejada con su apartamento.");
+    const download = page.waitForEvent("download");
+    await tap(dialog.getByRole("link", { name: /Descargar Excel de ejemplo/ }));
+    await (await download).saveAs(path.join(info.outputDir, "plantilla-residentes.xlsx"));
+    await showImage(page, sampleResidentes);
+    await caption(page, "Parte del <b>Excel de ejemplo</b>: unidad, nombre y documento", 2200,
+      "También hay un Excel de ejemplo para residentes, con las tres columnas: unidad, nombre y documento. Fíjate que las unidades se escriben igual que en Unidades.");
+    await hideImage(page);
     await dialog.locator('input[type="file"]').setInputFiles(path.join(FIXTURES, "residentes-demo.xlsx"));
     await page.waitForTimeout(700);
     await tap(dialog.getByRole("button", { name: "Importar residentes" }));
