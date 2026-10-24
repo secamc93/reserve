@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { VT, VtNotice, votingFontRoot, vtBtn, vtMono } from '../design';
 import { TUTORIALS, TUTORIAL_ORDER, tutorialPoster, tutorialVideo, type TutorialSlug } from './tutorials';
 
@@ -17,7 +18,14 @@ function actionFor(slug: TutorialSlug, businessId: number): { href: string; labe
 }
 
 export function TutorialsLibrary({ businessId }: { businessId: number }) {
+  const router = useRouter();
   const [failed, setFailed] = useState<Set<TutorialSlug>>(new Set());
+
+  // Vuelve a la pantalla de donde vino; si entró directo (sin historial), al resumen de la propiedad.
+  const goBack = () => {
+    if (window.history.length > 1) router.back();
+    else router.push(`/properties/${businessId}`);
+  };
 
   // Un video a la vez: al darle play a uno se pausan los demás.
   const pauseOthers = (current: HTMLVideoElement) => {
@@ -30,7 +38,9 @@ export function TutorialsLibrary({ businessId }: { businessId: number }) {
     <div className={`min-h-[calc(100vh-57px)] ${votingFontRoot}`} style={{ background: VT.paper, color: VT.ink }}>
       <div className="px-3 sm:px-8 py-4 md:py-7 flex flex-col gap-6 w-full max-w-5xl">
         <div>
-          <div className={`${vtMono} text-[11px] uppercase tracking-[.06em]`} style={{ color: VT.muted }}>Ayuda</div>
+          <button type="button" onClick={goBack} className={`${vtMono} text-[11px] uppercase tracking-[.06em] hover:underline`} style={{ color: VT.muted }}>
+            ← Volver
+          </button>
           <h1 className="m-0 mt-1.5 text-xl md:text-2xl font-semibold tracking-[-.02em]">Tutoriales</h1>
           <p className="m-0 mt-1 text-[14px] max-w-2xl" style={{ color: VT.inkSoft }}>
             Aprende a hacer una asamblea completa en Rupü: seis videos cortos, con voz, en el orden en que se hace.
