@@ -17,8 +17,4 @@ describe('guideSteps', () => {
   it('con todo hecho no hay siguiente paso', () => {
     expect(nextStep(guideSteps(facts({ groups: 1, votings: 1, presentUnits: 3, dayCovered: true, closedVotings: 1 })))).toBeNull();
   });
-
-  it('cada paso tiene su video', () => {
-    expect(guideSteps(facts()).map((s) => s.video)).toEqual(['crear-asamblea', 'agregar-votaciones', 'asistencia-y-qr', 'dias-de-votacion', 'votacion-en-vivo']);
-  });
 });

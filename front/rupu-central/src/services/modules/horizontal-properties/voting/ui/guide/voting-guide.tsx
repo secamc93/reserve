@@ -1,6 +1,7 @@
 /**
  * Guía interactiva de votaciones: los 5 pasos de una asamblea en Rupü, marcados según los datos
- * reales de la asamblea en curso, con el botón para hacer el siguiente paso y un video por paso.
+ * reales de la asamblea en curso, con el botón para hacer el siguiente paso. Los videos viven
+ * aparte, en Tutoriales (menú lateral).
  * Se puede ocultar (se recuerda por propiedad en este navegador).
  */
 
@@ -14,8 +15,6 @@ import { listAttendanceListsAction, getAttendanceListSummaryAction } from '../..
 import type { VotingGroup } from '../../domain/entities';
 import { VT, getGroupStatus, vtBtn } from '../design';
 import { guideSteps, nextStep, type GuideFacts, type GuideStep } from './guide-steps';
-import { TutorialVideoDialog } from './tutorial-video-dialog';
-import { TUTORIALS, type TutorialSlug } from './tutorials';
 
 interface VotingGuideProps {
   businessId: number;
@@ -44,7 +43,6 @@ export function VotingGuide({ businessId, groups, onCreateGroup, onOpenGroup }: 
   const group = useMemo(() => activeGroup(groups), [groups]);
   const [facts, setFacts] = useState<GuideFacts>({ groups: groups.length, votings: 0, presentUnits: 0, dayCovered: false, closedVotings: 0 });
   const [hidden, setHidden] = useState<boolean | null>(null);
-  const [video, setVideo] = useState<TutorialSlug | null>(null);
 
   const load = useCallback(async () => {
     const token = TokenStorage.getBusinessToken();
@@ -179,23 +177,11 @@ export function VotingGuide({ businessId, groups, onCreateGroup, onOpenGroup }: 
                 </span>
               </div>
               <p className="m-0 text-[12px] leading-snug" style={{ color: VT.inkSoft }}>{step.hint}</p>
-              <div className="mt-auto flex flex-wrap items-center gap-2">
-                <button type="button" className="text-[12px] font-semibold underline" onClick={() => setVideo(step.video)} aria-label={`Ver video: ${step.title}`}>
-                  ▶ Ver video
-                </button>
-                {step.extra && (
-                  <button type="button" className="text-[12px] font-semibold underline" onClick={() => setVideo(step.extra!.video)} aria-label={`Ver video: ${TUTORIALS[step.extra.video].title}`}>
-                    ▶ {step.extra.label}
-                  </button>
-                )}
-              </div>
-              {current && <div>{action(step)}</div>}
+              {current && <div className="mt-auto">{action(step)}</div>}
             </li>
           );
         })}
       </ol>
-
-      <TutorialVideoDialog slug={video} onClose={() => setVideo(null)} />
     </section>
   );
 }

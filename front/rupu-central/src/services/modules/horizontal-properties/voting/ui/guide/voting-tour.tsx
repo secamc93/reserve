@@ -62,7 +62,7 @@ export const VOTING_TOUR_STEPS: TourStep[] = [
     target: '[data-tour="guide"]',
     missing: 'skip',
     title: 'Tu guía paso a paso',
-    body: 'Aquí ves qué llevas hecho y cuál es el siguiente paso, con un botón para hacerlo. Cada paso tiene un video corto con voz.',
+    body: 'Aquí ves qué llevas hecho y cuál es el siguiente paso, con un botón para hacerlo.',
   },
   {
     id: 'group-actions',
@@ -83,7 +83,7 @@ export const VOTING_TOUR_STEPS: TourStep[] = [
     target: '[data-tour="tutorials"]',
     missing: 'skip',
     title: 'Tutoriales siempre a la mano',
-    body: 'Aquí están los 6 videos: desde crear la asamblea hasta descargar el informe para el acta.',
+    body: 'En el menú lateral están los 6 videos con voz: desde crear la asamblea hasta descargar el informe para el acta.',
   },
   {
     id: 'done',

@@ -61,18 +61,10 @@ describe('VotingGuide', () => {
     expect(screen.getByRole('listitem', { current: 'step' })).toHaveTextContent('Asistencia y QR');
   });
 
-  it('abre el video del paso', async () => {
+  it('no muestra videos: viven en Tutoriales (menú lateral)', async () => {
     render(<VotingGuide businessId={1} groups={[]} onCreateGroup={vi.fn()} onOpenGroup={vi.fn()} />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Ver video: Agrega las votaciones' }));
-    const dialog = await screen.findByRole('dialog');
-    expect(dialog.querySelector('video')?.getAttribute('src')).toBe('/tutoriales/agregar-votaciones.mp4');
-  });
-
-  it('el paso de asistencia tiene también el video del PDF con los QR', async () => {
-    render(<VotingGuide businessId={1} groups={[]} onCreateGroup={vi.fn()} onOpenGroup={vi.fn()} />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Ver video: Contraseñas y PDF con los QR' }));
-    const dialog = await screen.findByRole('dialog');
-    expect(dialog.querySelector('video')?.getAttribute('src')).toBe('/tutoriales/credenciales-qr.mp4');
+    await screen.findByRole('region', { name: 'Guía de votaciones' });
+    expect(screen.queryByRole('button', { name: /Ver video/ })).not.toBeInTheDocument();
   });
 
   it('se puede ocultar y lo recuerda por propiedad', async () => {

@@ -20,9 +20,7 @@ import { VotingsList } from './votings-list';
 import { GroupQRModal } from './components/group-qr-modal';
 import { VotingCoverageBanner } from './billing/voting-coverage-banner';
 import { VotingGuide } from './guide/voting-guide';
-import { TutorialVideoDialog } from './guide/tutorial-video-dialog';
 import { VotingTour, votingTourSeen } from './guide/voting-tour';
-import { tutorialPoster } from './guide/tutorials';
 import { useGroupQr, useVotingCapabilities, GROUP_QR_VALID_HOURS } from './hooks';
 import {
   VT,
@@ -49,7 +47,6 @@ export function VotingGroupsSection({ businessId, autoTour = true }: VotingGroup
   const caps = useVotingCapabilities();
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const [introVideo, setIntroVideo] = useState(false);
   const [tour, setTour] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<VotingGroup | null>(null);
@@ -162,33 +159,17 @@ export function VotingGroupsSection({ businessId, autoTour = true }: VotingGroup
             <Spinner size="md" text="Cargando grupos de votación..." />
           </div>
         ) : groups.length === 0 ? (
-          <div className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] py-10 px-6 flex flex-col md:flex-row items-center gap-8" style={{ border: `1px solid ${VT.border}` }}>
-            <button
-              type="button"
-              onClick={() => setIntroVideo(true)}
-              aria-label="Ver video: cómo crear una asamblea"
-              className="group relative w-full md:w-[360px] aspect-video rounded-[14px] overflow-hidden shrink-0"
-              style={{ background: VT.ink }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={tutorialPoster('crear-asamblea')} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-              <span className="absolute inset-0 flex items-center justify-center">
-                <span className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center text-[20px] shadow-lg group-hover:scale-110 transition-transform" aria-hidden>▶</span>
-              </span>
-              <span className="absolute left-3 bottom-3 text-[12px] font-semibold text-white bg-black/50 rounded-full px-2.5 py-1">Video · Cómo crear una asamblea</span>
-            </button>
-            <div className="text-center md:text-left">
-              <h2 className="m-0 text-[17px] font-semibold">Aún no hay grupos de votación</h2>
-              <p className="mt-1.5 mb-5 text-[13px] max-w-[420px]" style={{ color: VT.muted }}>
-                Cada grupo es una asamblea: le pones fecha y quórum, agregas una votación por cada punto del orden
-                del día y el día de la asamblea los residentes votan con un QR. Mira el video o empieza ya.
-              </p>
-              {caps.canManage && (
-                <button type="button" className={vtBtn.primary} onClick={() => setFormOpen(true)}>
-                  + Nuevo grupo
-                </button>
-              )}
-            </div>
+          <div className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
+            <h2 className="m-0 text-[17px] font-semibold">Aún no hay grupos de votación</h2>
+            <p className="mt-1.5 mb-5 mx-auto text-[13px] max-w-[460px]" style={{ color: VT.muted }}>
+              Cada grupo es una asamblea: le pones fecha y quórum, agregas una votación por cada punto del orden
+              del día y el día de la asamblea los residentes votan con un QR.
+            </p>
+            {caps.canManage && (
+              <button type="button" className={vtBtn.primary} onClick={() => setFormOpen(true)}>
+                + Nuevo grupo
+              </button>
+            )}
           </div>
         ) : (
           groups.map((group) => (
@@ -228,8 +209,6 @@ export function VotingGroupsSection({ businessId, autoTour = true }: VotingGroup
         businessId={businessId}
         group={deleting}
       />
-
-      <TutorialVideoDialog slug={introVideo ? 'crear-asamblea' : null} onClose={() => setIntroVideo(false)} />
 
       <VotingTour
         open={tour}

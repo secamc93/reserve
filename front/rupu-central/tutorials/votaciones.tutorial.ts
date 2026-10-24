@@ -143,9 +143,11 @@ test.describe.serial("votaciones", () => {
   test("4-credenciales-qr", async ({ page }, info) => {
     await openVoting(page);
     const group = await groupCard(page);
-    await say(page, "Ahora, para que nadie vote por otro, cada unidad tiene su propia contraseña de votación. Todo esto se hace desde Asistencia.");
     const attendance = await openAttendance(page, group);
     const generate = attendance.getByRole("button", { name: "Generar contraseñas" });
+    await expect(generate).toBeVisible({ timeout: 30_000 });
+    markReady(page); // el video empieza con Asistencia ya cargada (sin la espera de carga)
+    await say(page, "Ahora, para que nadie vote por otro, cada unidad tiene su propia contraseña de votación. Todo esto se hace desde Asistencia.");
     await caption(page, "<b>Genera las contraseñas</b> de todas las unidades con un clic", 1200,
       "Le das a Generar contraseñas, y Rupü crea una clave distinta para cada unidad del conjunto.");
     await tap(generate);
