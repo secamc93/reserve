@@ -9,9 +9,10 @@ out=${TUTORIALS_OUT:-public/tutoriales}
 mkdir -p "$out"
 shopt -s nullglob
 found=0
-for dir in ${TUTORIALS_SRC:-tutorials/.output}/votaciones.tutorial.ts-votaciones-*; do
+for dir in ${TUTORIALS_SRC:-tutorials/.output}/*.tutorial.ts-*; do
   name=$(basename "$dir")
-  slug=${name#votaciones.tutorial.ts-votaciones-?-}
+  # "<archivo>.tutorial.ts-<grupo>-<n>-<slug>" -> "<slug>"
+  slug=$(echo "$name" | sed -E 's/^[^.]+\.tutorial\.ts-[a-z]+-[0-9]+-//')
   video="$dir/video.webm"
   [[ -f "$video" ]] || continue
   found=1

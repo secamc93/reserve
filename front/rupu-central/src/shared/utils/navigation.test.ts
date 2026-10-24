@@ -174,7 +174,9 @@ describe('moduleTutorialsHref', () => {
 
   it('sin tutoriales en el módulo (o fuera de una propiedad) no hay acceso', async () => {
     const { moduleTutorialsHref } = await import('./navigation');
-    expect(moduleTutorialsHref('/properties/7/units', 7)).toBeUndefined();
+    expect(moduleTutorialsHref('/properties/7/units', 7)).toBe('/properties/7/units/tutorials');
+    expect(moduleTutorialsHref('/properties/7/residents/12', 7)).toBe('/properties/7/residents/tutorials');
+    expect(moduleTutorialsHref('/properties/7/parking', 7)).toBeUndefined();
     expect(moduleTutorialsHref('/properties/7', 7)).toBeUndefined();
     expect(moduleTutorialsHref('/iam/users', 7)).toBeUndefined();
     expect(moduleTutorialsHref('/properties/7/voting-groups', null)).toBeUndefined();

@@ -118,13 +118,15 @@ export function ImportResidentsModal({ isOpen, onClose, onSuccess, businessId }:
           <div className="flex flex-col gap-2">
             <DsEyebrow>Formato del archivo</DsEyebrow>
             <p className="text-[13px] text-[#4b4a46] m-0">
-              Primera fila con encabezados (se ignora). Columnas: número de unidad (debe existir), nombre completo, documento, email (opcional) y teléfono (opcional).
+              Primera fila con encabezados (se ignora). Columnas: <strong>número de unidad</strong> (exactamente como está en
+              Unidades, p. ej. <span className="font-mono">T1-101</span>), nombre completo y documento. Correo y teléfono se completan
+              después con Edición masiva. Todos quedan como Propietario; el tipo se cambia editando al residente.
             </p>
             <ExcelFormatExample
-              headers={['Unidad', 'Nombre', 'Documento', 'Email', 'Teléfono']}
+              headers={['Unidad', 'Nombre', 'Documento']}
               rows={[
-                ['126', 'Juan Pérez', '12345678', 'juan@correo.co', '3001234567'],
-                ['127', 'María García', '87654321', 'maria@correo.co', '3007654321'],
+                ['126', 'Juan Pérez', '12345678'],
+                ['127', 'María García', '87654321'],
               ]}
             />
           </div>

@@ -167,7 +167,7 @@ export function resolveActiveProperty(list: readonly PropertyLike[] | null | und
 }
 
 /** Módulos (segmento de la URL) que ya tienen página de tutoriales en `<módulo>/tutorials`. */
-export const MODULES_WITH_TUTORIALS = ['voting-groups'] as const;
+export const MODULES_WITH_TUTORIALS = ['voting-groups', 'units', 'residents'] as const;
 
 /**
  * Tutoriales del módulo donde está el usuario: `/properties/:id/<módulo>/tutorials`, o undefined si

@@ -1,10 +1,13 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { narrate } from "./voice";
 
-// Genera de una vez (en paralelo) todas las frases que dice la voz en los tutoriales, para que la
+// Genera de una vez (en paralelo) todas las frases que dice la voz en todos los tutoriales (*.tutorial.ts), para que la
 // grabación no se quede esperando a Google. Uso: TUTORIAL_VOICE=1 npx tsx tutorials/prewarm-voice.ts
-const source = readFileSync(path.join(__dirname, "votaciones.tutorial.ts"), "utf8");
+const source = readdirSync(__dirname)
+  .filter((f) => f.endsWith(".tutorial.ts"))
+  .map((f) => readFileSync(path.join(__dirname, f), "utf8"))
+  .join("\n");
 const lines = [...new Set([...source.matchAll(/"([^"<]{40,}\.)"/g)].map((m) => m[1]))];
 
 (async () => {
