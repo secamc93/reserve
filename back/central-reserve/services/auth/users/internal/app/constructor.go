@@ -14,6 +14,7 @@ type Iapp interface {
 	UpdateUser(ctx context.Context, id uint, user domain.UpdateUserDTO) (string, error)
 	DeleteUser(ctx context.Context, id uint) (string, error)
 	AssignRoleToUserBusiness(ctx context.Context, userID uint, assignments []domain.BusinessRoleAssignment) error
+	SetSuperAdmin(ctx context.Context, actorID uint, userID uint, enabled bool) error
 }
 
 // UserUseCase implementa los casos de uso para usuarios

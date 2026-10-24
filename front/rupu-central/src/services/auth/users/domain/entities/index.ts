@@ -6,3 +6,4 @@ export * from './update-user.entity';
 export * from './delete-user.entity';
 export * from './get-user-by-id.entity';
 export * from './assign-user-role.entity';
+export * from './set-super-admin.entity';

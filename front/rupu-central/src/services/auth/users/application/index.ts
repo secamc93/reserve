@@ -10,6 +10,7 @@ import { UpdateUserUseCase } from './update-user.use-case';
 import { GetUserByIdUseCase } from './get-user-by-id.use-case';
 import { GeneratePasswordUseCase } from './generate-password.use-case';
 import { AssignUserRoleUseCase } from './assign-user-role.use-case';
+import { SetSuperAdminUseCase } from './set-super-admin.use-case';
 
 export interface UsersUseCasesInput {
     UseCaseCreateUser: CreateUserUseCase;
@@ -19,6 +20,7 @@ export interface UsersUseCasesInput {
     UseCaseGetUsers: GetUsersUseCase;
     UseCaseGeneratePassword: GeneratePasswordUseCase;
     UseCaseAssignUserRole: AssignUserRoleUseCase;
+    UseCaseSetSuperAdmin: SetSuperAdminUseCase;
 }
 
 // Constructor centralizado para casos de uso de usuarios
@@ -30,6 +32,7 @@ export class UsersUseCases implements UsersUseCasesInput {
   public UseCaseGetUserById: GetUserByIdUseCase;
   public UseCaseGeneratePassword: GeneratePasswordUseCase;
   public UseCaseAssignUserRole: AssignUserRoleUseCase;
+  public UseCaseSetSuperAdmin: SetSuperAdminUseCase;
 
   constructor(usersRepository: IUsersRepository) {
     this.UseCaseGetUsers = new GetUsersUseCase(usersRepository);
@@ -39,6 +42,7 @@ export class UsersUseCases implements UsersUseCasesInput {
     this.UseCaseGetUserById = new GetUserByIdUseCase(usersRepository);
     this.UseCaseGeneratePassword = new GeneratePasswordUseCase(usersRepository);
     this.UseCaseAssignUserRole = new AssignUserRoleUseCase(usersRepository);
+    this.UseCaseSetSuperAdmin = new SetSuperAdminUseCase(usersRepository);
   }
 
   // Métodos de conveniencia que delegan a los casos de uso
@@ -59,3 +63,4 @@ export * from './update-user.use-case';
 export * from './get-user-by-id.use-case';
 export * from './generate-password.use-case';
 export * from './assign-user-role.use-case';
+export * from './set-super-admin.use-case';

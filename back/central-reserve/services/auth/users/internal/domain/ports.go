@@ -30,6 +30,10 @@ type IUserRepository interface {
 	// Métodos de relaciones business_staff
 	GetBusinessStaffRelationships(ctx context.Context, userID uint) ([]BusinessRoleAssignmentDetailed, error)
 	AssignRoleToUserBusiness(ctx context.Context, userID uint, assignments []BusinessRoleAssignment) error
+
+	// Super admin: rol de alcance platform asignado sin propiedad (business_id NULL)
+	GetPlatformRoleID(ctx context.Context) (uint, error)
+	SetPlatformRole(ctx context.Context, userID uint, roleID uint, enabled bool) error
 }
 type IS3Service interface {
 	GetImageURL(filename string) string
