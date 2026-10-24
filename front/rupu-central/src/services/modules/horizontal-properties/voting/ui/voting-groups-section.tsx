@@ -21,6 +21,7 @@ import { GroupQRModal } from './components/group-qr-modal';
 import { VotingCoverageBanner } from './billing/voting-coverage-banner';
 import { VotingGuide } from './guide/voting-guide';
 import { TutorialVideoDialog } from './guide/tutorial-video-dialog';
+import { VotingTour, votingTourSeen } from './guide/voting-tour';
 import { tutorialPoster } from './guide/tutorials';
 import { useGroupQr, useVotingCapabilities, GROUP_QR_VALID_HOURS } from './hooks';
 import {
@@ -38,15 +39,18 @@ import {
 
 interface VotingGroupsSectionProps {
   businessId: number;
+  /** Abre el recorrido guiado la primera vez (no debajo de otro panel, como Asistencia). */
+  autoTour?: boolean;
 }
 
-export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
+export function VotingGroupsSection({ businessId, autoTour = true }: VotingGroupsSectionProps) {
   const [groups, setGroups] = useState<VotingGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const caps = useVotingCapabilities();
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [introVideo, setIntroVideo] = useState(false);
+  const [tour, setTour] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<VotingGroup | null>(null);
   const [deleting, setDeleting] = useState<VotingGroup | null>(null);
@@ -88,6 +92,13 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
     }
   }, [businessId, loadGroups]);
 
+  // Primera visita de quien administra: el recorrido se abre solo, cuando la pantalla ya cargó.
+  useEffect(() => {
+    if (!autoTour || loading || !caps.canManage || votingTourSeen()) return;
+    const t = setTimeout(() => setTour(true), 900);
+    return () => clearTimeout(t);
+  }, [autoTour, loading, caps.canManage]);
+
   const toggle = (id: number) =>
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -107,16 +118,22 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
             <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em]">Grupos de votación</h1>
           </div>
           {caps.canManage && (
-            <button
-              type="button"
-              className={`${vtBtn.primary} max-md:w-full`}
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-            >
-              + Nuevo grupo
-            </button>
+            <div className="flex gap-2 max-md:w-full">
+              <button type="button" className={`${vtBtn.ghost} max-md:flex-1`} onClick={() => setTour(true)}>
+                Recorrido guiado
+              </button>
+              <button
+                type="button"
+                data-tour="new-group"
+                className={`${vtBtn.primary} max-md:flex-1`}
+                onClick={() => {
+                  setEditing(null);
+                  setFormOpen(true);
+                }}
+              >
+                + Nuevo grupo
+              </button>
+            </div>
           )}
         </div>
 
@@ -134,7 +151,11 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
           />
         )}
 
-        {caps.canManage && <VotingCoverageBanner businessId={businessId} />}
+        {caps.canManage && (
+          <div data-tour="coverage">
+            <VotingCoverageBanner businessId={businessId} />
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-16">
@@ -209,6 +230,16 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
       />
 
       <TutorialVideoDialog slug={introVideo ? 'crear-asamblea' : null} onClose={() => setIntroVideo(false)} />
+
+      <VotingTour
+        open={tour}
+        onClose={() => setTour(false)}
+        hasGroups={groups.length > 0}
+        onCreateGroup={() => {
+          setEditing(null);
+          setFormOpen(true);
+        }}
+      />
     </div>
   );
 }
@@ -307,7 +338,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
           </div>
           {qr.error && <div className="text-xs" style={{ color: VT.live }}>{qr.error}</div>}
         </div>
-        <div className="flex gap-1.5 items-center flex-wrap max-md:flex-nowrap max-md:w-full max-md:[&>a]:flex-1 max-md:[&>a]:min-w-0 max-md:[&>button:not([aria-label])]:min-w-0 max-md:[&>button:not([aria-label])]:flex-1">
+        <div data-tour="group-actions" className="flex gap-1.5 items-center flex-wrap max-md:flex-nowrap max-md:w-full max-md:[&>a]:flex-1 max-md:[&>a]:min-w-0 max-md:[&>button:not([aria-label])]:min-w-0 max-md:[&>button:not([aria-label])]:flex-1">
           {closed ? (
             <>
               {!expanded && (

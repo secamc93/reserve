@@ -79,6 +79,8 @@ export function Sidebar({ user, mobileNav = false, variant = 'rail' }: SidebarPr
     href: resolveBusinessHref(item.href, activeBizId),
   }));
 
+  const tutorialsHref = hasActiveProperty(activeBizId) ? `/properties/${activeBizId}/tutorials` : undefined;
+
   // Permisos IAM
   const canAccessIAM = hasResource('Usuarios') || hasResource('Roles') || hasResource('Permisos') || hasResource('Recursos') || hasResource('Tipos de Negocio') || hasResource('Negocios');
 
@@ -132,7 +134,7 @@ export function Sidebar({ user, mobileNav = false, variant = 'rail' }: SidebarPr
         onLogout={handleLogout}
         onOpenProfile={() => setShowUserModal(true)}
       />
-      <FloatingRail onChangeProperty={showChangeProperty ? goToPropertyPicker : undefined} />
+      <FloatingRail onChangeProperty={showChangeProperty ? goToPropertyPicker : undefined} tutorialsHref={tutorialsHref} />
       </>
       ) : (
       <aside
@@ -250,6 +252,7 @@ export function Sidebar({ user, mobileNav = false, variant = 'rail' }: SidebarPr
         user={user}
         onLogout={handleLogout}
         onChangeProperty={showChangeProperty ? goToPropertyPicker : undefined}
+        tutorialsHref={tutorialsHref}
         onOpenProfile={() => setShowUserModal(true)}
       />
       )}

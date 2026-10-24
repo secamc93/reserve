@@ -33,6 +33,8 @@ export interface MobileNavProps {
   onLogout: () => void;
   /** Si viene, muestra "Cambiar propiedad" (el usuario tiene dos o más propiedades). */
   onChangeProperty?: () => void;
+  /** Si viene, muestra el acceso a Tutoriales. */
+  tutorialsHref?: string;
   onOpenProfile?: () => void;
   /** Contenido adicional dentro del menú (p. ej. el selector de propiedad). */
   sheetExtra?: ReactNode;
@@ -53,6 +55,7 @@ export function MobileNav({
   user,
   onLogout,
   onChangeProperty,
+  tutorialsHref,
   onOpenProfile,
   sheetExtra,
 }: MobileNavProps) {
@@ -148,7 +151,17 @@ export function MobileNav({
           </div>
         }
         footer={
-          <div className={`grid gap-1 p-2 ${['grid-cols-1', 'grid-cols-2', 'grid-cols-3'][(onOpenProfile ? 1 : 0) + (onChangeProperty ? 1 : 0)]}`}>
+          <div className={`grid gap-1 p-2 ${['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'][(onOpenProfile ? 1 : 0) + (onChangeProperty ? 1 : 0) + (tutorialsHref ? 1 : 0)]}`}>
+            {tutorialsHref && (
+              <Link
+                href={tutorialsHref}
+                onClick={() => setOpen(false)}
+                className="flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+              >
+                <NavIcon className="h-5 w-5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                Tutoriales
+              </Link>
+            )}
             {onOpenProfile && (
               <button
                 type="button"

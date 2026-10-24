@@ -13,6 +13,14 @@ export function requireCredentials() {
 
 /** Llena el formulario de /login y lo envía. No espera la navegación. */
 export async function submitLogin(page: Page, email: string, password: string) {
+  // El recorrido guiado de la primera visita taparía los clics de las pruebas: se marca como visto.
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("rupu.tour.votaciones.v1", "done");
+    } catch {
+      /* sin almacenamiento */
+    }
+  });
   await page.goto("/login");
   await page.getByLabel("Correo Electrónico").fill(email);
   await page.getByLabel("Contraseña", { exact: true }).fill(password);

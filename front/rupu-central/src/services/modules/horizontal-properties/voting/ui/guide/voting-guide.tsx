@@ -130,7 +130,7 @@ export function VotingGuide({ businessId, groups, onCreateGroup, onOpenGroup }: 
   if (hidden) {
     return (
       <div className="flex">
-        <button type="button" className={vtBtn.ghost} onClick={() => setHiddenPersist(false)}>
+        <button type="button" data-tour="guide" className={vtBtn.ghost} onClick={() => setHiddenPersist(false)}>
           ¿Cómo funciona? · {doneCount}/{steps.length} pasos
         </button>
       </div>
@@ -138,7 +138,7 @@ export function VotingGuide({ businessId, groups, onCreateGroup, onOpenGroup }: 
   }
 
   return (
-    <section aria-label="Guía de votaciones" className="bg-white rounded-[14px] px-4 sm:px-5 py-4 flex flex-col gap-4" style={{ border: `1px solid ${VT.border}` }}>
+    <section aria-label="Guía de votaciones" data-tour="guide" className="bg-white rounded-[14px] px-4 sm:px-5 py-4 flex flex-col gap-4" style={{ border: `1px solid ${VT.border}` }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="m-0 text-[16px] font-semibold">Tu asamblea en Rupü, paso a paso</h2>

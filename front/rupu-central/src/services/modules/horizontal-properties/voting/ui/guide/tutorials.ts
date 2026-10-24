@@ -50,5 +50,15 @@ export const TUTORIALS: Record<TutorialSlug, Tutorial> = {
   },
 };
 
+/** Orden real de una asamblea: así se muestran en la página de Tutoriales. */
+export const TUTORIAL_ORDER: TutorialSlug[] = [
+  'crear-asamblea',
+  'agregar-votaciones',
+  'asistencia-y-qr',
+  'credenciales-qr',
+  'votacion-en-vivo',
+  'dias-de-votacion',
+];
+
 export const tutorialVideo = (slug: TutorialSlug) => `/tutoriales/${slug}.mp4`;
 export const tutorialPoster = (slug: TutorialSlug) => `/tutoriales/${slug}.jpg`;

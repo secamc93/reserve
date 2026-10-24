@@ -39,7 +39,12 @@ for dir in ${TUTORIALS_SRC:-tutorials/.output}/votaciones.tutorial.ts-votaciones
     ffmpeg -loglevel error -y -i "$video" -an -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p \
       -vf "scale=1280:-2" -movflags +faststart "$out/$slug.mp4"
   fi
-  ffmpeg -loglevel error -y -ss 3 -i "$out/$slug.mp4" -frames:v 1 -vf "scale=960:-2" -q:v 4 "$out/$slug.jpg"
+  # Portada: un cuadro representativo (en el de credenciales, la hoja del PDF hacia el final).
+  poster_at=3
+  if [[ $slug == credenciales-qr ]]; then
+    poster_at=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$out/$slug.mp4" | awk '{printf "%.1f", $1 * 0.8}')
+  fi
+  ffmpeg -loglevel error -y -ss "$poster_at" -i "$out/$slug.mp4" -frames:v 1 -vf "scale=960:-2" -q:v 4 "$out/$slug.jpg"
   echo "$slug: $(du -h "$out/$slug.mp4" | cut -f1)"
 done
 [[ $found == 1 ]] || { echo "No hay grabaciones en tutorials/.output; corre primero pnpm tutorials" >&2; exit 1; }

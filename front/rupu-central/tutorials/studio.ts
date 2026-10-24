@@ -48,6 +48,12 @@ export async function prepare(page: Page) {
         if (!label.textContent?.includes(demoProperty)) (label as HTMLElement).style.display = "none";
       }
     };
+    // Los videos muestran la pantalla de trabajo, no el recorrido guiado de la primera visita.
+    try {
+      localStorage.setItem("rupu.tour.votaciones.v1", "done");
+    } catch {
+      /* sin almacenamiento */
+    }
     const start = () => {
       const style = document.createElement("style");
       style.textContent = css;

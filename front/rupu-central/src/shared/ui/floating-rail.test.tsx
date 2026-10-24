@@ -1,6 +1,9 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+
+let pathname = '/properties/7/units';
+vi.mock('next/navigation', () => ({ usePathname: () => pathname }));
 import { FloatingRail } from './floating-rail';
 import { useNavSlot } from './nav-slots';
 
@@ -41,5 +44,22 @@ describe('FloatingRail', () => {
     unmount();
     render(<FloatingRail />);
     expect(screen.queryByRole('button', { name: 'Cambiar propiedad' })).toBeNull();
+  });
+
+  it('"Tutoriales" lleva a la página de videos y se marca cuando estás ahí', () => {
+    const { unmount } = render(<FloatingRail tutorialsHref="/properties/7/tutorials" />);
+    const link = screen.getByRole('link', { name: 'Tutoriales' });
+    expect(link).toHaveAttribute('href', '/properties/7/tutorials');
+    expect(link).not.toHaveAttribute('aria-current');
+    unmount();
+    pathname = '/properties/7/tutorials';
+    render(<FloatingRail tutorialsHref="/properties/7/tutorials" />);
+    expect(screen.getByRole('link', { name: 'Tutoriales' })).toHaveAttribute('aria-current', 'page');
+    pathname = '/properties/7/units';
+  });
+
+  it('sin propiedad elegida no muestra Tutoriales', () => {
+    render(<FloatingRail />);
+    expect(screen.queryByRole('link', { name: 'Tutoriales' })).not.toBeInTheDocument();
   });
 });

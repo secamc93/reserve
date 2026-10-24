@@ -101,6 +101,12 @@ describe('MobileNav — menú de módulos', () => {
     expect(document.body.style.overflow).toBe('hidden');
   });
 
+  it('el menú tiene el acceso a Tutoriales cuando hay propiedad', async () => {
+    const { user } = setup({ tutorialsHref: '/properties/7/tutorials' });
+    await user.click(logo());
+    expect(within(sheet()!).getByRole('link', { name: 'Tutoriales' })).toHaveAttribute('href', '/properties/7/tutorials');
+  });
+
   it('Esc cierra y devuelve el foco al logo', async () => {
     const { user } = setup();
     await user.click(logo());
