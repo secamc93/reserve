@@ -7,9 +7,10 @@ import {
   GetHorizontalPropertiesParams,
   GetHorizontalPropertyByIdParams,
   CreateHorizontalPropertyParams,
-  DeleteHorizontalPropertyParams
+  DeleteHorizontalPropertyParams,
+  GetPropertyOverviewParams
 } from '../../domain/ports/horizontal-properties.repository';
-import { HorizontalProperty, HorizontalPropertiesPaginated } from '../../domain/entities';
+import { HorizontalProperty, HorizontalPropertiesPaginated, PropertyOverview } from '../../domain/entities';
 import { env, logHttpRequest, logHttpSuccess, logHttpError } from '@shared/config';
 import {
   BackendHorizontalPropertiesResponse,
@@ -18,6 +19,37 @@ import {
 } from './response/horizontal-properties.response';
 
 export class HorizontalPropertiesRepository implements IHorizontalPropertiesRepository {
+  /** Detalle + resumen de unidades + resumen de residentes, en paralelo (tarjeta del selector). */
+  async getPropertyOverview({ token, businessId }: GetPropertyOverviewParams): Promise<PropertyOverview> {
+    const get = async (path: string) => {
+      const sep = path.includes('?') ? '&' : '?';
+      const res = await fetch(`${env.API_BASE_URL}${path}${sep}business_id=${businessId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.message || body.error || `Error ${res.status}`);
+      return body.data ?? {};
+    };
+    const [property, units, residents] = await Promise.all([
+      get(`/horizontal-properties/${businessId}`),
+      get('/horizontal-properties/property-units/summary'),
+      get('/horizontal-properties/residents/summary'),
+    ]);
+    const typeTotal = (code: string) =>
+      Number((residents.types ?? []).find((t: { code?: string }) => t.code === code)?.total) || 0;
+    return {
+      id: businessId,
+      address: property.address ?? '',
+      description: property.description ?? '',
+      units: Number(units.total) || 0,
+      coefficientSum: Number(units.coefficient_sum) || 0,
+      residents: Number(residents.total) || 0,
+      owners: typeTotal('owner'),
+      tenants: typeTotal('tenant'),
+    };
+  }
+
   async getHorizontalProperties(params: GetHorizontalPropertiesParams): Promise<HorizontalPropertiesPaginated> {
     const {
       token,

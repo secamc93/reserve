@@ -36,3 +36,17 @@ function subscribe(listener: () => void): () => void {
 export function useNavSlot(name: NavSlotName): HTMLElement | null {
   return useSyncExternalStore(subscribe, () => slots[name], () => null);
 }
+
+// Pestaña activa del módulo (la pone `DsSectionHeader`): la ruta de la barra superior la muestra
+// al final, p. ej. "Conjunto › Unidades › Torre 1".
+let currentTab: string | null = null;
+
+export function setCurrentTab(label: string | null): void {
+  if (currentTab === label) return;
+  currentTab = label;
+  listeners.forEach((listener) => listener());
+}
+
+export function useCurrentTab(): string | null {
+  return useSyncExternalStore(subscribe, () => currentTab, () => null);
+}

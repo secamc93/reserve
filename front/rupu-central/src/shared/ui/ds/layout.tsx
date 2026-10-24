@@ -9,9 +9,9 @@
 
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavSlot } from '../nav-slots';
+import { setCurrentTab, useNavSlot } from '../nav-slots';
 import { getInitials } from '../../utils/navigation';
 import { tabIcon } from './tab-icons';
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '../use-media-query';
@@ -71,6 +71,12 @@ export function DsSectionHeader<T extends string>({
   const actionsSlot = useNavSlot('actions');
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
   const hasTabs = !!tabs && tabs.length > 0;
+  // La pestaña activa se suma a la ruta de la barra superior ("dónde estoy").
+  const activeLabel = hasTabs ? tabs.find((t) => t.id === active)?.label ?? null : null;
+  useEffect(() => {
+    setCurrentTab(activeLabel);
+    return () => setCurrentTab(null);
+  }, [activeLabel]);
 
   if (tabs && hasTabs && submenuSlot && isDesktop) {
     return (

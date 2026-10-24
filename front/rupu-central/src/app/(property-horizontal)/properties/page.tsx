@@ -9,9 +9,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
-import { Spinner, PropertyPicker, useAccessibleProperties, selectProperty } from '@shared/ui';
+import { Spinner, useAccessibleProperties, selectProperty } from '@shared/ui';
 import { vtBtn } from '@shared/ui/ds';
 import { CreatePropertyModal } from '@/services/modules/horizontal-properties/properties/ui/create-property-modal';
+import { PropertyCards } from '@/services/modules/horizontal-properties/properties/ui/property-cards';
 
 export default function PropertiesPage() {
   const router = useRouter();
@@ -49,16 +50,28 @@ export default function PropertiesPage() {
   return (
     <div className="p-3 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {isSuperAdmin && (
-          <div className="flex justify-end mb-3">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+          <div>
+            <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em] text-[#1a1a1a]">Propiedades</h1>
+            <p className="m-0 mt-1 text-[13px] text-[#8a8580]">
+              {loadingProperties ? 'Cargando…' : `${properties.length} ${properties.length === 1 ? 'conjunto' : 'conjuntos'} · elige uno para entrar`}
+            </p>
+          </div>
+          {isSuperAdmin && (
             <button type="button" className={vtBtn.primary} onClick={() => setCreating(true)}>
               + Nueva propiedad
             </button>
-          </div>
-        )}
-        <div>
-          <PropertyPicker properties={properties} loading={loadingProperties} error={propertiesError} activeId={activeId} />
+          )}
         </div>
+        {loadingProperties ? (
+          <div className="flex justify-center py-10"><Spinner size="lg" text="Cargando propiedades..." /></div>
+        ) : propertiesError ? (
+          <p className="text-red-700 bg-red-50 border border-red-200 rounded-lg p-4">{propertiesError}</p>
+        ) : properties.length === 0 ? (
+          <p className="text-gray-600 bg-white border border-gray-200 rounded-lg p-6 text-center">No tienes propiedades asignadas.</p>
+        ) : (
+          <PropertyCards properties={properties} activeId={activeId} />
+        )}
         {isSuperAdmin && <CreatePropertyModal isOpen={creating} onClose={() => setCreating(false)} onSuccess={reload} />}
 
       </div>
