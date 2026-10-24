@@ -10,6 +10,7 @@ import { UpdateUserParams, UpdateUserResponse } from '../../domain/entities/upda
 import { GetUserByIdParams, GetUserByIdResponse } from '../../domain/entities/get-user-by-id.entity';
 import { GeneratePasswordParams, GeneratePasswordResponse } from '../../domain/entities/generate-password.entity';
 import { AssignUserRoleParams, AssignUserRoleResponse } from '../../domain/entities/assign-user-role.entity';
+import { SetSuperAdminParams, SetSuperAdminResponse } from '../../domain/entities/set-super-admin.entity';
 import { GetUsersRepository } from './get-users.repository';
 import { CreateUserRepository } from './create-user.repository';
 import { DeleteUserRepository } from './delete-user.repository';
@@ -17,6 +18,7 @@ import { UpdateUserRepository } from './update-user.repository';
 import { GetUserByIdRepository } from './get-user-by-id.repository';
 import { GeneratePasswordRepository } from './generate-password.repository';
 import { AssignUserRoleRepository } from './assign-user-role.repository';
+import { SetSuperAdminRepository } from './set-super-admin.repository';
 
 // Repositorio Principal de Usuarios con delegación
 export class UsersRepository implements IUsersRepository {
@@ -27,6 +29,7 @@ export class UsersRepository implements IUsersRepository {
   private getUserByIdRepository: GetUserByIdRepository;
   private generatePasswordRepository: GeneratePasswordRepository;
   private assignUserRoleRepository: AssignUserRoleRepository;
+  private setSuperAdminRepository: SetSuperAdminRepository;
 
   constructor() {
     this.getUsersRepository = new GetUsersRepository();
@@ -36,6 +39,7 @@ export class UsersRepository implements IUsersRepository {
     this.getUserByIdRepository = new GetUserByIdRepository();
     this.generatePasswordRepository = new GeneratePasswordRepository();
     this.assignUserRoleRepository = new AssignUserRoleRepository();
+    this.setSuperAdminRepository = new SetSuperAdminRepository();
   }
 
   async getUsers(params: GetUsersParams): Promise<UsersList> {
@@ -65,6 +69,10 @@ export class UsersRepository implements IUsersRepository {
   async assignUserRole(params: AssignUserRoleParams): Promise<AssignUserRoleResponse> {
     return this.assignUserRoleRepository.assignUserRole(params);
   }
+
+  async setSuperAdmin(params: SetSuperAdminParams): Promise<SetSuperAdminResponse> {
+    return this.setSuperAdminRepository.setSuperAdmin(params);
+  }
 }
 
 // Exportar repositorios específicos
@@ -75,3 +83,4 @@ export * from './update-user.repository';
 export * from './get-user-by-id.repository';
 export * from './generate-password.repository';
 export * from './assign-user-role.repository';
+export * from './set-super-admin.repository';

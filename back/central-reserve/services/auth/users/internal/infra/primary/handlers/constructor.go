@@ -15,6 +15,7 @@ type Ihandlers interface {
 	Updatehandlers(c *gin.Context)
 	Deletehandlers(c *gin.Context)
 	AssignRoleToUserBusinessHandler(c *gin.Context)
+	SetSuperAdminHandler(c *gin.Context)
 	RegisterRoutes(router *gin.RouterGroup, handler Ihandlers, logger log.ILogger)
 }
 

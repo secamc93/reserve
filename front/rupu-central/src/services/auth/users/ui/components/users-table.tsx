@@ -17,7 +17,8 @@ import {
   KeyIcon,
   DocumentDuplicateIcon,
   CheckIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '@shared/ui/button';
 import { Badge } from '@shared/ui/badge';
@@ -27,6 +28,8 @@ import { Modal } from '@shared/ui/modal';
 import { deleteUserAction } from '../../infrastructure/actions';
 import { getUserByIdAction } from '../../infrastructure/actions';
 import { generatePasswordAction } from '../../infrastructure/actions';
+import { setSuperAdminAction } from '../../infrastructure/actions';
+import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
 import { UserDetailModal } from './user-detail-modal';
 import { TokenStorage } from '@shared/config';
 import { useIsMobile, MobileCard, MobileActionButton, mobileColumn } from '@/services/mobile-ui';
@@ -107,6 +110,32 @@ export function UsersTable({
   const [emailCopied, setEmailCopied] = useState(false);
   const [showConfirmPasswordModal, setShowConfirmPasswordModal] = useState(false);
   const [userToGeneratePassword, setUserToGeneratePassword] = useState<User | null>(null);
+  // Super admin: solo otro super admin lo da o lo quita, y nadie se lo quita a sí mismo.
+  const { permissions } = usePermissions();
+  const viewerIsSuperAdmin = !!permissions?.isSuperAdmin;
+  const viewerId = TokenStorage.getUser()?.id;
+  const [superAdminTarget, setSuperAdminTarget] = useState<User | null>(null);
+  const [superAdminNotice, setSuperAdminNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const canToggleSuperAdmin = (user: User) => viewerIsSuperAdmin && !(user.is_super_user && user.id === viewerId);
+
+  const handleToggleSuperAdmin = async () => {
+    const target = superAdminTarget;
+    const token = TokenStorage.getBusinessToken();
+    if (!target || !token) return;
+    const enabled = !target.is_super_user;
+    const result = await setSuperAdminAction({ token, user_id: target.id, enabled });
+    if (!result.success) {
+      setSuperAdminNotice({ ok: false, text: result.error ?? 'No se pudo cambiar el rol de super admin' });
+      return;
+    }
+    setSuperAdminNotice({
+      ok: true,
+      text: enabled
+        ? `${target.name} ahora es super admin. Debe cerrar sesión y volver a entrar para que aplique.`
+        : `${target.name} ya no es super admin.`,
+    });
+    onRefresh?.();
+  };
 
   const handleDelete = async () => {
     if (!selectedUser) return;
@@ -354,6 +383,18 @@ export function UsersTable({
           >
             <ShieldCheckIcon className="w-4 h-4" />
           </Button>
+          {canToggleSuperAdmin(user) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSuperAdminTarget(user)}
+              className={`p-2 ${user.is_super_user ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' : 'hover:bg-purple-50 hover:text-purple-600'}`}
+              title={user.is_super_user ? 'Quitar super admin' : 'Hacer super admin'}
+              aria-label={user.is_super_user ? `Quitar super admin a ${user.name}` : `Hacer super admin a ${user.name}`}
+            >
+              <StarIcon className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -410,6 +451,9 @@ export function UsersTable({
             <MobileActionButton className="flex-1 px-0" title="Ver detalles" onClick={() => onViewUser?.(user)}><EyeIcon className="w-5 h-5" /></MobileActionButton>
             <MobileActionButton className="flex-1 px-0" title="Editar usuario" onClick={() => onEditUser?.(user)}><PencilIcon className="w-5 h-5" /></MobileActionButton>
             <MobileActionButton className="flex-1 px-0" title="Asignar roles" onClick={() => onAssignRoles?.(user)}><ShieldCheckIcon className="w-5 h-5" /></MobileActionButton>
+            {canToggleSuperAdmin(user) && (
+              <MobileActionButton className="flex-1 px-0" title={user.is_super_user ? 'Quitar super admin' : 'Hacer super admin'} onClick={() => setSuperAdminTarget(user)}><StarIcon className="w-5 h-5" /></MobileActionButton>
+            )}
             <MobileActionButton className="flex-1 px-0" title="Generar nueva contraseña" disabled={generatingPassword} onClick={() => handleOpenConfirmPasswordModal(user)}><KeyIcon className="w-5 h-5" /></MobileActionButton>
             <MobileActionButton className="flex-1 px-0" title="Eliminar usuario" variant="danger" onClick={() => onDeleteUser?.(user)}><TrashIcon className="w-5 h-5" /></MobileActionButton>
           </>
@@ -420,6 +464,15 @@ export function UsersTable({
 
   return (
     <>
+      {superAdminNotice && (
+        <div
+          role="status"
+          className={`mb-3 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${superAdminNotice.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}
+        >
+          <span>{superAdminNotice.text}</span>
+          <button type="button" className="shrink-0 underline" onClick={() => setSuperAdminNotice(null)}>Cerrar</button>
+        </div>
+      )}
       <Table
         columns={isMobile ? mobileColumns : columns}
         data={users}
@@ -449,6 +502,22 @@ export function UsersTable({
         title="Generar Nueva Contraseña"
         message={`¿Estás seguro de que quieres generar una nueva contraseña para el usuario "${userToGeneratePassword?.name}" (${userToGeneratePassword?.email})? Esta acción cambiará la contraseña actual y solo podrás ver la nueva contraseña una vez.`}
         confirmText="Generar Contraseña"
+        cancelText="Cancelar"
+        type="warning"
+      />
+
+      {/* Confirmación para dar o quitar super admin */}
+      <ConfirmModal
+        isOpen={!!superAdminTarget}
+        onClose={() => setSuperAdminTarget(null)}
+        onConfirm={handleToggleSuperAdmin}
+        title={superAdminTarget?.is_super_user ? 'Quitar super admin' : 'Hacer super admin'}
+        message={
+          (superAdminTarget?.is_super_user
+            ? `"${superAdminTarget?.name}" dejará de ver todas las propiedades y las herramientas de plataforma. Conserva los roles que tenga en sus propiedades.`
+            : `"${superAdminTarget?.name}" (${superAdminTarget?.email}) podrá ver y administrar todas las propiedades, usuarios, cobros y exenciones. Debe cerrar sesión y volver a entrar para que aplique.`)
+        }
+        confirmText={superAdminTarget?.is_super_user ? 'Quitar super admin' : 'Hacer super admin'}
         cancelText="Cancelar"
         type="warning"
       />

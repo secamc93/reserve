@@ -83,6 +83,7 @@ export * from './get-user-by-id.action';
 export * from './business-token.action';
 export * from './generate-password.action';
 export * from './assign-user-role.action';
+export * from './set-super-admin.action';
 
 // Exportar interfaces de request y response
 export * from './request';

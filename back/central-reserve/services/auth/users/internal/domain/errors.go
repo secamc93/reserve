@@ -11,4 +11,8 @@ var (
 	ErrUserEmailExists        = errors.New("el email ya está registrado")
 	ErrBusinessesNotFound     = errors.New("algunos businesses no existen")
 	ErrUserAvatarUploadFailed = errors.New("error al subir imagen de avatar")
+
+	// Super admin (rol de alcance platform, sin propiedad)
+	ErrPlatformRoleNotFound      = errors.New("no existe un rol de alcance platform")
+	ErrCannotRevokeOwnSuperAdmin = errors.New("no puedes quitarte a ti mismo el rol de super admin")
 )

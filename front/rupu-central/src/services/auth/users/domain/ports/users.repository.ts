@@ -9,6 +9,7 @@ import { UpdateUserParams, UpdateUserResponse } from '../entities/update-user.en
 import { GetUserByIdParams, GetUserByIdResponse } from '../entities/get-user-by-id.entity';
 import { GeneratePasswordParams, GeneratePasswordResponse } from '../entities/generate-password.entity';
 import { AssignUserRoleParams, AssignUserRoleResponse } from '../entities/assign-user-role.entity';
+import { SetSuperAdminParams, SetSuperAdminResponse } from '../entities/set-super-admin.entity';
 
 export interface IUsersRepository {
   getUsers(params: GetUsersParams): Promise<UsersList>;
@@ -18,6 +19,7 @@ export interface IUsersRepository {
   getUserById(params: GetUserByIdParams): Promise<GetUserByIdResponse>;
   generatePassword(params: GeneratePasswordParams): Promise<GeneratePasswordResponse>;
   assignUserRole(params: AssignUserRoleParams): Promise<AssignUserRoleResponse>;
+  setSuperAdmin(params: SetSuperAdminParams): Promise<SetSuperAdminResponse>;
 }
 
 // Los tipos ya están exportados desde las entidades, no es necesario re-exportarlos aquí
