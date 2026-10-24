@@ -5,3 +5,4 @@ export * from './assign-role-permissions.entity';
 export * from './remove-role-permission.entity';
 export * from './get-role-permissions.entity';
 export * from './assign-user-role.entity';
+export * from './permission-matrix.entity';

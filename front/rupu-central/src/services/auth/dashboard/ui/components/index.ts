@@ -4,3 +4,4 @@ export * from './simple-chart';
 export * from './dashboard-page';
 
 
+export * from './access-overview-page';

@@ -1,569 +1,318 @@
 /**
- * Componente de formulario para crear/editar usuarios
- * Aplica estilos globales y usa componentes reutilizables
+ * Crear o editar un usuario (rediseño IAM 2d).
+ *
+ * Al crear: datos, propiedad y el rol que tendrá allí (tarjetas con la descripción de cada rol).
+ * El back genera la clave y la devuelve una sola vez; si se eligió rol, se asigna enseguida
+ * (el alta no devuelve el id, así que se busca al usuario por su correo).
+ * Al editar: datos, propiedades a las que pertenece y si está activo. Los roles se cambian
+ * desde "Cambiar roles".
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { RupuLoader } from '@shared/ui/rupu-loader';
-import {
-  UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  PhotoIcon,
-  XMarkIcon,
-  DocumentDuplicateIcon,
-  CheckIcon
-} from '@heroicons/react/24/outline';
-import { Button } from '@shared/ui/button';
-import { Input } from '@shared/ui/input';
-import { Select } from '@shared/ui/select';
-import { FileInput } from '@shared/ui/file-input';
-import { FormModal } from '@shared/ui/form-modal';
-import { Modal } from '@shared/ui/modal';
-import { useUserCrud } from '../hooks/use-user-crud';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { TokenStorage } from '@shared/config';
-// Roles y asignaciones removidas del flujo actual
+import { VtDialog, VtNotice, VtSwitch, vtBtn, vtInput, vtLabel } from '@shared/ui/ds';
+import { getBusinessesAction } from '@/services/auth/businesses/infrastructure/actions';
+import { getRolesAction } from '@/services/auth/roles/infrastructure/actions';
+import { assignUserRoleAction, getUsersAction } from '../../infrastructure/actions';
+import { useUserCrud } from '../hooks/use-user-crud';
+import { PasswordRevealDialog, type UserRow } from './user-actions';
 
 interface UserFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  user?: any; // Usuario para editar, undefined para crear
+  /** Usuario a editar; sin él, se crea uno nuevo. */
+  user?: UserRow | null;
   mode: 'create' | 'edit';
 }
 
+interface BusinessOption {
+  id: number;
+  name: string;
+  businessTypeId: number;
+}
+
+interface RoleOption {
+  id: number;
+  name: string;
+  description: string;
+}
+
+const EMPTY = { name: '', email: '', phone: '', is_active: true };
+
+export function validateUserForm(data: { name: string; email: string; phone: string }): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!data.name.trim()) errors.name = 'Escribe el nombre';
+  if (!data.email.trim()) errors.email = 'Escribe el correo';
+  else if (!/^\S+@\S+\.\S+$/.test(data.email.trim())) errors.email = 'El correo no es válido';
+  if (data.phone.trim() && data.phone.replace(/\D/g, '').length !== 10) errors.phone = 'El celular debe tener 10 dígitos';
+  return errors;
+}
+
 export function UserForm({ isOpen, onClose, onSuccess, user, mode }: UserFormProps) {
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [createdUserData, setCreatedUserData] = useState<{ email?: string; password?: string; message?: string } | null>(null);
-  const [emailCopied, setEmailCopied] = useState(false);
-  const [passwordCopied, setPasswordCopied] = useState(false);
-
-  const { createUser, updateUser, loading, error, clearError } = useUserCrud({
-    onSuccess: (message, data) => {
-      if (mode === 'create' && data?.password) {
-        // Mostrar modal con contraseña solo al crear
-        setCreatedUserData(data);
-        setShowPasswordModal(true);
-      } else {
-        // Para edición, cerrar normalmente
-        onSuccess();
-        onClose();
-      }
-    }
-  });
-
-  // Estado del formulario
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    is_active: true as boolean,
-    avatarFile: null as File | null
-  });
-  // Negocios (multi-selección -> CSV)
-  const [businessOptions, setBusinessOptions] = useState<Array<{ value: string; label: string }>>([]);
-  const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
-  const [selectedBusinesses, setSelectedBusinesses] = useState<Array<{ id: number; name: string }>>([]);
-
-  // Estado de validación
+  const ids = { name: useId(), email: useId(), phone: useId(), business: useId(), avatar: useId() };
+  const [form, setForm] = useState(EMPTY);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [businesses, setBusinesses] = useState<BusinessOption[]>([]);
+  // Crear: una propiedad y un rol. Editar: varias propiedades.
+  const [businessId, setBusinessId] = useState<number | ''>('');
+  const [roleId, setRoleId] = useState<number | null>(null);
+  const [selectedBusinessIds, setSelectedBusinessIds] = useState<number[]>([]);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
+  const [created, setCreated] = useState<{ email?: string; password?: string; note?: string } | null>(null);
+  const [assigning, setAssigning] = useState(false);
 
-  // Cargar datos del usuario si está en modo edición
+  const { createUser, updateUser, loading, error, clearError } = useUserCrud();
+
   useEffect(() => {
-    if (mode === 'edit' && user) {
-      setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        is_active: user.is_active ?? true,
-        avatarFile: null
-      });
-
-      // Función helper para obtener el nombre del negocio
-      const getBusinessName = (businessId: number): string => {
-        // Primero buscar en businessOptions (si ya está cargado)
-        const option = businessOptions.find(b => b.value === String(businessId));
-        if (option?.label) {
-          return option.label;
-        }
-        // Si no está en businessOptions, buscar en business_role_assignments
-        if (Array.isArray(user.business_role_assignments)) {
-          const bra = user.business_role_assignments.find((br: any) => br.business_id === businessId);
-          if (bra?.business_name) {
-            return bra.business_name;
-          }
-        }
-        // Si no está en ningún lado, buscar en businesses
-        if (Array.isArray(user.businesses)) {
-          const bus = user.businesses.find((b: any) => b.id === businessId);
-          if (bus?.name) {
-            return bus.name;
-          }
-        }
-        // Fallback
-        return `Negocio ${businessId}`;
-      };
-
-      // Intentar cargar desde business_role_assignments primero (más confiable)
-      if (Array.isArray(user.business_role_assignments) && user.business_role_assignments.length > 0) {
-        const pre = user.business_role_assignments
-          .map((bra: any) => {
-            const businessId = Number(bra?.business_id);
-            if (!Number.isFinite(businessId) || businessId <= 0) return null;
-            const name = getBusinessName(businessId);
-            return {
-              id: businessId,
-              name: String(name || `Negocio ${businessId}`)
-            };
-          })
-          .filter((b: any) => b !== null && Number.isFinite(b?.id) && b.id > 0) as Array<{ id: number; name: string }>;
-        setSelectedBusinesses(pre);
-      } else if (Array.isArray(user.businesses) && user.businesses.length > 0) {
-        const pre = user.businesses
-          .map((b: any) => {
-            const businessId = Number(b?.id);
-            if (!Number.isFinite(businessId) || businessId <= 0) return null;
-            const name = getBusinessName(businessId);
-            return {
-              id: businessId,
-              name: String(name || `Negocio ${businessId}`)
-            };
-          })
-          .filter((b: any) => b !== null && Number.isFinite(b?.id) && b.id > 0) as Array<{ id: number; name: string }>;
-        setSelectedBusinesses(pre);
-      } else {
-        setSelectedBusinesses([]);
-      }
-    } else {
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        is_active: true,
-        avatarFile: null
-      });
-      setSelectedBusinesses([]);
-    }
-    setErrors({});
+    if (!isOpen) return;
     clearError();
-  }, [mode, user, clearError, businessOptions]);
+    setErrors({});
+    setAvatarFile(null);
+    setRoleId(null);
+    setBusinessId('');
+    if (mode === 'edit' && user) {
+      setForm({ name: user.name ?? '', email: user.email ?? '', phone: user.phone ?? '', is_active: user.is_active ?? true });
+      const fromRoles = (user.business_role_assignments ?? []).map((a) => a.business_id);
+      const fromBusinesses = (user.businesses ?? []).map((b) => b.id);
+      setSelectedBusinessIds([...new Set([...fromRoles, ...fromBusinesses])].filter((id) => id > 0));
+    } else {
+      setForm(EMPTY);
+      setSelectedBusinessIds([]);
+    }
+  }, [isOpen, mode, user, clearError]);
 
-  // Cargar lista de negocios para selección
   useEffect(() => {
-    (async () => {
-      try {
-        const token = TokenStorage.getBusinessToken();
-        if (!token) return;
-        const { getBusinessesAction } = await import('../../../businesses/infrastructure/actions');
-        const res = await getBusinessesAction({ token, page: 1, page_size: 200, name: '' } as any);
-        if (res.success && res.data) {
-          setBusinessOptions(res.data.businesses.map((b: any) => ({ value: String(b.id), label: b.name })));
-        }
-      } catch { }
-    })();
-  }, []);
-
-  // Validar formulario
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'El email no es válido';
-    }
-
-    if (formData.phone && formData.phone.trim().length > 0) {
-      const digits = formData.phone.replace(/\D/g, '');
-      if (digits.length !== 10) {
-        newErrors.phone = 'El teléfono debe tener exactamente 10 dígitos';
+    if (!isOpen) return;
+    const token = TokenStorage.getBusinessToken();
+    if (!token) return;
+    getBusinessesAction({ token, page: 1, per_page: 200, name: '' }).then((res) => {
+      if (res.success && res.data) {
+        setBusinesses(res.data.businesses.map((b) => ({ id: b.id, name: b.name, businessTypeId: b.business_type_id })));
       }
-    }
+    });
+  }, [isOpen]);
 
-    // Sin validación de asignaciones
+  const selectedBusiness = useMemo(() => businesses.find((b) => b.id === businessId), [businesses, businessId]);
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  useEffect(() => {
+    setRoleId(null);
+    setRoles([]);
+    const token = TokenStorage.getBusinessToken();
+    if (!selectedBusiness || !token) return;
+    setRolesLoading(true);
+    getRolesAction(token, { business_type_id: selectedBusiness.businessTypeId, page_size: 200 })
+      .then((res) => {
+        if (res.success && res.data) setRoles(res.data.roles.map((r) => ({ id: r.id, name: r.name, description: r.description })));
+      })
+      .finally(() => setRolesLoading(false));
+  }, [selectedBusiness]);
+
+  const set = (field: keyof typeof EMPTY, value: string | boolean) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
-  // Manejar cambios en el formulario
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  // Manejar envío del formulario
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken() || '';
-    const business_ids = selectedBusinesses.map(b => b.id).join(',');
-    const userData: any = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone || undefined,
-      is_active: formData.is_active,
-      avatarFile: formData.avatarFile,
-      business_ids: business_ids || undefined,
-      token,
-    };
-
-    let result;
-
-    if (mode === 'create') {
-      result = await createUser(userData);
-      // El modal se mostrará desde el callback onSuccess
-    } else if (mode === 'edit' && user) {
-      const success = await updateUser({
-        ...userData,
-        id: user.id
-      });
-      if (success) {
-        onSuccess();
-        onClose();
-      }
-    }
-  };
-
-  // (Asignaciones removidas)
-
-  const handleCopyPassword = () => {
-    if (createdUserData?.password) {
-      navigator.clipboard.writeText(createdUserData.password);
-      setPasswordCopied(true);
-      setTimeout(() => setPasswordCopied(false), 2000);
-    }
-  };
-
-  const handleCopyEmail = () => {
-    if (createdUserData?.email) {
-      navigator.clipboard.writeText(createdUserData.email);
-      setEmailCopied(true);
-      setTimeout(() => setEmailCopied(false), 2000);
-    }
-  };
-
-  const handleClosePasswordModal = () => {
-    setShowPasswordModal(false);
-    setCreatedUserData(null);
-    setEmailCopied(false);
-    setPasswordCopied(false);
+  const finishCreate = () => {
+    setCreated(null);
     onSuccess();
     onClose();
   };
 
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const found = validateUserForm(form);
+    setErrors(found);
+    if (Object.keys(found).length > 0) return;
+    const token = TokenStorage.getBusinessToken() || TokenStorage.getSessionToken() || '';
+    const base = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim() || undefined,
+      avatarFile,
+      token,
+    };
+
+    if (mode === 'edit' && user) {
+      const ok = await updateUser({ ...base, id: user.id, is_active: form.is_active, business_ids: selectedBusinessIds.join(',') });
+      if (ok) {
+        onSuccess();
+        onClose();
+      }
+      return;
+    }
+
+    const result = await createUser({ ...base, is_active: true, business_ids: businessId ? String(businessId) : undefined });
+    if (!result.success) return;
+    let note: string | undefined;
+    if (businessId && roleId) {
+      setAssigning(true);
+      note = await assignRoleByEmail(token, base.email, businessId, roleId);
+      setAssigning(false);
+    }
+    setCreated({ email: result.data?.email ?? base.email, password: result.data?.password, note });
+  };
+
+  const busy = loading || assigning;
+  const addableBusinesses = businesses.filter((b) => !selectedBusinessIds.includes(b.id));
+  const businessName = (id: number) =>
+    businesses.find((b) => b.id === id)?.name ??
+    user?.business_role_assignments?.find((a) => a.business_id === id)?.business_name ??
+    `Propiedad ${id}`;
+
   return (
     <>
-      <FormModal
-        isOpen={isOpen}
+      <VtDialog
+        open={isOpen && !created}
         onClose={onClose}
-        title={mode === 'create' ? 'Crear Usuario' : 'Editar Usuario'}
-        size="lg"
+        busy={busy}
+        title={mode === 'create' ? 'Crear usuario' : 'Editar usuario'}
+        subtitle={mode === 'create' ? 'Se genera una clave que le compartes; podrá cambiarla al entrar.' : user?.email}
+        footer={
+          <>
+            <button type="button" className={vtBtn.secondary} onClick={onClose} disabled={busy}>Cancelar</button>
+            <button type="submit" form="user-form" className={vtBtn.primary} disabled={busy}>
+              {busy ? 'Guardando…' : mode === 'create' ? 'Crear usuario' : 'Guardar cambios'}
+            </button>
+          </>
+        }
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Avatar */}
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-              {formData.avatarFile ? (
-                <img
-                  src={URL.createObjectURL(formData.avatarFile)}
-                  alt="Avatar preview"
-                  className="w-20 h-20 rounded-full object-cover"
-                />
-              ) : (
-                <UserIcon className="w-8 h-8" />
-              )}
+        <form id="user-form" onSubmit={submit} noValidate className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="md:col-span-2">
+              <label htmlFor={ids.name} className={vtLabel}>Nombre completo</label>
+              <input id={ids.name} className={vtInput} value={form.name} onChange={(e) => set('name', e.target.value)} aria-invalid={!!errors.name} autoComplete="off" />
+              {errors.name && <p className="mt-1 text-xs text-[#c8382d]">{errors.name}</p>}
             </div>
-            <FileInput
-              accept="image/*"
-              onChange={(file) => handleChange('avatarFile', file)}
-              buttonText={formData.avatarFile ? 'Cambiar Avatar' : 'Seleccionar Avatar'}
-              icon={<PhotoIcon className="w-4 h-4 mr-2" />}
-            />
-          </div>
-
-          {/* Nombre */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <UserIcon className="w-4 h-4 inline mr-2" />
-              Nombre completo *
-            </label>
-            <Input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="Ingresa el nombre completo"
-              className={errors.name ? 'input-error' : 'input'}
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <EnvelopeIcon className="w-4 h-4 inline mr-2" />
-              Email *
-            </label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="usuario@ejemplo.com"
-              className={errors.email ? 'input-error' : 'input'}
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Teléfono */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <PhoneIcon className="w-4 h-4 inline mr-2" />
-              Teléfono *
-            </label>
-            <Input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
-              placeholder="+1 234 567 8900"
-              className={errors.phone ? 'input-error' : 'input'}
-            />
-            {errors.phone && (
-              <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-            )}
-          </div>
-
-          {/* Negocios (se envían como CSV en business_ids) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Negocios</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
-              <Select
-                value={selectedBusinessId}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSelectedBusinessId(value);
-                }}
-                options={[{ value: '', label: 'Selecciona un negocio' }, ...businessOptions]}
-                placeholder="Selecciona un negocio"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-
-                  if (!selectedBusinessId || selectedBusinessId === '') {
-                    return;
-                  }
-
-                  const businessIdNum = Number(selectedBusinessId);
-
-                  if (!Number.isFinite(businessIdNum) || businessIdNum <= 0) {
-                    return;
-                  }
-
-                  const exists = selectedBusinesses.some(b => b.id === businessIdNum);
-                  if (exists) {
-                    return;
-                  }
-
-                  const businessOption = businessOptions.find(b => b.value === selectedBusinessId);
-
-                  const name = businessOption?.label ? String(businessOption.label) : `Negocio ${businessIdNum}`;
-
-                  setSelectedBusinesses(prev => {
-                    const newList = [...prev, {
-                      id: businessIdNum,
-                      name: String(name)
-                    }];
-                    return newList;
-                  });
-                  setSelectedBusinessId('');
-                }}
-              >
-                Agregar
-              </Button>
+            <div>
+              <label htmlFor={ids.email} className={vtLabel}>Correo</label>
+              <input id={ids.email} type="email" className={vtInput} value={form.email} onChange={(e) => set('email', e.target.value)} aria-invalid={!!errors.email} autoComplete="off" />
+              {errors.email && <p className="mt-1 text-xs text-[#c8382d]">{errors.email}</p>}
             </div>
-            {selectedBusinesses.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-1">
-                {selectedBusinesses
-                  .filter((b) => b && Number.isFinite(b.id) && b.id > 0)
-                  .map((b, idx) => {
-                    // Obtener el ID válido
-                    const businessId = Number(b.id);
-                    if (!Number.isFinite(businessId) || businessId <= 0) {
-                      return null;
-                    }
+            <div>
+              <label htmlFor={ids.phone} className={vtLabel}>
+                Celular <span className="font-normal text-[#6b6660]">(opcional)</span>
+              </label>
+              <input id={ids.phone} type="tel" inputMode="numeric" placeholder="300 000 0000" className={vtInput} value={form.phone} onChange={(e) => set('phone', e.target.value)} aria-invalid={!!errors.phone} />
+              {errors.phone && <p className="mt-1 text-xs text-[#c8382d]">{errors.phone}</p>}
+            </div>
+          </div>
 
-                    // Obtener el nombre: buscar primero en businessOptions (más confiable)
-                    let businessName = '';
-                    const option = businessOptions.find(opt => opt.value === String(businessId));
-                    if (option?.label) {
-                      businessName = option.label;
-                    } else if (b?.name && typeof b.name === 'string' && b.name.trim() !== '' && b.name !== '[object Object]') {
-                      businessName = b.name.trim();
-                    } else {
-                      businessName = `Negocio ${businessId}`;
-                    }
-
-                    return (
-                      <div key={`${businessId}-${idx}`} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs">
-                        <span className="font-medium">{businessName} (ID: {businessId})</span>
-                        <button
-                          type="button"
-                          className="ml-1 text-blue-700 hover:text-blue-900"
-                          onClick={() => setSelectedBusinesses(prev => prev.filter(x => Number.isFinite(x.id) && x.id !== businessId))}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    );
-                  })
-                  .filter(Boolean)}
+          {mode === 'create' ? (
+            <>
+              <div>
+                <label htmlFor={ids.business} className={vtLabel}>
+                  Propiedad <span className="font-normal text-[#6b6660]">(opcional)</span>
+                </label>
+                <select id={ids.business} className={vtInput} value={businessId} onChange={(e) => setBusinessId(e.target.value ? Number(e.target.value) : '')}>
+                  <option value="">Sin propiedad por ahora</option>
+                  {businesses.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
               </div>
-            )}
-          </div>
-
-          {/* Error general */}
-          {error && (
-            <div className="alert alert-error">
-              <XMarkIcon className="w-5 h-5" />
-              <span>{error}</span>
-            </div>
+              {selectedBusiness && (
+                <fieldset className="border-0 m-0 p-0 flex flex-col gap-2">
+                  <legend className={vtLabel}>¿Qué rol tendrá en {selectedBusiness.name}?</legend>
+                  {rolesLoading && <div className="text-[13px] text-[#8a8580]">Cargando roles…</div>}
+                  {!rolesLoading && roles.length === 0 && (
+                    <div className="text-[13px] text-[#8a8580]">No hay roles para este tipo de propiedad. Créalo en Roles y permisos.</div>
+                  )}
+                  {roles.map((r) => {
+                    const on = r.id === roleId;
+                    return (
+                      <label
+                        key={r.id}
+                        className={`flex gap-3 items-start px-3.5 py-3 rounded-xl cursor-pointer border transition-colors ${on ? 'border-[#0F7F8A] bg-[#f2fafa]' : 'border-[#e4e2dd] bg-white hover:bg-[#faf9f7]'}`}
+                      >
+                        <input type="radio" name="rol" checked={on} onChange={() => setRoleId(r.id)} className="mt-0.5 w-[18px] h-[18px] accent-[#0F7F8A]" />
+                        <span className="flex flex-col gap-0.5">
+                          <span className="text-sm font-semibold">{r.name}</span>
+                          {r.description && <span className="text-[13px] text-[#4b4a46]">{r.description}</span>}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+              )}
+            </>
+          ) : (
+            <>
+              <div>
+                <span className={vtLabel}>Propiedades</span>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {selectedBusinessIds.length === 0 && <span className="text-[13px] text-[#8a8580]">No pertenece a ninguna propiedad.</span>}
+                  {selectedBusinessIds.map((id) => (
+                    <span key={id} className="inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-[#f0eeeb] text-[13px]">
+                      {businessName(id)}
+                      <button
+                        type="button"
+                        aria-label={`Quitar ${businessName(id)}`}
+                        onClick={() => setSelectedBusinessIds((prev) => prev.filter((x) => x !== id))}
+                        className="w-6 h-6 max-md:w-9 max-md:h-9 rounded-full inline-flex items-center justify-center text-[#6b6660] hover:bg-white"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {addableBusinesses.length > 0 && (
+                  <select
+                    aria-label="Agregar propiedad"
+                    className={vtInput}
+                    value=""
+                    onChange={(e) => e.target.value && setSelectedBusinessIds((prev) => [...prev, Number(e.target.value)])}
+                  >
+                    <option value="">+ Agregar propiedad</option>
+                    {addableBusinesses.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[#e4e2dd] px-3.5 py-3">
+                <span className="flex flex-col">
+                  <span className="text-sm font-semibold">Puede entrar</span>
+                  <span className="text-[13px] text-[#4b4a46]">Si lo apagas, no podrá iniciar sesión.</span>
+                </span>
+                <VtSwitch checked={form.is_active} onChange={(v) => set('is_active', v)} label="Puede entrar" />
+              </div>
+            </>
           )}
 
-          {/* Botones */}
-          <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4 border-t border-gray-200 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={loading}
-              className="btn-primary"
-            >
-              {loading ? (
-                <>
-                  <span className="mr-2 inline-flex items-center">
-                    <RupuLoader size={24} />
-                  </span>
-                  {mode === 'create' ? 'Creando...' : 'Actualizando...'}
-                </>
-              ) : (
-                mode === 'create' ? 'Crear Usuario' : 'Actualizar Usuario'
-              )}
-            </Button>
+          <div>
+            <label htmlFor={ids.avatar} className={vtLabel}>
+              Foto <span className="font-normal text-[#6b6660]">(opcional)</span>
+            </label>
+            <input id={ids.avatar} type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)} className="block w-full text-[13px] text-[#4b4a46] file:mr-3 file:h-9 file:px-3.5 file:rounded-full file:border file:border-[#e4e2dd] file:bg-white file:text-[13px] file:font-medium" />
           </div>
+
+          {error && <VtNotice>{error}</VtNotice>}
         </form>
-      </FormModal>
+      </VtDialog>
 
-      {/* Modal para mostrar contraseña generada */}
-      <Modal
-        isOpen={showPasswordModal}
-        onClose={handleClosePasswordModal}
-        title="Usuario creado exitosamente"
-        size="md"
-      >
-        <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-800 mb-4">
-              {createdUserData?.message || 'Usuario creado exitosamente. Guarda esta información de forma segura.'}
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Email:</label>
-                <div className="flex items-center space-x-2">
-                  <code className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm font-mono">
-                    {createdUserData?.email || 'N/A'}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={handleCopyEmail}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                    title="Copiar email"
-                  >
-                    {emailCopied ? (
-                      <CheckIcon className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <DocumentDuplicateIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Contraseña generada <span className="text-red-600">(solo se muestra una vez)</span>:
-                </label>
-                <div className="flex items-center space-x-2">
-                  <code className="flex-1 px-3 py-2 bg-yellow-50 border-2 border-yellow-400 rounded text-sm font-mono font-bold text-gray-900">
-                    {createdUserData?.password || 'N/A'}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={handleCopyPassword}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                    title="Copiar contraseña"
-                  >
-                    {passwordCopied ? (
-                      <CheckIcon className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <DocumentDuplicateIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>Importante:</strong> Esta contraseña solo se muestra una vez. Asegúrate de copiarla y guardarla de forma segura antes de cerrar este mensaje.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse md:flex-row justify-end pt-4 border-t border-gray-200 gap-3 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleClosePasswordModal}
-              className="btn-primary"
-            >
-              Entendido
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <PasswordRevealDialog
+        open={!!created}
+        title="Usuario creado"
+        intro={created?.note ?? 'Compártele su correo y esta clave para que entre a Rupü.'}
+        email={created?.email}
+        password={created?.password}
+        onClose={finishCreate}
+      />
     </>
   );
+}
+
+/** Asigna el rol al usuario recién creado. Devuelve un aviso si no se pudo. */
+async function assignRoleByEmail(token: string, email: string, businessId: number, roleId: number): Promise<string | undefined> {
+  const fail = 'Se creó el usuario, pero no se pudo asignar el rol. Asígnalo desde su ficha con "Cambiar roles".';
+  const found = await getUsersAction({ token, email, page: 1, page_size: 10 });
+  const created = found.success ? found.data?.users.find((u) => u.email.toLowerCase() === email.toLowerCase()) : undefined;
+  if (!created) return fail;
+  const assigned = await assignUserRoleAction({ token, user_id: created.id, assignments: [{ business_id: businessId, role_id: roleId }] });
+  return assigned.success ? undefined : fail;
 }

@@ -113,18 +113,18 @@ func (r *Repository) GetUsers(ctx context.Context, filters domain.UserFilters) (
 	if filters.IsActive != nil {
 		query = query.Where("is_active = ?", *filters.IsActive)
 	}
+	// Rol y propiedad de un usuario viven en business_staff (las tablas user_roles y
+	// user_businesses ya no se llenan).
 	if filters.RoleID != nil {
-		// Subquery para obtener IDs de usuarios con el rol especificado
 		subquery := r.database.Conn(ctx).
-			Table("user_roles").
+			Model(&models.BusinessStaff{}).
 			Select("user_id").
 			Where("role_id = ?", *filters.RoleID)
 		query = query.Where("id IN (?)", subquery)
 	}
 	if filters.BusinessID != nil {
-		// Subquery para obtener IDs de usuarios con el business especificado
 		subquery := r.database.Conn(ctx).
-			Table("user_businesses").
+			Model(&models.BusinessStaff{}).
 			Select("user_id").
 			Where("business_id = ?", *filters.BusinessID)
 		query = query.Where("id IN (?)", subquery)

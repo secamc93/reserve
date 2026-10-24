@@ -1,604 +1,146 @@
 /**
- * Componente de tabla de usuarios
- * Aplica estilos globales y usa componentes reutilizables
+ * Lista de usuarios (rediseño IAM 2a): quién es, su rol en cada propiedad, cuándo entró por
+ * última vez y su estado. Clic en la fila abre la ficha; el menú de cada fila trae las acciones.
  */
 
 'use client';
 
-import { useState } from 'react';
-import { 
-  PencilIcon, 
-  TrashIcon, 
-  EyeIcon, 
-  UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  CalendarIcon,
-  KeyIcon,
-  DocumentDuplicateIcon,
-  CheckIcon,
-  ShieldCheckIcon,
-  StarIcon
-} from '@heroicons/react/24/outline';
-import { Button } from '@shared/ui/button';
-import { Badge } from '@shared/ui/badge';
-import { Table, TableColumn, TableUrlPagination, TableFiltersProps } from '@shared/ui/table';
-import { ConfirmModal } from '@shared/ui/confirm-modal';
-import { Modal } from '@shared/ui/modal';
-import { deleteUserAction } from '../../infrastructure/actions';
-import { getUserByIdAction } from '../../infrastructure/actions';
-import { generatePasswordAction } from '../../infrastructure/actions';
-import { setSuperAdminAction } from '../../infrastructure/actions';
-import { usePermissions } from '@/services/auth/permissions/ui/hooks/use-permissions';
-import { UserDetailModal } from './user-detail-modal';
-import { TokenStorage } from '@shared/config';
-import { useIsMobile, MobileCard, MobileActionButton, mobileColumn } from '@/services/mobile-ui';
+import type { ReactNode } from 'react';
+import { DsTable, DsStatus, VtMenu, type DsColumn, type VtMenuItem } from '@shared/ui/ds';
+import { hasNoRole, lastAccessLabel, roleAssignmentsOf } from '../../domain/entities/users-overview.entity';
+import type { UserRow } from './user-actions';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  avatar_url?: string;
-  is_active: boolean;
-  is_super_user?: boolean;
-  last_login_at?: string;
-  roles: Array<{
-    id: number;
-    name: string;
-    description: string;
-  }>;
-  businesses: Array<{
-    id: number;
-    name: string;
-    logo_url: string;
-  }>;
-  business_role_assignments?: Array<{
-    business_id: number;
-    business_name?: string;
-    role_id: number;
-    role_name: string;
-  }>;
-  created_at: string;
-  updated_at: string;
+const AVATAR_TONES = [
+  ['#E3F5F5', '#0C6B76'],
+  ['#f3e6dc', '#8a4a26'],
+  ['#e6e9f3', '#3b4a7a'],
+  ['#e9f0e2', '#3f5a2a'],
+  ['#efe6f0', '#6a3d70'],
+] as const;
+
+export function UserAvatar({ user, size = 36 }: { user: Pick<UserRow, 'id' | 'name' | 'avatar_url'>; size?: number }) {
+  const [bg, fg] = AVATAR_TONES[Math.abs(user.id) % AVATAR_TONES.length];
+  const initials = user.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('');
+  if (user.avatar_url) {
+    return <img src={user.avatar_url} alt="" className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />;
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className="rounded-full shrink-0 inline-flex items-center justify-center font-bold"
+      style={{ width: size, height: size, background: bg, color: fg, fontSize: Math.round(size * 0.36) }}
+    >
+      {initials || '?'}
+    </span>
+  );
+}
+
+export function RoleChip({ label, tone = 'default' }: { label: string; tone?: 'default' | 'brand' | 'warn' | 'ink' }) {
+  const cls = {
+    default: 'bg-[#f0eeeb] text-[#3d3c39]',
+    brand: 'bg-[#E3F5F5] text-[#0C6B76]',
+    warn: 'bg-[#fbe9e4] text-[#9a4528]',
+    ink: 'bg-[#1a1a1a] text-white',
+  }[tone];
+  return <span className={`inline-flex px-2.5 py-[3px] rounded-md text-xs font-medium whitespace-nowrap ${cls}`}>{label}</span>;
+}
+
+/** Roles del usuario como etiquetas: "Super admin", "Administrador · Tayazal" o "Sin rol asignado". */
+export function UserRoleChips({ user }: { user: UserRow }) {
+  if (user.is_super_user) return <RoleChip label="Super admin" tone="ink" />;
+  if (hasNoRole(user)) return <RoleChip label="Sin rol asignado" tone="warn" />;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {roleAssignmentsOf(user).map((a) => (
+        <RoleChip key={`${a.businessId}-${a.roleId}`} label={`${a.roleName} · ${a.businessName}`} tone={/admin/i.test(a.roleName) ? 'brand' : 'default'} />
+      ))}
+    </div>
+  );
+}
+
+export function userStatus(user: Pick<UserRow, 'is_active' | 'last_login_at'>): { label: string; color: string } {
+  if (!user.is_active) return { label: 'Inactivo', color: '#8a8580' };
+  if (!user.last_login_at) return { label: 'Sin entrar', color: '#b5532f' };
+  return { label: 'Activo', color: '#1f8a4c' };
 }
 
 interface UsersTableProps {
-  users: User[];
+  users: UserRow[];
   loading?: boolean;
-  onRefresh?: () => void;
-  onEditUser?: (user: any) => void;
-  onViewUser?: (user: any) => void;
-  onDeleteUser?: (user: any) => void;
-  onAssignRoles?: (user: any) => void;
-  selectedUser?: any | null;
-  isDeleteModalOpen?: boolean;
-  closeDeleteModal?: () => void;
-  isViewModalOpen?: boolean;
-  closeViewModal?: () => void;
-  // Paginación: page/page_size viven en la URL; aquí solo los totales del back
-  totalPages?: number;
-  totalCount?: number;
-  // Props de filtros
-  filters?: TableFiltersProps;
+  selectedId?: number | null;
+  onSelect?: (user: UserRow) => void;
+  menuItems: (user: UserRow) => VtMenuItem[];
+  footer?: ReactNode;
 }
 
-export function UsersTable({ 
-  users = [], 
-  loading = false, 
-  onRefresh,
-  onEditUser,
-  onViewUser,
-  onDeleteUser,
-  onAssignRoles,
-  selectedUser,
-  isDeleteModalOpen,
-  closeDeleteModal,
-  isViewModalOpen,
-  closeViewModal,
-  totalPages = 1,
-  totalCount = 0,
-  filters
-}: UsersTableProps) {
-  
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [crudLoading, setCrudLoading] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [generatedPasswordData, setGeneratedPasswordData] = useState<{ email?: string; password?: string; message?: string } | null>(null);
-  const [generatingPassword, setGeneratingPassword] = useState(false);
-  const [passwordCopied, setPasswordCopied] = useState(false);
-  const [emailCopied, setEmailCopied] = useState(false);
-  const [showConfirmPasswordModal, setShowConfirmPasswordModal] = useState(false);
-  const [userToGeneratePassword, setUserToGeneratePassword] = useState<User | null>(null);
-  // Super admin: solo otro super admin lo da o lo quita, y nadie se lo quita a sí mismo.
-  const { permissions } = usePermissions();
-  const viewerIsSuperAdmin = !!permissions?.isSuperAdmin;
-  const viewerId = TokenStorage.getUser()?.id;
-  const [superAdminTarget, setSuperAdminTarget] = useState<User | null>(null);
-  const [superAdminNotice, setSuperAdminNotice] = useState<{ ok: boolean; text: string } | null>(null);
-  const canToggleSuperAdmin = (user: User) => viewerIsSuperAdmin && !(user.is_super_user && user.id === viewerId);
-
-  const handleToggleSuperAdmin = async () => {
-    const target = superAdminTarget;
-    const token = TokenStorage.getBusinessToken();
-    if (!target || !token) return;
-    const enabled = !target.is_super_user;
-    const result = await setSuperAdminAction({ token, user_id: target.id, enabled });
-    if (!result.success) {
-      setSuperAdminNotice({ ok: false, text: result.error ?? 'No se pudo cambiar el rol de super admin' });
-      return;
-    }
-    setSuperAdminNotice({
-      ok: true,
-      text: enabled
-        ? `${target.name} ahora es super admin. Debe cerrar sesión y volver a entrar para que aplique.`
-        : `${target.name} ya no es super admin.`,
-    });
-    onRefresh?.();
-  };
-
-  const handleDelete = async () => {
-    if (!selectedUser) return;
-    
-    const token = TokenStorage.getBusinessToken();
-    if (!token) {
-      console.error('No hay token de autenticación disponible');
-      return;
-    }
-    
-    setCrudLoading(true);
-    setDeletingId(selectedUser.id);
-    
-    try {
-      const result = await deleteUserAction({
-        id: selectedUser.id,
-        token: token
-      });
-      
-      if (result.success) {
-        onRefresh?.();
-        closeDeleteModal?.();
-      } else {
-        console.error('Error eliminando usuario:', result.error);
-      }
-    } catch (error) {
-      console.error('Error eliminando usuario:', error);
-    } finally {
-      setCrudLoading(false);
-      setDeletingId(null);
-    }
-  };
-
-  const handleOpenConfirmPasswordModal = (user: User) => {
-    setUserToGeneratePassword(user);
-    setShowConfirmPasswordModal(true);
-  };
-
-  const handleCloseConfirmPasswordModal = () => {
-    setShowConfirmPasswordModal(false);
-    setUserToGeneratePassword(null);
-  };
-
-  const handleGeneratePassword = async () => {
-    if (!userToGeneratePassword) return;
-    
-    const token = TokenStorage.getBusinessToken();
-    if (!token) {
-      console.error('No hay token de autenticación disponible');
-      return;
-    }
-    
-    setGeneratingPassword(true);
-    setPasswordCopied(false);
-    setEmailCopied(false);
-    setShowConfirmPasswordModal(false);
-    
-    try {
-      const result = await generatePasswordAction({
-        token,
-        user_id: userToGeneratePassword.id,
-      });
-      
-      if (result.success && result.data) {
-        setGeneratedPasswordData(result.data);
-        setShowPasswordModal(true);
-      } else {
-        console.error('Error generando contraseña:', result.error);
-        alert(result.error || 'Error al generar contraseña');
-      }
-    } catch (error) {
-      console.error('Error generando contraseña:', error);
-      alert('Error al generar contraseña');
-    } finally {
-      setGeneratingPassword(false);
-      setUserToGeneratePassword(null);
-    }
-  };
-
-  const handleCopyPassword = () => {
-    if (generatedPasswordData?.password) {
-      navigator.clipboard.writeText(generatedPasswordData.password);
-      setPasswordCopied(true);
-      setTimeout(() => setPasswordCopied(false), 2000);
-    }
-  };
-
-  const handleCopyEmail = () => {
-    if (generatedPasswordData?.email) {
-      navigator.clipboard.writeText(generatedPasswordData.email);
-      setEmailCopied(true);
-      setTimeout(() => setEmailCopied(false), 2000);
-    }
-  };
-
-  const handleClosePasswordModal = () => {
-    setShowPasswordModal(false);
-    setGeneratedPasswordData(null);
-    setPasswordCopied(false);
-    setEmailCopied(false);
-  };
-
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const columns: TableColumn<User>[] = [
+export function UsersTable({ users, loading = false, selectedId, onSelect, menuItems, footer }: UsersTableProps) {
+  const columns: DsColumn<UserRow>[] = [
     {
       key: 'user',
       label: 'Usuario',
-      render: (_, user) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-            {user.avatar_url ? (
-              <img 
-                src={user.avatar_url} 
-                alt={user.name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            ) : (
-              user.name.charAt(0).toUpperCase()
-            )}
-          </div>
-          <div>
-            <p className="font-semibold text-gray-900">{user.name}</p>
-            <p className="text-sm text-gray-500">ID: {user.id}</p>
+      width: 'minmax(220px, 1.3fr)',
+      render: (u) => (
+        <div className="flex items-center gap-3 min-w-0">
+          <UserAvatar user={u} />
+          <div className="flex flex-col min-w-0">
+            <span className="font-semibold text-sm truncate">{u.name}</span>
+            <span className="text-[13px] text-[#6b6660] truncate">{u.email}</span>
           </div>
         </div>
       ),
     },
+    { key: 'roles', label: 'Rol en cada propiedad', width: 'minmax(220px, 1.4fr)', render: (u) => <UserRoleChips user={u} /> },
     {
-      key: 'contact',
-      label: 'Contacto',
-      render: (_, user) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm">
-            <EnvelopeIcon className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-900">{user.email}</span>
-          </div>
-          {user.phone && (
-            <div className="flex items-center gap-2 text-sm">
-              <PhoneIcon className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-600">{user.phone}</span>
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'roles',
-      label: 'Roles por Negocio',
-      render: (_, user) => (
-        <div className="flex flex-wrap gap-2">
-          {user.is_super_user ? (
-            <Badge className="text-xs bg-purple-100 text-purple-700">Super Administrador</Badge>
-          ) : user.business_role_assignments && user.business_role_assignments.length > 0 ? (
-            user.business_role_assignments.map((bra, idx) => (
-              <div
-                key={`${bra.business_id}-${bra.role_id}-${idx}`}
-                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs bg-green-100 text-green-800"
-              >
-                <span className="font-medium">{bra.business_name || `Negocio ${bra.business_id}`}</span>
-                <span className="text-green-600">:</span>
-                <span>{bra.role_name}</span>
-              </div>
-            ))
-          ) : (
-            <Badge className="text-xs bg-gray-100 text-gray-600">Sin rol asignado</Badge>
-          )}
-        </div>
-      ),
+      key: 'last',
+      label: 'Último acceso',
+      width: '140px',
+      render: (u) => <span className="text-[13px] text-[#4b4a46]">{lastAccessLabel(u.last_login_at)}</span>,
     },
     {
       key: 'status',
       label: 'Estado',
-      render: (_, user) => (
-        <Badge 
-          type={user.is_active ? "success" : "error"}
-          className="text-xs"
-        >
-          {user.is_active ? 'Activo' : 'Inactivo'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'last_login',
-      label: 'Último acceso',
-      render: (_, user) => (
-        <div className="text-sm text-gray-600">
-          {user.last_login_at ? (
-            <span title={formatDateTime(user.last_login_at)}>
-              {formatDate(user.last_login_at)}
-            </span>
-          ) : (
-            <span className="text-gray-400">Nunca</span>
-          )}
-        </div>
-      ),
+      width: '110px',
+      render: (u) => {
+        const s = userStatus(u);
+        return <DsStatus label={s.label} color={s.color} />;
+      },
     },
     {
       key: 'actions',
-      label: 'Acciones',
-      align: 'center',
-      render: (_, user) => (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onViewUser?.(user)}
-            className="p-2 hover:bg-blue-50 hover:text-blue-600"
-            title="Ver detalles"
-          >
-            <EyeIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEditUser?.(user)}
-            className="p-2 hover:bg-green-50 hover:text-green-600"
-            title="Editar usuario"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onAssignRoles?.(user)}
-            className="p-2 hover:bg-purple-50 hover:text-purple-600"
-            title="Asignar roles"
-          >
-            <ShieldCheckIcon className="w-4 h-4" />
-          </Button>
-          {canToggleSuperAdmin(user) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSuperAdminTarget(user)}
-              className={`p-2 ${user.is_super_user ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' : 'hover:bg-purple-50 hover:text-purple-600'}`}
-              title={user.is_super_user ? 'Quitar super admin' : 'Hacer super admin'}
-              aria-label={user.is_super_user ? `Quitar super admin a ${user.name}` : `Hacer super admin a ${user.name}`}
-            >
-              <StarIcon className="w-4 h-4" />
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleOpenConfirmPasswordModal(user)}
-            disabled={generatingPassword}
-            className="p-2 hover:bg-yellow-50 hover:text-yellow-600 disabled:opacity-50"
-            title="Generar nueva contraseña"
-          >
-            <KeyIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDeleteUser?.(user)}
-            className="p-2 hover:bg-red-50 hover:text-red-600"
-            title="Eliminar usuario"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </Button>
+      // `relative`: el texto oculto (absoluto) queda dentro de la tabla y no ensancha la página.
+      label: (
+        <span className="relative">
+          <span className="sr-only">Acciones</span>
+        </span>
+      ),
+      width: '44px',
+      align: 'right',
+      render: (u) => (
+        // Abrir el menú no abre la ficha de la fila.
+        <div onClick={(e) => e.stopPropagation()}>
+          <VtMenu label={`Acciones de ${u.name}`} items={menuItems(u)} size={34} />
         </div>
       ),
     },
   ];
 
-  const pagination: TableUrlPagination = { total: totalCount, totalPages };
-
-  // Teléfono: cada usuario es una tarjeta con sus acciones táctiles.
-  const isMobile = useIsMobile();
-  const mobileColumns = mobileColumn<User>('Usuarios', (user) => (
-    <div className="[contain:inline-size]">
-      <MobileCard
-        title={user.name}
-        subtitle={user.email}
-        badge={
-          <Badge type={user.is_active ? 'success' : 'error'} className="text-xs">
-            {user.is_active ? 'Activo' : 'Inactivo'}
-          </Badge>
-        }
-        fields={[
-          { label: 'Teléfono', value: user.phone || '-' },
-          { label: 'Último acceso', value: user.last_login_at ? formatDate(user.last_login_at) : 'Nunca' },
-          {
-            label: 'Roles',
-            full: true,
-            value: user.is_super_user
-              ? 'Super Administrador'
-              : user.business_role_assignments && user.business_role_assignments.length > 0
-                ? user.business_role_assignments.map((b) => `${b.business_name || `Negocio ${b.business_id}`}: ${b.role_name}`).join(' · ')
-                : 'Sin rol asignado',
-          },
-        ]}
-        actions={
-          <>
-            <MobileActionButton className="flex-1 px-0" title="Ver detalles" onClick={() => onViewUser?.(user)}><EyeIcon className="w-5 h-5" /></MobileActionButton>
-            <MobileActionButton className="flex-1 px-0" title="Editar usuario" onClick={() => onEditUser?.(user)}><PencilIcon className="w-5 h-5" /></MobileActionButton>
-            <MobileActionButton className="flex-1 px-0" title="Asignar roles" onClick={() => onAssignRoles?.(user)}><ShieldCheckIcon className="w-5 h-5" /></MobileActionButton>
-            {canToggleSuperAdmin(user) && (
-              <MobileActionButton className="flex-1 px-0" title={user.is_super_user ? 'Quitar super admin' : 'Hacer super admin'} onClick={() => setSuperAdminTarget(user)}><StarIcon className="w-5 h-5" /></MobileActionButton>
-            )}
-            <MobileActionButton className="flex-1 px-0" title="Generar nueva contraseña" disabled={generatingPassword} onClick={() => handleOpenConfirmPasswordModal(user)}><KeyIcon className="w-5 h-5" /></MobileActionButton>
-            <MobileActionButton className="flex-1 px-0" title="Eliminar usuario" variant="danger" onClick={() => onDeleteUser?.(user)}><TrashIcon className="w-5 h-5" /></MobileActionButton>
-          </>
-        }
-      />
-    </div>
-  ));
-
   return (
-    <>
-      {superAdminNotice && (
-        <div
-          role="status"
-          className={`mb-3 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${superAdminNotice.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}
-        >
-          <span>{superAdminNotice.text}</span>
-          <button type="button" className="shrink-0 underline" onClick={() => setSuperAdminNotice(null)}>Cerrar</button>
-        </div>
-      )}
-      <Table
-        columns={isMobile ? mobileColumns : columns}
-        data={users}
-        loading={loading}
-        emptyMessage="No hay usuarios disponibles"
-        keyExtractor={(user) => user.id.toString()}
-        pagination={pagination}
-        filters={filters}
-      />
-
-      {/* Modal de confirmación de eliminación */}
-      <ConfirmModal
-        isOpen={isDeleteModalOpen || false}
-        onClose={closeDeleteModal || (() => {})}
-        onConfirm={handleDelete}
-        title="Eliminar Usuario"
-        message={`¿Estás seguro de que quieres eliminar al usuario "${selectedUser?.name}"? Esta acción no se puede deshacer.`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-      />
-
-      {/* Modal de confirmación para generar contraseña */}
-      <ConfirmModal
-        isOpen={showConfirmPasswordModal}
-        onClose={handleCloseConfirmPasswordModal}
-        onConfirm={handleGeneratePassword}
-        title="Generar Nueva Contraseña"
-        message={`¿Estás seguro de que quieres generar una nueva contraseña para el usuario "${userToGeneratePassword?.name}" (${userToGeneratePassword?.email})? Esta acción cambiará la contraseña actual y solo podrás ver la nueva contraseña una vez.`}
-        confirmText="Generar Contraseña"
-        cancelText="Cancelar"
-        type="warning"
-      />
-
-      {/* Confirmación para dar o quitar super admin */}
-      <ConfirmModal
-        isOpen={!!superAdminTarget}
-        onClose={() => setSuperAdminTarget(null)}
-        onConfirm={handleToggleSuperAdmin}
-        title={superAdminTarget?.is_super_user ? 'Quitar super admin' : 'Hacer super admin'}
-        message={
-          (superAdminTarget?.is_super_user
-            ? `"${superAdminTarget?.name}" dejará de ver todas las propiedades y las herramientas de plataforma. Conserva los roles que tenga en sus propiedades.`
-            : `"${superAdminTarget?.name}" (${superAdminTarget?.email}) podrá ver y administrar todas las propiedades, usuarios, cobros y exenciones. Debe cerrar sesión y volver a entrar para que aplique.`)
-        }
-        confirmText={superAdminTarget?.is_super_user ? 'Quitar super admin' : 'Hacer super admin'}
-        cancelText="Cancelar"
-        type="warning"
-      />
-
-      {/* Modal de detalles del usuario */}
-      <UserDetailModal
-        isOpen={isViewModalOpen || false}
-        onClose={closeViewModal || (() => {})}
-        user={selectedUser}
-      />
-
-      {/* Modal para mostrar contraseña generada */}
-      <Modal
-        isOpen={showPasswordModal}
-        onClose={handleClosePasswordModal}
-        title="Nueva Contraseña Generada"
-        size="md"
-      >
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email:</label>
-              <div className="flex items-center space-x-2">
-                <code className="flex-1 min-w-0 break-all px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
-                  {generatedPasswordData?.email || 'N/A'}
-                </code>
-                <button
-                  type="button"
-                  onClick={handleCopyEmail}
-                  className="p-2 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 inline-flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                  title="Copiar email"
-                >
-                  {emailCopied ? (
-                    <CheckIcon className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <DocumentDuplicateIcon className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contraseña generada:
-              </label>
-              <div className="flex items-center space-x-2">
-                <code className="flex-1 min-w-0 break-all px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm font-mono text-gray-900">
-                  {generatedPasswordData?.password || 'N/A'}
-                </code>
-                <button
-                  type="button"
-                  onClick={handleCopyPassword}
-                  className="p-2 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 inline-flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                  title="Copiar contraseña"
-                >
-                  {passwordCopied ? (
-                    <CheckIcon className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <DocumentDuplicateIcon className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-sm text-gray-600">
-            Esta contraseña solo se muestra una vez. Asegúrate de copiarla y guardarla de forma segura.
-          </p>
-
-          <div className="flex flex-col-reverse md:flex-row justify-end pt-4 border-t border-gray-200 gap-3 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleClosePasswordModal}
-              className="btn-primary"
-            >
-              Entendido
-            </Button>
-          </div>
-        </div>
-      </Modal>
-    </>
+    <DsTable
+      ariaLabel="Usuarios"
+      columns={columns}
+      rows={users}
+      rowKey={(u) => u.id}
+      selectedKey={selectedId ?? null}
+      onRowClick={onSelect}
+      loading={loading}
+      minWidth={760}
+      empty="No hay usuarios con estos filtros."
+      footer={footer}
+    />
   );
 }

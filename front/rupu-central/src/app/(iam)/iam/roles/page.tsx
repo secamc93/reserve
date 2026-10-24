@@ -1,15 +1,13 @@
 'use client';
 
-import Link from 'next/link';
-import { HomeIcon, ChevronRightIcon, ShieldCheckIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { RolesTable } from '@/services/auth/roles/ui';
+import { RolesPermissionsPage } from '@/services/auth/roles/ui';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RupuLoader } from '@/shared/ui/rupu-loader';
 
 export default function IAMRolesPage() {
-  const { isAuthenticated, loading, token } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -26,11 +24,6 @@ export default function IAMRolesPage() {
     );
   }
   return (
-    <div className="p-3 md:p-8 w-full">
-      <div className="w-full">
-        {/* Roles Table */}
-        <RolesTable token={token || ''} />
-      </div>
-    </div>
+    <RolesPermissionsPage />
   );
 }

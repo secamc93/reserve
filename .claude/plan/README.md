@@ -9,3 +9,4 @@ al avanzar y se borra (o se mueve a la bitácora) al terminar.
 | `propiedad-unica-sin-tipo-de-negocio.md` | planeado, sin ejecutar: esperar instrucciones del usuario |
 | (en curso) Flujo completo de votaciones + paginación 10–200 | 3 trabajadores: `votaciones-flujo`, `paginacion-back`, `paginacion-front` |
 - [rediseno-propiedad-horizontal.md](rediseno-propiedad-horizontal.md) — rediseño PH completo (rama feat/rediseno-ph)
+- [rediseno-iam.md](rediseno-iam.md) — rediseño de IAM/Accesos (rama feat/rediseno-ui), falta revisión en navegador
