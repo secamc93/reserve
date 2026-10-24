@@ -116,16 +116,8 @@ test.describe.serial("votaciones", () => {
   test("3-asistencia-y-qr", async ({ page }) => {
     await openVoting(page);
     const group = await groupCard(page);
-    await caption(page, "Con el <b>QR</b> los propietarios votan desde su celular, sin instalar nada", 1500,
-      "Para votar, los propietarios escanean este código QR con la cámara del celular. No tienen que instalar nada ni crear una cuenta.");
-    await tap(group.getByRole("button", { name: "QR" }));
-    const qr = page.getByRole("dialog", { name: GROUP });
-    await expect(qr.getByRole("img", { name: new RegExp(`Código QR para votar en ${GROUP}`) })).toBeVisible({ timeout: 20_000 });
-    await caption(page, "Proyéctalo en la asamblea o compártelo por WhatsApp", 1800,
-      "Lo puedes proyectar en la pantalla del salón, imprimirlo o mandarlo al grupo de WhatsApp del conjunto.");
-    await tap(qr.getByRole("button", { name: "Cerrar" }));
-    await caption(page, "Solo vota quien tenga <b>asistencia</b>: márcala al llegar", 1200,
-      "Pero ojo: solo puede votar la unidad que tenga la asistencia registrada. Por eso, en Asistencia vas marcando cada unidad a medida que llega.");
+    await caption(page, "En <b>Asistencia</b> marcas quién llegó a la asamblea", 1200,
+      "Empecemos por la asistencia. Cuando cada propietario llega, lo marcas presente aquí. Ojo: solo puede votar la unidad que tenga asistencia, vote con su QR o a mano.");
     const attendance = await openAttendance(page, group);
     for (const unit of PRESENT) {
       const sw = attendance.getByRole("switch", { name: `Presente ${unit}` });
@@ -136,6 +128,8 @@ test.describe.serial("votaciones", () => {
       "Con cada unidad presente, el quórum se recalcula solo, según el coeficiente de cada apartamento. Así sabes en todo momento si ya pueden empezar a votar.");
     await caption(page, "Si alguien no puede ir, registras su <b>apoderado</b>", 1500,
       "Y si un propietario no puede asistir, registras aquí mismo a su apoderado, que vota por él.");
+    await caption(page, "¿No vota con QR? Registras su voto <b>a mano</b> en el panel en vivo", 1800,
+      "Y si alguien no vota con su QR, no pasa nada: tú registras su voto a mano desde el panel en vivo, como verás en el video de votación en vivo.");
     await finish(page);
     await tap(attendance.getByRole("button", { name: "Cerrar asistencia" }));
   });
@@ -143,11 +137,18 @@ test.describe.serial("votaciones", () => {
   test("4-credenciales-qr", async ({ page }, info) => {
     await openVoting(page);
     const group = await groupCard(page);
+    await caption(page, "Cada propietario vota desde su celular con un <b>código QR</b>", 1200,
+      "Ahora la forma más cómoda: que cada propietario vote desde su propio celular con un código QR, sin instalar nada.");
+    await tap(group.getByRole("button", { name: "QR" }));
+    const qr = page.getByRole("dialog", { name: GROUP });
+    await expect(qr.getByRole("img", { name: new RegExp(`Código QR para votar en ${GROUP}`) })).toBeVisible({ timeout: 20_000 });
+    await caption(page, "El QR de la asamblea: proyéctalo o compártelo por WhatsApp", 1800,
+      "Este es el QR de la asamblea. Lo puedes proyectar en el salón o mandarlo al grupo de WhatsApp del conjunto.");
+    await tap(qr.getByRole("button", { name: "Cerrar" }));
+    await say(page, "Para que nadie vote por otro, cada unidad tiene su propia contraseña de votación. Se genera desde Asistencia.");
     const attendance = await openAttendance(page, group);
     const generate = attendance.getByRole("button", { name: "Generar contraseñas" });
     await expect(generate).toBeVisible({ timeout: 30_000 });
-    markReady(page); // el video empieza con Asistencia ya cargada (sin la espera de carga)
-    await say(page, "Ahora, para que nadie vote por otro, cada unidad tiene su propia contraseña de votación. Todo esto se hace desde Asistencia.");
     await caption(page, "<b>Genera las contraseñas</b> de todas las unidades con un clic", 1200,
       "Le das a Generar contraseñas, y Rupü crea una clave distinta para cada unidad del conjunto.");
     await tap(generate);

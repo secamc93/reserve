@@ -18,13 +18,13 @@ describe('TutorialsLibrary', () => {
     expect(titles).toEqual([
       'Crea la asamblea',
       'Agrega las votaciones',
-      'Asistencia y código QR',
-      'Contraseñas y PDF con los QR',
+      'Asistencia y voto manual',
+      'Votar con QR desde el celular',
       'Vota en vivo y descarga el informe',
       'Cubre el día de votación',
     ]);
-    const section = screen.getByRole('region', { name: 'Contraseñas y PDF con los QR' });
-    expect(within(section).getByLabelText('Video: Contraseñas y PDF con los QR')).toHaveAttribute('src', '/tutoriales/credenciales-qr.mp4');
+    const section = screen.getByRole('region', { name: 'Votar con QR desde el celular' });
+    expect(within(section).getByLabelText('Video: Votar con QR desde el celular')).toHaveAttribute('src', '/tutoriales/credenciales-qr.mp4');
     expect(within(section).getByText('Paso 4 de 6')).toBeInTheDocument();
   });
 
