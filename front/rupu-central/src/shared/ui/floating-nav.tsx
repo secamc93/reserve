@@ -18,6 +18,7 @@ import { usePathname } from 'next/navigation';
 import { PropertyLogo } from './property-logo';
 import { setActionsSlot } from './nav-slots';
 import { isNavItemActive, type ActiveProperty, type NavItem } from '../utils/navigation';
+import { buildBreadcrumbs } from '../utils/breadcrumbs';
 
 export interface FloatingNavUser {
   name: string;
@@ -81,6 +82,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
   const isActive = (item: NavItem) => isNavItemActive(item.href, pathname, allHrefs);
   const current = items.find(isActive);
   const propertyName = property?.name || fallbackName || 'Rupü';
+  const crumbs = buildBreadcrumbs(pathname, { propertyName: property?.name, modules: items });
 
   useEffect(() => {
     if (!open) setSettled(false);
@@ -195,6 +197,29 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
             </nav>
           )}
         </div>
+
+        {/* Ruta: dónde estoy (propiedad › módulo › …); cada paso vuelve a su pantalla. */}
+        {crumbs.length > 1 && (
+          <nav
+            aria-label="Ruta"
+            className={`${ISLAND} hidden lg:flex rounded-full h-[44px] px-4 items-center min-w-0 max-w-[48%] transition-opacity duration-300 ${open ? 'invisible opacity-0' : ''}`}
+          >
+            <ol className="flex items-center gap-1.5 min-w-0 text-[13px]">
+              {crumbs.map((c, i) => (
+                <li key={`${c.label}-${i}`} className="flex items-center gap-1.5 min-w-0">
+                  {i > 0 && <Icon d="M9 5l7 7-7 7" className="w-3 h-3 text-[#b5b0aa] flex-shrink-0" />}
+                  {c.href ? (
+                    <Link href={c.href} className="truncate text-[#6b6a66] hover:text-[#1a1a1a] hover:underline">
+                      {c.label}
+                    </Link>
+                  ) : (
+                    <span aria-current="page" className="truncate font-semibold text-[#1a1a1a]">{c.label}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
 
         {/* Botones del módulo actual (los pone `DsSectionHeader`). */}
         {/* Por debajo de xl no caben junto a los módulos abiertos: se ocultan mientras tanto. */}

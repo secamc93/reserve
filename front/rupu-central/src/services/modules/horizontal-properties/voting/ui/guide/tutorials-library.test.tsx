@@ -6,6 +6,9 @@ vi.mock('next/font/google', () => ({
   JetBrains_Mono: () => ({ variable: 'font-b', className: 'font-b' }),
 }));
 
+const nav = vi.hoisted(() => ({ back: vi.fn(), push: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => nav }));
+
 import { TutorialsLibrary } from './tutorials-library';
 
 describe('TutorialsLibrary', () => {
@@ -49,5 +52,12 @@ describe('TutorialsLibrary', () => {
     render(<TutorialsLibrary businessId={7} />);
     fireEvent.error(screen.getByLabelText('Video: Crea la asamblea'));
     expect(screen.getByText(/El video todavía no está disponible/)).toBeInTheDocument();
+  });
+
+  it('"Volver" regresa a la pantalla anterior', () => {
+    render(<TutorialsLibrary businessId={7} />);
+    Object.defineProperty(window.history, 'length', { value: 3, configurable: true });
+    fireEvent.click(screen.getByRole('button', { name: '← Volver' }));
+    expect(nav.back).toHaveBeenCalled();
   });
 });

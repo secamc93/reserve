@@ -153,4 +153,17 @@ describe('FloatingNav — usuario', () => {
     setup({ user: { name: 'Ana Admin', email: 'ana@x.co', is_super_admin: true } });
     expect(screen.getByText('SUPER ADMIN')).toBeInTheDocument();
   });
+
+  it('muestra la ruta donde estoy y cada paso vuelve a su pantalla', () => {
+    pathname = '/properties/7/voting-groups/12/attendance';
+    setup();
+    const ruta = screen.getByRole('navigation', { name: 'Ruta' });
+    expect(within(ruta).getByRole('link', { name: 'Tayazal de Suba' })).toHaveAttribute('href', '/properties/7');
+    expect(within(ruta).getAllByRole('link', { name: /Votaciones|Asamblea/ }).map((a) => a.getAttribute('href'))).toEqual([
+      '/properties/7/voting-groups',
+      '/properties/7/voting-groups',
+    ]);
+    expect(within(ruta).getByText('Asistencia')).toHaveAttribute('aria-current', 'page');
+    pathname = '/properties/7/units';
+  });
 });
