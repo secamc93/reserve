@@ -110,12 +110,15 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
         {/* Propiedad + desplegable de módulos */}
         <div
           ref={launcherRef}
-          onMouseEnter={openOnHover}
+          // Moverse dentro de la isla (logo → módulos) no cierra; solo abre el logo.
+          onMouseEnter={cancelClose}
           onMouseLeave={closeOnLeave}
-          className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center min-w-0 flex-shrink-0`}
+          className={`${ISLAND} rounded-full h-[52px] pl-1.5 pr-1.5 flex items-center min-w-0`}
         >
           <button
             type="button"
+            // El logo despliega los módulos al pasar el cursor; la ruta de al lado se puede pulsar.
+            onMouseEnter={openOnHover}
             // Con el cursor ya está abierto al hacer clic: el clic solo abre (táctil / teclado).
             onClick={openOnHover}
             aria-expanded={open}
@@ -125,7 +128,7 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
             className="flex items-center rounded-full pr-2 hover:bg-[#f5f5f4] transition-colors text-left min-w-0"
           >
             <PropertyLogo name={propertyName} logoUrl={property?.logoUrl} size={40} />
-            {/* Módulo actual y nombre: se recogen al abrir. */}
+            {/* Módulo actual: se recoge al abrir. */}
             <span
               className={`flex items-center gap-2.5 overflow-hidden ${EASE} transition-[max-width,opacity,margin] ${DURATION(open)} ${
                 open ? 'max-w-0 opacity-0 ml-0' : 'max-w-[300px] opacity-100 ml-2.5'
@@ -140,12 +143,6 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
                   <Icon d={current.iconPath} className="w-[18px] h-[18px]" />
                 </span>
               )}
-              <span className="hidden xl:block min-w-0 max-w-[180px]">
-                <span className="block text-[13px] font-semibold text-[#1a1a1a] truncate leading-tight">{propertyName}</span>
-                <span className="block text-[11px] text-[#8a8580] truncate leading-tight">
-                  {current ? current.label : property ? 'Propiedad horizontal' : 'Elige una propiedad'}
-                </span>
-              </span>
             </span>
             <Icon
               d="M9 5l7 7-7 7"
@@ -196,30 +193,35 @@ export function FloatingNav({ items, property, fallbackName, user, onLogout, onO
               })}
             </nav>
           )}
-        </div>
 
-        {/* Ruta: dónde estoy (propiedad › módulo › …); cada paso vuelve a su pantalla. */}
-        {crumbs.length > 1 && (
-          <nav
-            aria-label="Ruta"
-            className={`${ISLAND} hidden lg:flex rounded-full h-[44px] px-4 items-center min-w-0 max-w-[48%] transition-opacity duration-300 ${open ? 'invisible opacity-0' : ''}`}
-          >
-            <ol className="flex items-center gap-1.5 min-w-0 text-[13px]">
-              {crumbs.map((c, i) => (
-                <li key={`${c.label}-${i}`} className="flex items-center gap-1.5 min-w-0">
-                  {i > 0 && <Icon d="M9 5l7 7-7 7" className="w-3 h-3 text-[#b5b0aa] flex-shrink-0" />}
-                  {c.href ? (
-                    <Link href={c.href} className="truncate text-[#6b6a66] hover:text-[#1a1a1a] hover:underline">
-                      {c.label}
-                    </Link>
-                  ) : (
-                    <span aria-current="page" className="truncate font-semibold text-[#1a1a1a]">{c.label}</span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )}
+          {/* Ruta: dónde estoy (propiedad › módulo › …); cada paso vuelve a su pantalla. Se recoge
+              mientras los módulos están desplegados. */}
+          {crumbs.length > 0 && (
+            <nav
+              aria-label="Ruta"
+              aria-hidden={open}
+              inert={open}
+              className={`min-w-0 overflow-hidden ${EASE} transition-[max-width,opacity] ${DURATION(open)} ${
+                open ? 'max-w-0 opacity-0' : 'max-w-[560px] opacity-100'
+              }`}
+            >
+              <ol className="flex items-center gap-1.5 min-w-0 pl-1 pr-3 text-[13px] whitespace-nowrap">
+                {crumbs.map((c, i) => (
+                  <li key={`${c.label}-${i}`} className="flex items-center gap-1.5 min-w-0">
+                    {i > 0 && <Icon d="M9 5l7 7-7 7" className="w-3 h-3 text-[#b5b0aa] flex-shrink-0" />}
+                    {c.href ? (
+                      <Link href={c.href} className="truncate max-w-[200px] text-[#6b6a66] hover:text-[#1a1a1a] hover:underline">
+                        {c.label}
+                      </Link>
+                    ) : (
+                      <span aria-current="page" className="truncate max-w-[220px] font-semibold text-[#1a1a1a]">{c.label}</span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
+        </div>
 
         {/* Botones del módulo actual (los pone `DsSectionHeader`). */}
         {/* Por debajo de xl no caben junto a los módulos abiertos: se ocultan mientras tanto. */}

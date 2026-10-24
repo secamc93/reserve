@@ -48,13 +48,21 @@ beforeEach(() => {
 });
 
 describe('FloatingNav — desplegable de módulos', () => {
-  it('cerrado deja fijo el módulo actual (icono y nombre) junto a la propiedad, sin la lista', () => {
+  it('cerrado deja el icono del módulo actual y, en la misma isla, la ruta propiedad › módulo', () => {
     setup();
     expect(launcher()).toHaveAttribute('aria-expanded', 'false');
-    expect(within(launcher()).getByText('Tayazal de Suba')).toBeInTheDocument();
-    expect(within(launcher()).getByText('Unidades')).toBeInTheDocument();
     expect(within(launcher()).getByTestId('current-module')).toBeInTheDocument();
+    const ruta = screen.getByRole('navigation', { name: 'Ruta' });
+    expect(launcher().parentElement).toContainElement(ruta);
+    expect(within(ruta).getByRole('link', { name: 'Tayazal de Suba' })).toHaveAttribute('href', '/properties/7');
+    expect(within(ruta).getByText('Unidades')).toHaveAttribute('aria-current', 'page');
     expect(modules()).toBeNull();
+  });
+
+  it('al desplegar los módulos la ruta se recoge', async () => {
+    const { user } = setup();
+    await user.click(launcher());
+    expect(screen.queryByRole('navigation', { name: 'Ruta' })).toBeNull();
   });
 
   it('fuera de un módulo (selector de propiedad) no muestra módulo actual', () => {
