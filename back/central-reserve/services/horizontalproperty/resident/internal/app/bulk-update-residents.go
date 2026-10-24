@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"central_reserve/services/horizontalproperty/resident/internal/domain"
 	"central_reserve/shared/log"
@@ -105,7 +106,7 @@ func (uc *residentUseCase) BulkUpdateResidents(ctx context.Context, businessID u
 				continue
 			}
 
-			email := fmt.Sprintf("%s@residente.local", strings.ReplaceAll(dni, " ", ""))
+			email := domain.PlaceholderResidentEmail(businessID, dni, fmt.Sprintf("sin_dni_%d", time.Now().UnixNano()))
 
 			createDTO := domain.CreateResidentDTO{
 				BusinessID:       businessID,

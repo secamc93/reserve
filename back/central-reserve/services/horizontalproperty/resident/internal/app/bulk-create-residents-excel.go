@@ -281,16 +281,11 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 			continue
 		}
 
-		emailSeed := strings.ReplaceAll(dni, " ", "")
-		if emailSeed == "" {
-			emailSeed = fmt.Sprintf("sin_dni_%d", time.Now().UnixNano())
-		}
-
 		toCreate = append(toCreate, &domain.Resident{
 			BusinessID:     businessID,
 			ResidentTypeID: residentTypeID,
 			Name:           agg.name,
-			Email:          fmt.Sprintf("%s@residente.local", emailSeed),
+			Email:          domain.PlaceholderResidentEmail(businessID, dni, fmt.Sprintf("sin_dni_%d", time.Now().UnixNano())),
 			Dni:            dni,
 			IsActive:       true,
 		})
@@ -342,13 +337,12 @@ func (uc *residentUseCase) ImportResidentsFromExcel(ctx context.Context, busines
 			continue
 		}
 		firstUnit := agg.units[0]
-		emailSeed := fmt.Sprintf("sin_dni_%d", time.Now().UnixNano())
 		createDTO := domain.CreateResidentDTO{
 			BusinessID:       businessID,
 			PropertyUnitID:   firstUnit.unitID,
 			ResidentTypeID:   residentTypeID,
 			Name:             agg.name,
-			Email:            fmt.Sprintf("%s@residente.local", emailSeed),
+			Email:            domain.PlaceholderResidentEmail(businessID, "", fmt.Sprintf("sin_dni_%d", time.Now().UnixNano())),
 			Dni:              "",
 			IsMainResident:   firstUnit.isMain,
 			AllowEmptyDni:    true,
