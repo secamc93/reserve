@@ -181,6 +181,7 @@ describe('U1 · Unidades por torre/bloque', () => {
     render(<PropertyUnitsTable businessId={1} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Importar Excel' }));
     const dialog = screen.getByRole('dialog', { name: 'Elige el archivo' });
+    expect(within(dialog).getByRole('link', { name: /Descargar Excel de ejemplo/ })).toHaveAttribute('href', '/plantillas/plantilla-unidades.xlsx');
     const file = new File(['x'], 'unidades.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     await userEvent.upload(within(dialog).getByLabelText('Archivo Excel'), file);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Revisar archivo' }));

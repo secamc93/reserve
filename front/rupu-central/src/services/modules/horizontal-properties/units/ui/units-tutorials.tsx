@@ -14,7 +14,7 @@ export function unitsTutorialItems(businessId: number): TutorialItem[] {
       slug: 'unidades-importar',
       title: 'Importar unidades desde Excel',
       points: [
-        'Columnas: Número, Torre, Piso, Tipo y Coeficiente. Número y coeficiente son obligatorios.',
+        'Descarga el Excel de ejemplo desde Importar Excel: trae las columnas Número, Torre, Piso, Tipo y Coeficiente.',
         'Primero se revisa el archivo: nada se guarda hasta que confirmas.',
         'Los coeficientes deben sumar 100 %: son el peso de cada voto y la base del quórum.',
       ],
