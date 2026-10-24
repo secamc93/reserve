@@ -9,7 +9,7 @@
 import { GetRolesUseCase } from '../../application/get-roles.use-case';
 import { RolesRepository } from '../repositories/roles.repository';
 
-interface RoleData {
+export interface RoleData {
   id: number;
   name: string;
   code: string;
@@ -19,6 +19,8 @@ interface RoleData {
   scopeId: number;
   scopeName: string;
   scopeCode: string;
+  businessTypeId?: number;
+  businessTypeName?: string;
 }
 
 export interface GetRolesActionParams {

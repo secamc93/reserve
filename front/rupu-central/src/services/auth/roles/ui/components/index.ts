@@ -8,3 +8,4 @@ export * from './create-role-form';
 export * from './update-role-modal';
 export * from './update-role-form';
 export * from './assign-permissions-modal';
+export * from './roles-permissions-page';

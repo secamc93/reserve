@@ -1,361 +1,186 @@
 /**
- * Página principal de usuarios
- * Integra todos los componentes y aplica estilos globales
+ * Usuarios (rediseño IAM 2a): buscador y filtros en la URL (?q=&estado=&rol=&propiedad=), lista
+ * con el rol por propiedad y ficha lateral al tocar una fila.
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  PlusIcon, 
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline';
-import { Button } from '@shared/ui/button';
+import { useEffect, useMemo, useState } from 'react';
 import { TokenStorage } from '@shared/config';
-import { useUsers } from '../hooks/use-users';
-import { useUserModals } from '../hooks/use-user-modals';
+import { IamPage, IamPageHeader } from '@shared/ui/iam-navigation';
+import { DsChips, DsSearch, VtNotice, dsSelect, useDebouncedValue, useUrlFilters, vtBtn } from '@shared/ui/ds';
+import { Pagination } from '@shared/ui/pagination';
+import { getRolesAction } from '@/services/auth/roles/infrastructure/actions';
+import { getBusinessesAction } from '@/services/auth/businesses/infrastructure/actions';
+import { useUsers, type UseUsersReturn } from '../hooks/use-users';
 import { UsersTable } from './users-table';
 import { UserForm } from './user-form';
-import { FilterOption, ActiveFilter } from '@shared/ui/dynamic-filters';
-import { getRolesAction } from '../../../roles/infrastructure/actions';
-import { getBusinessesAction } from '../../../businesses/infrastructure/actions';
-import { useBusinessTypes } from '../../../business-types/ui/hooks';
-import { UserDetailModal } from './user-detail-modal';
 import { AssignRolesModal } from './assign-roles-modal';
+import { UserSidePanel } from './user-side-panel';
+import { useUserActions, type UserRow } from './user-actions';
+
+const FILTER_KEYS = ['q', 'estado', 'rol', 'propiedad'] as const;
+type FilterValues = Record<(typeof FILTER_KEYS)[number], string>;
+
+const STATUS_CHIPS = [
+  { id: '', label: 'Todos' },
+  { id: 'activos', label: 'Activos' },
+  { id: 'inactivos', label: 'Inactivos' },
+];
+
+/** Filtros de la URL → parámetros del back. El buscador va a correo, celular o nombre según lo escrito. */
+export function usersQueryFromUrl(values: FilterValues): UseUsersReturn['filters'] {
+  const q = values.q.trim();
+  const isEmail = q.includes('@');
+  const isPhone = /^[+\d][\d\s-]*$/.test(q);
+  const roleId = Number(values.rol);
+  const businessId = Number(values.propiedad);
+  return {
+    name: q && !isEmail && !isPhone ? q : undefined,
+    email: isEmail ? q : undefined,
+    phone: isPhone ? q.replace(/\D/g, '') : undefined,
+    is_active: values.estado === 'activos' ? true : values.estado === 'inactivos' ? false : undefined,
+    role_id: roleId > 0 ? roleId : undefined,
+    business_id: businessId > 0 ? businessId : undefined,
+  };
+}
 
 export function UsersPage() {
-  // Hooks
-  const {
-    users,
-    loading,
-    error,
-    currentPage,
-    pageSize,
-    totalPages,
-    totalCount,
-    filters,
-    loadUsers,
-    setFilters,
-    refresh
-  } = useUsers({
-    initialPage: 1,
-    pageSize: 10,
-    autoLoad: false
-  });
+  const { values, setFilters: setUrlFilters } = useUrlFilters(FILTER_KEYS);
+  const query = useMemo(() => usersQueryFromUrl(values), [values]);
+  const { users, loading, error, totalPages, totalCount, loadUsers, setFilters, refresh } = useUsers({ initialFilters: query });
 
-  const {
-    isCreateModalOpen,
-    isEditModalOpen,
-    isDeleteModalOpen,
-    isViewModalOpen,
-    isAssignRolesModalOpen,
-    selectedUser,
-    openCreateModal,
-    openEditModal,
-    openDeleteModal,
-    openViewModal,
-    openAssignRolesModal,
-    closeCreateModal,
-    closeEditModal,
-    closeDeleteModal,
-    closeViewModal,
-    closeAssignRolesModal,
-    closeAllModals
-  } = useUserModals();
-
-  // Estado local
   const [token, setToken] = useState<string | null>(null);
-  const [roleOptions, setRoleOptions] = useState<Array<{ value: string; label: string }>>([]);
-  const [businessOptions, setBusinessOptions] = useState<Array<{ value: string; label: string }>>([]);
-  const { businessTypes } = useBusinessTypes();
+  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
+  const [businessOptions, setBusinessOptions] = useState<{ value: string; label: string }[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [formMode, setFormMode] = useState<'create' | 'edit' | null>(null);
+  const [formUser, setFormUser] = useState<UserRow | null>(null);
+  const [rolesUser, setRolesUser] = useState<UserRow | null>(null);
+  const [search, setSearch] = useDebouncedValue(values.q, (q) => setUrlFilters({ q }));
 
-  // Cargar token y opciones para filtros
   useEffect(() => {
-    // Obtener token usando TokenStorage
     const authToken = TokenStorage.getBusinessToken();
     setToken(authToken);
-    
-    if (authToken) {
-      loadUsers(authToken);
-      
-      // Cargar opciones de roles
-      (async () => {
-        try {
-          const rolesRes = await getRolesAction(authToken);
-          if (rolesRes.success && rolesRes.data) {
-            setRoleOptions(
-              rolesRes.data.roles.map((r: any) => ({ 
-                value: r.id.toString(), 
-                label: r.name 
-              }))
-            );
-          }
-        } catch (e) {
-          console.error('Error cargando roles:', e);
-        }
-      })();
-
-      // Cargar opciones de negocios
-      (async () => {
-        try {
-          const bizRes = await getBusinessesAction({ token: authToken, page: 1, per_page: 100, name: '' });
-          if (bizRes.success && bizRes.data) {
-            setBusinessOptions(
-              bizRes.data.businesses.map((b: any) => ({ 
-                value: b.id.toString(), 
-                label: b.name 
-              }))
-            );
-          }
-        } catch (e) {
-          console.error('Error cargando negocios:', e);
-        }
-      })();
-    }
+    if (!authToken) return;
+    loadUsers(authToken);
+    getRolesAction(authToken, { page_size: 200 }).then((r) => {
+      if (r.success && r.data) setRoleOptions(r.data.roles.map((role) => ({ value: String(role.id), label: role.name })));
+    });
+    getBusinessesAction({ token: authToken, page: 1, per_page: 200, name: '' }).then((r) => {
+      if (r.success && r.data) setBusinessOptions(r.data.businesses.map((b) => ({ value: String(b.id), label: b.name })));
+    });
+    // Solo al montar: después recarga useUsers al cambiar filtros o página.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Convertir filtros de usuarios a ActiveFilter[]
-  const activeFilters: ActiveFilter[] = [];
-  if (filters.name) {
-    activeFilters.push({
-      key: 'name',
-      label: 'Nombre',
-      value: filters.name,
-      type: 'text',
-    });
-  }
-  if (filters.email) {
-    activeFilters.push({
-      key: 'email',
-      label: 'Email',
-      value: filters.email,
-      type: 'text',
-    });
-  }
-  if (filters.phone) {
-    activeFilters.push({
-      key: 'phone',
-      label: 'Teléfono',
-      value: filters.phone,
-      type: 'text',
-    });
-  }
-  if (filters.is_active !== undefined) {
-    activeFilters.push({
-      key: 'is_active',
-      label: 'Estado',
-      value: filters.is_active,
-      type: 'boolean',
-    });
-  }
-  if (filters.role_id) {
-    activeFilters.push({
-      key: 'role_id',
-      label: 'Rol',
-      value: filters.role_id.toString(),
-      type: 'select',
-    });
-  }
-  if (filters.business_id) {
-    activeFilters.push({
-      key: 'business_id',
-      label: 'Negocio',
-      value: filters.business_id.toString(),
-      type: 'select',
-    });
-  }
+  // La URL manda: cuando cambia un filtro, se lo pasa a useUsers (que vuelve a la página 1).
+  const queryKey = JSON.stringify(query);
+  const [appliedKey, setAppliedKey] = useState(queryKey);
+  useEffect(() => {
+    if (queryKey === appliedKey) return;
+    setAppliedKey(queryKey);
+    setFilters(query);
+  }, [queryKey, appliedKey, query, setFilters]);
 
-  // Definir filtros disponibles
-  const availableFilters: FilterOption[] = [
-    {
-      key: 'name',
-      label: 'Nombre',
-      type: 'text',
-      placeholder: 'Buscar por nombre',
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      type: 'text',
-      placeholder: 'Buscar por email',
-    },
-    {
-      key: 'phone',
-      label: 'Teléfono',
-      type: 'text',
-      placeholder: 'Buscar por teléfono',
-    },
-    {
-      key: 'is_active',
-      label: 'Estado',
-      type: 'boolean',
-    },
-    {
-      key: 'role_id',
-      label: 'Rol',
-      type: 'select',
-      options: roleOptions,
-    },
-    {
-      key: 'business_id',
-      label: 'Negocio',
-      type: 'select',
-      options: businessOptions,
-    },
-  ];
+  const rows = users as UserRow[];
+  const selected = rows.find((u) => u.id === selectedId) ?? null;
 
-  // Manejar agregar filtro
-  const handleAddFilter = (filterKey: string, value: any) => {
-    const newFilters = { ...filters };
-    
-    if (filterKey === 'is_active') {
-      newFilters.is_active = value === true;
-    } else if (filterKey === 'role_id') {
-      newFilters.role_id = parseInt(value);
-    } else if (filterKey === 'business_id') {
-      newFilters.business_id = parseInt(value);
-    } else {
-      (newFilters as any)[filterKey] = value;
-    }
-    
-    setFilters(newFilters);
-    
-    // Recargar usuarios con los nuevos filtros
-    if (token) {
-      loadUsers(token, { ...newFilters, page: 1, page_size: pageSize });
-    }
+  const openEdit = (u: UserRow) => {
+    setFormUser(u);
+    setFormMode('edit');
   };
-
-  // Manejar remover filtro
-  const handleRemoveFilter = (filterKey: string) => {
-    const newFilters = { ...filters };
-    
-    // Limpiar el filtro según su tipo
-    if (filterKey === 'is_active') {
-      delete newFilters.is_active;
-    } else if (filterKey === 'role_id') {
-      delete newFilters.role_id;
-    } else if (filterKey === 'business_id') {
-      delete newFilters.business_id;
-    } else {
-      delete (newFilters as any)[filterKey];
-    }
-    
-    setFilters(newFilters);
-    
-    // Recargar usuarios con los nuevos filtros
-    if (token) {
-      loadUsers(token, { ...newFilters, page: currentPage, page_size: pageSize });
-    }
-  };
-
-  // Manejar éxito de operaciones CRUD
-  const handleCrudSuccess = () => {
-    refresh();
-    closeAllModals();
-  };
-
-  // Manejar error
-  const handleError = (error: string) => {
-    console.error('Error en operación de usuario:', error);
-  };
+  const actions = useUserActions({
+    onEdit: openEdit,
+    onAssignRoles: setRolesUser,
+    onChanged: refresh,
+    onDeleted: (u) => setSelectedId((id) => (id === u.id ? null : id)),
+  });
 
   if (!token) {
     return (
-      <div className="card">
-        <div className="text-center py-12">
-          <ExclamationTriangleIcon className="w-12 h-12 mx-auto text-yellow-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Token de autenticación requerido
-          </h3>
-          <p className="text-gray-600">
-            Por favor, inicia sesión para acceder a la gestión de usuarios.
-          </p>
-        </div>
-      </div>
+      <IamPage>
+        <VtNotice>Inicia sesión para administrar los usuarios.</VtNotice>
+      </IamPage>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Tabla de usuarios con filtros y paginación integrada */}
+    <IamPage>
+      <IamPageHeader
+        title="Usuarios"
+        description="Quién entra a Rupü y qué puede hacer en cada propiedad."
+        counts={{ '/iam/users': totalCount }}
+        actions={
+          <button
+            type="button"
+            className={vtBtn.primary}
+            onClick={() => {
+              setFormUser(null);
+              setFormMode('create');
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Crear usuario
+          </button>
+        }
+      />
+
+      <div className="flex flex-wrap items-center gap-2.5">
+        <DsSearch value={search} onChange={setSearch} placeholder="Buscar por nombre, correo o celular" className="md:w-80" />
+        <DsChips chips={STATUS_CHIPS} active={values.estado} onChange={(estado) => setUrlFilters({ estado })} ariaLabel="Estado" />
+        <select aria-label="Filtrar por rol" className={dsSelect} value={values.rol} onChange={(e) => setUrlFilters({ rol: e.target.value })}>
+          <option value="">Rol: todos</option>
+          {roleOptions.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <select aria-label="Filtrar por propiedad" className={dsSelect} value={values.propiedad} onChange={(e) => setUrlFilters({ propiedad: e.target.value })}>
+          <option value="">Propiedad: todas</option>
+          {businessOptions.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {actions.noticeBar}
+      {error && <VtNotice>No se pudieron cargar los usuarios: {error}</VtNotice>}
+
       <UsersTable
-        users={users}
+        users={rows}
         loading={loading}
-        onRefresh={refresh}
-        onEditUser={openEditModal}
-        onViewUser={openViewModal}
-        onDeleteUser={openDeleteModal}
-        onAssignRoles={openAssignRolesModal}
-        selectedUser={selectedUser}
-        isDeleteModalOpen={isDeleteModalOpen}
-        closeDeleteModal={closeDeleteModal}
-        isViewModalOpen={isViewModalOpen}
-        closeViewModal={closeViewModal}
-        totalPages={totalPages}
-        totalCount={totalCount}
-        filters={{
-          availableFilters,
-          activeFilters,
-          onAddFilter: handleAddFilter,
-          onRemoveFilter: handleRemoveFilter,
-          headerActions: (
-            <Button
-              variant="primary"
-              onClick={openCreateModal}
-              className="btn-primary w-full md:w-auto min-h-[44px] md:min-h-0 justify-center"
-              title="Nuevo Usuario"
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span className="md:hidden">Nuevo usuario</span>
-            </Button>
-          ),
-        }}
+        selectedId={selectedId}
+        onSelect={(u) => setSelectedId(u.id)}
+        menuItems={actions.menuItems}
+        footer={<Pagination total={totalCount} totalPages={totalPages} disabled={loading} />}
       />
 
-      {/* Error general */}
-      {error && (
-        <div className="alert alert-error">
-          <ExclamationTriangleIcon className="w-5 h-5" />
-          <div>
-            <h4 className="font-semibold">Error al cargar usuarios</h4>
-            <p className="text-sm mt-1">{error}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Modales */}
-      <UserForm
-        isOpen={isCreateModalOpen}
-        onClose={closeCreateModal}
-        onSuccess={handleCrudSuccess}
-        mode="create"
+      <UserSidePanel
+        user={selected}
+        onClose={() => setSelectedId(null)}
+        onEdit={openEdit}
+        onAssignRoles={setRolesUser}
+        menuItems={actions.menuItems}
       />
 
       <UserForm
-        isOpen={isEditModalOpen}
-        onClose={closeEditModal}
-        onSuccess={handleCrudSuccess}
-        user={selectedUser}
-        mode="edit"
-      />
-      
-
-      {/* Modal de detalles del usuario */}
-      <UserDetailModal
-        isOpen={isViewModalOpen}
-        onClose={closeViewModal}
-        user={selectedUser}
+        isOpen={formMode !== null}
+        mode={formMode ?? 'create'}
+        user={formUser}
+        onClose={() => setFormMode(null)}
+        onSuccess={refresh}
       />
 
-      {/* Modal de asignar roles */}
       <AssignRolesModal
-        isOpen={isAssignRolesModalOpen}
-        onClose={closeAssignRolesModal}
-        user={selectedUser}
-        onSuccess={handleCrudSuccess}
+        isOpen={!!rolesUser}
+        onClose={() => setRolesUser(null)}
+        user={rolesUser}
+        onSuccess={refresh}
       />
-    </div>
+
+      {actions.dialogs}
+    </IamPage>
   );
 }

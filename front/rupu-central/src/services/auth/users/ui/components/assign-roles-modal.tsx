@@ -5,11 +5,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { Button } from '@shared/ui/button';
-import { Select } from '@shared/ui/select';
-import { Modal } from '@shared/ui/modal';
-import { RupuLoader } from '@shared/ui/rupu-loader';
+import { VtDialog, VtNotice, vtBtn, vtInput } from '@shared/ui/ds';
 import { assignUserRoleAction } from '../../../users/infrastructure/actions';
 import { getRolesAction } from '../../../roles/infrastructure/actions';
 import { getBusinessesAction } from '../../../businesses/infrastructure/actions';
@@ -128,7 +124,7 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
           const rolePromises = userBusinesses.map(async (business) => {
             setLoadingRoles(prev => ({ ...prev, [business.id]: true }));
             try {
-              const rolesRes = await getRolesAction(token, { business_type_id: business.business_type_id });
+              const rolesRes = await getRolesAction(token, { business_type_id: business.business_type_id, page_size: 200 });
               if (rolesRes.success && rolesRes.data) {
                 rolesMap[business.id] = rolesRes.data.roles;
               }
@@ -179,7 +175,7 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
 
     setLoadingRoles(prev => ({ ...prev, [businessId]: true }));
     try {
-      const rolesRes = await getRolesAction(token, { business_type_id: business.business_type_id });
+      const rolesRes = await getRolesAction(token, { business_type_id: business.business_type_id, page_size: 200 });
       if (rolesRes.success && rolesRes.data) {
         setRolesByBusiness(prev => ({
           ...prev,
@@ -218,7 +214,7 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
       }));
 
     if (assignments.length === 0) {
-      setError('Debes seleccionar al menos un rol para un negocio');
+      setError('Elige un rol para al menos una propiedad');
       return;
     }
 
@@ -249,102 +245,58 @@ export function AssignRolesModal({ isOpen, onClose, user, onSuccess }: AssignRol
   if (!user) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
+    <VtDialog
+      open={isOpen}
       onClose={onClose}
-      title={`Asignar Roles - ${user.name}`}
-      size="lg"
+      busy={loading}
+      eyebrow="Roles"
+      title={`Cambiar roles de ${user.name}`}
+      subtitle="Un rol por propiedad. Cada propiedad muestra los roles de su tipo."
+      footer={
+        <>
+          <button type="button" className={vtBtn.secondary} onClick={onClose} disabled={loading}>Cancelar</button>
+          <button type="button" className={vtBtn.primary} onClick={handleSubmit} disabled={loading || businesses.length === 0}>
+            {loading ? 'Guardando…' : 'Guardar roles'}
+          </button>
+        </>
+      }
     >
-      <div className="space-y-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            Selecciona un rol para cada negocio asociado al usuario. Los roles se filtran automáticamente según el tipo de negocio.
-          </p>
+      {businesses.length === 0 ? (
+        <VtNotice tone="info">No pertenece a ninguna propiedad. Agrégala con "Editar datos" y vuelve aquí para darle un rol.</VtNotice>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {businesses.map((business) => {
+            const businessRoles = rolesByBusiness[business.id] || [];
+            const isLoading = loadingRoles[business.id] || false;
+            const selectedRoleId = selectedRoles[business.id]?.toString() || '';
+            const selectId = `rol-${business.id}`;
+            return (
+              <div key={business.id} className="flex flex-col md:flex-row md:items-center justify-between gap-2 border border-[#e4e2dd] rounded-xl px-3.5 py-3">
+                <label htmlFor={selectId} className="text-sm font-semibold">{business.name}</label>
+                {isLoading ? (
+                  <span className="text-[13px] text-[#8a8580]">Cargando roles…</span>
+                ) : businessRoles.length === 0 ? (
+                  <span className="text-[13px] text-[#8a8580]">No hay roles para este tipo de propiedad</span>
+                ) : (
+                  <select
+                    id={selectId}
+                    className={`${vtInput} md:w-56`}
+                    value={selectedRoleId}
+                    onChange={(e) => handleRoleChange(business.id, e.target.value)}
+                    onFocus={() => handleBusinessFocus(business.id)}
+                  >
+                    <option value="">Sin rol</option>
+                    {businessRoles.map((role) => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            );
+          })}
         </div>
-
-        {businesses.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">El usuario no tiene negocios asociados.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {businesses.map((business) => {
-              const businessRoles = rolesByBusiness[business.id] || [];
-              const isLoading = loadingRoles[business.id] || false;
-              const selectedRoleId = selectedRoles[business.id]?.toString() || '';
-
-              return (
-                <div key={business.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="mb-3">
-                    <h4 className="font-semibold text-gray-900">{business.name}</h4>
-                    <p className="text-xs text-gray-500">
-                      Tipo: {business.business_type || `ID: ${business.business_type_id}`}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Rol para este negocio
-                    </label>
-                    {isLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <RupuLoader size={24} />
-                        <span>Cargando roles...</span>
-                      </div>
-                    ) : businessRoles.length === 0 ? (
-                      <p className="text-sm text-gray-500">No hay roles disponibles para este tipo de negocio</p>
-                    ) : (
-                      <Select
-                        value={selectedRoleId}
-                        onChange={(e) => {
-                          handleRoleChange(business.id, e.target.value);
-                        }}
-                        onFocus={() => handleBusinessFocus(business.id)}
-                        options={[
-                          { value: '', label: 'Selecciona un rol' },
-                          ...businessRoles.map(role => ({
-                            value: role.id.toString(),
-                            label: role.name,
-                          })),
-                        ]}
-                        placeholder="Selecciona un rol"
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4 border-t border-gray-200 [&>*]:w-full md:[&>*]:w-auto [&>*]:min-h-[44px] md:[&>*]:min-h-0">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={loading}
-            className="btn-outline"
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={loading || businesses.length === 0}
-            className="btn-primary"
-          >
-            {loading ? 'Asignando...' : 'Asignar Roles'}
-          </Button>
-        </div>
-      </div>
-    </Modal>
+      )}
+      {error && <VtNotice>{error}</VtNotice>}
+    </VtDialog>
   );
 }
-

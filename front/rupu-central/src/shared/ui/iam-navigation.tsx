@@ -1,210 +1,126 @@
 /**
- * Navegación horizontal secundaria para IAM
- * Muestra todas las opciones de los módulos dentro de auth
+ * Cabecera y pestañas de Accesos (IAM), rediseño "IAM - Rediseño" 2a–2d.
+ *
+ * Cinco pestañas: Resumen · Usuarios · Roles y permisos · Propiedades · Avanzado. "Avanzado"
+ * agrupa las pantallas técnicas (permisos sueltos, recursos y tipos de negocio), que se eligen
+ * con píldoras debajo de las pestañas.
  */
 
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
-import { 
-  UsersIcon, 
-  ShieldCheckIcon, 
-  KeyIcon, 
-  CubeTransparentIcon,
-  BuildingOfficeIcon,
-  TagIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon
-} from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
+import { dsFontRoot, dsMono } from './ds/fonts';
 
-interface NavItem {
+interface IamTab {
   href: string;
   label: string;
-  title: string;
-  description: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  /** Rutas que marcan la pestaña como activa (en vez de `href`). */
+  match?: string[];
 }
 
-const navItems: NavItem[] = [
-  {
-    href: '/iam',
-    label: 'Dashboard',
-    title: 'Dashboard IAM',
-    description: 'Panel de control de gestión de identidad y acceso',
-    icon: BuildingOfficeIcon,
-  },
-  {
-    href: '/iam/users',
-    label: 'Usuarios',
-    title: 'Gestión de Usuarios',
-    description: 'Administra los usuarios del sistema',
-    icon: UsersIcon,
-  },
-  {
-    href: '/iam/roles',
-    label: 'Roles',
-    title: 'Gestión de Roles',
-    description: 'Define y administra los roles de usuario en el sistema',
-    icon: ShieldCheckIcon,
-  },
-  {
-    href: '/iam/permissions',
-    label: 'Permisos',
-    title: 'Gestión de Permisos',
-    description: 'Administra los permisos detallados para cada acción en el sistema',
-    icon: KeyIcon,
-  },
-  {
-    href: '/iam/resources',
-    label: 'Recursos',
-    title: 'Gestión de Recursos',
-    description: 'Administra los recursos del sistema a los que se aplican los permisos',
-    icon: CubeTransparentIcon,
-  },
-  {
-    href: '/iam/business-types',
-    label: 'Tipos de Negocio',
-    title: 'Gestión de Tipos de Negocio',
-    description: 'Administra los tipos de negocio disponibles en el sistema',
-    icon: TagIcon,
-  },
-  {
-    href: '/iam/businesses',
-    label: 'Negocios',
-    title: 'Gestión de Negocios',
-    description: 'Administra los negocios del sistema',
-    icon: BuildingOfficeIcon,
-  },
+const ADVANCED: IamTab[] = [
+  { href: '/iam/permissions', label: 'Permisos' },
+  { href: '/iam/resources', label: 'Recursos' },
+  { href: '/iam/business-types', label: 'Tipos de negocio' },
 ];
 
-export function IAMNavigation() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+const TABS: IamTab[] = [
+  { href: '/iam', label: 'Resumen' },
+  { href: '/iam/users', label: 'Usuarios' },
+  { href: '/iam/roles', label: 'Roles y permisos' },
+  { href: '/iam/businesses', label: 'Propiedades' },
+  { href: '/iam/permissions', label: 'Avanzado', match: ADVANCED.map((t) => t.href) },
+];
 
-  // Encontrar el módulo actual
-  const currentModule = navItems.find(
-    (item) => pathname === item.href || 
-    (item.href !== '/iam' && pathname.startsWith(item.href))
-  ) || navItems[0];
+/** ¿La ruta pertenece a la pestaña? `/iam` solo coincide exacto; las demás, también con subrutas. */
+export function isIamTabActive(pathname: string, tab: { href: string; match?: string[] }): boolean {
+  const prefixes = tab.match ?? [tab.href];
+  return prefixes.some((p) => (p === '/iam' ? pathname === p : pathname === p || pathname.startsWith(`${p}/`)));
+}
 
-  // Verificar capacidad de scroll
-  const checkScrollButtons = () => {
-    if (!scrollContainerRef.current) return;
-    
-    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-  };
-
-  useEffect(() => {
-    checkScrollButtons();
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', checkScrollButtons);
-      window.addEventListener('resize', checkScrollButtons);
-      return () => {
-        container.removeEventListener('scroll', checkScrollButtons);
-        window.removeEventListener('resize', checkScrollButtons);
-      };
-    }
-  }, [pathname]);
-
-  // Scroll funciones
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
-    }
-  };
+export function IAMNavigation({ counts }: { counts?: Partial<Record<string, number | null>> }) {
+  const pathname = usePathname() ?? '';
+  const inAdvanced = isIamTabActive(pathname, TABS[TABS.length - 1]);
 
   return (
-    // Teléfono (< md): queda debajo de la barra superior móvil (h-14) y el título va encima de las pestañas.
-    <div className="bg-white border-b border-gray-200 sticky top-14 md:top-0 z-10 shadow-sm">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between md:gap-4">
-          {/* Título del módulo actual - Izquierda */}
-          <div className="flex-shrink-0 min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 md:truncate">
-              {currentModule.title}
-            </h1>
-            {currentModule.description && (
-              <p className="text-sm text-gray-500 md:truncate mt-0.5">
-                {currentModule.description}
-              </p>
-            )}
-          </div>
-
-          {/* Navegación de módulos - Derecha con scroll */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {/* Botón scroll izquierda */}
-            {canScrollLeft && (
-              <button
-                onClick={scrollLeft}
-                className="flex-shrink-0 p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                aria-label="Desplazar izquierda"
-              >
-                <ChevronLeftIcon className="w-5 h-5" />
-              </button>
-            )}
-
-            {/* Lista scrolleable de módulos */}
-            <div
-              ref={scrollContainerRef}
-              className="flex-1 overflow-x-auto scrollbar-hide scroll-smooth"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+    <div className="flex flex-col gap-3">
+      <nav aria-label="Secciones de accesos" className="flex gap-1 border-b border-[#e4e2dd] overflow-x-auto -mx-1 px-1">
+        {TABS.map((tab) => {
+          const on = isIamTabActive(pathname, tab);
+          const count = counts?.[tab.href];
+          return (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              aria-current={on ? 'page' : undefined}
+              className={`px-3.5 py-3 text-sm whitespace-nowrap -mb-px border-b-2 transition-colors ${
+                on ? 'font-semibold text-[#1a1a1a] border-[#0F7F8A]' : 'font-medium text-[#4b4a46] border-transparent hover:text-[#1a1a1a]'
+              }`}
             >
-              <nav className="flex items-center gap-1" aria-label="IAM Navigation">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href || 
-                    (item.href !== '/iam' && pathname.startsWith(item.href));
-
-                  return (
-                    <button
-                      key={item.href}
-                      onClick={() => router.push(item.href)}
-                      className={`
-                        flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200
-                        whitespace-nowrap
-                        ${
-                          isActive
-                            ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }
-                      `}
-                    >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Botón scroll derecha */}
-            {canScrollRight && (
-              <button
-                onClick={scrollRight}
-                className="flex-shrink-0 p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                aria-label="Desplazar derecha"
+              {tab.label}
+              {count !== undefined && count !== null && <span className={`${dsMono} ml-1.5 text-xs text-[#6b6660]`}>{count}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+      {inAdvanced && (
+        <nav aria-label="Avanzado" className="flex flex-wrap gap-1">
+          {ADVANCED.map((tab) => {
+            const on = isIamTabActive(pathname, tab);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                aria-current={on ? 'page' : undefined}
+                className={`h-8 max-md:h-10 px-3.5 rounded-full text-xs font-medium inline-flex items-center whitespace-nowrap transition-colors ${
+                  on ? 'bg-[#1a1a1a] text-white' : 'text-[#4b4a46] hover:bg-white hover:text-[#1a1a1a]'
+                }`}
               >
-                <ChevronRightIcon className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+                {tab.label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
 
+/** Cabecera de una pantalla de Accesos: rótulo, título, descripción, acciones y pestañas. */
+export function IamPageHeader({
+  title,
+  description,
+  actions,
+  counts,
+}: {
+  title: string;
+  description?: ReactNode;
+  actions?: ReactNode;
+  /** Conteo junto a una pestaña, por su ruta (`{ '/iam/users': 48 }`). */
+  counts?: Partial<Record<string, number | null>>;
+}) {
+  return (
+    <header className={`${dsFontRoot} flex flex-col gap-5 text-[#1a1a1a]`}>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <span className="text-xs font-semibold tracking-[.08em] uppercase text-[#0F7F8A]">Accesos</span>
+          <h1 className="m-0 text-2xl md:text-[28px] font-bold tracking-[-.01em]">{title}</h1>
+          {description && <p className="m-0 text-sm text-[#4b4a46]">{description}</p>}
+        </div>
+        {actions && <div className="flex flex-wrap gap-2.5 max-md:w-full max-md:[&>*]:flex-1">{actions}</div>}
+      </div>
+      <IAMNavigation counts={counts} />
+    </header>
+  );
+}
 
+/** Contenedor de una pantalla de Accesos: fondo papel, márgenes y ancho máximo. */
+export function IamPage({ children }: { children: ReactNode }) {
+  return (
+    <div className={`${dsFontRoot} min-h-full bg-[#f5f5f4] text-[#1a1a1a] px-4 md:px-8 pt-5 md:pt-7 pb-12`}>
+      <div className="max-w-[1280px] mx-auto flex flex-col gap-5">{children}</div>
+    </div>
+  );
+}

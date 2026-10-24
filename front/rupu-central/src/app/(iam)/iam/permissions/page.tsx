@@ -1,11 +1,11 @@
 'use client';
 
-import { HomeIcon, ChevronRightIcon, KeyIcon } from '@heroicons/react/24/outline';
 import { PermissionsTable } from '@/services/auth/permissions/ui';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RupuLoader } from '@/shared/ui/rupu-loader';
+import { IamPage, IamPageHeader } from '@/shared/ui/iam-navigation';
 
 export default function IAMPermissionsPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -25,11 +25,9 @@ export default function IAMPermissionsPage() {
     );
   }
   return (
-    <div className="p-3 md:p-8 w-full">
-      <div className="w-full">
-        {/* Permissions Table */}
-        <PermissionsTable token={token || ''} />
-      </div>
-    </div>
+    <IamPage>
+      <IamPageHeader title="Permisos" description="Cada permiso es una acción sobre un recurso. Los roles los agrupan en Roles y permisos." />
+      <PermissionsTable token={token || ''} />
+    </IamPage>
   );
 }

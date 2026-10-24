@@ -14,6 +14,8 @@ export interface UseUsersOptions {
   initialPage?: number;
   pageSize?: number;
   autoLoad?: boolean;
+  /** Filtros con los que arranca (p. ej. leídos de la URL), sin volver a la página 1. */
+  initialFilters?: UseUsersReturn['filters'];
 }
 
 export interface UseUsersReturn {
@@ -48,7 +50,7 @@ export interface UseUsersReturn {
 
 export function useUsers(options: UseUsersOptions = {}) {
   // initialPage/pageSize se ignoran: la paginación sale de la URL.
-  const { autoLoad = false } = options;
+  const { autoLoad = false, initialFilters } = options;
 
   // Estado
   const [users, setUsers] = useState<any[]>([]);
@@ -61,7 +63,7 @@ export function useUsers(options: UseUsersOptions = {}) {
   const [totalCount, setTotalCount] = useState(0);
   
   // Filtros
-  const [filters, setFiltersState] = useState<UseUsersReturn['filters']>({});
+  const [filters, setFiltersState] = useState<UseUsersReturn['filters']>(initialFilters ?? {});
   
   // Token (debería venir de un contexto de auth)
   const [token, setToken] = useState<string | null>(null);

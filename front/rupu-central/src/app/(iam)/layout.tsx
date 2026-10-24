@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 import { TokenStorage } from '@shared/config';
 import { Sidebar, Spinner, MobileTopBar, useActiveProperty } from '@shared/ui';
 import { BusinessSelector } from '@/services/auth/businesses/ui';
-import { IAMNavigation } from '@shared/ui';
 
 export default function IamLayout({
   children,
@@ -166,11 +165,8 @@ export default function IamLayout({
       >
         <MobileTopBar property={activeProperty} fallbackName="IAM" />
 
-        {/* Navegación IAM horizontal */}
-        <IAMNavigation />
-
-        {/* Contenido de las páginas */}
-        <div className="w-full min-h-screen bg-white">
+        {/* Contenido: cada pantalla pone su cabecera de Accesos (IamPageHeader) con las pestañas. */}
+        <div className="w-full min-h-screen bg-[#f5f5f4]">
           {children}
         </div>
       </main>

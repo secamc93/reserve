@@ -92,7 +92,7 @@ test.describe("navegación en teléfono", () => {
     // IAM también lleva la barra inferior; las páginas de (auth) como /select-type no.
     await page.goto("/iam");
     await expect(bottomBar(page)).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByRole("navigation", { name: "IAM Navigation" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Secciones de accesos" })).toBeVisible();
     await expectNoHorizontalScroll(page);
     await page.goto("/select-type");
     await expect(page.getByRole("heading", { name: "Selecciona un Modulo" })).toBeVisible({ timeout: 30_000 });

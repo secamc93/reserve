@@ -1,11 +1,11 @@
 'use client';
 
-import { HomeIcon, ChevronRightIcon, CubeTransparentIcon } from '@heroicons/react/24/outline';
 import { ResourcesTable } from '@/services/auth/resources/ui';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RupuLoader } from '@/shared/ui/rupu-loader';
+import { IamPage, IamPageHeader } from '@/shared/ui/iam-navigation';
 
 export default function IAMResourcesPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -25,11 +25,9 @@ export default function IAMResourcesPage() {
     );
   }
   return (
-    <div className="p-3 md:p-8 w-full">
-      <div className="w-full">
-        {/* Resources Table */}
-        <ResourcesTable token={token || ''} />
-      </div>
-    </div>
+    <IamPage>
+      <IamPageHeader title="Recursos" description="Los módulos de Rupü a los que se aplican los permisos." />
+      <ResourcesTable token={token || ''} />
+    </IamPage>
   );
 }

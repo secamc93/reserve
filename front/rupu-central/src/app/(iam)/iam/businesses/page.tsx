@@ -5,6 +5,7 @@ import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RupuLoader } from '@/shared/ui/rupu-loader';
+import { IamPage, IamPageHeader } from '@/shared/ui/iam-navigation';
 
 export default function IAMBusinessesPage() {
   const { isAuthenticated, loading, token } = useAuth();
@@ -25,9 +26,10 @@ export default function IAMBusinessesPage() {
   }
 
   return (
-    <div className="p-3 md:p-6 lg:p-8 w-full">
+    <IamPage>
+      <IamPageHeader title="Propiedades" description="Los conjuntos que administra Rupü y sus módulos activos." />
       <BusinessesTable token={token || ''} />
-    </div>
+    </IamPage>
   );
 }
 
