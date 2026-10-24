@@ -74,8 +74,10 @@ export function UnitFormDialog({ businessId, unit, blocks = [], coefficientSum, 
     setError(null);
     try {
       const token = await getUnitsBusinessToken(businessId);
-      if (unit) await updatePropertyUnitAction({ businessId, unitId: unit.id, data: formToUpdateDTO(values), token });
-      else await createPropertyUnitAction({ businessId, data: formToCreateDTO(values), token });
+      const result = unit
+        ? await updatePropertyUnitAction({ businessId, unitId: unit.id, data: formToUpdateDTO(values), token })
+        : await createPropertyUnitAction({ businessId, data: formToCreateDTO(values), token });
+      if (!result.success) throw new Error(result.error);
       onSuccess();
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
