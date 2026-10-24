@@ -1,14 +1,13 @@
 'use client';
 
-import { ResourcesTable } from '@/services/auth/resources/ui';
+import { ResourcesAdminPage } from '@/services/auth/resources/ui';
 import { useAuthSimple as useAuth } from '@/services/auth/users/ui/hooks';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RupuLoader } from '@/shared/ui/rupu-loader';
-import { IamPage, IamPageHeader } from '@/shared/ui/iam-navigation';
 
 export default function IAMResourcesPage() {
-  const { isAuthenticated, loading, token } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -24,10 +23,6 @@ export default function IAMResourcesPage() {
       </div>
     );
   }
-  return (
-    <IamPage>
-      <IamPageHeader title="Recursos" description="Los módulos de Rupü a los que se aplican los permisos." />
-      <ResourcesTable token={token || ''} />
-    </IamPage>
-  );
+
+  return <ResourcesAdminPage />;
 }
