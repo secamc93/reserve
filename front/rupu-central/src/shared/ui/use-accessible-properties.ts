@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TokenStorage } from '@shared/config';
 import { toPropertyOptions, type PropertyOption } from '../utils/properties';
 
@@ -32,10 +32,21 @@ export function loadAccessibleProperties(): Promise<PropertyOption[]> {
   return superAdminCache;
 }
 
-export function useAccessibleProperties(): { properties: PropertyOption[]; loading: boolean; error: string | null } {
+/** Olvida la lista en caché (p. ej. después de crear una propiedad) para volver a pedirla. */
+export function invalidateAccessibleProperties() {
+  superAdminCache = null;
+}
+
+export function useAccessibleProperties(): { properties: PropertyOption[]; loading: boolean; error: string | null; reload: () => void } {
   const [properties, setProperties] = useState<PropertyOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [version, setVersion] = useState(0);
+  const reload = useCallback(() => {
+    invalidateAccessibleProperties();
+    setVersion((v) => v + 1);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -44,7 +55,7 @@ export function useAccessibleProperties(): { properties: PropertyOption[]; loadi
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : 'No se pudieron cargar las propiedades'); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, []);
+  }, [version]);
 
-  return { properties, loading, error };
+  return { properties, loading, error, reload };
 }
