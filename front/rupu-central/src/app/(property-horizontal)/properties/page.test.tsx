@@ -6,12 +6,12 @@ vi.mock('next/font/google', () => ({
   Public_Sans: () => ({ variable: 'font-a', className: 'font-a' }),
   JetBrains_Mono: () => ({ variable: 'font-b', className: 'font-b' }),
 }));
-const hook = vi.hoisted(() => ({ reload: vi.fn(), properties: [] as { id: number; name: string }[] }));
+const hook = vi.hoisted(() => ({ reload: vi.fn(), select: vi.fn(), properties: [] as { id: number; name: string }[] }));
 vi.mock('@shared/ui', () => ({
   Spinner: () => null,
   PropertyPicker: ({ properties }: { properties: { name: string }[] }) => <ul>{properties.map((p) => <li key={p.name}>{p.name}</li>)}</ul>,
   useAccessibleProperties: () => ({ properties: hook.properties, loading: false, error: null, reload: hook.reload }),
-  selectProperty: vi.fn(),
+  selectProperty: hook.select,
 }));
 const user = vi.hoisted(() => ({ is_super_admin: true }));
 vi.mock('@shared/config', () => ({ TokenStorage: { getUser: () => ({ id: 1, ...user }), getActiveBusiness: () => null } }));
@@ -30,6 +30,7 @@ import PropertiesPage from './page';
 describe('Elegir propiedad — nueva propiedad', () => {
   beforeEach(() => {
     hook.reload.mockReset();
+    hook.select.mockReset();
     hook.properties = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }];
     user.is_super_admin = true;
   });
@@ -47,5 +48,16 @@ describe('Elegir propiedad — nueva propiedad', () => {
     render(<PropertiesPage />);
     await waitFor(() => expect(screen.getByText('A')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: '+ Nueva propiedad' })).not.toBeInTheDocument();
+  });
+
+  it('con una sola propiedad el super admin se queda para poder crear otra; los demás entran directo', async () => {
+    hook.properties = [{ id: 1, name: 'Tayazal' }];
+    const { unmount } = render(<PropertiesPage />);
+    expect(await screen.findByRole('button', { name: '+ Nueva propiedad' })).toBeInTheDocument();
+    expect(hook.select).not.toHaveBeenCalled();
+    unmount();
+    user.is_super_admin = false;
+    render(<PropertiesPage />);
+    await waitFor(() => expect(hook.select).toHaveBeenCalledWith({ id: 1, name: 'Tayazal' }));
   });
 });

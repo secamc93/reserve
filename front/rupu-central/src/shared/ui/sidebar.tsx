@@ -51,7 +51,8 @@ export function Sidebar({ user, mobileNav = false, variant = 'rail' }: SidebarPr
   const { hasResource } = usePermissions();
   const activeProperty = useActiveProperty();
   const { properties } = useAccessibleProperties();
-  const showChangeProperty = canSwitchProperty(properties);
+  // El super admin siempre puede ir al selector (ahí también crea propiedades), aunque haya una sola.
+  const showChangeProperty = canSwitchProperty(properties) || Boolean(TokenStorage.getUser()?.is_super_admin);
   const goToPropertyPicker = () => router.push('/properties');
 
   const handleLogout = () => {

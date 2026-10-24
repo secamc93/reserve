@@ -2,7 +2,7 @@
  * Página: elegir propiedad horizontal.
  * Es a donde lleva "Cambiar propiedad" y el login cuando el usuario tiene varias propiedades.
  * - Super admin: ve todas las propiedades y puede crear una nueva ("+ Nueva propiedad").
- * - Demás usuarios: sus propiedades; con una sola, entra directo a ella.
+ * - Demás usuarios: sus propiedades; con una sola, entra directo a ella (el super admin no).
  */
 'use client';
 
@@ -30,9 +30,10 @@ export default function PropertiesPage() {
     setActiveId(TokenStorage.getActiveBusiness());
   }, [router]);
 
-  // Con una sola propiedad (también el super admin) no hay nada que elegir: se entra directo.
+  // Con una sola propiedad no hay nada que elegir: se entra directo. El super admin se queda, porque
+  // aquí también crea propiedades nuevas.
   useEffect(() => {
-    if (isSuperAdmin !== null && !loadingProperties && properties.length === 1) {
+    if (isSuperAdmin === false && !loadingProperties && properties.length === 1) {
       selectProperty(properties[0]);
     }
   }, [isSuperAdmin, loadingProperties, properties]);
