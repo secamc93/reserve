@@ -24,7 +24,7 @@ export default function AttendanceManagementPage() {
 
   return (
     <>
-      <VotingGroupsSection businessId={businessId} />
+      <VotingGroupsSection businessId={businessId} autoTour={false} />
       <DsFloatingPanel onClose={close} ariaLabel="Asistencia">
         <AttendancePanel businessId={businessId} groupId={groupId} onClose={close} />
       </DsFloatingPanel>

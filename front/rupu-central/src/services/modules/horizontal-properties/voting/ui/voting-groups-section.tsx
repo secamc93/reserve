@@ -19,6 +19,8 @@ import { DeleteVotingGroupModal } from './delete-voting-group-modal';
 import { VotingsList } from './votings-list';
 import { GroupQRModal } from './components/group-qr-modal';
 import { VotingCoverageBanner } from './billing/voting-coverage-banner';
+import { VotingGuide } from './guide/voting-guide';
+import { VotingTour, votingTourSeen } from './guide/voting-tour';
 import { useGroupQr, useVotingCapabilities, GROUP_QR_VALID_HOURS } from './hooks';
 import {
   VT,
@@ -35,14 +37,17 @@ import {
 
 interface VotingGroupsSectionProps {
   businessId: number;
+  /** Abre el recorrido guiado la primera vez (no debajo de otro panel, como Asistencia). */
+  autoTour?: boolean;
 }
 
-export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
+export function VotingGroupsSection({ businessId, autoTour = true }: VotingGroupsSectionProps) {
   const [groups, setGroups] = useState<VotingGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const caps = useVotingCapabilities();
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [tour, setTour] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<VotingGroup | null>(null);
   const [deleting, setDeleting] = useState<VotingGroup | null>(null);
@@ -84,6 +89,13 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
     }
   }, [businessId, loadGroups]);
 
+  // Primera visita de quien administra: el recorrido se abre solo, cuando la pantalla ya cargó.
+  useEffect(() => {
+    if (!autoTour || loading || !caps.canManage || votingTourSeen()) return;
+    const t = setTimeout(() => setTour(true), 900);
+    return () => clearTimeout(t);
+  }, [autoTour, loading, caps.canManage]);
+
   const toggle = (id: number) =>
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -103,22 +115,44 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
             <h1 className="m-0 text-xl md:text-2xl font-semibold tracking-[-.02em]">Grupos de votación</h1>
           </div>
           {caps.canManage && (
-            <button
-              type="button"
-              className={`${vtBtn.primary} max-md:w-full`}
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-            >
-              + Nuevo grupo
-            </button>
+            <div className="flex gap-2 max-md:w-full">
+              <button type="button" className={`${vtBtn.ghost} max-md:flex-1`} onClick={() => setTour(true)}>
+                Recorrido guiado
+              </button>
+              <button
+                type="button"
+                data-tour="new-group"
+                className={`${vtBtn.primary} max-md:flex-1`}
+                onClick={() => {
+                  setEditing(null);
+                  setFormOpen(true);
+                }}
+              >
+                + Nuevo grupo
+              </button>
+            </div>
           )}
         </div>
 
         {error && <VtNotice>{error}</VtNotice>}
 
-        {caps.canManage && <VotingCoverageBanner businessId={businessId} />}
+        {caps.canManage && !loading && (
+          <VotingGuide
+            businessId={businessId}
+            groups={groups}
+            onCreateGroup={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
+            onOpenGroup={(id) => setExpanded((cur) => new Set(cur).add(id))}
+          />
+        )}
+
+        {caps.canManage && (
+          <div data-tour="coverage">
+            <VotingCoverageBanner businessId={businessId} />
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-16">
@@ -127,15 +161,14 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
         ) : groups.length === 0 ? (
           <div className="bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,.04),0_4px_14px_rgba(0,0,0,.05)] py-14 px-6 text-center" style={{ border: `1px solid ${VT.border}` }}>
             <h2 className="m-0 text-[17px] font-semibold">Aún no hay grupos de votación</h2>
+            <p className="mt-1.5 mb-5 mx-auto text-[13px] max-w-[460px]" style={{ color: VT.muted }}>
+              Cada grupo es una asamblea: le pones fecha y quórum, agregas una votación por cada punto del orden
+              del día y el día de la asamblea los residentes votan con un QR.
+            </p>
             {caps.canManage && (
-              <>
-                <p className="mt-1.5 mb-5 text-[13px]" style={{ color: VT.muted }}>
-                  Crea el grupo de la asamblea y agrega sus votaciones.
-                </p>
-                <button type="button" className={vtBtn.primary} onClick={() => setFormOpen(true)}>
-                  + Nuevo grupo
-                </button>
-              </>
+              <button type="button" className={vtBtn.primary} onClick={() => setFormOpen(true)}>
+                + Nuevo grupo
+              </button>
             )}
           </div>
         ) : (
@@ -175,6 +208,16 @@ export function VotingGroupsSection({ businessId }: VotingGroupsSectionProps) {
         }}
         businessId={businessId}
         group={deleting}
+      />
+
+      <VotingTour
+        open={tour}
+        onClose={() => setTour(false)}
+        hasGroups={groups.length > 0}
+        onCreateGroup={() => {
+          setEditing(null);
+          setFormOpen(true);
+        }}
       />
     </div>
   );
@@ -274,7 +317,7 @@ function VotingGroupCard({ group, businessId, expanded, onToggle, onEdit, onDele
           </div>
           {qr.error && <div className="text-xs" style={{ color: VT.live }}>{qr.error}</div>}
         </div>
-        <div className="flex gap-1.5 items-center flex-wrap max-md:flex-nowrap max-md:w-full max-md:[&>a]:flex-1 max-md:[&>a]:min-w-0 max-md:[&>button:not([aria-label])]:min-w-0 max-md:[&>button:not([aria-label])]:flex-1">
+        <div data-tour="group-actions" className="flex gap-1.5 items-center flex-wrap max-md:flex-nowrap max-md:w-full max-md:[&>a]:flex-1 max-md:[&>a]:min-w-0 max-md:[&>button:not([aria-label])]:min-w-0 max-md:[&>button:not([aria-label])]:flex-1">
           {closed ? (
             <>
               {!expanded && (
