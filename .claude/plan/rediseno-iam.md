@@ -26,14 +26,17 @@ Diseño: lienzo "IAM - Rediseño" (https://claude.ai/artifact/2ZM2vqZdiWe4Un93pe
 ## Decisiones
 - 2026-10-23: el diseño decía "Invitar" y "enviar por WhatsApp"; el back no invita (genera clave),
   así que es "Crear usuario" con la clave en pantalla. Sin "Actividad reciente" (no hay fuente).
-- Propiedades y Avanzado conservan sus tablas actuales, solo con la cabecera nueva.
+- 2026-10-23 (usuario): Propiedades y Avanzado también llevan el diseño nuevo (sin lienzo propio: mismo sistema que 2a–2c).
 
 ## Pendientes
 - [x] 2026-10-23: revisión en navegador con datos sembrados en `rupu_ui_rediseno`.
 - [x] 2026-10-23: back: los filtros `role_id` y `business_id` de `GET /users` leían tablas viejas
       (ver `bitacora/2026-10-23-filtros-usuarios-por-rol-y-propiedad.md`).
 - [x] 2026-10-23: push y PR #104 a `main` (pendiente revisión y merge).
+- [x] 2026-10-23: Propiedades (tarjetas + panel de módulos con interruptores) y Avanzado
+      (Permisos agrupados por módulo, Recursos con sus acciones, Tipos de negocio) rediseñados.
 - [ ] Borrar componentes que quedaron sin uso: `RolesTable`, `AssignPermissionsModal`,
-      `DashboardPage` (+ stats-card, simple-chart, module-indicator), `UserDetailModal`, `UsersFilters`.
-- [ ] Rediseñar Propiedades (`BusinessesTable`) y las tablas de Avanzado.
+      `DashboardPage` (+ stats-card, simple-chart, module-indicator), `UserDetailModal`, `UsersFilters`,
+      `BusinessesTable`, `PermissionsTable` (+ `EditPermissionModal`), `ResourcesTable` (+ modales),
+      `BusinessTypesPage` (+ tabla y formulario).
 - [ ] Back: endpoint de invitación por correo/WhatsApp y filtro "sin rol" en `GET /users`.
