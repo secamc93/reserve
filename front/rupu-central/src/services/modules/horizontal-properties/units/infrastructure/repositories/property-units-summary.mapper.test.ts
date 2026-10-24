@@ -42,6 +42,8 @@ describe('resumen de unidades (mapper y repositorio)', () => {
     await new PropertyUnitsRepository().createPropertyUnit({ businessId: 7, token: 'T', data: { number: '126', unitType: 'house', block: 'Casa', coefficient: 0.503 } });
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body).toMatchObject({ business_id: 7, number: '126', block: 'Casa', participation_coefficient: 0.503 });
+    // El super admin (token con business_id 0) debe decir la propiedad en ?business_id: si no, 400.
+    expect(fetchMock.mock.calls[0][0]).toBe('http://api/horizontal-properties/property-units?business_id=7');
     vi.unstubAllGlobals();
   });
 });

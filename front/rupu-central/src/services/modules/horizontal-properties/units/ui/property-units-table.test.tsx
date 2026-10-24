@@ -102,7 +102,7 @@ describe('U1 · Unidades por torre/bloque', () => {
   });
 
   it('editar desde el lápiz: título "Editar Casa 126", tipo en chips y suma de la propiedad', async () => {
-    actions.updatePropertyUnitAction.mockResolvedValue(unit(11, '126', 'Casa'));
+    actions.updatePropertyUnitAction.mockResolvedValue({ success: true, data: unit(11, '126', 'Casa') });
     render(<PropertyUnitsTable businessId={1} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Editar Casa 126' }));
     const dialog = screen.getByRole('dialog', { name: 'Editar Casa 126' });
@@ -136,7 +136,7 @@ describe('U1 · Unidades por torre/bloque', () => {
   });
 
   it('nueva unidad: bloque de la lista, número y coeficiente', async () => {
-    actions.createPropertyUnitAction.mockResolvedValue(unit(14, '200', 'Casa'));
+    actions.createPropertyUnitAction.mockResolvedValue({ success: true, data: unit(14, '200', 'Casa') });
     render(<PropertyUnitsTable businessId={1} />);
     await screen.findByRole('tab', { name: /^Casa/ });
     await userEvent.click(screen.getByRole('button', { name: '+ Nueva unidad' }));
@@ -150,6 +150,19 @@ describe('U1 · Unidades por torre/bloque', () => {
         expect.objectContaining({ businessId: 1, data: expect.objectContaining({ number: '200', block: 'Casa', coefficient: 0.45 }) }),
       ),
     );
+  });
+
+  it('si el back rechaza la unidad, el formulario dice el motivo (no un error genérico)', async () => {
+    actions.createPropertyUnitAction.mockResolvedValue({ success: false, error: 'business_id requerido' });
+    render(<PropertyUnitsTable businessId={1} />);
+    await screen.findByRole('tab', { name: /^Casa/ });
+    await userEvent.click(screen.getByRole('button', { name: '+ Nueva unidad' }));
+    const dialog = screen.getByRole('dialog', { name: 'Nueva unidad' });
+    await userEvent.selectOptions(within(dialog).getByLabelText('Torre / bloque'), 'Casa');
+    await userEvent.type(within(dialog).getByLabelText('Número *'), '200');
+    await userEvent.type(within(dialog).getByLabelText('Coeficiente de copropiedad'), '0,45');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Crear unidad' }));
+    expect(await within(dialog).findByText('business_id requerido')).toBeInTheDocument();
   });
 
   it('U3 · importar revisa el archivo (vista previa) antes de importar', async () => {

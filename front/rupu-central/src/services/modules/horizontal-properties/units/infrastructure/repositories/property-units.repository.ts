@@ -192,8 +192,9 @@ export class PropertyUnitsRepository implements IPropertyUnitsRepository {
 
   async createPropertyUnit(params: CreatePropertyUnitParams): Promise<PropertyUnit> {
     const { businessId, data: unitData, token } = params;
-    // Nueva URL: sin business_id en path, se envía en el body
-    const url = `${this.baseUrl}/horizontal-properties/property-units`;
+    // business_id va en el body y también en la URL: el super admin (token con business_id 0) debe
+    // indicar la propiedad en ?business_id o el back responde 400 "business_id requerido".
+    const url = `${this.baseUrl}/horizontal-properties/property-units?business_id=${businessId}`;
     const method = 'POST';
     const startTime = Date.now();
 
