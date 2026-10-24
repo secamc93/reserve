@@ -36,8 +36,17 @@ func (r *Repository) CreateHorizontalProperty(ctx context.Context, property *dom
 	// Mapear a modelo de GORM (Business)
 	businessModel := mapper.ToBusinessModel(property)
 
-	// Crear en la base de datos
-	if err := r.db.Conn(ctx).Create(businessModel).Error; err != nil {
+	// Crear en la base de datos. Antes se liberan el código y el dominio si los conserva una
+	// propiedad borrada (los índices únicos también cuentan las filas borradas).
+	err := r.db.Conn(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := releaseDeletedIdentifiers(tx.Unscoped().Where(
+			"deleted_at IS NOT NULL AND (code = ? OR custom_domain = ?)", businessModel.Code, businessModel.CustomDomain,
+		)); err != nil {
+			return err
+		}
+		return tx.Create(businessModel).Error
+	})
+	if err != nil {
 		r.logger.Error().Err(err).Msg("Error creando propiedad horizontal en la base de datos")
 		return nil, fmt.Errorf("error creando propiedad horizontal: %w", err)
 	}
@@ -100,7 +109,19 @@ func (r *Repository) UpdateHorizontalProperty(ctx context.Context, id uint, prop
 
 // DeleteHorizontalProperty elimina una propiedad horizontal
 func (r *Repository) DeleteHorizontalProperty(ctx context.Context, id uint) error {
-	result := r.db.Conn(ctx).Delete(&models.Business{}, id)
+	var result *gorm.DB
+	err := r.db.Conn(ctx).Transaction(func(tx *gorm.DB) error {
+		// Libera el código y el dominio para que se puedan usar en una propiedad nueva.
+		if err := releaseDeletedIdentifiers(tx.Where("id = ?", id)); err != nil {
+			return err
+		}
+		result = tx.Delete(&models.Business{}, id)
+		return result.Error
+	})
+	if err != nil {
+		r.logger.Error().Err(err).Uint("id", id).Msg("Error eliminando propiedad horizontal")
+		return fmt.Errorf("error eliminando propiedad horizontal: %w", err)
+	}
 
 	if result.Error != nil {
 		r.logger.Error().Err(result.Error).Uint("id", id).Msg("Error eliminando propiedad horizontal")
@@ -370,4 +391,14 @@ func (r *Repository) GetHorizontalPropertyType(ctx context.Context) (*domain.Bus
 	}
 
 	return mapper.ToBusinessType(&businessType), nil
+}
+
+// releaseDeletedIdentifiers cambia el código y el dominio de las propiedades de `scope` por
+// "<valor recortado>--del-<id>" (cabe en code 50 / custom_domain 100), para que un conjunto borrado
+// no deje ocupados su código ni su dominio.
+func releaseDeletedIdentifiers(scope *gorm.DB) error {
+	return scope.Model(&models.Business{}).Updates(map[string]interface{}{
+		"code":          gorm.Expr("LEFT(code, 30) || '--del-' || id"),
+		"custom_domain": gorm.Expr("LEFT(COALESCE(custom_domain, ''), 80) || '--del-' || id"),
+	}).Error
 }
