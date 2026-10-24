@@ -32,7 +32,7 @@ Diseño: lienzo "IAM - Rediseño" (https://claude.ai/artifact/2ZM2vqZdiWe4Un93pe
 - [x] 2026-10-23: revisión en navegador con datos sembrados en `rupu_ui_rediseno`.
 - [x] 2026-10-23: back: los filtros `role_id` y `business_id` de `GET /users` leían tablas viejas
       (ver `bitacora/2026-10-23-filtros-usuarios-por-rol-y-propiedad.md`).
-- [ ] Push y PR a `main` (con autorización).
+- [x] 2026-10-23: push y PR #104 a `main` (pendiente revisión y merge).
 - [ ] Borrar componentes que quedaron sin uso: `RolesTable`, `AssignPermissionsModal`,
       `DashboardPage` (+ stats-card, simple-chart, module-indicator), `UserDetailModal`, `UsersFilters`.
 - [ ] Rediseñar Propiedades (`BusinessesTable`) y las tablas de Avanzado.
